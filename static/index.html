@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ShiftShare</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { font-family:'Hiragino Sans','Yu Gothic',sans-serif; background:#f0f4ff; color:#1e293b; min-height:100vh; }
+
+/* ── SCREENS ── */
+.screen { display:none; }
+.screen.active { display:block; }
+
+/* ── LOGIN ── */
+#login {
+  min-height:100vh;
+  padding:24px; gap:40px;
+  background:linear-gradient(160deg,#f0f4ff 0%,#e8edff 100%);
+}
+#login.active {
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+}
+.logo-mark {
+  width:72px; height:72px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  border-radius:22px;
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 16px;
+  box-shadow:0 12px 32px rgba(99,102,241,.28);
+}
+.logo-text h1 { font-size:24px; font-weight:700; letter-spacing:3px; text-align:center; }
+.logo-text p { font-size:12px; color:#94a3b8; text-align:center; margin-top:6px; }
+.login-card {
+  background:white; border-radius:24px; padding:32px 28px;
+  width:100%; max-width:340px;
+  box-shadow:0 4px 24px rgba(0,0,0,.07);
+}
+.field-label { font-size:11px; color:#94a3b8; letter-spacing:2px; font-weight:600; display:block; margin-bottom:8px; }
+.passcode-input {
+  width:100%; padding:14px 16px;
+  background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px;
+  color:#1e293b; font-size:22px; letter-spacing:10px; text-align:center; outline:none;
+  margin-bottom:20px;
+}
+.passcode-input:focus { border-color:#6366f1; }
+.btn-primary {
+  width:100%; padding:15px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  border:none; border-radius:14px; color:white;
+  font-size:14px; font-weight:700; cursor:pointer; letter-spacing:2px;
+  box-shadow:0 6px 20px rgba(99,102,241,.3);
+}
+.btn-primary:active { opacity:.9; transform:scale(.99); }
+.login-err { color:#ef4444; font-size:12px; text-align:center; margin-top:10px; min-height:18px; }
+
+/* ── APP SHELL ── */
+#app { display:none; flex-direction:column; min-height:100vh; }
+#app.active { display:flex; }
+.app-content { flex:1; overflow-y:auto; padding:0 18px 90px; max-width:480px; margin:0 auto; width:100%; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position:fixed; bottom:0; left:0; right:0;
+  background:white; border-top:1px solid #f1f5f9;
+  display:flex; justify-content:space-around;
+  padding:10px 0 max(20px,env(safe-area-inset-bottom));
+  box-shadow:0 -4px 20px rgba(0,0,0,.06);
+  z-index:100;
+}
+.nav-btn {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  font-size:10px; font-weight:600; color:#cbd5e1;
+  background:none; border:none; cursor:pointer; padding:4px 28px;
+  transition:color .15s;
+}
+.nav-btn.active { color:#6366f1; }
+
+/* ── PAGE HEADERS ── */
+.page-top {
+  display:flex; justify-content:space-between; align-items:flex-start;
+  padding:20px 0 14px;
+}
+.page-title { font-size:22px; font-weight:700; }
+.page-sub { font-size:11px; color:#94a3b8; margin-top:3px; }
+.chip-green {
+  font-size:11px; font-weight:600; color:#10b981;
+  background:#d1fae5; padding:5px 12px; border-radius:20px; white-space:nowrap;
+}
+.chip-gray {
+  font-size:11px; font-weight:600; color:#94a3b8;
+  background:#f1f5f9; padding:5px 12px; border-radius:20px; white-space:nowrap;
+}
+
+/* ── LEGEND ── */
+.legend {
+  display:flex; gap:14px; margin-bottom:16px;
+  background:white; border-radius:14px; padding:10px 14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
+}
+.leg { display:flex; align-items:center; gap:6px; font-size:11px; color:#64748b; font-weight:500; }
+.leg-bar { width:16px; height:4px; border-radius:2px; }
+
+/* ── CALENDAR GRID ── */
+.cal-grid { display:flex; flex-direction:column; gap:6px; }
+.cal-row { display:grid; grid-template-columns:50px 1fr 1fr; gap:6px; }
+.cal-date {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border-radius:14px; padding:8px 0; cursor:default;
+}
+.dn { font-size:17px; font-weight:700; line-height:1; }
+.dw { font-size:10px; margin-top:3px; font-weight:500; }
+.cal-date.wd { background:#eff6ff; color:#3b82f6; }
+.cal-date.su { background:#fff1f2; color:#f43f5e; }
+.cal-date.sa { background:#f5f3ff; color:#8b5cf6; }
+.cal-date.gold { background:#fffbeb; color:#d97706; border:1.5px solid #fcd34d; }
+
+.shift-cell {
+  border-radius:14px; padding:10px 12px;
+  display:flex; flex-direction:column; justify-content:center;
+  min-height:56px; background:white;
+}
+.sc-lbl { font-size:10px; font-weight:600; letter-spacing:.5px; margin-bottom:2px; }
+.sc-time { font-size:13px; font-weight:700; }
+.sc-end { font-size:11px; opacity:.65; }
+.sc-mine { background:#eff6ff; border:1.5px solid #bfdbfe; color:#2563eb; }
+.sc-hers { background:#fff0f6; border:1.5px solid #fbcfe8; color:#db2777; }
+.sc-off {
+  background:#f8fafc; border:1.5px solid #e2e8f0; color:#94a3b8;
+  font-size:12px; font-weight:600; text-align:center; align-items:center;
+}
+.sc-off span { background:#f1f5f9; padding:3px 10px; border-radius:6px; font-size:11px; }
+.sc-gold {
+  background:#fffbeb; border:1.5px solid #fcd34d; color:#b45309;
+  font-size:12px; font-weight:600; text-align:center; align-items:center;
+}
+.sc-gold span { background:#fef3c7; padding:3px 10px; border-radius:6px; font-size:11px; }
+.sc-empty { background:transparent; border:1.5px dashed #e2e8f0; }
+
+.both-off-banner {
+  grid-column:1/-1;
+  background:#fffbeb; border:1px solid #fcd34d; border-radius:8px;
+  padding:5px 12px; font-size:11px; font-weight:600; color:#b45309;
+  text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;
+  margin-bottom:1px;
+}
+
+/* ── UPLOAD ── */
+.person-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:22px; }
+.person-card {
+  padding:18px 12px; border-radius:16px;
+  border:1.5px solid #e2e8f0; background:white; color:#94a3b8;
+  text-align:center; cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.04); transition:all .2s;
+}
+.person-card .pc-icon {
+  width:38px; height:38px; border-radius:50%; background:#f1f5f9;
+  margin:0 auto 10px; display:flex; align-items:center; justify-content:center;
+}
+.person-card .pc-name { font-size:14px; font-weight:600; }
+.person-card.sel-mine { background:#eff6ff; border-color:#93c5fd; color:#2563eb; }
+.person-card.sel-mine .pc-icon { background:#dbeafe; }
+.person-card.sel-hers { background:#fff0f6; border-color:#fbcfe8; color:#db2777; }
+.person-card.sel-hers .pc-icon { background:#fce7f3; }
+
+.drop-zone {
+  border:2px dashed #c7d2fe; border-radius:20px;
+  padding:36px 20px; text-align:center; background:#f5f7ff;
+  margin-bottom:16px; cursor:pointer; position:relative;
+}
+.drop-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.drop-icon {
+  width:50px; height:50px; background:#e0e7ff; border-radius:14px;
+  display:flex; align-items:center; justify-content:center; margin:0 auto 14px;
+}
+.drop-zone h3 { font-size:14px; color:#475569; margin-bottom:5px; font-weight:600; }
+.drop-zone p { font-size:12px; color:#94a3b8; }
+.drop-hint {
+  display:inline-block; margin-top:14px;
+  background:#e0e7ff; color:#6366f1;
+  padding:4px 14px; border-radius:20px; font-size:11px; font-weight:600;
+}
+.preview-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+.preview-card {
+  border-radius:14px; aspect-ratio:9/16;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:8px; font-size:12px; font-weight:600;
+  background:#f8fafc; border:1.5px dashed #e2e8f0; color:#94a3b8;
+  position:relative; overflow:hidden;
+}
+.preview-card.has-img { border-style:solid; background:#eff6ff; border-color:#bfdbfe; color:#3b82f6; }
+.preview-card img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:12px; }
+.preview-card .pg-label {
+  position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
+  background:rgba(255,255,255,.9); color:#3b82f6; font-size:10px; font-weight:700;
+  padding:2px 8px; border-radius:10px;
+}
+.btn-analyze {
+  width:100%; padding:16px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  border:none; border-radius:16px; color:white;
+  font-size:14px; font-weight:700; cursor:pointer; letter-spacing:1px;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  box-shadow:0 6px 20px rgba(99,102,241,.3);
+}
+.btn-analyze:disabled { opacity:.5; cursor:not-allowed; }
+
+/* ── ANALYZING OVERLAY ── */
+.overlay {
+  position:fixed; inset:0; background:rgba(240,244,255,.92);
+  backdrop-filter:blur(6px); display:none;
+  flex-direction:column; align-items:center; justify-content:center;
+  z-index:200; gap:20px;
+}
+.overlay.active { display:flex; }
+.ring {
+  width:56px; height:56px;
+  border:3px solid #e0e7ff; border-top-color:#6366f1;
+  border-radius:50%; animation:spin .9s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.overlay h3 { font-size:16px; font-weight:700; color:#1e293b; }
+.overlay p { font-size:12px; color:#94a3b8; }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; top:16px; left:50%; transform:translateX(-50%);
+  background:white; color:#1e293b; padding:12px 20px;
+  border-radius:14px; font-size:13px; font-weight:600;
+  display:flex; align-items:center; gap:10px;
+  box-shadow:0 8px 32px rgba(0,0,0,.12);
+  white-space:nowrap; z-index:300; border-left:4px solid #6366f1;
+  opacity:0; pointer-events:none; transition:opacity .3s, top .3s;
+}
+.toast.show { opacity:1; top:24px; }
+
+/* ── MISC ── */
+.sect-label { font-size:11px; color:#94a3b8; letter-spacing:2px; font-weight:600; margin-bottom:10px; }
+.empty-state {
+  text-align:center; padding:60px 20px;
+  font-size:13px; color:#94a3b8; line-height:1.8;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="screen active">
+  <div class="logo-mark">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+  </div>
+  <div class="logo-text">
+    <h1>SHIFTSHARE</h1>
+    <p>2人のシフトをかんたん共有</p>
+  </div>
+  <div class="login-card">
+    <label class="field-label">PASSCODE</label>
+    <input id="pw" class="passcode-input" type="password" placeholder="••••" maxlength="20">
+    <button class="btn-primary" onclick="doLogin()">LOGIN</button>
+    <div id="login-err" class="login-err"></div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app">
+  <div class="app-content">
+
+    <!-- CALENDAR TAB -->
+    <div id="tab-calendar" class="screen active">
+      <div class="page-top">
+        <div>
+          <div class="page-title" id="cal-title">カレンダー</div>
+          <div class="page-sub" id="cal-period">—</div>
+        </div>
+        <div id="cal-status" class="chip-gray">未登録</div>
+      </div>
+      <div class="legend">
+        <div class="leg"><div class="leg-bar" style="background:#3b82f6"></div>自分</div>
+        <div class="leg"><div class="leg-bar" style="background:#ec4899"></div>彼女</div>
+        <div class="leg"><div class="leg-bar" style="background:#f59e0b"></div>2人お休み</div>
+      </div>
+      <div id="cal-grid" class="cal-grid">
+        <div class="empty-state">シフトがまだ登録されていません。<br>アップロードタブからスクショを送ってください。</div>
+      </div>
+    </div>
+
+    <!-- UPLOAD TAB -->
+    <div id="tab-upload" class="screen">
+      <div class="page-top">
+        <div>
+          <div class="page-title">アップロード</div>
+          <div class="page-sub">スクショを2枚選ぶだけ</div>
+        </div>
+      </div>
+
+      <div class="sect-label">WHOSE SHIFT</div>
+      <div class="person-grid">
+        <div class="person-card sel-mine" id="card-mine" onclick="selectPerson('mine')">
+          <div class="pc-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="pc-name">自分</div>
+        </div>
+        <div class="person-card" id="card-hers" onclick="selectPerson('hers')">
+          <div class="pc-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="pc-name">彼女</div>
+        </div>
+      </div>
+
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept="image/*" multiple onchange="onFiles(this.files)">
+        <div class="drop-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <h3>スクショを選択</h3>
+        <p>Rシフトのスクショを2枚アップ</p>
+        <span class="drop-hint">2枚まで選択可</span>
+      </div>
+
+      <div class="preview-grid">
+        <div class="preview-card" id="prev-0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <span style="font-size:12px;color:#94a3b8">1枚目</span>
+        </div>
+        <div class="preview-card" id="prev-1">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <span style="font-size:12px;color:#94a3b8">2枚目</span>
+        </div>
+      </div>
+
+      <button class="btn-analyze" id="btn-analyze" onclick="doUpload()" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        AIでシフトを読み取る
+      </button>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-calendar" onclick="showTab('calendar')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      カレンダー
+    </button>
+    <button class="nav-btn" id="nav-upload" onclick="showTab('upload')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      アップロード
+    </button>
+  </nav>
+</div>
+
+<!-- ANALYZING OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="ring"></div>
+  <h3>AIがシフトを解析中...</h3>
+  <p>しばらくお待ちください</p>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+let selectedPerson = 'mine';
+let selectedFiles = [];
+
+// ── AUTH ──
+async function doLogin() {
+  const pw = document.getElementById('pw').value;
+  const err = document.getElementById('login-err');
+  err.textContent = '';
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    if (!r.ok) { err.textContent = 'パスワードが違います'; return; }
+    sessionStorage.setItem('auth', '1');
+    enterApp();
+  } catch {
+    err.textContent = '接続エラー';
+  }
+}
+
+document.getElementById('pw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function enterApp() {
+  document.getElementById('login').classList.remove('active');
+  document.getElementById('app').style.display = 'flex';
+  loadCalendar();
+  setupPush();
+}
+
+// Auto-login if already authenticated
+if (sessionStorage.getItem('auth')) enterApp();
+
+// ── TABS ──
+function showTab(name) {
+  ['calendar','upload'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t === name);
+    document.getElementById('nav-'+t).classList.toggle('active', t === name);
+  });
+}
+
+// ── CALENDAR ──
+async function loadCalendar() {
+  const [shifts, status] = await Promise.all([
+    fetch('/api/shifts').then(r => r.json()),
+    fetch('/api/status').then(r => r.json()),
+  ]);
+  renderCalendar(shifts, status);
+}
+
+function renderCalendar(shifts, status) {
+  // Status chip
+  const both = status.mine && status.hers;
+  const any = status.mine || status.hers;
+  const chip = document.getElementById('cal-status');
+  chip.textContent = both ? '両方確定済み' : any ? '片方登録済み' : '未登録';
+  chip.className = both ? 'chip-green' : 'chip-gray';
+
+  if (!shifts.length) {
+    document.getElementById('cal-grid').innerHTML =
+      '<div class="empty-state">シフトがまだ登録されていません。<br>アップロードタブからスクショを送ってください。</div>';
+    return;
+  }
+
+  // Group by date
+  const byDate = {};
+  for (const s of shifts) {
+    const key = `${s.year}-${String(s.month).padStart(2,'0')}-${String(s.day).padStart(2,'0')}`;
+    if (!byDate[key]) byDate[key] = {};
+    byDate[key][s.person] = s;
+  }
+
+  const keys = Object.keys(byDate).sort();
+  const firstKey = keys[0], lastKey = keys[keys.length-1];
+
+  // Period label
+  const fd = parseKey(firstKey), ld = parseKey(lastKey);
+  document.getElementById('cal-period').textContent =
+    `${fd.month}月${fd.day}日 〜 ${ld.month}月${ld.day}日`;
+  document.getElementById('cal-title').textContent = `${fd.month}月 — ${ld.month}月`;
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  for (const key of keys) {
+    const { year, month, day } = parseKey(key);
+    const date = new Date(year, month - 1, day);
+    const dow = date.getDay(); // 0=Sun
+    const dayNames = ['日','月','火','水','木','金','土'];
+    const mine = byDate[key].mine;
+    const hers = byDate[key].hers;
+
+    const bothOff = mine && hers &&
+      mine.shift_type === 'off' && hers.shift_type === 'off';
+
+    if (bothOff) {
+      const banner = document.createElement('div');
+      banner.className = 'cal-row';
+      banner.innerHTML = `<div class="both-off-banner" style="grid-column:1/-1">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        2人ともお休み
+      </div>`;
+      grid.appendChild(banner);
+    }
+
+    const row = document.createElement('div');
+    row.className = 'cal-row';
+
+    // Date cell
+    const dateClass = dow === 0 ? 'su' : dow === 6 ? 'sa' : 'wd';
+    row.innerHTML = `
+      <div class="cal-date ${bothOff ? 'gold' : dateClass}">
+        <span class="dn">${day}</span>
+        <span class="dw">${dayNames[dow]}</span>
+      </div>
+      ${shiftCell(mine, 'mine', bothOff)}
+      ${shiftCell(hers, 'hers', bothOff)}
+    `;
+    grid.appendChild(row);
+  }
+}
+
+function shiftCell(s, person, bothOff) {
+  if (!s) return '<div class="shift-cell sc-empty"></div>';
+  if (s.shift_type === 'off') {
+    const cls = bothOff ? 'sc-gold' : 'sc-off';
+    return `<div class="shift-cell ${cls}"><span>${s.label || '公休'}</span></div>`;
+  }
+  const cls = person === 'mine' ? 'sc-mine' : 'sc-hers';
+  const lbl = person === 'mine' ? '自分' : '彼女';
+  return `<div class="shift-cell ${cls}">
+    <span class="sc-lbl">${lbl}</span>
+    <span class="sc-time">${s.start_time || ''}</span>
+    <span class="sc-end">〜 ${s.end_time || ''}</span>
+  </div>`;
+}
+
+function parseKey(key) {
+  const [year, month, day] = key.split('-').map(Number);
+  return { year, month, day };
+}
+
+// ── UPLOAD ──
+function selectPerson(p) {
+  selectedPerson = p;
+  document.getElementById('card-mine').className =
+    'person-card' + (p === 'mine' ? ' sel-mine' : '');
+  document.getElementById('card-hers').className =
+    'person-card' + (p === 'hers' ? ' sel-hers' : '');
+  // Update icon colors
+  document.querySelector('#card-mine .pc-icon svg').setAttribute('stroke', p === 'mine' ? '#2563eb' : '#94a3b8');
+  document.querySelector('#card-hers .pc-icon svg').setAttribute('stroke', p === 'hers' ? '#db2777' : '#94a3b8');
+}
+
+function onFiles(files) {
+  selectedFiles = Array.from(files).slice(0, 2);
+  for (let i = 0; i < 2; i++) {
+    const card = document.getElementById('prev-' + i);
+    if (selectedFiles[i]) {
+      const url = URL.createObjectURL(selectedFiles[i]);
+      card.innerHTML = `<img src="${url}" alt="preview"><div class="pg-label">PAGE ${i+1}</div>`;
+      card.classList.add('has-img');
+    } else {
+      card.classList.remove('has-img');
+      card.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:12px;color:#94a3b8">${i+1}枚目</span>`;
+    }
+  }
+  document.getElementById('btn-analyze').disabled = selectedFiles.length === 0;
+}
+
+async function doUpload() {
+  if (!selectedFiles.length) return;
+  document.getElementById('overlay').classList.add('active');
+
+  const form = new FormData();
+  form.append('person', selectedPerson);
+  for (const f of selectedFiles) form.append('files', f);
+
+  try {
+    const r = await fetch('/api/upload', { method: 'POST', body: form });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({ detail: '不明なエラー' }));
+      throw new Error(err.detail || 'エラー');
+    }
+    const data = await r.json();
+    showToast(`${data.count}件のシフトを登録しました`);
+    // Reset
+    selectedFiles = [];
+    document.getElementById('file-input').value = '';
+    onFiles([]);
+    // Reload calendar
+    await loadCalendar();
+    showTab('calendar');
+  } catch (e) {
+    showToast(`エラー: ${e.message}`, true);
+  } finally {
+    document.getElementById('overlay').classList.remove('active');
+  }
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderLeftColor = isErr ? '#ef4444' : '#6366f1';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── PUSH NOTIFICATIONS ──
+async function setupPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    const keyRes = await fetch('/api/vapid-key');
+    const { publicKey } = await keyRes.json();
+    if (!publicKey) return;
+
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+    }
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sub),
+    });
+  } catch { /* push optional */ }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+</script>
+</body>
+</html>
