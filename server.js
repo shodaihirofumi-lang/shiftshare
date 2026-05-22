@@ -6,12 +6,13 @@ import { parseShiftImages } from './aiParser.js';
 import {
   getAllShifts, getUploadLog,
   savePushSubscription, getPushSubscriptions, saveShifts,
+  saveAvatar, getAvatars,
 } from './db.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
-app.use(express.json());
+app.use(express.json({ limit: '8mb' }));
 app.use(express.static('static'));
 
 const PASSWORD = process.env.APP_PASSWORD || '1234';
@@ -59,6 +60,20 @@ app.post('/api/upload', upload.array('files', 2), async (req, res) => {
 app.get('/api/shifts', (_req, res) => res.json(getAllShifts()));
 app.get('/api/status', (_req, res) => res.json(getUploadLog()));
 app.get('/api/vapid-key', (_req, res) => res.json({ publicKey: VAPID_PUBLIC }));
+
+// ── AVATARS ──
+app.get('/api/avatars', (_req, res) => res.json(getAvatars()));
+app.post('/api/avatar', (req, res) => {
+  const { person, image } = req.body;
+  if (!['mine', 'hers'].includes(person)) {
+    return res.status(400).json({ error: 'person は mine または hers のみ' });
+  }
+  if (typeof image !== 'string' || !image.startsWith('data:image/')) {
+    return res.status(400).json({ error: '画像データが不正です' });
+  }
+  saveAvatar(person, image);
+  res.json({ success: true });
+});
 
 // ── PUSH ──
 app.post('/api/push/subscribe', (req, res) => {

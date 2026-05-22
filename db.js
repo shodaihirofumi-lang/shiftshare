@@ -6,7 +6,7 @@ function load() {
   try {
     return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
   } catch {
-    return { shifts: [], pushSubscriptions: [], uploadLog: {} };
+    return { shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {} };
   }
 }
 
@@ -62,4 +62,15 @@ export function savePushSubscription(sub) {
 
 export function getPushSubscriptions() {
   return load().pushSubscriptions;
+}
+
+export function saveAvatar(person, dataUrl) {
+  const data = load();
+  if (!data.avatars) data.avatars = {};
+  data.avatars[person] = dataUrl;
+  save(data);
+}
+
+export function getAvatars() {
+  return load().avatars || {};
 }
