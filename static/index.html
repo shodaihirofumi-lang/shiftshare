@@ -224,8 +224,20 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 /* ── EVENT CHIPS (calendar) ── */
 .event-row { display:flex; flex-wrap:wrap; gap:6px; padding:0 2px 2px 56px; margin-top:-2px; cursor:pointer; }
 .ev-chip { display:inline-flex; align-items:center; gap:5px; background:#efe7d6; color:#8a6f43; border:1px solid var(--gold-border); border-radius:8px; padding:4px 10px; font-size:11px; font-weight:600; text-decoration:none; }
-.ev-chip.linked { background:var(--gold-bg); }
+.ev-chip.mine { background:var(--mine-bg); color:var(--mine); border-color:var(--mine-border); }
+.ev-chip.hers { background:var(--hers-bg); color:var(--hers); border-color:var(--hers-border); }
 .ev-chip .ev-time { font-weight:700; opacity:.8; }
+
+/* event person toggle */
+.ev-person-toggle { display:flex; gap:6px; margin-bottom:8px; }
+.evp-btn { flex:1; padding:8px 0; border-radius:9px; border:1.5px solid var(--line); background:var(--card); font-size:12px; font-weight:600; color:var(--text-soft); cursor:pointer; }
+.evp-btn.active[data-p=mine] { background:var(--mine-bg); color:var(--mine); border-color:var(--mine); }
+.evp-btn.active[data-p=hers] { background:var(--hers-bg); color:var(--hers); border-color:var(--hers); }
+.ev-item-who { font-size:11px; font-weight:700; padding:1px 7px; border-radius:6px; background:rgba(255,255,255,.6); }
+.ev-item.mine { background:var(--mine-bg); border-color:var(--mine-border); }
+.ev-item.mine .ev-item-who { color:var(--mine); }
+.ev-item.hers { background:var(--hers-bg); border-color:var(--hers-border); }
+.ev-item.hers .ev-item-who { color:var(--hers); }
 
 /* ── EVENTS in editor ── */
 .ed-events { margin:4px 0 18px; padding-top:16px; border-top:1px solid var(--line); }
@@ -389,6 +401,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div class="ed-events-head">予定・リンク</div>
       <div id="ed-event-list"></div>
       <div class="ev-add">
+        <div class="ev-person-toggle">
+          <button class="evp-btn active" data-p="mine" onclick="setEvPerson('mine')">ひろの予定</button>
+          <button class="evp-btn" data-p="hers" onclick="setEvPerson('hers')">ちかの予定</button>
+        </div>
         <input id="ev-title" class="ev-in" placeholder="予定（例：デート）" maxlength="100">
         <div class="ev-add-row">
           <input id="ev-time" class="ev-in" type="time">
@@ -418,6 +434,7 @@ let wages = {};
 let lastStatus = {};
 let viewYM = null;
 let editorDate = null;
+let evPerson = 'mine';
 const edTypes = { mine: 'none', hers: 'none' };
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -516,11 +533,30 @@ async function loadCalendar() {
   ]);
   allShifts = shifts; allEvents = events; lastStatus = status; wages = wagesData || {};
   if (!viewYM) {
-    if (shifts.length) { const last = shifts[shifts.length-1]; viewYM = { year:last.year, month:last.month }; }
-    else { const d = new Date(); viewYM = { year:d.getFullYear(), month:d.getMonth()+1 }; }
+    if (shifts.length) { const last = shifts[shifts.length-1]; viewYM = termOfDate(last.year, last.month, last.day); }
+    else { const d = new Date(); viewYM = termOfDate(d.getFullYear(), d.getMonth()+1, d.getDate()); }
   }
   rebuildMaps();
   renderCalendar();
+}
+// 給与サイクル（16日締め）: 「N月度」= (N-1)月16日 〜 N月15日
+function termOfDate(year, month, day) {
+  if (day >= 16) { let m = month+1, y = year; if (m>12){ m=1; y++; } return { year:y, month:m }; }
+  return { year, month };
+}
+function termRange(year, month) {
+  let sY = year, sM = month-1; if (sM < 1) { sM = 12; sY = year-1; }
+  return { startNum: sY*10000 + sM*100 + 16, endNum: year*10000 + month*100 + 15, startY:sY, startM:sM };
+}
+function cycleDays(year, month) {
+  const r = termRange(year, month);
+  const days = [];
+  const start = new Date(r.startY, r.startM-1, 16);
+  const end = new Date(year, month-1, 15);
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+    days.push({ year:d.getFullYear(), month:d.getMonth()+1, day:d.getDate() });
+  }
+  return days;
 }
 function rebuildMaps() {
   shiftsByDate = {}; eventsByDate = {};
@@ -542,16 +578,16 @@ function renderCalendar() {
   chip.className = both ? 'chip-green' : 'chip-gray';
 
   const { year, month } = viewYM;
-  document.getElementById('month-label').textContent = `${year}年 ${month}月`;
+  document.getElementById('month-label').textContent = `${year}年 ${month}月度`;
   renderIncome();
 
   const grid = document.getElementById('cal-grid');
   grid.innerHTML = '';
   const dayNames = ['日','月','火','水','木','金','土'];
-  const daysInMonth = new Date(year, month, 0).getDate();
-  for (let day=1; day<=daysInMonth; day++) {
-    const key = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const dow = new Date(year, month-1, day).getDay();
+  for (const dt of cycleDays(year, month)) {
+    const { year:yy, month:mm, day } = dt;
+    const key = `${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const dow = new Date(yy, mm-1, day).getDay();
     const sd = shiftsByDate[key] || {};
     const mine = sd.mine, hers = sd.hers;
     const evs = eventsByDate[key] || [];
@@ -576,12 +612,13 @@ function renderCalendar() {
   }
 }
 function eventChip(e) {
+  const pc = e.person==='mine' ? 'mine' : e.person==='hers' ? 'hers' : '';
   const t = e.time ? `<span class="ev-time">${escapeHtml(e.time)}</span>` : '';
   if (e.link) {
     const ln = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
-    return `<a class="ev-chip linked" href="${escapeHtml(e.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${t}${escapeHtml(e.title)} ${ln}</a>`;
+    return `<a class="ev-chip linked ${pc}" href="${escapeHtml(e.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${t}${escapeHtml(e.title)} ${ln}</a>`;
   }
-  return `<span class="ev-chip">${t}${escapeHtml(e.title)}</span>`;
+  return `<span class="ev-chip ${pc}">${t}${escapeHtml(e.title)}</span>`;
 }
 
 // ── INCOME ──
@@ -594,14 +631,18 @@ function shiftHours(s) {
   return mins / 60;
 }
 function monthIncome(person, year, month) {
+  const r = termRange(year, month);
   let hours = 0;
-  for (const s of allShifts) if (s.person===person && s.year===year && s.month===month) hours += shiftHours(s);
+  for (const s of allShifts) {
+    const n = s.year*10000 + s.month*100 + s.day;
+    if (s.person===person && n>=r.startNum && n<=r.endNum) hours += shiftHours(s);
+  }
   return { hours, income: Math.round(hours * (Number(wages[person])||0)) };
 }
 function renderIncome() {
   if (!viewYM) return;
   const { year, month } = viewYM;
-  const ml = document.getElementById('income-month'); if (ml) ml.textContent = `${month}月`;
+  const ml = document.getElementById('income-month'); if (ml) ml.textContent = `${month}月度`;
   for (const p of ['mine','hers']) {
     const { hours, income } = monthIncome(p, year, month);
     const wi = document.getElementById('wage-'+p);
@@ -633,6 +674,7 @@ function openDayEditor(key) {
     document.getElementById('ed-'+p).innerHTML = buildPersonEditor(p, s);
   }
   renderEventList(key);
+  setEvPerson('mine');
   document.getElementById('ev-title').value = '';
   document.getElementById('ev-time').value = '';
   document.getElementById('ev-link').value = '';
@@ -642,15 +684,24 @@ function renderEventList(key) {
   const evs = eventsByDate[key] || [];
   const el = document.getElementById('ed-event-list');
   if (!evs.length) { el.innerHTML = '<div class="ev-empty">まだ予定はありません</div>'; return; }
-  el.innerHTML = evs.map(e => `
-    <div class="ev-item">
+  el.innerHTML = evs.map(e => {
+    const pc = e.person==='mine' ? 'mine' : e.person==='hers' ? 'hers' : '';
+    const who = e.person ? `<span class="ev-item-who">${NAMES[e.person]}</span>` : '';
+    return `
+    <div class="ev-item ${pc}">
       <div class="ev-item-main">
+        ${who}
         ${e.time?`<span class="ev-item-time">${escapeHtml(e.time)}</span>`:''}
         <span class="ev-item-title">${escapeHtml(e.title)}</span>
         ${e.link?`<a href="${escapeHtml(e.link)}" target="_blank" rel="noopener" class="ev-item-link">リンク↗</a>`:''}
       </div>
       <button class="ev-del" onclick="deleteEventById('${e.id}')">×</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+}
+function setEvPerson(p) {
+  evPerson = p;
+  document.querySelectorAll('.evp-btn').forEach(b => b.classList.toggle('active', b.dataset.p === p));
 }
 async function addEventFromEditor() {
   const { year, month, day } = parseKey(editorDate);
@@ -660,7 +711,7 @@ async function addEventFromEditor() {
   if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
   const time = document.getElementById('ev-time').value || null;
   try {
-    await fetch('/api/event', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({year,month,day,title,time,link:link||null}) });
+    await fetch('/api/event', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({year,month,day,person:evPerson,title,time,link:link||null}) });
     document.getElementById('ev-title').value=''; document.getElementById('ev-time').value=''; document.getElementById('ev-link').value='';
     await refreshEvents();
     showToast('予定を追加しました');

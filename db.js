@@ -139,6 +139,7 @@ export async function addEvent(ev) {
   cache.events.push({
     id,
     year: ev.year, month: ev.month, day: ev.day,
+    person: ['mine', 'hers'].includes(ev.person) ? ev.person : null,
     title: String(ev.title).slice(0, 100),
     time: ev.time || null,
     link: ev.link || null,
