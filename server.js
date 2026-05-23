@@ -16,7 +16,14 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 app.use(express.json({ limit: '8mb' }));
-app.use(express.static('static'));
+app.use(express.static('static', {
+  setHeaders: (res, filePath) => {
+    // HTML（アプリ本体）は常に最新を取得させる（古いキャッシュで反映されない問題を防ぐ）
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  },
+}));
 
 const PASSWORD = process.env.APP_PASSWORD || '1234';
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || '';
