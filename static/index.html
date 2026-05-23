@@ -244,6 +244,19 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .ev-add-row #ev-time { flex:0 0 110px; }
 .ev-add-row #ev-link { flex:1; }
 .ev-add-btn { flex:0 0 auto; padding:0 16px; border-radius:10px; border:none; background:var(--text); color:var(--card); font-size:13px; font-weight:600; cursor:pointer; }
+
+/* ── INCOME CARD ── */
+.income-card { background:var(--card); border-radius:14px; padding:13px 16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
+.income-head { font-size:11px; font-weight:600; color:var(--text-soft); letter-spacing:1px; margin-bottom:8px; }
+.income-person { display:flex; align-items:center; gap:8px; padding:8px 0; }
+.income-person + .income-person { border-top:1px solid var(--line-soft); }
+.inc-name { font-size:13px; font-weight:600; }
+.wage-wrap { font-size:11px; color:var(--text-soft); display:flex; align-items:center; gap:2px; }
+.wage-in { width:62px; padding:5px 7px; border:1.5px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit; color:var(--text); background:var(--card); text-align:right; }
+.wage-in::-webkit-outer-spin-button, .wage-in::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.inc-total { margin-left:auto; text-align:right; line-height:1.2; }
+.inc-amt { display:block; font-size:16px; font-weight:700; color:var(--text); }
+.inc-hrs { display:block; font-size:11px; color:var(--text-soft); }
 </style>
 </head>
 <body>
@@ -283,6 +296,21 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="leg"><span class="leg-ava mine" id="leg-ava-mine"></span><span id="leg-name-mine">ひろ</span></div>
         <div class="leg"><span class="leg-ava hers" id="leg-ava-hers"></span><span id="leg-name-hers">ちか</span></div>
         <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div>ふたり休み</div>
+      </div>
+      <div class="income-card">
+        <div class="income-head"><span id="income-month">今月</span>の収入</div>
+        <div class="income-person">
+          <span class="leg-ava mine" id="inc-ava-mine"></span>
+          <span class="inc-name">ひろ</span>
+          <span class="wage-wrap">時給¥<input type="number" id="wage-mine" class="wage-in" inputmode="numeric" placeholder="0" onchange="saveWage('mine')"></span>
+          <span class="inc-total"><span class="inc-amt" id="income-mine">¥0</span><span class="inc-hrs" id="hours-mine">0h</span></span>
+        </div>
+        <div class="income-person">
+          <span class="leg-ava hers" id="inc-ava-hers"></span>
+          <span class="inc-name">ちか</span>
+          <span class="wage-wrap">時給¥<input type="number" id="wage-hers" class="wage-in" inputmode="numeric" placeholder="0" onchange="saveWage('hers')"></span>
+          <span class="inc-total"><span class="inc-amt" id="income-hers">¥0</span><span class="inc-hrs" id="hours-hers">0h</span></span>
+        </div>
       </div>
       <div id="cal-grid" class="cal-grid"></div>
     </div>
@@ -386,6 +414,7 @@ let shiftsByDate = {};
 let eventsByDate = {};
 let allShifts = [];
 let allEvents = [];
+let wages = {};
 let lastStatus = {};
 let viewYM = null;
 let editorDate = null;
@@ -479,12 +508,13 @@ function resizeImage(file, max) {
 
 // ── CALENDAR ──
 async function loadCalendar() {
-  const [shifts, status, events] = await Promise.all([
+  const [shifts, status, events, wagesData] = await Promise.all([
     fetch('/api/shifts').then(r=>r.json()),
     fetch('/api/status').then(r=>r.json()),
     fetch('/api/events').then(r=>r.json()).catch(()=>[]),
+    fetch('/api/wages').then(r=>r.json()).catch(()=>({})),
   ]);
-  allShifts = shifts; allEvents = events; lastStatus = status;
+  allShifts = shifts; allEvents = events; lastStatus = status; wages = wagesData || {};
   if (!viewYM) {
     if (shifts.length) { const last = shifts[shifts.length-1]; viewYM = { year:last.year, month:last.month }; }
     else { const d = new Date(); viewYM = { year:d.getFullYear(), month:d.getMonth()+1 }; }
@@ -513,6 +543,7 @@ function renderCalendar() {
 
   const { year, month } = viewYM;
   document.getElementById('month-label').textContent = `${year}年 ${month}月`;
+  renderIncome();
 
   const grid = document.getElementById('cal-grid');
   grid.innerHTML = '';
@@ -551,6 +582,42 @@ function eventChip(e) {
     return `<a class="ev-chip linked" href="${escapeHtml(e.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${t}${escapeHtml(e.title)} ${ln}</a>`;
   }
   return `<span class="ev-chip">${t}${escapeHtml(e.title)}</span>`;
+}
+
+// ── INCOME ──
+function shiftHours(s) {
+  if (!s || s.shift_type !== 'work' || !s.start_time || !s.end_time) return 0;
+  const [sh, sm] = s.start_time.split(':').map(Number);
+  const [eh, em] = s.end_time.split(':').map(Number);
+  let mins = (eh*60+em) - (sh*60+sm);
+  if (mins < 0) mins += 24*60;
+  return mins / 60;
+}
+function monthIncome(person, year, month) {
+  let hours = 0;
+  for (const s of allShifts) if (s.person===person && s.year===year && s.month===month) hours += shiftHours(s);
+  return { hours, income: Math.round(hours * (Number(wages[person])||0)) };
+}
+function renderIncome() {
+  if (!viewYM) return;
+  const { year, month } = viewYM;
+  const ml = document.getElementById('income-month'); if (ml) ml.textContent = `${month}月`;
+  for (const p of ['mine','hers']) {
+    const { hours, income } = monthIncome(p, year, month);
+    const wi = document.getElementById('wage-'+p);
+    if (wi && document.activeElement !== wi) wi.value = wages[p] || '';
+    document.getElementById('income-'+p).textContent = '¥' + income.toLocaleString();
+    document.getElementById('hours-'+p).textContent = (Math.round(hours*10)/10) + 'h';
+    const av = document.getElementById('inc-ava-'+p);
+    if (av) av.innerHTML = avatars[p] ? `<img src="${avatars[p]}" style="width:100%;height:100%;object-fit:cover">` : `<span style="width:7px;height:7px;border-radius:2px;background:var(--${p})"></span>`;
+  }
+}
+async function saveWage(person) {
+  const v = parseInt(document.getElementById('wage-'+person).value, 10);
+  wages[person] = isNaN(v) ? 0 : v;
+  renderIncome();
+  try { await fetch('/api/wage', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person, wage:wages[person]}) }); }
+  catch { showToast('時給の保存に失敗しました', true); }
 }
 
 // ── DAY EDITOR ──

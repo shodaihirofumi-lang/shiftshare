@@ -9,6 +9,7 @@ import {
   savePushSubscription, getPushSubscriptions, saveShifts,
   saveAvatar, getAvatars, upsertShift,
   getEvents, addEvent, deleteEvent,
+  getWages, saveWage,
 } from './db.js';
 
 const app = express();
@@ -91,6 +92,17 @@ app.post('/api/event', async (req, res) => {
 });
 app.post('/api/event/delete', async (req, res) => {
   await deleteEvent(req.body.id);
+  res.json({ success: true });
+});
+
+// ── WAGES（時給）──
+app.get('/api/wages', (_req, res) => res.json(getWages()));
+app.post('/api/wage', async (req, res) => {
+  const { person, wage } = req.body;
+  if (!['mine', 'hers'].includes(person)) {
+    return res.status(400).json({ error: 'person は mine または hers のみ' });
+  }
+  await saveWage(person, wage);
   res.json({ success: true });
 });
 

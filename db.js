@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {} });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -150,5 +150,16 @@ export async function addEvent(ev) {
 export async function deleteEvent(id) {
   if (!cache.events) return;
   cache.events = cache.events.filter(e => e.id !== id);
+  await persist();
+}
+
+// ── WAGES（時給。1人ぶん）──
+export function getWages() {
+  return cache.wages || {};
+}
+
+export async function saveWage(person, wage) {
+  if (!cache.wages) cache.wages = {};
+  cache.wages[person] = Number(wage) || 0;
   await persist();
 }
