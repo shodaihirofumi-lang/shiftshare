@@ -282,9 +282,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .loc-pin { flex-shrink:0; color:var(--text-soft); }
 .loc-in { width:104px; padding:5px 8px; border:1.5px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit; color:var(--text); background:var(--card); }
 .wage-in::-webkit-outer-spin-button, .wage-in::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
-.inc-total { margin-left:auto; text-align:right; line-height:1.2; }
-.inc-amt { display:block; font-size:16px; font-weight:700; color:var(--text); }
-.inc-hrs { display:block; font-size:11px; color:var(--text-soft); }
+.inc-total { margin-left:auto; text-align:right; line-height:1.25; }
+.inc-amt { display:block; font-size:17px; font-weight:700; color:var(--text); }
+.inc-hrs { display:block; font-size:14px; font-weight:700; color:var(--text-soft); margin-top:2px; }
 </style>
 </head>
 <body>
@@ -662,12 +662,14 @@ function eventChip(e) {
 }
 
 // ── INCOME ──
+const BREAK_MIN = 60; // 1日の勤務につき休憩1時間は労働時間に含めない
 function shiftHours(s) {
   if (!s || s.shift_type !== 'work' || !s.start_time || !s.end_time) return 0;
   const [sh, sm] = s.start_time.split(':').map(Number);
   const [eh, em] = s.end_time.split(':').map(Number);
   let mins = (eh*60+em) - (sh*60+sm);
   if (mins < 0) mins += 24*60;
+  mins = Math.max(0, mins - BREAK_MIN);
   return mins / 60;
 }
 function monthIncome(person, year, month) {
@@ -690,7 +692,7 @@ function renderIncome() {
     const li = document.getElementById('loc-'+p);
     if (li && document.activeElement !== li) li.value = locations[p] || '';
     document.getElementById('income-'+p).textContent = '¥' + income.toLocaleString();
-    document.getElementById('hours-'+p).textContent = (Math.round(hours*10)/10) + 'h';
+    document.getElementById('hours-'+p).textContent = '労働 ' + (Math.round(hours*10)/10) + 'h';
     const av = document.getElementById('inc-ava-'+p);
     if (av) av.innerHTML = avatars[p] ? `<img src="${avatars[p]}" style="width:100%;height:100%;object-fit:cover">` : `<span style="width:7px;height:7px;border-radius:2px;background:var(--${p})"></span>`;
   }
