@@ -10,6 +10,7 @@ import {
   saveAvatar, getAvatars, upsertShift,
   getEvents, addEvent, deleteEvent,
   getWages, saveWage,
+  getLocations, saveLocation,
 } from './db.js';
 
 const app = express();
@@ -110,6 +111,17 @@ app.post('/api/wage', async (req, res) => {
     return res.status(400).json({ error: 'person は mine または hers のみ' });
   }
   await saveWage(person, wage);
+  res.json({ success: true });
+});
+
+// ── LOCATIONS（居住地・天気用）──
+app.get('/api/locations', (_req, res) => res.json(getLocations()));
+app.post('/api/location', async (req, res) => {
+  const { person, location } = req.body;
+  if (!['mine', 'hers'].includes(person)) {
+    return res.status(400).json({ error: 'person は mine または hers のみ' });
+  }
+  await saveLocation(person, location);
   res.json({ success: true });
 });
 

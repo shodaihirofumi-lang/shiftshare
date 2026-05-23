@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {} });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {} });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -162,5 +162,16 @@ export function getWages() {
 export async function saveWage(person, wage) {
   if (!cache.wages) cache.wages = {};
   cache.wages[person] = Number(wage) || 0;
+  await persist();
+}
+
+// ── LOCATIONS（居住地。天気表示用）──
+export function getLocations() {
+  return cache.locations || {};
+}
+
+export async function saveLocation(person, location) {
+  if (!cache.locations) cache.locations = {};
+  cache.locations[person] = String(location || '').slice(0, 60);
   await persist();
 }

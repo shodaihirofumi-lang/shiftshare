@@ -109,7 +109,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .cal-date.sa { background:#e9ecef; color:#6a7384; }
 .cal-date.gold { background:var(--gold-bg); color:var(--gold); border:1.5px solid var(--gold-border); }
 
-.shift-cell { border-radius:14px; padding:10px 12px; display:flex; flex-direction:column; justify-content:center; min-height:56px; background:var(--card); }
+.shift-cell { border-radius:14px; padding:10px 12px; display:flex; flex-direction:column; justify-content:center; min-height:56px; background:var(--card); position:relative; }
+.wx-badge { position:absolute; top:5px; right:7px; display:flex; align-items:center; gap:1px; }
+.wx-temp { font-size:10px; font-weight:700; color:var(--text-soft); }
 .sc-lbl { font-size:10px; font-weight:600; letter-spacing:.5px; margin-bottom:3px; display:flex; align-items:center; gap:5px; }
 .sc-ava { width:16px; height:16px; border-radius:50%; object-fit:cover; flex-shrink:0; }
 .sc-time { font-size:14px; font-weight:700; }
@@ -260,11 +262,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 /* ── INCOME CARD ── */
 .income-card { background:var(--card); border-radius:14px; padding:13px 16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
 .income-head { font-size:11px; font-weight:600; color:var(--text-soft); letter-spacing:1px; margin-bottom:8px; }
-.income-person { display:flex; align-items:center; gap:8px; padding:8px 0; }
+.income-person { display:flex; align-items:center; gap:10px; padding:10px 0; }
 .income-person + .income-person { border-top:1px solid var(--line-soft); }
+.inc-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
 .inc-name { font-size:13px; font-weight:600; }
+.inc-fields { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .wage-wrap { font-size:11px; color:var(--text-soft); display:flex; align-items:center; gap:2px; }
-.wage-in { width:62px; padding:5px 7px; border:1.5px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit; color:var(--text); background:var(--card); text-align:right; }
+.wage-in { width:58px; padding:5px 7px; border:1.5px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit; color:var(--text); background:var(--card); text-align:right; }
+.loc-wrap { font-size:11px; color:var(--text-soft); display:flex; align-items:center; gap:3px; }
+.loc-pin { flex-shrink:0; color:var(--text-soft); }
+.loc-in { width:104px; padding:5px 8px; border:1.5px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit; color:var(--text); background:var(--card); }
 .wage-in::-webkit-outer-spin-button, .wage-in::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 .inc-total { margin-left:auto; text-align:right; line-height:1.2; }
 .inc-amt { display:block; font-size:16px; font-weight:700; color:var(--text); }
@@ -310,17 +317,27 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div>ふたり休み</div>
       </div>
       <div class="income-card">
-        <div class="income-head"><span id="income-month">今月</span>の収入</div>
+        <div class="income-head"><span id="income-month">今月</span>の収入・天気</div>
         <div class="income-person">
           <span class="leg-ava mine" id="inc-ava-mine"></span>
-          <span class="inc-name">ひろ</span>
-          <span class="wage-wrap">時給¥<input type="number" id="wage-mine" class="wage-in" inputmode="numeric" placeholder="0" onchange="saveWage('mine')"></span>
+          <div class="inc-info">
+            <span class="inc-name">ひろ</span>
+            <div class="inc-fields">
+              <span class="wage-wrap">時給¥<input type="number" id="wage-mine" class="wage-in" inputmode="numeric" placeholder="0" onchange="saveWage('mine')"></span>
+              <span class="loc-wrap"><svg class="loc-pin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><input id="loc-mine" class="loc-in" placeholder="地域(例:東京)" onchange="saveLocation('mine')"></span>
+            </div>
+          </div>
           <span class="inc-total"><span class="inc-amt" id="income-mine">¥0</span><span class="inc-hrs" id="hours-mine">0h</span></span>
         </div>
         <div class="income-person">
           <span class="leg-ava hers" id="inc-ava-hers"></span>
-          <span class="inc-name">ちか</span>
-          <span class="wage-wrap">時給¥<input type="number" id="wage-hers" class="wage-in" inputmode="numeric" placeholder="0" onchange="saveWage('hers')"></span>
+          <div class="inc-info">
+            <span class="inc-name">ちか</span>
+            <div class="inc-fields">
+              <span class="wage-wrap">時給¥<input type="number" id="wage-hers" class="wage-in" inputmode="numeric" placeholder="0" onchange="saveWage('hers')"></span>
+              <span class="loc-wrap"><svg class="loc-pin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><input id="loc-hers" class="loc-in" placeholder="地域(例:大阪)" onchange="saveLocation('hers')"></span>
+            </div>
+          </div>
           <span class="inc-total"><span class="inc-amt" id="income-hers">¥0</span><span class="inc-hrs" id="hours-hers">0h</span></span>
         </div>
       </div>
@@ -431,6 +448,8 @@ let eventsByDate = {};
 let allShifts = [];
 let allEvents = [];
 let wages = {};
+let locations = {};
+let weather = { mine: {}, hers: {} };
 let lastStatus = {};
 let viewYM = null;
 let editorDate = null;
@@ -452,11 +471,12 @@ async function doLogin() {
 }
 document.getElementById('pw').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
 
-function enterApp() {
+async function enterApp() {
   document.getElementById('login').classList.remove('active');
   document.getElementById('app').style.display = 'flex';
   loadAvatars();
-  loadCalendar();
+  await loadCalendar();
+  loadWeather();
   setupPush();
 }
 if (sessionStorage.getItem('auth')) enterApp();
@@ -525,13 +545,14 @@ function resizeImage(file, max) {
 
 // ── CALENDAR ──
 async function loadCalendar() {
-  const [shifts, status, events, wagesData] = await Promise.all([
+  const [shifts, status, events, wagesData, locData] = await Promise.all([
     fetch('/api/shifts').then(r=>r.json()),
     fetch('/api/status').then(r=>r.json()),
     fetch('/api/events').then(r=>r.json()).catch(()=>[]),
     fetch('/api/wages').then(r=>r.json()).catch(()=>({})),
+    fetch('/api/locations').then(r=>r.json()).catch(()=>({})),
   ]);
-  allShifts = shifts; allEvents = events; lastStatus = status; wages = wagesData || {};
+  allShifts = shifts; allEvents = events; lastStatus = status; wages = wagesData || {}; locations = locData || {};
   if (!viewYM) {
     if (shifts.length) { const last = shifts[shifts.length-1]; viewYM = termOfDate(last.year, last.month, last.day); }
     else { const d = new Date(); viewYM = termOfDate(d.getFullYear(), d.getMonth()+1, d.getDate()); }
@@ -599,7 +620,7 @@ function renderCalendar() {
     }
     const row = document.createElement('div'); row.className = 'cal-row';
     const dc = dow===0 ? 'su' : dow===6 ? 'sa' : 'wd';
-    row.innerHTML = `<div class="cal-date ${bothOff?'gold':dc}"><span class="dn">${day}</span><span class="dw">${dayNames[dow]}</span></div>${shiftCell(mine,'mine',bothOff)}${shiftCell(hers,'hers',bothOff)}`;
+    row.innerHTML = `<div class="cal-date ${bothOff?'gold':dc}"><span class="dn">${day}</span><span class="dw">${dayNames[dow]}</span></div>${shiftCell(mine,'mine',bothOff,weather.mine?.[key])}${shiftCell(hers,'hers',bothOff,weather.hers?.[key])}`;
     row.style.cursor = 'pointer';
     row.addEventListener('click', () => openDayEditor(key));
     grid.appendChild(row);
@@ -647,6 +668,8 @@ function renderIncome() {
     const { hours, income } = monthIncome(p, year, month);
     const wi = document.getElementById('wage-'+p);
     if (wi && document.activeElement !== wi) wi.value = wages[p] || '';
+    const li = document.getElementById('loc-'+p);
+    if (li && document.activeElement !== li) li.value = locations[p] || '';
     document.getElementById('income-'+p).textContent = '¥' + income.toLocaleString();
     document.getElementById('hours-'+p).textContent = (Math.round(hours*10)/10) + 'h';
     const av = document.getElementById('inc-ava-'+p);
@@ -659,6 +682,56 @@ async function saveWage(person) {
   renderIncome();
   try { await fetch('/api/wage', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person, wage:wages[person]}) }); }
   catch { showToast('時給の保存に失敗しました', true); }
+}
+
+// ── WEATHER（Open-Meteo・APIキー不要）──
+const WX_SVG = {
+  sun: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d99a2b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  cloud: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a99a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>',
+  rain: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4a90c2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="16" y1="19" x2="16" y2="21"/><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/></svg>',
+  snow: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7fb0d0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="21" x2="8.01" y2="21"/><line x1="12" y1="22" x2="12.01" y2="22"/><line x1="16" y1="21" x2="16.01" y2="21"/></svg>',
+  thunder: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c79a3b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"/><polyline points="13 11 9 17 15 17 11 23"/></svg>',
+};
+function weatherIcon(code) {
+  if (code===0 || code===1 || code===2) return WX_SVG.sun;
+  if (code===3 || code===45 || code===48) return WX_SVG.cloud;
+  if ((code>=71 && code<=77) || code===85 || code===86) return WX_SVG.snow;
+  if (code>=95) return WX_SVG.thunder;
+  if ((code>=51 && code<=67) || (code>=80 && code<=82)) return WX_SVG.rain;
+  return WX_SVG.cloud;
+}
+// Open-Meteoの地名検索は主要な日本語地名(東京/大阪等)に弱いので英名へ変換
+const JP_CITY = {
+  '北海道':'Sapporo','札幌':'Sapporo','青森':'Aomori','岩手':'Morioka','盛岡':'Morioka','宮城':'Sendai','仙台':'Sendai','秋田':'Akita','山形':'Yamagata','福島':'Fukushima','茨城':'Mito','水戸':'Mito','栃木':'Utsunomiya','宇都宮':'Utsunomiya','群馬':'Maebashi','前橋':'Maebashi','埼玉':'Saitama','さいたま':'Saitama','千葉':'Chiba','東京':'Tokyo','神奈川':'Yokohama','横浜':'Yokohama','川崎':'Kawasaki','新潟':'Niigata','富山':'Toyama','石川':'Kanazawa','金沢':'Kanazawa','福井':'Fukui','山梨':'Kofu','甲府':'Kofu','長野':'Nagano','岐阜':'Gifu','静岡':'Shizuoka','浜松':'Hamamatsu','愛知':'Nagoya','名古屋':'Nagoya','三重':'Tsu','滋賀':'Otsu','大津':'Otsu','京都':'Kyoto','京都府':'Kyoto','京都市':'Kyoto','大阪':'Osaka','堺':'Sakai','兵庫':'Kobe','神戸':'Kobe','奈良':'Nara','和歌山':'Wakayama','鳥取':'Tottori','島根':'Matsue','松江':'Matsue','岡山':'Okayama','広島':'Hiroshima','山口':'Yamaguchi','徳島':'Tokushima','香川':'Takamatsu','高松':'Takamatsu','愛媛':'Matsuyama','松山':'Matsuyama','高知':'Kochi','福岡':'Fukuoka','北九州':'Kitakyushu','佐賀':'Saga','長崎':'Nagasaki','熊本':'Kumamoto','大分':'Oita','宮崎':'Miyazaki','鹿児島':'Kagoshima','沖縄':'Naha','那覇':'Naha'
+};
+function resolvePlace(input) {
+  const s = input.trim();
+  if (JP_CITY[s]) return JP_CITY[s];
+  const core = s.replace(/[都道府県市区町村]+$/, '');
+  if (JP_CITY[core]) return JP_CITY[core];
+  return s;
+}
+async function loadWeather() {
+  for (const p of ['mine','hers']) {
+    const loc = (locations[p] || '').trim();
+    if (!loc) { weather[p] = {}; continue; }
+    try {
+      const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(resolvePlace(loc))}&count=1&language=ja&format=json`).then(r=>r.json());
+      const g = geo.results && geo.results[0];
+      if (!g) { weather[p] = {}; continue; }
+      const fc = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.latitude}&longitude=${g.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&past_days=14&forecast_days=16`).then(r=>r.json());
+      const map = {}; const t = fc.daily?.time || [];
+      for (let i=0;i<t.length;i++) map[t[i]] = { code: fc.daily.weather_code[i], tmax: Math.round(fc.daily.temperature_2m_max[i]) };
+      weather[p] = map;
+    } catch { weather[p] = {}; }
+  }
+  renderCalendar();
+}
+async function saveLocation(person) {
+  locations[person] = document.getElementById('loc-'+person).value.trim();
+  try { await fetch('/api/location', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person, location:locations[person]}) }); }
+  catch { showToast('地域の保存に失敗しました', true); }
+  loadWeather();
 }
 
 // ── DAY EDITOR ──
@@ -791,13 +864,14 @@ async function saveEditor() {
     await loadCalendar();
   } catch (e) { showToast(`保存に失敗: ${e.message}`, true); }
 }
-function shiftCell(s, person, bothOff) {
-  if (!s) return '<div class="shift-cell sc-empty"></div>';
+function shiftCell(s, person, bothOff, wx) {
+  const badge = wx ? `<span class="wx-badge">${weatherIcon(wx.code)}<span class="wx-temp">${wx.tmax}°</span></span>` : '';
+  if (!s) return `<div class="shift-cell sc-empty">${badge}</div>`;
   if (s.shift_type === 'off') {
-    return `<div class="shift-cell ${bothOff?'sc-gold':'sc-off'}"><span>${s.label||'公休'}</span></div>`;
+    return `<div class="shift-cell ${bothOff?'sc-gold':'sc-off'}">${badge}<span>${s.label||'公休'}</span></div>`;
   }
   const ava = avatars[person] ? `<img class="sc-ava" src="${avatars[person]}">` : '';
-  return `<div class="shift-cell ${person==='mine'?'sc-mine':'sc-hers'}"><span class="sc-lbl">${ava}${NAMES[person]}</span><span class="sc-time">${s.start_time||''}</span><span class="sc-end">〜 ${s.end_time||''}</span></div>`;
+  return `<div class="shift-cell ${person==='mine'?'sc-mine':'sc-hers'}">${badge}<span class="sc-lbl">${ava}${NAMES[person]}</span><span class="sc-time">${s.start_time||''}</span><span class="sc-end">〜 ${s.end_time||''}</span></div>`;
 }
 function parseKey(k) { const [year,month,day]=k.split('-').map(Number); return {year,month,day}; }
 
