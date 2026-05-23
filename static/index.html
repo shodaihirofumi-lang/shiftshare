@@ -416,7 +416,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeEditor()">閉じる</button>
-      <button class="btn-save" onclick="saveEditor()">シフトを保存</button>
+      <button class="btn-save" onclick="saveEditor()">保存</button>
     </div>
   </div>
 </div>
@@ -711,11 +711,12 @@ async function addEventFromEditor() {
   if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
   const time = document.getElementById('ev-time').value || null;
   try {
-    await fetch('/api/event', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({year,month,day,person:evPerson,title,time,link:link||null}) });
+    const r = await fetch('/api/event', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({year,month,day,person:evPerson,title,time,link:link||null}) });
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || `保存エラー(${r.status})`); }
     document.getElementById('ev-title').value=''; document.getElementById('ev-time').value=''; document.getElementById('ev-link').value='';
     await refreshEvents();
     showToast('予定を追加しました');
-  } catch { showToast('予定の追加に失敗しました', true); }
+  } catch (e) { showToast(`予定の追加に失敗: ${e.message}`, true); }
 }
 async function deleteEventById(id) {
   try {
@@ -776,10 +777,19 @@ async function saveEditor() {
       }
       await fetch('/api/shift', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     }
+    // 予定欄に書きかけがあれば、それも一緒に保存（「追加」を押し忘れても保存される）
+    const pendingTitle = document.getElementById('ev-title').value.trim();
+    if (pendingTitle) {
+      let link = document.getElementById('ev-link').value.trim();
+      if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+      const time = document.getElementById('ev-time').value || null;
+      const r = await fetch('/api/event', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({year,month,day,person:evPerson,title:pendingTitle,time,link:link||null}) });
+      if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || `予定の保存エラー(${r.status})`); }
+    }
     closeEditor();
-    showToast('シフトを更新しました');
+    showToast('保存しました');
     await loadCalendar();
-  } catch { showToast('更新に失敗しました', true); }
+  } catch (e) { showToast(`保存に失敗: ${e.message}`, true); }
 }
 function shiftCell(s, person, bothOff) {
   if (!s) return '<div class="shift-cell sc-empty"></div>';
