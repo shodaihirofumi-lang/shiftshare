@@ -7,7 +7,7 @@ import {
   initDb,
   getAllShifts, getUploadLog,
   savePushSubscription, getPushSubscriptions, saveShifts,
-  saveAvatar, getAvatars,
+  saveAvatar, getAvatars, upsertShift,
 } from './db.js';
 
 const app = express();
@@ -61,6 +61,19 @@ app.post('/api/upload', upload.array('files', 2), async (req, res) => {
 app.get('/api/shifts', (_req, res) => res.json(getAllShifts()));
 app.get('/api/status', (_req, res) => res.json(getUploadLog()));
 app.get('/api/vapid-key', (_req, res) => res.json({ publicKey: VAPID_PUBLIC }));
+
+// ── EDIT one day's shift manually ──
+app.post('/api/shift', async (req, res) => {
+  const { person, year, month, day } = req.body;
+  if (!['mine', 'hers'].includes(person)) {
+    return res.status(400).json({ error: 'person は mine または hers のみ' });
+  }
+  if (![year, month, day].every(Number.isInteger)) {
+    return res.status(400).json({ error: '日付が不正です' });
+  }
+  await upsertShift(req.body);
+  res.json({ success: true });
+});
 
 // ── AVATARS ──
 app.get('/api/avatars', (_req, res) => res.json(getAvatars()));

@@ -191,6 +191,29 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .toast.show { opacity:1; top:24px; }
 
 .empty-state { text-align:center; padding:60px 20px; font-size:13px; color:var(--text-soft); line-height:1.9; }
+
+/* ── DAY EDITOR MODAL ── */
+.modal-bg { position:fixed; inset:0; background:rgba(60,55,50,.45); backdrop-filter:blur(4px); display:none; align-items:flex-end; justify-content:center; z-index:250; }
+.modal-bg.active { display:flex; }
+.modal { background:var(--card); border-radius:24px 24px 0 0; width:100%; max-width:480px; padding:24px 20px calc(28px + env(safe-area-inset-bottom)); max-height:88vh; overflow-y:auto; animation:slideUp .25s ease; }
+@keyframes slideUp { from { transform:translateY(40px); opacity:.6; } to { transform:translateY(0); opacity:1; } }
+@media(min-width:520px){ .modal-bg{align-items:center} .modal{border-radius:24px} }
+.modal-title { font-size:19px; font-weight:600; }
+.modal-sub { font-size:12px; color:var(--text-soft); margin:4px 0 20px; }
+.edit-person { margin-bottom:14px; padding:16px; border-radius:16px; border:1.5px solid var(--line); }
+.edit-person.mine { background:var(--mine-bg); border-color:var(--mine-border); }
+.edit-person.hers { background:var(--hers-bg); border-color:var(--hers-border); }
+.edit-name { font-size:14px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.type-toggle { display:flex; gap:6px; margin-bottom:12px; }
+.type-btn { flex:1; padding:9px 0; border-radius:10px; border:1.5px solid var(--line); background:var(--card); font-size:12px; font-weight:600; color:var(--text-soft); cursor:pointer; }
+.type-btn.active { background:var(--text); color:var(--card); border-color:var(--text); }
+.time-row { display:flex; gap:10px; align-items:center; }
+.time-row input[type=time] { flex:1; padding:11px; border-radius:10px; border:1.5px solid var(--line); font-size:16px; background:var(--card); color:var(--text); font-family:inherit; }
+.time-sep { color:var(--text-soft); }
+.label-select { width:100%; padding:11px; border-radius:10px; border:1.5px solid var(--line); font-size:15px; background:var(--card); color:var(--text); font-family:inherit; }
+.modal-actions { display:flex; gap:10px; margin-top:10px; }
+.btn-cancel { flex:1; padding:14px; border-radius:13px; border:1.5px solid var(--line); background:var(--card); color:var(--text-soft); font-size:14px; font-weight:600; cursor:pointer; }
+.btn-save { flex:2; padding:14px; border-radius:13px; border:none; background:var(--grad); color:#fbf9f5; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 6px 18px rgba(74,70,85,.22); }
 </style>
 </head>
 <body>
@@ -296,11 +319,28 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 <div class="overlay" id="overlay"><div class="ring"></div><h3>AIがシフトを解析中…</h3><p>しばらくお待ちください</p></div>
 <div class="toast" id="toast"></div>
 
+<!-- DAY EDITOR MODAL -->
+<div class="modal-bg" id="day-editor" onclick="if(event.target===this)closeEditor()">
+  <div class="modal">
+    <div class="modal-title" id="ed-title">編集</div>
+    <div class="modal-sub">時間や種類をタップで編集できます</div>
+    <div class="edit-person mine" id="ed-mine"></div>
+    <div class="edit-person hers" id="ed-hers"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditor()">キャンセル</button>
+      <button class="btn-save" onclick="saveEditor()">保存</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const NAMES = { mine: 'ひろ', hers: 'ちか' };
 let selectedPerson = 'mine';
 let selectedFiles = [];
 let avatars = {};
+let shiftsByDate = {};
+let editorDate = null;
+const edTypes = { mine: 'none', hers: 'none' };
 
 // ── AUTH ──
 async function doLogin() {
@@ -410,6 +450,7 @@ function renderCalendar(shifts, status) {
     const key = `${s.year}-${String(s.month).padStart(2,'0')}-${String(s.day).padStart(2,'0')}`;
     (byDate[key] ||= {})[s.person] = s;
   }
+  shiftsByDate = byDate;
   const keys = Object.keys(byDate).sort();
   const fd = parseKey(keys[0]), ld = parseKey(keys[keys.length-1]);
   document.getElementById('cal-period').textContent = `${fd.month}月${fd.day}日 〜 ${ld.month}月${ld.day}日`;
@@ -431,8 +472,77 @@ function renderCalendar(shifts, status) {
     const row = document.createElement('div'); row.className = 'cal-row';
     const dc = dow===0 ? 'su' : dow===6 ? 'sa' : 'wd';
     row.innerHTML = `<div class="cal-date ${bothOff?'gold':dc}"><span class="dn">${day}</span><span class="dw">${dayNames[dow]}</span></div>${shiftCell(mine,'mine',bothOff)}${shiftCell(hers,'hers',bothOff)}`;
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', () => openDayEditor(key));
     grid.appendChild(row);
   }
+}
+
+// ── DAY EDITOR ──
+function openDayEditor(key) {
+  editorDate = key;
+  const { year, month, day } = parseKey(key);
+  const dow = ['日','月','火','水','木','金','土'][new Date(year, month-1, day).getDay()];
+  document.getElementById('ed-title').textContent = `${month}月${day}日（${dow}）`;
+  const data = shiftsByDate[key] || {};
+  for (const p of ['mine','hers']) {
+    const s = data[p];
+    edTypes[p] = s ? (s.shift_type === 'off' ? 'off' : 'work') : 'none';
+    document.getElementById('ed-'+p).innerHTML = buildPersonEditor(p, s);
+  }
+  document.getElementById('day-editor').classList.add('active');
+}
+function buildPersonEditor(person, s) {
+  const t = edTypes[person];
+  const start = s?.start_time || '';
+  const end = s?.end_time || '';
+  const label = s?.label || '公休';
+  const ava = avatars[person] ? `<img class="sc-ava" src="${avatars[person]}">` : '';
+  const opt = v => `<option ${label===v?'selected':''}>${v}</option>`;
+  return `
+    <div class="edit-name">${ava}${NAMES[person]}</div>
+    <div class="type-toggle" data-person="${person}">
+      <button class="type-btn ${t==='work'?'active':''}" onclick="setType('${person}','work')">仕事</button>
+      <button class="type-btn ${t==='off'?'active':''}" onclick="setType('${person}','off')">休み</button>
+      <button class="type-btn ${t==='none'?'active':''}" onclick="setType('${person}','none')">なし</button>
+    </div>
+    <div id="edwork-${person}" style="display:${t==='work'?'block':'none'}">
+      <div class="time-row">
+        <input type="time" id="edstart-${person}" value="${start}">
+        <span class="time-sep">〜</span>
+        <input type="time" id="edend-${person}" value="${end}">
+      </div>
+    </div>
+    <div id="edoff-${person}" style="display:${t==='off'?'block':'none'}">
+      <select class="label-select" id="edlabel-${person}">${opt('公休')}${opt('有休')}${opt('希望休')}</select>
+    </div>`;
+}
+function setType(person, type) {
+  edTypes[person] = type;
+  const tg = document.querySelector(`.type-toggle[data-person="${person}"]`);
+  [...tg.children].forEach((b,i) => b.classList.toggle('active', i === {work:0,off:1,none:2}[type]));
+  document.getElementById('edwork-'+person).style.display = type==='work' ? 'block' : 'none';
+  document.getElementById('edoff-'+person).style.display = type==='off' ? 'block' : 'none';
+}
+function closeEditor() { document.getElementById('day-editor').classList.remove('active'); }
+async function saveEditor() {
+  const { year, month, day } = parseKey(editorDate);
+  try {
+    for (const person of ['mine','hers']) {
+      const t = edTypes[person];
+      const body = { person, year, month, day, shift_type: t };
+      if (t === 'work') {
+        body.start_time = document.getElementById('edstart-'+person).value || null;
+        body.end_time = document.getElementById('edend-'+person).value || null;
+      } else if (t === 'off') {
+        body.label = document.getElementById('edlabel-'+person).value;
+      }
+      await fetch('/api/shift', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    }
+    closeEditor();
+    showToast('シフトを更新しました');
+    await loadCalendar();
+  } catch { showToast('更新に失敗しました', true); }
 }
 function shiftCell(s, person, bothOff) {
   if (!s) return '<div class="shift-cell sc-empty"></div>';

@@ -83,6 +83,29 @@ export function getUploadLog() {
   return cache.uploadLog;
 }
 
+// 1日・1人ぶんのシフトを手動で上書き（shift_type が 'none' なら削除）
+export async function upsertShift(s) {
+  const { person, year, month, day } = s;
+  cache.shifts = cache.shifts.filter(
+    x => !(x.person === person && x.year === year && x.month === month && x.day === day)
+  );
+  if (s.shift_type && s.shift_type !== 'none') {
+    cache.shifts.push({
+      year, month, day, person,
+      shift_type: s.shift_type,
+      start_time: s.start_time || null,
+      end_time: s.end_time || null,
+      label: s.label || null,
+    });
+  }
+  cache.shifts.sort((a, b) => {
+    const an = a.year * 10000 + a.month * 100 + a.day;
+    const bn = b.year * 10000 + b.month * 100 + b.day;
+    return an !== bn ? an - bn : a.person.localeCompare(b.person);
+  });
+  await persist();
+}
+
 export async function savePushSubscription(sub) {
   const json = JSON.stringify(sub);
   if (!cache.pushSubscriptions.some(s => JSON.stringify(s) === json)) {
