@@ -108,20 +108,29 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .cal-date.su { background:#f0e6e3; color:#a36a64; }
 .cal-date.sa { background:#e9ecef; color:#6a7384; }
 .cal-date.gold { background:var(--gold-bg); color:var(--gold); border:1.5px solid var(--gold-border); }
+.cal-date.today { background:var(--grad); color:#fbf9f5; box-shadow:0 0 0 3px rgba(86,110,120,.3); }
+.today-tag { font-size:8px; font-weight:700; margin-top:3px; background:rgba(255,255,255,.28); padding:1px 5px; border-radius:5px; letter-spacing:.5px; }
+.today-row .shift-cell { box-shadow:0 0 0 1.5px rgba(86,110,120,.22); }
+.today-line { font-size:12px; color:var(--mine); font-weight:700; margin-top:4px; }
 
-.shift-cell { border-radius:14px; padding:10px 12px; display:flex; flex-direction:column; justify-content:center; min-height:56px; background:var(--card); position:relative; }
-.wx-badge { position:absolute; top:5px; right:7px; display:flex; align-items:center; gap:1px; }
-.wx-temp { font-size:10px; font-weight:700; color:var(--text-soft); }
+.shift-cell { border-radius:14px; padding:8px 11px; display:flex; flex-direction:column; justify-content:flex-start; min-height:64px; background:var(--card); }
+.sc-head { display:flex; justify-content:space-between; align-items:center; width:100%; gap:4px; min-height:20px; }
+.wx { display:flex; align-items:center; gap:3px; }
+.wx > svg { width:19px; height:19px; flex-shrink:0; }
+.wx-temp { font-size:14px; font-weight:700; color:var(--text); }
+.wx-pop { display:flex; align-items:center; gap:1px; font-size:13px; font-weight:700; color:#3a82bd; }
+.wx-drop { flex-shrink:0; }
 .sc-lbl { font-size:10px; font-weight:600; letter-spacing:.5px; margin-bottom:3px; display:flex; align-items:center; gap:5px; }
 .sc-ava { width:16px; height:16px; border-radius:50%; object-fit:cover; flex-shrink:0; }
 .sc-time { font-size:14px; font-weight:700; }
 .sc-end { font-size:11px; opacity:.6; }
 .sc-mine { background:var(--mine-bg); border:1.5px solid var(--mine-border); color:var(--mine); }
 .sc-hers { background:var(--hers-bg); border:1.5px solid var(--hers-border); color:var(--hers); }
-.sc-off { background:#f3efe7; border:1.5px solid var(--line); color:#a89e90; font-size:12px; font-weight:600; text-align:center; align-items:center; }
-.sc-off span { background:#eae3d7; padding:3px 10px; border-radius:6px; font-size:11px; }
-.sc-gold { background:var(--gold-bg); border:1.5px solid var(--gold-border); color:var(--gold); font-size:12px; font-weight:600; text-align:center; align-items:center; }
-.sc-gold span { background:#e9dcc1; padding:3px 10px; border-radius:6px; font-size:11px; }
+.sc-off { background:#f3efe7; border:1.5px solid var(--line); color:#a89e90; }
+.sc-gold { background:var(--gold-bg); border:1.5px solid var(--gold-border); color:var(--gold); }
+.off-badge { margin:auto; padding:4px 13px; border-radius:7px; font-size:13px; font-weight:700; }
+.sc-off .off-badge { background:#eae3d7; }
+.sc-gold .off-badge { background:#e9dcc1; }
 .sc-empty { background:transparent; border:1.5px dashed var(--line); }
 
 .both-off-banner {
@@ -303,7 +312,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <!-- CALENDAR -->
     <div id="tab-calendar" class="screen active">
       <div class="page-top">
-        <div><div class="page-title">カレンダー</div></div>
+        <div><div class="page-title">カレンダー</div><div class="today-line" id="today-line"></div></div>
         <div id="cal-status" class="chip-gray">未登録</div>
       </div>
       <div class="month-nav">
@@ -476,8 +485,13 @@ async function enterApp() {
   document.getElementById('app').style.display = 'flex';
   loadAvatars();
   await loadCalendar();
+  setTimeout(scrollToToday, 100);
   loadWeather();
   setupPush();
+}
+function scrollToToday() {
+  const el = document.querySelector('#cal-grid .cal-date.today');
+  if (el) el.scrollIntoView({ block: 'center' });
 }
 if (sessionStorage.getItem('auth')) enterApp();
 
@@ -605,6 +619,10 @@ function renderCalendar() {
   const grid = document.getElementById('cal-grid');
   grid.innerHTML = '';
   const dayNames = ['日','月','火','水','木','金','土'];
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const tl = document.getElementById('today-line');
+  if (tl) tl.textContent = `今日 ${now.getMonth()+1}月${now.getDate()}日（${dayNames[now.getDay()]}）`;
   for (const dt of cycleDays(year, month)) {
     const { year:yy, month:mm, day } = dt;
     const key = `${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
@@ -618,9 +636,10 @@ function renderCalendar() {
       b.innerHTML = `<div class="both-off-banner" style="grid-column:1/-1"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>ふたりともお休み</div>`;
       grid.appendChild(b);
     }
-    const row = document.createElement('div'); row.className = 'cal-row';
+    const row = document.createElement('div'); row.className = 'cal-row' + (key===todayKey ? ' today-row' : '');
     const dc = dow===0 ? 'su' : dow===6 ? 'sa' : 'wd';
-    row.innerHTML = `<div class="cal-date ${bothOff?'gold':dc}"><span class="dn">${day}</span><span class="dw">${dayNames[dow]}</span></div>${shiftCell(mine,'mine',bothOff,weather.mine?.[key])}${shiftCell(hers,'hers',bothOff,weather.hers?.[key])}`;
+    const isToday = key === todayKey;
+    row.innerHTML = `<div class="cal-date ${bothOff?'gold':dc} ${isToday?'today':''}"><span class="dn">${day}</span><span class="dw">${dayNames[dow]}</span>${isToday?'<span class="today-tag">今日</span>':''}</div>${shiftCell(mine,'mine',bothOff,weather.mine?.[key])}${shiftCell(hers,'hers',bothOff,weather.hers?.[key])}`;
     row.style.cursor = 'pointer';
     row.addEventListener('click', () => openDayEditor(key));
     grid.appendChild(row);
@@ -719,9 +738,9 @@ async function loadWeather() {
       const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(resolvePlace(loc))}&count=1&language=ja&format=json`).then(r=>r.json());
       const g = geo.results && geo.results[0];
       if (!g) { weather[p] = {}; continue; }
-      const fc = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.latitude}&longitude=${g.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&past_days=14&forecast_days=16`).then(r=>r.json());
+      const fc = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.latitude}&longitude=${g.longitude}&daily=weather_code,temperature_2m_max,precipitation_probability_max&timezone=Asia%2FTokyo&past_days=14&forecast_days=16`).then(r=>r.json());
       const map = {}; const t = fc.daily?.time || [];
-      for (let i=0;i<t.length;i++) map[t[i]] = { code: fc.daily.weather_code[i], tmax: Math.round(fc.daily.temperature_2m_max[i]) };
+      for (let i=0;i<t.length;i++) map[t[i]] = { code: fc.daily.weather_code[i], tmax: Math.round(fc.daily.temperature_2m_max[i]), precip: fc.daily.precipitation_probability_max?.[i] };
       weather[p] = map;
     } catch { weather[p] = {}; }
   }
@@ -864,14 +883,19 @@ async function saveEditor() {
     await loadCalendar();
   } catch (e) { showToast(`保存に失敗: ${e.message}`, true); }
 }
+function wxLine(wx) {
+  if (!wx) return '<span class="wx"></span>';
+  const drop = '<svg class="wx-drop" width="9" height="11" viewBox="0 0 24 24" fill="#4a90c2"><path d="M12 2s7 8 7 13a7 7 0 0 1-14 0c0-5 7-13 7-13z"/></svg>';
+  const pop = (wx.precip != null) ? `<span class="wx-pop">${drop}${wx.precip}%</span>` : '';
+  return `<span class="wx">${weatherIcon(wx.code)}<span class="wx-temp">${wx.tmax}°</span>${pop}</span>`;
+}
 function shiftCell(s, person, bothOff, wx) {
-  const badge = wx ? `<span class="wx-badge">${weatherIcon(wx.code)}<span class="wx-temp">${wx.tmax}°</span></span>` : '';
-  if (!s) return `<div class="shift-cell sc-empty">${badge}</div>`;
+  if (!s) return `<div class="shift-cell sc-empty"><div class="sc-head"><span></span>${wxLine(wx)}</div></div>`;
   if (s.shift_type === 'off') {
-    return `<div class="shift-cell ${bothOff?'sc-gold':'sc-off'}">${badge}<span>${s.label||'公休'}</span></div>`;
+    return `<div class="shift-cell ${bothOff?'sc-gold':'sc-off'}"><div class="sc-head"><span></span>${wxLine(wx)}</div><span class="off-badge">${s.label||'公休'}</span></div>`;
   }
   const ava = avatars[person] ? `<img class="sc-ava" src="${avatars[person]}">` : '';
-  return `<div class="shift-cell ${person==='mine'?'sc-mine':'sc-hers'}">${badge}<span class="sc-lbl">${ava}${NAMES[person]}</span><span class="sc-time">${s.start_time||''}</span><span class="sc-end">〜 ${s.end_time||''}</span></div>`;
+  return `<div class="shift-cell ${person==='mine'?'sc-mine':'sc-hers'}"><div class="sc-head"><span class="sc-lbl">${ava}${NAMES[person]}</span>${wxLine(wx)}</div><span class="sc-time">${s.start_time||''}</span><span class="sc-end">〜 ${s.end_time||''}</span></div>`;
 }
 function parseKey(k) { const [year,month,day]=k.split('-').map(Number); return {year,month,day}; }
 
