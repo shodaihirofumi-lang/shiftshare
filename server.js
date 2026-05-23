@@ -8,6 +8,7 @@ import {
   getAllShifts, getUploadLog,
   savePushSubscription, getPushSubscriptions, saveShifts,
   saveAvatar, getAvatars, upsertShift,
+  getEvents, addEvent, deleteEvent,
 } from './db.js';
 
 const app = express();
@@ -72,6 +73,24 @@ app.post('/api/shift', async (req, res) => {
     return res.status(400).json({ error: '日付が不正です' });
   }
   await upsertShift(req.body);
+  res.json({ success: true });
+});
+
+// ── EVENTS（日の予定）──
+app.get('/api/events', (_req, res) => res.json(getEvents()));
+app.post('/api/event', async (req, res) => {
+  const { year, month, day, title } = req.body;
+  if (![year, month, day].every(Number.isInteger)) {
+    return res.status(400).json({ error: '日付が不正です' });
+  }
+  if (!title || typeof title !== 'string' || !title.trim()) {
+    return res.status(400).json({ error: 'タイトルが必要です' });
+  }
+  const id = await addEvent(req.body);
+  res.json({ success: true, id });
+});
+app.post('/api/event/delete', async (req, res) => {
+  await deleteEvent(req.body.id);
   res.json({ success: true });
 });
 

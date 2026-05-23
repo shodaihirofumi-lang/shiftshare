@@ -214,6 +214,36 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .modal-actions { display:flex; gap:10px; margin-top:10px; }
 .btn-cancel { flex:1; padding:14px; border-radius:13px; border:1.5px solid var(--line); background:var(--card); color:var(--text-soft); font-size:14px; font-weight:600; cursor:pointer; }
 .btn-save { flex:2; padding:14px; border-radius:13px; border:none; background:var(--grad); color:#fbf9f5; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 6px 18px rgba(74,70,85,.22); }
+
+/* ── MONTH NAV ── */
+.month-nav { display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:16px; }
+.mn-btn { width:38px; height:38px; border-radius:50%; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:20px; cursor:pointer; box-shadow:var(--shadow-sm); line-height:1; }
+.mn-btn:active { background:var(--bg); }
+#month-label { font-size:18px; font-weight:600; letter-spacing:1px; min-width:120px; text-align:center; }
+
+/* ── EVENT CHIPS (calendar) ── */
+.event-row { display:flex; flex-wrap:wrap; gap:6px; padding:0 2px 2px 56px; margin-top:-2px; cursor:pointer; }
+.ev-chip { display:inline-flex; align-items:center; gap:5px; background:#efe7d6; color:#8a6f43; border:1px solid var(--gold-border); border-radius:8px; padding:4px 10px; font-size:11px; font-weight:600; text-decoration:none; }
+.ev-chip.linked { background:var(--gold-bg); }
+.ev-chip .ev-time { font-weight:700; opacity:.8; }
+
+/* ── EVENTS in editor ── */
+.ed-events { margin:4px 0 18px; padding-top:16px; border-top:1px solid var(--line); }
+.ed-events-head { font-size:13px; font-weight:600; color:var(--text); margin-bottom:10px; }
+.ev-empty { font-size:12px; color:var(--text-soft); padding:4px 0 10px; }
+.ev-item { display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--gold-bg); border:1px solid var(--gold-border); border-radius:10px; padding:9px 12px; margin-bottom:8px; }
+.ev-item-main { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px; }
+.ev-item-time { font-weight:700; color:var(--gold); }
+.ev-item-title { color:var(--text); font-weight:500; }
+.ev-item-link { color:var(--mine); font-size:12px; font-weight:600; text-decoration:none; }
+.ev-del { width:24px; height:24px; border-radius:50%; border:none; background:rgba(60,55,50,.1); color:var(--text); font-size:16px; line-height:1; cursor:pointer; flex-shrink:0; }
+.ev-add { margin-top:6px; }
+.ev-in { width:100%; padding:10px; border-radius:10px; border:1.5px solid var(--line); font-size:14px; background:var(--card); color:var(--text); font-family:inherit; margin-bottom:8px; }
+.ev-add-row { display:flex; gap:8px; }
+.ev-add-row .ev-in { margin-bottom:0; }
+.ev-add-row #ev-time { flex:0 0 110px; }
+.ev-add-row #ev-link { flex:1; }
+.ev-add-btn { flex:0 0 auto; padding:0 16px; border-radius:10px; border:none; background:var(--text); color:var(--card); font-size:13px; font-weight:600; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -241,20 +271,20 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <!-- CALENDAR -->
     <div id="tab-calendar" class="screen active">
       <div class="page-top">
-        <div>
-          <div class="page-title" id="cal-title">カレンダー</div>
-          <div class="page-sub" id="cal-period">—</div>
-        </div>
+        <div><div class="page-title">カレンダー</div></div>
         <div id="cal-status" class="chip-gray">未登録</div>
+      </div>
+      <div class="month-nav">
+        <button class="mn-btn" onclick="changeMonth(-1)">‹</button>
+        <div id="month-label">—</div>
+        <button class="mn-btn" onclick="changeMonth(1)">›</button>
       </div>
       <div class="legend">
         <div class="leg"><span class="leg-ava mine" id="leg-ava-mine"></span><span id="leg-name-mine">ひろ</span></div>
         <div class="leg"><span class="leg-ava hers" id="leg-ava-hers"></span><span id="leg-name-hers">ちか</span></div>
         <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div>ふたり休み</div>
       </div>
-      <div id="cal-grid" class="cal-grid">
-        <div class="empty-state">シフトがまだ登録されていません。<br>アップロードからスクショを送ってください。</div>
-      </div>
+      <div id="cal-grid" class="cal-grid"></div>
     </div>
 
     <!-- UPLOAD -->
@@ -326,9 +356,23 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <div class="modal-sub">時間や種類をタップで編集できます</div>
     <div class="edit-person mine" id="ed-mine"></div>
     <div class="edit-person hers" id="ed-hers"></div>
+
+    <div class="ed-events">
+      <div class="ed-events-head">予定・リンク</div>
+      <div id="ed-event-list"></div>
+      <div class="ev-add">
+        <input id="ev-title" class="ev-in" placeholder="予定（例：デート）" maxlength="100">
+        <div class="ev-add-row">
+          <input id="ev-time" class="ev-in" type="time">
+          <input id="ev-link" class="ev-in" placeholder="リンクURL（任意）">
+          <button class="ev-add-btn" onclick="addEventFromEditor()">追加</button>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeEditor()">キャンセル</button>
-      <button class="btn-save" onclick="saveEditor()">保存</button>
+      <button class="btn-cancel" onclick="closeEditor()">閉じる</button>
+      <button class="btn-save" onclick="saveEditor()">シフトを保存</button>
     </div>
   </div>
 </div>
@@ -339,8 +383,14 @@ let selectedPerson = 'mine';
 let selectedFiles = [];
 let avatars = {};
 let shiftsByDate = {};
+let eventsByDate = {};
+let allShifts = [];
+let allEvents = [];
+let lastStatus = {};
+let viewYM = null;
 let editorDate = null;
 const edTypes = { mine: 'none', hers: 'none' };
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 // ── AUTH ──
 async function doLogin() {
@@ -429,40 +479,51 @@ function resizeImage(file, max) {
 
 // ── CALENDAR ──
 async function loadCalendar() {
-  const [shifts, status] = await Promise.all([
+  const [shifts, status, events] = await Promise.all([
     fetch('/api/shifts').then(r=>r.json()),
     fetch('/api/status').then(r=>r.json()),
+    fetch('/api/events').then(r=>r.json()).catch(()=>[]),
   ]);
-  renderCalendar(shifts, status);
+  allShifts = shifts; allEvents = events; lastStatus = status;
+  if (!viewYM) {
+    if (shifts.length) { const last = shifts[shifts.length-1]; viewYM = { year:last.year, month:last.month }; }
+    else { const d = new Date(); viewYM = { year:d.getFullYear(), month:d.getMonth()+1 }; }
+  }
+  rebuildMaps();
+  renderCalendar();
 }
-function renderCalendar(shifts, status) {
+function rebuildMaps() {
+  shiftsByDate = {}; eventsByDate = {};
+  for (const s of allShifts) { const k=`${s.year}-${String(s.month).padStart(2,'0')}-${String(s.day).padStart(2,'0')}`; (shiftsByDate[k] ||= {})[s.person]=s; }
+  for (const e of allEvents) { const k=`${e.year}-${String(e.month).padStart(2,'0')}-${String(e.day).padStart(2,'0')}`; (eventsByDate[k] ||= []).push(e); }
+}
+function changeMonth(delta) {
+  let { year, month } = viewYM;
+  month += delta;
+  if (month < 1) { month = 12; year--; } else if (month > 12) { month = 1; year++; }
+  viewYM = { year, month };
+  renderCalendar();
+}
+function renderCalendar() {
+  const status = lastStatus || {};
   const both = status.mine && status.hers, any = status.mine || status.hers;
   const chip = document.getElementById('cal-status');
   chip.textContent = both ? 'ふたり登録済み' : any ? '片方登録済み' : '未登録';
   chip.className = both ? 'chip-green' : 'chip-gray';
 
-  if (!shifts.length) {
-    document.getElementById('cal-grid').innerHTML = '<div class="empty-state">シフトがまだ登録されていません。<br>アップロードからスクショを送ってください。</div>';
-    return;
-  }
-  const byDate = {};
-  for (const s of shifts) {
-    const key = `${s.year}-${String(s.month).padStart(2,'0')}-${String(s.day).padStart(2,'0')}`;
-    (byDate[key] ||= {})[s.person] = s;
-  }
-  shiftsByDate = byDate;
-  const keys = Object.keys(byDate).sort();
-  const fd = parseKey(keys[0]), ld = parseKey(keys[keys.length-1]);
-  document.getElementById('cal-period').textContent = `${fd.month}月${fd.day}日 〜 ${ld.month}月${ld.day}日`;
-  document.getElementById('cal-title').textContent = `${fd.month}月 — ${ld.month}月`;
+  const { year, month } = viewYM;
+  document.getElementById('month-label').textContent = `${year}年 ${month}月`;
 
   const grid = document.getElementById('cal-grid');
   grid.innerHTML = '';
   const dayNames = ['日','月','火','水','木','金','土'];
-  for (const key of keys) {
-    const { year, month, day } = parseKey(key);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  for (let day=1; day<=daysInMonth; day++) {
+    const key = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     const dow = new Date(year, month-1, day).getDay();
-    const mine = byDate[key].mine, hers = byDate[key].hers;
+    const sd = shiftsByDate[key] || {};
+    const mine = sd.mine, hers = sd.hers;
+    const evs = eventsByDate[key] || [];
     const bothOff = mine && hers && mine.shift_type==='off' && hers.shift_type==='off';
     if (bothOff) {
       const b = document.createElement('div'); b.className = 'cal-row';
@@ -475,7 +536,21 @@ function renderCalendar(shifts, status) {
     row.style.cursor = 'pointer';
     row.addEventListener('click', () => openDayEditor(key));
     grid.appendChild(row);
+    if (evs.length) {
+      const er = document.createElement('div'); er.className = 'event-row';
+      er.innerHTML = evs.map(eventChip).join('');
+      er.addEventListener('click', () => openDayEditor(key));
+      grid.appendChild(er);
+    }
   }
+}
+function eventChip(e) {
+  const t = e.time ? `<span class="ev-time">${escapeHtml(e.time)}</span>` : '';
+  if (e.link) {
+    const ln = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
+    return `<a class="ev-chip linked" href="${escapeHtml(e.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${t}${escapeHtml(e.title)} ${ln}</a>`;
+  }
+  return `<span class="ev-chip">${t}${escapeHtml(e.title)}</span>`;
 }
 
 // ── DAY EDITOR ──
@@ -490,7 +565,51 @@ function openDayEditor(key) {
     edTypes[p] = s ? (s.shift_type === 'off' ? 'off' : 'work') : 'none';
     document.getElementById('ed-'+p).innerHTML = buildPersonEditor(p, s);
   }
+  renderEventList(key);
+  document.getElementById('ev-title').value = '';
+  document.getElementById('ev-time').value = '';
+  document.getElementById('ev-link').value = '';
   document.getElementById('day-editor').classList.add('active');
+}
+function renderEventList(key) {
+  const evs = eventsByDate[key] || [];
+  const el = document.getElementById('ed-event-list');
+  if (!evs.length) { el.innerHTML = '<div class="ev-empty">まだ予定はありません</div>'; return; }
+  el.innerHTML = evs.map(e => `
+    <div class="ev-item">
+      <div class="ev-item-main">
+        ${e.time?`<span class="ev-item-time">${escapeHtml(e.time)}</span>`:''}
+        <span class="ev-item-title">${escapeHtml(e.title)}</span>
+        ${e.link?`<a href="${escapeHtml(e.link)}" target="_blank" rel="noopener" class="ev-item-link">リンク↗</a>`:''}
+      </div>
+      <button class="ev-del" onclick="deleteEventById('${e.id}')">×</button>
+    </div>`).join('');
+}
+async function addEventFromEditor() {
+  const { year, month, day } = parseKey(editorDate);
+  const title = document.getElementById('ev-title').value.trim();
+  if (!title) { showToast('予定のタイトルを入力してください', true); return; }
+  let link = document.getElementById('ev-link').value.trim();
+  if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+  const time = document.getElementById('ev-time').value || null;
+  try {
+    await fetch('/api/event', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({year,month,day,title,time,link:link||null}) });
+    document.getElementById('ev-title').value=''; document.getElementById('ev-time').value=''; document.getElementById('ev-link').value='';
+    await refreshEvents();
+    showToast('予定を追加しました');
+  } catch { showToast('予定の追加に失敗しました', true); }
+}
+async function deleteEventById(id) {
+  try {
+    await fetch('/api/event/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) });
+    await refreshEvents();
+  } catch { showToast('削除に失敗しました', true); }
+}
+async function refreshEvents() {
+  allEvents = await fetch('/api/events').then(r=>r.json()).catch(()=>allEvents);
+  rebuildMaps();
+  renderCalendar();
+  if (editorDate) renderEventList(editorDate);
 }
 function buildPersonEditor(person, s) {
   const t = edTypes[person];

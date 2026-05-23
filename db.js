@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {} });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [] });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -126,4 +126,29 @@ export async function saveAvatar(person, dataUrl) {
 
 export function getAvatars() {
   return cache.avatars || {};
+}
+
+// ── EVENTS（日に紐づく予定。2人共通）──
+export function getEvents() {
+  return cache.events || [];
+}
+
+export async function addEvent(ev) {
+  if (!cache.events) cache.events = [];
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  cache.events.push({
+    id,
+    year: ev.year, month: ev.month, day: ev.day,
+    title: String(ev.title).slice(0, 100),
+    time: ev.time || null,
+    link: ev.link || null,
+  });
+  await persist();
+  return id;
+}
+
+export async function deleteEvent(id) {
+  if (!cache.events) return;
+  cache.events = cache.events.filter(e => e.id !== id);
+  await persist();
 }
