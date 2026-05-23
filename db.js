@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {} });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [] });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -173,5 +173,30 @@ export function getLocations() {
 export async function saveLocation(person, location) {
   if (!cache.locations) cache.locations = {};
   cache.locations[person] = String(location || '').slice(0, 60);
+  await persist();
+}
+
+// ── EXPENSES（日ごとの出費。person別）──
+export function getExpenses() {
+  return cache.expenses || [];
+}
+
+export async function addExpense(ex) {
+  if (!cache.expenses) cache.expenses = [];
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  cache.expenses.push({
+    id,
+    year: ex.year, month: ex.month, day: ex.day,
+    person: ['mine', 'hers'].includes(ex.person) ? ex.person : null,
+    amount: Math.round(Number(ex.amount)) || 0,
+    memo: String(ex.memo || '').slice(0, 60),
+  });
+  await persist();
+  return id;
+}
+
+export async function deleteExpense(id) {
+  if (!cache.expenses) return;
+  cache.expenses = cache.expenses.filter(e => e.id !== id);
   await persist();
 }

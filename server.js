@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import multer from 'multer';
 import webpush from 'web-push';
-import { parseShiftImages } from './aiParser.js';
+import { parseShiftImages, parseExpenseAmount } from './aiParser.js';
 import {
   initDb,
   getAllShifts, getUploadLog,
@@ -11,6 +11,7 @@ import {
   getEvents, addEvent, deleteEvent,
   getWages, saveWage,
   getLocations, saveLocation,
+  getExpenses, addExpense, deleteExpense,
 } from './db.js';
 
 const app = express();
@@ -112,6 +113,35 @@ app.post('/api/wage', async (req, res) => {
   }
   await saveWage(person, wage);
   res.json({ success: true });
+});
+
+// ── EXPENSES（出費）──
+app.get('/api/expenses', (_req, res) => res.json(getExpenses()));
+app.post('/api/expense', async (req, res) => {
+  const { person, year, month, day } = req.body;
+  if (!['mine', 'hers'].includes(person)) {
+    return res.status(400).json({ error: 'person は mine または hers のみ' });
+  }
+  if (![year, month, day].every(Number.isInteger)) {
+    return res.status(400).json({ error: '日付が不正です' });
+  }
+  const id = await addExpense(req.body);
+  res.json({ success: true, id });
+});
+app.post('/api/expense/delete', async (req, res) => {
+  await deleteExpense(req.body.id);
+  res.json({ success: true });
+});
+// レシート/決済画面の画像から金額を読み取る（保存はしない）
+app.post('/api/expense/scan', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'ファイルがありません' });
+  try {
+    const amount = await parseExpenseAmount(req.file.buffer.toString('base64'), req.file.mimetype || 'image/jpeg');
+    res.json({ amount });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: `金額の読み取りエラー: ${e.message}` });
+  }
 });
 
 // ── LOCATIONS（居住地・天気用）──

@@ -123,7 +123,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .sc-lbl { font-size:10px; font-weight:600; letter-spacing:.5px; margin-bottom:3px; display:flex; align-items:center; gap:5px; }
 .sc-ava { width:16px; height:16px; border-radius:50%; object-fit:cover; flex-shrink:0; }
 .sc-time { font-size:14px; font-weight:700; }
-.sc-end { font-size:11px; opacity:.6; }
+.sc-end { font-size:13px; font-weight:700; }
 .sc-mine { background:var(--mine-bg); border:1.5px solid var(--mine-border); color:var(--mine); }
 .sc-hers { background:var(--hers-bg); border:1.5px solid var(--hers-border); color:var(--hers); }
 .sc-off { background:#f3efe7; border:1.5px solid var(--line); color:#a89e90; }
@@ -271,20 +271,33 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 /* ── INCOME CARD ── */
 .income-card { background:var(--card); border-radius:14px; padding:13px 16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
 .income-head { font-size:11px; font-weight:600; color:var(--text-soft); letter-spacing:1px; margin-bottom:8px; }
-.income-person { display:flex; align-items:center; gap:10px; padding:10px 0; }
+.income-person { padding:12px 0; }
 .income-person + .income-person { border-top:1px solid var(--line-soft); }
-.inc-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
-.inc-name { font-size:13px; font-weight:600; }
-.inc-fields { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.ip-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+.inc-name { font-size:14px; font-weight:700; }
 .wage-wrap { font-size:11px; color:var(--text-soft); display:flex; align-items:center; gap:2px; }
 .wage-in { width:58px; padding:5px 7px; border:1.5px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit; color:var(--text); background:var(--card); text-align:right; }
 .loc-wrap { font-size:11px; color:var(--text-soft); display:flex; align-items:center; gap:3px; }
 .loc-pin { flex-shrink:0; color:var(--text-soft); }
-.loc-in { width:104px; padding:5px 8px; border:1.5px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit; color:var(--text); background:var(--card); }
+.loc-in { width:88px; padding:5px 8px; border:1.5px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit; color:var(--text); background:var(--card); }
 .wage-in::-webkit-outer-spin-button, .wage-in::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
-.inc-total { margin-left:auto; text-align:right; line-height:1.25; }
-.inc-amt { display:block; font-size:17px; font-weight:700; color:var(--text); }
-.inc-hrs { display:block; font-size:14px; font-weight:700; color:var(--text-soft); margin-top:2px; }
+.ip-rows { display:flex; flex-direction:column; gap:3px; padding-left:28px; }
+.ip-row { display:flex; align-items:baseline; gap:8px; }
+.ip-lbl { font-size:11px; color:var(--text-soft); width:30px; flex-shrink:0; }
+.ip-amt { font-size:16px; font-weight:700; color:var(--text); }
+.ip-amt.exp { font-size:14px; color:#b5544f; }
+.ip-hrs { font-size:12px; color:var(--text-soft); font-weight:600; }
+.ip-row.net { margin-top:3px; padding-top:5px; border-top:1px dashed var(--line); }
+.ip-row.net .ip-lbl { color:var(--text); font-weight:700; }
+.ip-row.net .ip-amt { font-size:19px; }
+.ip-amt.neg { color:#b5544f; }
+.ed-expenses { margin:4px 0 18px; padding-top:16px; border-top:1px solid var(--line); }
+.exp-btn { flex:1; padding:8px 0; border-radius:9px; border:1.5px solid var(--line); background:var(--card); font-size:12px; font-weight:600; color:var(--text-soft); cursor:pointer; }
+.exp-btn.active[data-p=mine] { background:var(--mine-bg); color:var(--mine); border-color:var(--mine); }
+.exp-btn.active[data-p=hers] { background:var(--hers-bg); color:var(--hers); border-color:var(--hers); }
+.exp-amt-item { font-size:14px; font-weight:700; }
+.scan-btn { display:flex; align-items:center; justify-content:center; gap:7px; margin-top:8px; padding:11px; border:1.5px dashed #c7d2fe; border-radius:10px; font-size:12px; font-weight:600; color:var(--mine); cursor:pointer; }
+.scan-btn:active { background:var(--mine-bg); }
 </style>
 </head>
 <body>
@@ -326,28 +339,32 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div>ふたり休み</div>
       </div>
       <div class="income-card">
-        <div class="income-head"><span id="income-month">今月</span>の収入・天気</div>
+        <div class="income-head"><span id="income-month">今月</span>の収支・天気</div>
         <div class="income-person">
-          <span class="leg-ava mine" id="inc-ava-mine"></span>
-          <div class="inc-info">
+          <div class="ip-head">
+            <span class="leg-ava mine" id="inc-ava-mine"></span>
             <span class="inc-name">ひろ</span>
-            <div class="inc-fields">
-              <span class="wage-wrap">時給¥<input type="number" id="wage-mine" class="wage-in" inputmode="numeric" placeholder="0" onchange="saveWage('mine')"></span>
-              <span class="loc-wrap"><svg class="loc-pin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><input id="loc-mine" class="loc-in" placeholder="地域(例:東京)" onchange="saveLocation('mine')"></span>
-            </div>
+            <span class="wage-wrap">時給¥<input type="number" id="wage-mine" class="wage-in" inputmode="numeric" placeholder="0" onchange="saveWage('mine')"></span>
+            <span class="loc-wrap"><svg class="loc-pin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><input id="loc-mine" class="loc-in" placeholder="地域" onchange="saveLocation('mine')"></span>
           </div>
-          <span class="inc-total"><span class="inc-amt" id="income-mine">¥0</span><span class="inc-hrs" id="hours-mine">0h</span></span>
+          <div class="ip-rows">
+            <div class="ip-row"><span class="ip-lbl">収入</span><span class="ip-amt" id="income-mine">¥0</span><span class="ip-hrs" id="hours-mine">労働 0h</span></div>
+            <div class="ip-row"><span class="ip-lbl">出費</span><span class="ip-amt exp" id="expense-mine">¥0</span></div>
+            <div class="ip-row net"><span class="ip-lbl">差引</span><span class="ip-amt" id="net-mine">¥0</span></div>
+          </div>
         </div>
         <div class="income-person">
-          <span class="leg-ava hers" id="inc-ava-hers"></span>
-          <div class="inc-info">
+          <div class="ip-head">
+            <span class="leg-ava hers" id="inc-ava-hers"></span>
             <span class="inc-name">ちか</span>
-            <div class="inc-fields">
-              <span class="wage-wrap">時給¥<input type="number" id="wage-hers" class="wage-in" inputmode="numeric" placeholder="0" onchange="saveWage('hers')"></span>
-              <span class="loc-wrap"><svg class="loc-pin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><input id="loc-hers" class="loc-in" placeholder="地域(例:大阪)" onchange="saveLocation('hers')"></span>
-            </div>
+            <span class="wage-wrap">時給¥<input type="number" id="wage-hers" class="wage-in" inputmode="numeric" placeholder="0" onchange="saveWage('hers')"></span>
+            <span class="loc-wrap"><svg class="loc-pin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><input id="loc-hers" class="loc-in" placeholder="地域" onchange="saveLocation('hers')"></span>
           </div>
-          <span class="inc-total"><span class="inc-amt" id="income-hers">¥0</span><span class="inc-hrs" id="hours-hers">0h</span></span>
+          <div class="ip-rows">
+            <div class="ip-row"><span class="ip-lbl">収入</span><span class="ip-amt" id="income-hers">¥0</span><span class="ip-hrs" id="hours-hers">労働 0h</span></div>
+            <div class="ip-row"><span class="ip-lbl">出費</span><span class="ip-amt exp" id="expense-hers">¥0</span></div>
+            <div class="ip-row net"><span class="ip-lbl">差引</span><span class="ip-amt" id="net-hers">¥0</span></div>
+          </div>
         </div>
       </div>
       <div id="cal-grid" class="cal-grid"></div>
@@ -440,6 +457,27 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       </div>
     </div>
 
+    <div class="ed-expenses">
+      <div class="ed-events-head">出費</div>
+      <div id="ed-expense-list"></div>
+      <div class="ev-add">
+        <div class="ev-person-toggle">
+          <button class="exp-btn active" data-p="mine" onclick="setExpPerson('mine')">ひろ</button>
+          <button class="exp-btn" data-p="hers" onclick="setExpPerson('hers')">ちか</button>
+        </div>
+        <div class="ev-add-row">
+          <input id="exp-amount" class="ev-in" type="number" inputmode="numeric" placeholder="金額 ¥">
+          <input id="exp-memo" class="ev-in" placeholder="メモ(任意)">
+          <button class="ev-add-btn" onclick="addExpenseFromEditor()">追加</button>
+        </div>
+        <label class="scan-btn">
+          <input type="file" accept="image/*" onchange="scanExpense(this.files[0])" hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          レシート / PayPay画面から自動入力
+        </label>
+      </div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeEditor()">閉じる</button>
       <button class="btn-save" onclick="saveEditor()">保存</button>
@@ -454,8 +492,10 @@ let selectedFiles = [];
 let avatars = {};
 let shiftsByDate = {};
 let eventsByDate = {};
+let expensesByDate = {};
 let allShifts = [];
 let allEvents = [];
+let allExpenses = [];
 let wages = {};
 let locations = {};
 let weather = { mine: {}, hers: {} };
@@ -463,6 +503,7 @@ let lastStatus = {};
 let viewYM = null;
 let editorDate = null;
 let evPerson = 'mine';
+let expPerson = 'mine';
 const edTypes = { mine: 'none', hers: 'none' };
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -559,14 +600,15 @@ function resizeImage(file, max) {
 
 // ── CALENDAR ──
 async function loadCalendar() {
-  const [shifts, status, events, wagesData, locData] = await Promise.all([
+  const [shifts, status, events, wagesData, locData, expData] = await Promise.all([
     fetch('/api/shifts').then(r=>r.json()),
     fetch('/api/status').then(r=>r.json()),
     fetch('/api/events').then(r=>r.json()).catch(()=>[]),
     fetch('/api/wages').then(r=>r.json()).catch(()=>({})),
     fetch('/api/locations').then(r=>r.json()).catch(()=>({})),
+    fetch('/api/expenses').then(r=>r.json()).catch(()=>[]),
   ]);
-  allShifts = shifts; allEvents = events; lastStatus = status; wages = wagesData || {}; locations = locData || {};
+  allShifts = shifts; allEvents = events; lastStatus = status; wages = wagesData || {}; locations = locData || {}; allExpenses = expData || [];
   if (!viewYM) {
     if (shifts.length) { const last = shifts[shifts.length-1]; viewYM = termOfDate(last.year, last.month, last.day); }
     else { const d = new Date(); viewYM = termOfDate(d.getFullYear(), d.getMonth()+1, d.getDate()); }
@@ -594,9 +636,19 @@ function cycleDays(year, month) {
   return days;
 }
 function rebuildMaps() {
-  shiftsByDate = {}; eventsByDate = {};
+  shiftsByDate = {}; eventsByDate = {}; expensesByDate = {};
   for (const s of allShifts) { const k=`${s.year}-${String(s.month).padStart(2,'0')}-${String(s.day).padStart(2,'0')}`; (shiftsByDate[k] ||= {})[s.person]=s; }
   for (const e of allEvents) { const k=`${e.year}-${String(e.month).padStart(2,'0')}-${String(e.day).padStart(2,'0')}`; (eventsByDate[k] ||= []).push(e); }
+  for (const e of allExpenses) { const k=`${e.year}-${String(e.month).padStart(2,'0')}-${String(e.day).padStart(2,'0')}`; (expensesByDate[k] ||= []).push(e); }
+}
+function cycleExpense(person, year, month) {
+  const r = termRange(year, month);
+  let total = 0;
+  for (const e of allExpenses) {
+    const n = e.year*10000 + e.month*100 + e.day;
+    if (e.person===person && n>=r.startNum && n<=r.endNum) total += (e.amount||0);
+  }
+  return total;
 }
 function changeMonth(delta) {
   let { year, month } = viewYM;
@@ -687,12 +739,18 @@ function renderIncome() {
   const ml = document.getElementById('income-month'); if (ml) ml.textContent = `${month}月度`;
   for (const p of ['mine','hers']) {
     const { hours, income } = monthIncome(p, year, month);
+    const expense = cycleExpense(p, year, month);
     const wi = document.getElementById('wage-'+p);
     if (wi && document.activeElement !== wi) wi.value = wages[p] || '';
     const li = document.getElementById('loc-'+p);
     if (li && document.activeElement !== li) li.value = locations[p] || '';
     document.getElementById('income-'+p).textContent = '¥' + income.toLocaleString();
     document.getElementById('hours-'+p).textContent = '労働 ' + (Math.round(hours*10)/10) + 'h';
+    document.getElementById('expense-'+p).textContent = expense > 0 ? '−¥' + expense.toLocaleString() : '¥0';
+    const net = income - expense;
+    const netEl = document.getElementById('net-'+p);
+    netEl.textContent = (net < 0 ? '−¥' : '¥') + Math.abs(net).toLocaleString();
+    netEl.classList.toggle('neg', net < 0);
     const av = document.getElementById('inc-ava-'+p);
     if (av) av.innerHTML = avatars[p] ? `<img src="${avatars[p]}" style="width:100%;height:100%;object-fit:cover">` : `<span style="width:7px;height:7px;border-radius:2px;background:var(--${p})"></span>`;
   }
@@ -772,6 +830,10 @@ function openDayEditor(key) {
   document.getElementById('ev-title').value = '';
   document.getElementById('ev-time').value = '';
   document.getElementById('ev-link').value = '';
+  renderExpenseList(key);
+  setExpPerson('mine');
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-memo').value = '';
   document.getElementById('day-editor').classList.add('active');
 }
 function renderEventList(key) {
@@ -823,6 +885,68 @@ async function refreshEvents() {
   rebuildMaps();
   renderCalendar();
   if (editorDate) renderEventList(editorDate);
+}
+
+// ── EXPENSES ──
+function setExpPerson(p) {
+  expPerson = p;
+  document.querySelectorAll('.exp-btn').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+}
+function renderExpenseList(key) {
+  const exps = expensesByDate[key] || [];
+  const el = document.getElementById('ed-expense-list');
+  if (!exps.length) { el.innerHTML = '<div class="ev-empty">出費はまだありません</div>'; return; }
+  el.innerHTML = exps.map(e => {
+    const pc = e.person==='mine' ? 'mine' : e.person==='hers' ? 'hers' : '';
+    const who = e.person ? `<span class="ev-item-who">${NAMES[e.person]}</span>` : '';
+    return `
+    <div class="ev-item ${pc}">
+      <div class="ev-item-main">
+        ${who}
+        <span class="exp-amt-item">¥${(e.amount||0).toLocaleString()}</span>
+        ${e.memo?`<span class="ev-item-title">${escapeHtml(e.memo)}</span>`:''}
+      </div>
+      <button class="ev-del" onclick="deleteExpenseById('${e.id}')">×</button>
+    </div>`;
+  }).join('');
+}
+async function addExpenseFromEditor() {
+  const { year, month, day } = parseKey(editorDate);
+  const amount = parseInt(document.getElementById('exp-amount').value, 10);
+  if (!Number.isFinite(amount) || amount <= 0) { showToast('金額を入力してください', true); return; }
+  const memo = document.getElementById('exp-memo').value.trim();
+  try {
+    const r = await fetch('/api/expense', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({year,month,day,person:expPerson,amount,memo}) });
+    if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error||`保存エラー(${r.status})`); }
+    document.getElementById('exp-amount').value=''; document.getElementById('exp-memo').value='';
+    await refreshExpenses();
+    showToast('出費を追加しました');
+  } catch (e) { showToast(`出費の追加に失敗: ${e.message}`, true); }
+}
+async function deleteExpenseById(id) {
+  try {
+    await fetch('/api/expense/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) });
+    await refreshExpenses();
+  } catch { showToast('削除に失敗しました', true); }
+}
+async function scanExpense(file) {
+  if (!file) return;
+  showToast('画像から金額を読み取り中…');
+  const form = new FormData(); form.append('file', file);
+  try {
+    const r = await fetch('/api/expense/scan', { method:'POST', body:form });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || '読み取り失敗');
+    if (data.amount == null) { showToast('金額を読み取れませんでした。手入力してください', true); return; }
+    document.getElementById('exp-amount').value = data.amount;
+    showToast(`¥${data.amount.toLocaleString()} を読み取りました。確認して「追加」を押してください`);
+  } catch (e) { showToast(`読み取りエラー: ${e.message}`, true); }
+}
+async function refreshExpenses() {
+  allExpenses = await fetch('/api/expenses').then(r=>r.json()).catch(()=>allExpenses);
+  rebuildMaps();
+  renderCalendar();
+  if (editorDate) renderExpenseList(editorDate);
 }
 function buildPersonEditor(person, s) {
   const t = edTypes[person];
@@ -879,6 +1003,13 @@ async function saveEditor() {
       const time = document.getElementById('ev-time').value || null;
       const r = await fetch('/api/event', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({year,month,day,person:evPerson,title:pendingTitle,time,link:link||null}) });
       if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || `予定の保存エラー(${r.status})`); }
+    }
+    // 書きかけの出費があれば一緒に保存
+    const pendingAmount = parseInt(document.getElementById('exp-amount').value, 10);
+    if (Number.isFinite(pendingAmount) && pendingAmount > 0) {
+      const memo = document.getElementById('exp-memo').value.trim();
+      const r = await fetch('/api/expense', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({year,month,day,person:expPerson,amount:pendingAmount,memo}) });
+      if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || `出費の保存エラー(${r.status})`); }
     }
     closeEditor();
     showToast('保存しました');

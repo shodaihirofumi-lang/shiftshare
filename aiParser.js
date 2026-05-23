@@ -53,3 +53,27 @@ JSON配列のみ返してください。`,
     s => s.year && s.month && s.day && ['work', 'off'].includes(s.shift_type)
   );
 }
+
+// レシートやPayPay等の決済画面から支払合計金額を読み取る
+export async function parseExpenseAmount(imageB64, mimeType) {
+  const content = [
+    { type: 'image', source: { type: 'base64', media_type: mimeType, data: imageB64 } },
+    { type: 'text', text: `これはレシート、またはPayPay等のキャッシュレス決済アプリの支払い画面のスクリーンショットです。
+この画像から「支払った合計金額（日本円）」を1つだけ読み取ってください。
+- レシートの場合は「合計」「お会計」の金額
+- 決済アプリの場合は支払い金額
+次のJSONのみ返してください（説明不要、数字のみ・カンマや円記号なし）：
+{"amount": 1980}
+金額が読み取れない場合は {"amount": null} を返してください。` },
+  ];
+  const message = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 256,
+    messages: [{ role: 'user', content }],
+  });
+  const raw = message.content[0].text.trim();
+  const match = raw.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error(`AIから金額が返されませんでした: ${raw.slice(0, 200)}`);
+  const obj = JSON.parse(match[0]);
+  return Number.isFinite(obj.amount) ? Math.round(obj.amount) : null;
+}
