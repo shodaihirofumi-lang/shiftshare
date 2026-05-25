@@ -336,24 +336,28 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 /* ── 2人同時休み（きらびやか）── */
 .day-block.both-off {
-  background:linear-gradient(120deg,#fff7e0 0%,#fbe7b6 50%,#fff7e0 100%);
   border:1.5px solid #e3c068; border-radius:16px;
   padding:14px 8px 16px; margin:8px 0;
-  box-shadow:0 0 20px rgba(212,160,80,.5);
   position:relative; overflow:hidden;
+  background:linear-gradient(120deg,#fff7e0,#fbe7b6,#fff7e0);
+  box-shadow:0 0 20px rgba(212,160,80,.5);
 }
 .day-block.both-off::before {
-  content:''; position:absolute; top:0; left:-60%; width:55%; height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);
+  content:''; position:absolute; top:0; left:-60%; width:55%; height:100%; z-index:1;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent);
   transform:skewX(-20deg); animation:shimmer 3.6s infinite;
 }
 @keyframes shimmer { 0%{left:-60%} 55%,100%{left:135%} }
-.day-block.both-off::after {
-  content:'★ ふたり休み'; position:absolute; top:8px; right:11px; z-index:1;
-  font-size:10px; font-weight:700; color:#b8860b;
-  background:rgba(255,255,255,.75); padding:2px 9px; border-radius:11px;
-}
 .day-block.both-off .cal-row, .day-block.both-off .event-row { position:relative; z-index:1; }
+.both-off-badge { position:absolute; top:8px; right:11px; z-index:2; display:flex; align-items:center; gap:4px; font-size:10px; font-weight:700; color:#7a6230; background:rgba(255,255,255,.82); padding:2px 9px; border-radius:11px; }
+.both-off-badge svg { width:13px; height:13px; }
+/* 天候連動 */
+.both-off.wx-cloud { border-color:#d3c8b2; background:linear-gradient(120deg,#f6f1e6,#e8dec9,#f6f1e6); box-shadow:0 0 16px rgba(170,150,115,.4); }
+.both-off.wx-rain { border-color:#a8c6dd; background:linear-gradient(120deg,#eaf2f8,#cde0ef,#eaf2f8); box-shadow:0 0 22px rgba(80,135,190,.5); }
+.both-off.wx-rain .both-off-badge { color:#2e6da4; }
+.both-off.wx-snow { border-color:#cdd9e3; background:linear-gradient(120deg,#f6f9fc,#e5edf4,#f6f9fc); box-shadow:0 0 24px rgba(140,175,210,.6); }
+.both-off.wx-snow .both-off-badge { color:#5a7da0; }
+.both-off.wx-thunder { border-color:#cdaf7a; background:linear-gradient(120deg,#f3ecdf,#e6d3b3,#f3ecdf); box-shadow:0 0 22px rgba(180,140,90,.5); }
 </style>
 </head>
 <body>
@@ -883,8 +887,10 @@ function renderCalendar() {
     const isToday = key === todayKey;
     const dc = dow===0 ? 'su' : dow===6 ? 'sa' : 'wd';
 
+    const bothWx = bothOff ? (weather.mine?.[key] || weather.hers?.[key]) : null;
     const block = document.createElement('div');
-    block.className = 'day-block' + (isToday ? ' today-block' : '') + (bothOff ? ' both-off' : '');
+    block.className = 'day-block' + (isToday ? ' today-block' : '')
+      + (bothOff ? ' both-off wx-' + (bothWx ? weatherCat(bothWx.code) : 'sun') : '');
     block.style.cursor = 'pointer';
     block.addEventListener('click', () => openDayEditor(key));
 
@@ -896,6 +902,11 @@ function renderCalendar() {
       const er = document.createElement('div'); er.className = 'event-row';
       er.innerHTML = evs.map(eventChip).join('') + gevs.map(gcalChip).join('') + tasks.map(taskChip).join('');
       block.appendChild(er);
+    }
+    if (bothOff) {
+      const badge = document.createElement('div'); badge.className = 'both-off-badge';
+      badge.innerHTML = (bothWx ? weatherIcon(bothWx.code) : '') + '<span>ふたり休み</span>';
+      block.appendChild(badge);
     }
     grid.appendChild(block);
   }
@@ -968,13 +979,16 @@ const WX_SVG = {
   snow: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7fb0d0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="21" x2="8.01" y2="21"/><line x1="12" y1="22" x2="12.01" y2="22"/><line x1="16" y1="21" x2="16.01" y2="21"/></svg>',
   thunder: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c79a3b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"/><polyline points="13 11 9 17 15 17 11 23"/></svg>',
 };
+function weatherCat(code) {
+  if (code===0 || code===1 || code===2) return 'sun';
+  if (code===3 || code===45 || code===48) return 'cloud';
+  if ((code>=71 && code<=77) || code===85 || code===86) return 'snow';
+  if (code>=95) return 'thunder';
+  if ((code>=51 && code<=67) || (code>=80 && code<=82)) return 'rain';
+  return 'cloud';
+}
 function weatherIcon(code) {
-  if (code===0 || code===1 || code===2) return WX_SVG.sun;
-  if (code===3 || code===45 || code===48) return WX_SVG.cloud;
-  if ((code>=71 && code<=77) || code===85 || code===86) return WX_SVG.snow;
-  if (code>=95) return WX_SVG.thunder;
-  if ((code>=51 && code<=67) || (code>=80 && code<=82)) return WX_SVG.rain;
-  return WX_SVG.cloud;
+  return WX_SVG[weatherCat(code)] || WX_SVG.cloud;
 }
 // Open-Meteoの地名検索は主要な日本語地名(東京/大阪等)に弱いので英名へ変換
 const JP_CITY = {
