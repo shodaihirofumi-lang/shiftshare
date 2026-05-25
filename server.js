@@ -148,6 +148,54 @@ app.get('/api/quotes', async (req, res) => {
   res.json(out);
 });
 
+// ── 日別ポートフォリオ評価額（保有株の日足履歴から計算）──
+app.get('/api/portfolio-history', async (_req, res) => {
+  const hold = getHoldings();
+  if (!hold.length) return res.json({ history: [] });
+  let usdjpy = 150;
+  try {
+    const fx = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDJPY=X?interval=1d&range=5d', { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+    const p = fx.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (p) usdjpy = p;
+  } catch { /* default */ }
+  const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const perHolding = [];
+  const allDates = new Set();
+  for (const h of hold) {
+    try {
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(h.ticker)}?interval=1d&range=1mo`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+      const r0 = j.chart?.result?.[0];
+      if (!r0) continue;
+      const ts = r0.timestamp || [];
+      const closes = r0.indicators?.quote?.[0]?.close || [];
+      const fxRate = (r0.meta?.currency === 'USD') ? usdjpy : 1;
+      const person = h.person === 'hers' ? 'hers' : 'mine';
+      const m = {};
+      for (let i = 0; i < ts.length; i++) {
+        if (closes[i] == null) continue;
+        const key = fmt.format(new Date(ts[i] * 1000));
+        m[key] = closes[i] * h.shares * fxRate;
+        allDates.add(key);
+      }
+      if (Object.keys(m).length) perHolding.push({ person, m });
+    } catch { /* skip */ }
+  }
+  // 日付の和集合を作り、各銘柄は直近値を前方補完（取引日が違う銘柄でも誤差なく合算）
+  const dates = [...allDates].sort();
+  const last = perHolding.map(() => 0);
+  const seen = perHolding.map(() => false);
+  const history = [];
+  for (const date of dates) {
+    let mine = 0, hers = 0;
+    perHolding.forEach((ph, idx) => {
+      if (ph.m[date] != null) { last[idx] = ph.m[date]; seen[idx] = true; }
+      if (seen[idx]) { if (ph.person === 'hers') hers += last[idx]; else mine += last[idx]; }
+    });
+    history.push({ date, mine: Math.round(mine), hers: Math.round(hers) });
+  }
+  res.json({ history });
+});
+
 // ── 日経平均株価（Yahoo Finance・キー不要）──
 app.get('/api/nikkei', async (_req, res) => {
   try {
