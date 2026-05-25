@@ -246,12 +246,18 @@ app.post('/api/gcal-url', async (req, res) => {
   res.json({ success: true });
 });
 
-function gcalDateParts(d) {
-  return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
-}
-function gcalTime(d, datetype) {
-  if (datetype === 'date') return null; // 終日予定
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+// 日付・時刻は必ず日本時間(JST)で取り出す（サーバーはUTCのため）
+const JST_FMT = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', hour12: false,
+});
+function gcalEntry(d, datetype) {
+  const o = {};
+  for (const p of JST_FMT.formatToParts(d)) o[p.type] = p.value;
+  return {
+    year: +o.year, month: +o.month, day: +o.day,
+    time: datetype === 'date' ? null : `${o.hour}:${o.minute}`,
+  };
 }
 async function fetchGcalEvents(url, winStart, winEnd) {
   const data = await ical.async.fromURL(url);
@@ -260,11 +266,9 @@ async function fetchGcalEvents(url, winStart, winEnd) {
     if (ev.type !== 'VEVENT' || !ev.start) continue;
     const title = (ev.summary || '(無題)').toString().slice(0, 80);
     if (ev.rrule) {
-      for (const d of ev.rrule.between(winStart, winEnd, true)) {
-        out.push({ ...gcalDateParts(d), title, time: gcalTime(ev.start, ev.datetype) });
-      }
+      for (const d of ev.rrule.between(winStart, winEnd, true)) out.push({ ...gcalEntry(d, ev.datetype), title });
     } else if (ev.start >= winStart && ev.start <= winEnd) {
-      out.push({ ...gcalDateParts(ev.start), title, time: gcalTime(ev.start, ev.datetype) });
+      out.push({ ...gcalEntry(ev.start, ev.datetype), title });
     }
   }
   return out;
