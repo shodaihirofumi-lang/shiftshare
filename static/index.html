@@ -99,7 +99,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .leg-dot { width:11px; height:11px; border-radius:3px; }
 
 /* ── CALENDAR ── */
-.cal-grid { display:flex; flex-direction:column; gap:6px; }
+.cal-grid { display:flex; flex-direction:column; gap:0; }
+.day-block { display:flex; flex-direction:column; gap:6px; padding:8px 0 11px; border-bottom:1px solid var(--line); }
+.day-block:last-child { border-bottom:none; }
+.today-block { background:var(--mine-bg); border:1.5px solid var(--mine-border); border-radius:14px; padding:10px 8px; margin:4px 0; }
 .cal-row { display:grid; grid-template-columns:50px 1fr 1fr; gap:6px; }
 .cal-date { display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:14px; padding:8px 0; }
 .dn { font-size:17px; font-weight:600; line-height:1; }
@@ -110,7 +113,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .cal-date.gold { background:var(--gold-bg); color:var(--gold); border:1.5px solid var(--gold-border); }
 .cal-date.today { background:var(--grad); color:#fbf9f5; box-shadow:0 0 0 3px rgba(86,110,120,.3); }
 .today-tag { font-size:8px; font-weight:700; margin-top:3px; background:rgba(255,255,255,.28); padding:1px 5px; border-radius:5px; letter-spacing:.5px; }
-.today-row .shift-cell { box-shadow:0 0 0 1.5px rgba(86,110,120,.22); }
 .today-line { font-size:12px; color:var(--mine); font-weight:700; margin-top:4px; }
 
 .shift-cell { border-radius:14px; padding:8px 11px; display:flex; flex-direction:column; justify-content:flex-start; min-height:64px; background:var(--card); }
@@ -233,7 +235,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 #month-label { font-size:18px; font-weight:600; letter-spacing:1px; min-width:120px; text-align:center; }
 
 /* ── EVENT CHIPS (calendar) ── */
-.event-row { display:flex; flex-wrap:wrap; gap:6px; padding:0 2px 2px 56px; margin-top:-2px; cursor:pointer; }
+.event-row { display:flex; flex-wrap:wrap; gap:6px; padding:0 2px 0 56px; cursor:pointer; }
 .ev-chip { display:inline-flex; align-items:center; gap:5px; background:#efe7d6; color:#8a6f43; border:1px solid var(--gold-border); border-radius:8px; padding:4px 10px; font-size:11px; font-weight:600; text-decoration:none; }
 .ev-chip.mine { background:var(--mine-bg); color:var(--mine); border-color:var(--mine-border); }
 .ev-chip.hers { background:var(--hers-bg); color:var(--hers); border-color:var(--hers-border); }
@@ -801,27 +803,27 @@ function renderCalendar() {
     const sd = shiftsByDate[key] || {};
     const mine = sd.mine, hers = sd.hers;
     const evs = eventsByDate[key] || [];
-    const bothOff = mine && hers && mine.shift_type==='off' && hers.shift_type==='off';
-    if (bothOff) {
-      const b = document.createElement('div'); b.className = 'cal-row';
-      b.innerHTML = `<div class="both-off-banner" style="grid-column:1/-1"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>ふたりともお休み</div>`;
-      grid.appendChild(b);
-    }
-    const row = document.createElement('div'); row.className = 'cal-row' + (key===todayKey ? ' today-row' : '');
-    const dc = dow===0 ? 'su' : dow===6 ? 'sa' : 'wd';
-    const isToday = key === todayKey;
-    row.innerHTML = `<div class="cal-date ${bothOff?'gold':dc} ${isToday?'today':''}"><span class="dn">${day}</span><span class="dw">${dayNames[dow]}</span>${isToday?'<span class="today-tag">今日</span>':''}</div>${shiftCell(mine,'mine',bothOff,weather.mine?.[key])}${shiftCell(hers,'hers',bothOff,weather.hers?.[key])}`;
-    row.style.cursor = 'pointer';
-    row.addEventListener('click', () => openDayEditor(key));
-    grid.appendChild(row);
     const gevs = gcalByDate[key] || [];
     const tasks = gtasksByDate[key] || [];
+    const bothOff = mine && hers && mine.shift_type==='off' && hers.shift_type==='off';
+    const isToday = key === todayKey;
+    const dc = dow===0 ? 'su' : dow===6 ? 'sa' : 'wd';
+
+    const block = document.createElement('div');
+    block.className = 'day-block' + (isToday ? ' today-block' : '');
+    block.style.cursor = 'pointer';
+    block.addEventListener('click', () => openDayEditor(key));
+
+    const row = document.createElement('div'); row.className = 'cal-row';
+    row.innerHTML = `<div class="cal-date ${bothOff?'gold':dc} ${isToday?'today':''}"><span class="dn">${day}</span><span class="dw">${dayNames[dow]}</span>${isToday?'<span class="today-tag">今日</span>':''}</div>${shiftCell(mine,'mine',bothOff,weather.mine?.[key])}${shiftCell(hers,'hers',bothOff,weather.hers?.[key])}`;
+    block.appendChild(row);
+
     if (evs.length || gevs.length || tasks.length) {
       const er = document.createElement('div'); er.className = 'event-row';
       er.innerHTML = evs.map(eventChip).join('') + gevs.map(gcalChip).join('') + tasks.map(taskChip).join('');
-      er.addEventListener('click', () => openDayEditor(key));
-      grid.appendChild(er);
+      block.appendChild(er);
     }
+    grid.appendChild(block);
   }
 }
 function eventChip(e) {
