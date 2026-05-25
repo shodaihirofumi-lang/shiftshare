@@ -1160,8 +1160,12 @@ function eventChip(e) {
 
 // ── INCOME ──
 const BREAK_MIN = 60; // 1日の勤務につき休憩1時間は労働時間に含めない
+const PAID_LEAVE_HOURS = 8; // 有休は1日8時間の労働として計算（休憩は引かない）
 function shiftHours(s) {
-  if (!s || s.shift_type !== 'work' || !s.start_time || !s.end_time) return 0;
+  if (!s) return 0;
+  // 有休は勤務時間に関わらず8時間の労働として総労働時間・収入に反映
+  if (s.shift_type === 'off' && s.label === '有休') return PAID_LEAVE_HOURS;
+  if (s.shift_type !== 'work' || !s.start_time || !s.end_time) return 0;
   const [sh, sm] = s.start_time.split(':').map(Number);
   const [eh, em] = s.end_time.split(':').map(Number);
   let mins = (eh*60+em) - (sh*60+sm);
