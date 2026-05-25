@@ -14,6 +14,7 @@ import {
   getLocations, saveLocation,
   getExpenses, addExpense, deleteExpense,
   getGcalUrls, saveGcalUrl,
+  getGtasksTokens, saveGtasksToken, deleteGtasksToken,
 } from './db.js';
 
 const app = express();
@@ -33,6 +34,13 @@ const PASSWORD = process.env.APP_PASSWORD || '1234';
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
 const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:admin@example.com';
+
+// Google Tasks OAuth
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+const BASE_URL = process.env.BASE_URL || 'https://shiftshare.onrender.com';
+const GOOGLE_REDIRECT = `${BASE_URL}/api/google/callback`;
+const TASKS_SCOPE = 'https://www.googleapis.com/auth/tasks.readonly';
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
@@ -144,6 +152,87 @@ app.post('/api/expense/scan', upload.single('file'), async (req, res) => {
     console.error(e);
     res.status(500).json({ error: `金額の読み取りエラー: ${e.message}` });
   }
+});
+
+// ── GOOGLE TASKS（OAuth）──
+app.get('/api/google/status', (_req, res) => {
+  const t = getGtasksTokens();
+  res.json({ configured: !!GOOGLE_CLIENT_ID, mine: !!t.mine, hers: !!t.hers });
+});
+app.get('/api/google/connect', (req, res) => {
+  const person = req.query.person;
+  if (!['mine', 'hers'].includes(person)) return res.status(400).send('person不正');
+  if (!GOOGLE_CLIENT_ID) return res.status(500).send('Google連携が未設定です（管理者にお問い合わせください）');
+  const url = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: GOOGLE_REDIRECT,
+    response_type: 'code',
+    scope: TASKS_SCOPE,
+    access_type: 'offline',
+    prompt: 'consent',
+    state: person,
+  });
+  res.redirect(url);
+});
+app.get('/api/google/callback', async (req, res) => {
+  const { code, state } = req.query;
+  if (!code || !['mine', 'hers'].includes(state)) return res.status(400).send('認証に失敗しました');
+  try {
+    const tok = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code, client_id: GOOGLE_CLIENT_ID, client_secret: GOOGLE_CLIENT_SECRET,
+        redirect_uri: GOOGLE_REDIRECT, grant_type: 'authorization_code',
+      }),
+    }).then(r => r.json());
+    if (!tok.refresh_token) throw new Error('refresh_tokenが取得できませんでした（既に連携済みの可能性。Googleアカウントのアクセス権を一度削除して再試行してください）');
+    await saveGtasksToken(state, tok.refresh_token);
+    res.redirect('/?gtasks=connected');
+  } catch (e) {
+    console.error('google callback', e.message);
+    res.status(500).send(`連携エラー: ${e.message}`);
+  }
+});
+app.post('/api/google/disconnect', async (req, res) => {
+  if (['mine', 'hers'].includes(req.body.person)) await deleteGtasksToken(req.body.person);
+  res.json({ success: true });
+});
+
+async function googleAccessToken(refreshToken) {
+  const tok = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID, client_secret: GOOGLE_CLIENT_SECRET,
+      refresh_token: refreshToken, grant_type: 'refresh_token',
+    }),
+  }).then(r => r.json());
+  return tok.access_token;
+}
+async function fetchGoogleTasks(refreshToken) {
+  const accessToken = await googleAccessToken(refreshToken);
+  if (!accessToken) return [];
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const lists = await fetch('https://tasks.googleapis.com/tasks/v1/users/@me/lists', { headers }).then(r => r.json());
+  const out = [];
+  for (const list of (lists.items || [])) {
+    const tasks = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${list.id}/tasks?showCompleted=false&maxResults=100`, { headers }).then(r => r.json());
+    for (const t of (tasks.items || [])) {
+      if (!t.due) continue; // 期限のあるタスクのみカレンダーに表示
+      const d = new Date(t.due);
+      out.push({ year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(), title: (t.title || '(無題)').toString().slice(0, 80) });
+    }
+  }
+  return out;
+}
+app.get('/api/gtasks', async (_req, res) => {
+  const tokens = getGtasksTokens();
+  const result = { mine: [], hers: [] };
+  for (const p of ['mine', 'hers']) {
+    if (!tokens[p]) continue;
+    try { result[p] = await fetchGoogleTasks(tokens[p]); }
+    catch (e) { console.error('gtasks', p, e.message); }
+  }
+  res.json(result);
 });
 
 // ── GOOGLE CALENDAR 連携 ──

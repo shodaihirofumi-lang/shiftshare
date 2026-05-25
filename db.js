@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {} });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {} });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -209,5 +209,22 @@ export function getGcalUrls() {
 export async function saveGcalUrl(person, url) {
   if (!cache.gcalUrls) cache.gcalUrls = {};
   cache.gcalUrls[person] = String(url || '').trim().slice(0, 500);
+  await persist();
+}
+
+// ── GOOGLE TASKS（OAuthリフレッシュトークン）──
+export function getGtasksTokens() {
+  return cache.gtasksTokens || {};
+}
+
+export async function saveGtasksToken(person, refreshToken) {
+  if (!cache.gtasksTokens) cache.gtasksTokens = {};
+  cache.gtasksTokens[person] = refreshToken;
+  await persist();
+}
+
+export async function deleteGtasksToken(person) {
+  if (!cache.gtasksTokens) return;
+  delete cache.gtasksTokens[person];
   await persist();
 }

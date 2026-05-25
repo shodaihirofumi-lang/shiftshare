@@ -241,6 +241,13 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .ev-chip.gcal { background:transparent; border-style:dashed; }
 .ev-chip.gcal.mine { color:var(--mine); border-color:var(--mine-border); }
 .ev-chip.gcal.hers { color:var(--hers); border-color:var(--hers-border); }
+.ev-chip.gtask { background:transparent; border-style:dotted; }
+.ev-chip.gtask.mine { color:var(--mine); border-color:var(--mine); }
+.ev-chip.gtask.hers { color:var(--hers); border-color:var(--hers); }
+.gt-status { font-size:12px; }
+.gt-on { color:#6e8b6a; font-weight:700; }
+.gt-conn { padding:6px 14px; border-radius:8px; border:none; background:var(--grad); color:#fbf9f5; font-size:12px; font-weight:600; cursor:pointer; }
+.gt-disc { padding:4px 10px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); color:var(--text-soft); font-size:11px; font-weight:600; cursor:pointer; margin-left:6px; }
 
 /* Googleカレンダー連携カード */
 .gcal-card { background:var(--card); border-radius:14px; margin-bottom:16px; box-shadow:var(--shadow-sm); overflow:hidden; }
@@ -393,6 +400,18 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <label class="gcal-row"><span class="gcal-lbl hers">ちか</span><input id="gcal-hers" class="gcal-in" placeholder="https://calendar.google.com/.../basic.ics" onchange="saveGcalUrl('hers')"></label>
         </div>
       </details>
+      <details class="gcal-card">
+        <summary>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Google ToDo（Tasks）連携
+        </summary>
+        <div class="gcal-body">
+          <p class="gcal-help" id="gt-note" style="display:none">※ この機能はまだ設定されていません（Google Cloudの設定が必要）。</p>
+          <p class="gcal-help">Googleアカウントを連携すると、<b>期限付きのToDo（Tasks）</b>がカレンダーに表示されます。</p>
+          <div class="gcal-row"><span class="gcal-lbl mine">ひろ</span><span class="gt-status" id="gt-status-mine"></span></div>
+          <div class="gcal-row"><span class="gcal-lbl hers">ちか</span><span class="gt-status" id="gt-status-hers"></span></div>
+        </div>
+      </details>
       <div id="cal-grid" class="cal-grid"></div>
     </div>
 
@@ -526,6 +545,8 @@ let wages = {};
 let locations = {};
 let gcalUrls = {};
 let gcalByDate = {};
+let gtasksByDate = {};
+let gtasksStatus = { mine: false, hers: false, configured: false };
 let weather = { mine: {}, hers: {} };
 let lastStatus = {};
 let viewYM = null;
@@ -557,7 +578,47 @@ async function enterApp() {
   setTimeout(scrollToToday, 100);
   loadWeather();
   loadGcal();
+  loadGoogleStatus();
+  loadGtasks();
   setupPush();
+  if (new URLSearchParams(location.search).get('gtasks') === 'connected') {
+    showToast('Google ToDo を連携しました');
+    history.replaceState({}, '', '/');
+  }
+}
+async function loadGoogleStatus() {
+  try { gtasksStatus = await fetch('/api/google/status').then(r=>r.json()); } catch { return; }
+  for (const p of ['mine','hers']) {
+    const el = document.getElementById('gt-status-'+p);
+    if (!el) continue;
+    el.innerHTML = gtasksStatus[p]
+      ? `<span class="gt-on">連携済み</span> <button class="gt-disc" onclick="disconnectGtasks('${p}')">解除</button>`
+      : `<button class="gt-conn" onclick="connectGtasks('${p}')">連携する</button>`;
+  }
+  const note = document.getElementById('gt-note');
+  if (note) note.style.display = gtasksStatus.configured ? 'none' : 'block';
+}
+function connectGtasks(person) { window.location.href = '/api/google/connect?person=' + person; }
+async function disconnectGtasks(person) {
+  try { await fetch('/api/google/disconnect', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person}) }); } catch {}
+  await loadGoogleStatus(); await loadGtasks();
+}
+async function loadGtasks() {
+  let data;
+  try { data = await fetch('/api/gtasks').then(r=>r.json()); } catch { return; }
+  gtasksByDate = {};
+  for (const p of ['mine','hers']) {
+    for (const t of (data[p] || [])) {
+      const k = `${t.year}-${String(t.month).padStart(2,'0')}-${String(t.day).padStart(2,'0')}`;
+      (gtasksByDate[k] ||= []).push({ ...t, person: p });
+    }
+  }
+  renderCalendar();
+}
+function taskChip(t) {
+  const pc = t.person==='mine' ? 'mine' : 'hers';
+  const icon = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
+  return `<span class="ev-chip gtask ${pc}">${icon}${escapeHtml(t.title)}</span>`;
 }
 async function loadGcal() {
   let data;
@@ -754,9 +815,10 @@ function renderCalendar() {
     row.addEventListener('click', () => openDayEditor(key));
     grid.appendChild(row);
     const gevs = gcalByDate[key] || [];
-    if (evs.length || gevs.length) {
+    const tasks = gtasksByDate[key] || [];
+    if (evs.length || gevs.length || tasks.length) {
       const er = document.createElement('div'); er.className = 'event-row';
-      er.innerHTML = evs.map(eventChip).join('') + gevs.map(gcalChip).join('');
+      er.innerHTML = evs.map(eventChip).join('') + gevs.map(gcalChip).join('') + tasks.map(taskChip).join('');
       er.addEventListener('click', () => openDayEditor(key));
       grid.appendChild(er);
     }
