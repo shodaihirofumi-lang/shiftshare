@@ -322,6 +322,38 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .exp-amt-item { font-size:14px; font-weight:700; }
 .scan-btn { display:flex; align-items:center; justify-content:center; gap:7px; margin-top:8px; padding:11px; border:1.5px dashed #c7d2fe; border-radius:10px; font-size:12px; font-weight:600; color:var(--mine); cursor:pointer; }
 .scan-btn:active { background:var(--mine-bg); }
+
+/* ── 日経平均カード ── */
+.nikkei-card { background:var(--card); border-radius:14px; padding:14px 16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
+.nk-head { font-size:11px; font-weight:600; color:var(--text-soft); letter-spacing:1px; margin-bottom:6px; }
+.nk-main { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.nk-price { font-size:26px; font-weight:700; color:var(--text); letter-spacing:.5px; }
+.nk-change { font-size:14px; font-weight:700; }
+.nk-change.up { color:#c0392b; }
+.nk-change.down { color:#2e6da4; }
+.nk-chart { margin-top:8px; }
+.nk-date { font-size:10px; color:var(--text-soft); margin-top:4px; text-align:right; }
+
+/* ── 2人同時休み（きらびやか）── */
+.day-block.both-off {
+  background:linear-gradient(120deg,#fff7e0 0%,#fbe7b6 50%,#fff7e0 100%);
+  border:1.5px solid #e3c068; border-radius:16px;
+  padding:14px 8px 16px; margin:8px 0;
+  box-shadow:0 0 20px rgba(212,160,80,.5);
+  position:relative; overflow:hidden;
+}
+.day-block.both-off::before {
+  content:''; position:absolute; top:0; left:-60%; width:55%; height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);
+  transform:skewX(-20deg); animation:shimmer 3.6s infinite;
+}
+@keyframes shimmer { 0%{left:-60%} 55%,100%{left:135%} }
+.day-block.both-off::after {
+  content:'★ ふたり休み'; position:absolute; top:8px; right:11px; z-index:1;
+  font-size:10px; font-weight:700; color:#b8860b;
+  background:rgba(255,255,255,.75); padding:2px 9px; border-radius:11px;
+}
+.day-block.both-off .cal-row, .day-block.both-off .event-row { position:relative; z-index:1; }
 </style>
 </head>
 <body>
@@ -362,6 +394,17 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="leg"><span class="leg-ava hers" id="leg-ava-hers"></span><span id="leg-name-hers">ちか</span></div>
         <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div>ふたり休み</div>
       </div>
+      <div class="nikkei-card">
+        <div class="nk-head">日経平均株価</div>
+        <div class="nk-main">
+          <span class="nk-price" id="nk-price">—</span>
+          <span class="nk-change" id="nk-change"></span>
+        </div>
+        <div class="nk-chart" id="nk-chart"></div>
+        <div class="nk-date" id="nk-date"></div>
+      </div>
+      <div id="cal-grid" class="cal-grid"></div>
+
       <div class="income-card">
         <div class="income-head"><span id="income-month">今月</span>の収支・天気</div>
         <div class="income-person">
@@ -414,7 +457,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <div class="gcal-row"><span class="gcal-lbl hers">ちか</span><span class="gt-status" id="gt-status-hers"></span></div>
         </div>
       </details>
-      <div id="cal-grid" class="cal-grid"></div>
     </div>
 
     <!-- UPLOAD -->
@@ -582,6 +624,7 @@ async function enterApp() {
   loadGcal();
   loadGoogleStatus();
   loadGtasks();
+  loadNikkei();
   setupPush();
   if (new URLSearchParams(location.search).get('gtasks') === 'connected') {
     showToast('Google ToDo を連携しました');
@@ -621,6 +664,37 @@ function taskChip(t) {
   const pc = t.person==='mine' ? 'mine' : 'hers';
   const icon = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
   return `<span class="ev-chip gtask ${pc}">${icon}${escapeHtml(t.title)}</span>`;
+}
+
+// ── 日経平均株価 ──
+async function loadNikkei() {
+  let d;
+  try { d = await fetch('/api/nikkei').then(r=>r.json()); } catch { return; }
+  const priceEl = document.getElementById('nk-price');
+  if (!d || d.error || !d.history) { priceEl.textContent = '取得できませんでした'; return; }
+  priceEl.textContent = d.latest.toLocaleString('ja-JP', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const up = d.change >= 0;
+  const ch = document.getElementById('nk-change');
+  ch.className = 'nk-change ' + (up ? 'up' : 'down');
+  ch.textContent = `${up ? '▲' : '▼'} ${up ? '+' : ''}${d.change.toLocaleString('ja-JP')}　(${up ? '+' : ''}${d.changePct}%)`;
+  document.getElementById('nk-date').textContent = `${d.date} 終値`;
+  document.getElementById('nk-chart').innerHTML = sparkline(d.history.map(h => h.close), up);
+}
+function sparkline(values, up) {
+  if (values.length < 2) return '';
+  const w = 320, h = 60, pad = 4;
+  const min = Math.min(...values), max = Math.max(...values), range = (max - min) || 1;
+  const pts = values.map((v, i) => {
+    const x = pad + (i / (values.length - 1)) * (w - 2 * pad);
+    const y = pad + (1 - (v - min) / range) * (h - 2 * pad);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const color = up ? '#c0392b' : '#2e6da4';
+  const last = pts.split(' ').pop().split(',');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:60px">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${last[0]}" cy="${last[1]}" r="3" fill="${color}"/>
+  </svg>`;
 }
 async function loadGcal() {
   let data;
@@ -810,7 +884,7 @@ function renderCalendar() {
     const dc = dow===0 ? 'su' : dow===6 ? 'sa' : 'wd';
 
     const block = document.createElement('div');
-    block.className = 'day-block' + (isToday ? ' today-block' : '');
+    block.className = 'day-block' + (isToday ? ' today-block' : '') + (bothOff ? ' both-off' : '');
     block.style.cursor = 'pointer';
     block.addEventListener('click', () => openDayEditor(key));
 

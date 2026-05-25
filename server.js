@@ -83,6 +83,34 @@ app.get('/api/shifts', (_req, res) => res.json(getAllShifts()));
 app.get('/api/status', (_req, res) => res.json(getUploadLog()));
 app.get('/api/vapid-key', (_req, res) => res.json({ publicKey: VAPID_PUBLIC }));
 
+// ── 日経平均株価（Yahoo Finance・キー不要）──
+app.get('/api/nikkei', async (_req, res) => {
+  try {
+    const j = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EN225?interval=1d&range=1mo', {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    }).then(r => r.json());
+    const r = j.chart?.result?.[0];
+    if (!r) throw new Error('データ取得失敗');
+    const ts = r.timestamp || [];
+    const closes = r.indicators.quote[0].close || [];
+    const history = [];
+    for (let i = 0; i < ts.length; i++) {
+      if (closes[i] == null) continue;
+      const d = new Date(ts[i] * 1000);
+      history.push({ date: `${d.getMonth() + 1}/${d.getDate()}`, close: Math.round(closes[i] * 100) / 100 });
+    }
+    if (history.length < 2) throw new Error('データ不足');
+    const latest = history[history.length - 1].close;
+    const prev = history[history.length - 2].close;
+    const change = Math.round((latest - prev) * 100) / 100;
+    const changePct = Math.round((change / prev) * 10000) / 100;
+    res.json({ latest, change, changePct, date: history[history.length - 1].date, history });
+  } catch (e) {
+    console.error('nikkei', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── EDIT one day's shift manually ──
 app.post('/api/shift', async (req, res) => {
   const { person, year, month, day } = req.body;
