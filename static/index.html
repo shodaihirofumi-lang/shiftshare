@@ -334,6 +334,26 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .nk-chart { margin-top:8px; }
 .nk-date { font-size:10px; color:var(--text-soft); margin-top:4px; text-align:right; }
 
+/* ── 保有株カード ── */
+.folio-card { background:var(--card); border-radius:14px; padding:13px 16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
+.folio-row { display:flex; align-items:flex-start; gap:10px; padding:7px 0; }
+.folio-row + .folio-row { border-top:1px solid var(--line-soft); }
+.folio-name { font-size:13px; font-weight:700; width:36px; flex-shrink:0; padding-top:1px; }
+.folio-name.mine { color:var(--mine); } .folio-name.hers { color:var(--hers); }
+.folio-lines { display:flex; flex-direction:column; gap:3px; flex:1; }
+.folio-line { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.folio-val { font-size:16px; font-weight:700; color:var(--text); }
+.folio-gain { font-size:12px; font-weight:700; }
+.folio-gain.up { color:#c0392b; } .folio-gain.down { color:#2e6da4; }
+.folio-empty { font-size:12px; color:var(--text-soft); }
+.folio-manage { margin-top:8px; border-top:1px solid var(--line); }
+.folio-manage summary { font-size:12px; font-weight:600; color:var(--mine); cursor:pointer; padding:10px 0 4px; list-style:none; }
+.folio-manage summary::-webkit-details-marker { display:none; }
+.folio-manage .gcal-body { padding:0; }
+.fh-btn { flex:1; padding:8px 0; border-radius:9px; border:1.5px solid var(--line); background:var(--card); font-size:12px; font-weight:600; color:var(--text-soft); cursor:pointer; }
+.fh-btn.active[data-p=mine] { background:var(--mine-bg); color:var(--mine); border-color:var(--mine); }
+.fh-btn.active[data-p=hers] { background:var(--hers-bg); color:var(--hers); border-color:var(--hers); }
+
 /* ── 2人同時休み（きらびやか）── */
 .day-block.both-off {
   border:1.5px solid #e3c068; border-radius:16px;
@@ -406,6 +426,26 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         </div>
         <div class="nk-chart" id="nk-chart"></div>
         <div class="nk-date" id="nk-date"></div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">保有株</div>
+        <div id="folio-summary"></div>
+        <details class="folio-manage">
+          <summary>銘柄を管理・追加</summary>
+          <div class="gcal-body">
+            <div id="folio-list"></div>
+            <div class="ev-person-toggle">
+              <button class="fh-btn active" data-p="mine" onclick="setFolioPerson('mine')">ひろ</button>
+              <button class="fh-btn" data-p="hers" onclick="setFolioPerson('hers')">ちか</button>
+            </div>
+            <input id="fh-ticker" class="ev-in" placeholder="銘柄コード（例 7203.T / AAPL）">
+            <div class="ev-add-row">
+              <input id="fh-shares" class="ev-in" type="number" inputmode="decimal" placeholder="株数">
+              <input id="fh-cost" class="ev-in" type="number" inputmode="decimal" placeholder="取得単価">
+              <button class="ev-add-btn" onclick="addHoldingFromUI()">追加</button>
+            </div>
+          </div>
+        </details>
       </div>
       <div id="cal-grid" class="cal-grid"></div>
 
@@ -595,6 +635,9 @@ let gcalUrls = {};
 let gcalByDate = {};
 let gtasksByDate = {};
 let gtasksStatus = { mine: false, hers: false, configured: false };
+let holdings = [];
+let quotes = {};
+let folioPerson = 'mine';
 let weather = { mine: {}, hers: {} };
 let lastStatus = {};
 let viewYM = null;
@@ -629,6 +672,7 @@ async function enterApp() {
   loadGoogleStatus();
   loadGtasks();
   loadNikkei();
+  loadHoldings();
   setupPush();
   if (new URLSearchParams(location.search).get('gtasks') === 'connected') {
     showToast('Google ToDo を連携しました');
@@ -683,6 +727,70 @@ async function loadNikkei() {
   ch.textContent = `${up ? '▲' : '▼'} ${up ? '+' : ''}${d.change.toLocaleString('ja-JP')}　(${up ? '+' : ''}${d.changePct}%)`;
   document.getElementById('nk-date').textContent = `${d.date} 終値`;
   document.getElementById('nk-chart').innerHTML = sparkline(d.history.map(h => h.close), up);
+}
+// ── 保有株ポートフォリオ ──
+const CUR_SYM = { JPY:'¥', USD:'$', EUR:'€', GBP:'£' };
+function curSym(c){ return CUR_SYM[c] || (c ? c+' ' : '¥'); }
+async function loadHoldings() {
+  try { holdings = await fetch('/api/holdings').then(r=>r.json()); } catch { holdings = []; }
+  const syms = [...new Set(holdings.map(h=>h.ticker).filter(Boolean))];
+  if (syms.length) { try { quotes = await fetch('/api/quotes?symbols='+encodeURIComponent(syms.join(','))).then(r=>r.json()); } catch { quotes={}; } }
+  else quotes = {};
+  renderPortfolio();
+}
+function setFolioPerson(p){ folioPerson=p; document.querySelectorAll('.fh-btn').forEach(b=>b.classList.toggle('active', b.dataset.p===p)); }
+function renderPortfolio() {
+  // 通貨ごと・人ごとに集計
+  const sum = { mine:{}, hers:{} };
+  for (const h of holdings) {
+    const q = quotes[h.ticker];
+    const cur = q ? q.currency : 'JPY';
+    const price = q ? q.price : h.cost;
+    const p = h.person==='hers' ? 'hers' : 'mine';
+    (sum[p][cur] ||= {value:0, cost:0});
+    sum[p][cur].value += price*h.shares;
+    sum[p][cur].cost += h.cost*h.shares;
+  }
+  const sm = document.getElementById('folio-summary');
+  if (sm) sm.innerHTML = ['mine','hers'].map(p=>{
+    const curs = Object.keys(sum[p]);
+    if (!curs.length) return `<div class="folio-row"><span class="folio-name ${p}">${NAMES[p]}</span><span class="folio-empty">未登録</span></div>`;
+    const parts = curs.map(c=>{
+      const {value,cost}=sum[p][c]; const g=value-cost; const gp=cost?Math.round(g/cost*1000)/10:0; const up=g>=0;
+      return `<div class="folio-line"><span class="folio-val">${curSym(c)}${Math.round(value).toLocaleString()}</span><span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(c)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gp}%)</span></div>`;
+    }).join('');
+    return `<div class="folio-row"><span class="folio-name ${p}">${NAMES[p]}</span><div class="folio-lines">${parts}</div></div>`;
+  }).join('');
+  const list = document.getElementById('folio-list');
+  if (!list) return;
+  if (!holdings.length) { list.innerHTML = '<div class="ev-empty">銘柄はまだありません</div>'; return; }
+  list.innerHTML = holdings.map(h=>{
+    const q = quotes[h.ticker]; const cur = q?q.currency:'JPY'; const price = q?q.price:null;
+    const v = price!=null ? price*h.shares : null;
+    const g = price!=null ? (price-h.cost)*h.shares : null; const up = g>=0;
+    const detail = price!=null
+      ? `${curSym(cur)}${price.toLocaleString()} × ${h.shares} = ${curSym(cur)}${Math.round(v).toLocaleString()} <span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${gp(g,h.cost,h.shares)}</span>`
+      : '<span style="color:#b5544f">価格取得失敗</span>';
+    return `<div class="ev-item ${h.person||'mine'}"><div class="ev-item-main"><span class="ev-item-who">${h.person?NAMES[h.person]:''}</span><b>${escapeHtml(q?q.name:h.ticker)}</b> ${detail}</div><button class="ev-del" onclick="delHolding('${h.id}')">×</button></div>`;
+  }).join('');
+}
+function gp(gain, cost, shares){ const c=cost*shares; const p=c?Math.round(gain/c*1000)/10:0; return `${gain>=0?'+':''}${p}%`; }
+async function addHoldingFromUI() {
+  const ticker = document.getElementById('fh-ticker').value.trim();
+  const shares = parseFloat(document.getElementById('fh-shares').value);
+  const cost = parseFloat(document.getElementById('fh-cost').value);
+  if (!ticker) { showToast('銘柄コードを入力してください', true); return; }
+  if (!(shares>0)) { showToast('株数を入力してください', true); return; }
+  try {
+    const r = await fetch('/api/holding', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person:folioPerson, ticker, shares, cost:cost||0}) });
+    if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error||'エラー'); }
+    document.getElementById('fh-ticker').value=''; document.getElementById('fh-shares').value=''; document.getElementById('fh-cost').value='';
+    await loadHoldings(); showToast('銘柄を追加しました');
+  } catch (e) { showToast('追加失敗: '+e.message, true); }
+}
+async function delHolding(id) {
+  try { await fetch('/api/holding/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) }); await loadHoldings(); }
+  catch { showToast('削除に失敗しました', true); }
 }
 function sparkline(values, up) {
   if (values.length < 2) return '';

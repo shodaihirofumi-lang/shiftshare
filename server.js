@@ -15,6 +15,7 @@ import {
   getExpenses, addExpense, deleteExpense,
   getGcalUrls, saveGcalUrl,
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
+  getHoldings, addHolding, deleteHolding,
 } from './db.js';
 
 const app = express();
@@ -82,6 +83,42 @@ app.post('/api/upload', upload.array('files', 2), async (req, res) => {
 app.get('/api/shifts', (_req, res) => res.json(getAllShifts()));
 app.get('/api/status', (_req, res) => res.json(getUploadLog()));
 app.get('/api/vapid-key', (_req, res) => res.json({ publicKey: VAPID_PUBLIC }));
+
+// ── 保有株（ポートフォリオ）──
+app.get('/api/holdings', (_req, res) => res.json(getHoldings()));
+app.post('/api/holding', async (req, res) => {
+  const { person, ticker } = req.body;
+  if (!['mine', 'hers'].includes(person)) return res.status(400).json({ error: 'person は mine または hers のみ' });
+  if (!ticker || !String(ticker).trim()) return res.status(400).json({ error: '銘柄コードが必要です' });
+  const id = await addHolding(req.body);
+  res.json({ success: true, id });
+});
+app.post('/api/holding/delete', async (req, res) => {
+  await deleteHolding(req.body.id);
+  res.json({ success: true });
+});
+// 複数銘柄の現在値を取得（Yahoo Finance）
+app.get('/api/quotes', async (req, res) => {
+  const symbols = String(req.query.symbols || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 30);
+  const out = {};
+  for (const sym of symbols) {
+    try {
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      }).then(r => r.json());
+      const m = j.chart?.result?.[0]?.meta;
+      if (m && m.regularMarketPrice != null) {
+        out[sym] = {
+          price: m.regularMarketPrice,
+          prevClose: m.chartPreviousClose ?? m.previousClose ?? m.regularMarketPrice,
+          currency: m.currency || 'JPY',
+          name: m.shortName || m.longName || sym,
+        };
+      }
+    } catch { /* skip */ }
+  }
+  res.json(out);
+});
 
 // ── 日経平均株価（Yahoo Finance・キー不要）──
 app.get('/api/nikkei', async (_req, res) => {

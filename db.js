@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {} });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [] });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -226,5 +226,30 @@ export async function saveGtasksToken(person, refreshToken) {
 export async function deleteGtasksToken(person) {
   if (!cache.gtasksTokens) return;
   delete cache.gtasksTokens[person];
+  await persist();
+}
+
+// ── 保有株（手入力ポートフォリオ）──
+export function getHoldings() {
+  return cache.holdings || [];
+}
+
+export async function addHolding(h) {
+  if (!cache.holdings) cache.holdings = [];
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  cache.holdings.push({
+    id,
+    person: ['mine', 'hers'].includes(h.person) ? h.person : null,
+    ticker: String(h.ticker || '').trim().toUpperCase().slice(0, 20),
+    shares: Number(h.shares) || 0,
+    cost: Number(h.cost) || 0,
+  });
+  await persist();
+  return id;
+}
+
+export async function deleteHolding(id) {
+  if (!cache.holdings) return;
+  cache.holdings = cache.holdings.filter(h => h.id !== id);
   await persist();
 }
