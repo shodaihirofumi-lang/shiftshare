@@ -227,6 +227,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .modal-actions { display:flex; gap:10px; margin-top:10px; }
 .btn-cancel { flex:1; padding:14px; border-radius:13px; border:1.5px solid var(--line); background:var(--card); color:var(--text-soft); font-size:14px; font-weight:600; cursor:pointer; }
 .btn-save { flex:2; padding:14px; border-radius:13px; border:none; background:var(--grad); color:#fbf9f5; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 6px 18px rgba(74,70,85,.22); }
+/* 銘柄チャート */
+.chart-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+.chart-price { font-size:18px; font-weight:700; color:var(--text); }
+.chart-range { display:flex; gap:6px; margin-bottom:14px; }
+.rng-btn { flex:1; padding:7px 0; border-radius:9px; border:1.5px solid var(--line); background:var(--card); font-size:12px; font-weight:600; color:var(--text-soft); cursor:pointer; font-family:inherit; }
+.rng-btn.active { background:var(--text); color:var(--card); border-color:var(--text); }
+.chart-axis { display:flex; justify-content:space-between; gap:6px; font-size:10px; color:var(--text-soft); margin-top:6px; }
+.chart-axis span:nth-child(2) { color:var(--text); font-weight:600; }
 
 /* ── MONTH NAV ── */
 .month-nav { display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:16px; }
@@ -340,8 +348,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-row { display:flex; align-items:center; gap:8px; padding:9px 0; cursor:pointer; }
 .folio-tg { font-size:9px; color:var(--text-soft); width:12px; flex-shrink:0; }
 .folio-detail { padding:2px 0 8px 12px; }
-.folio-item { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; background:var(--bg); border-radius:10px; padding:8px 11px; margin-bottom:6px; }
+.folio-item { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; background:var(--bg); border-radius:10px; padding:8px 11px; margin-bottom:6px; cursor:pointer; transition:background .15s; }
+.folio-item:active { background:var(--line-soft); }
 .folio-item-main { font-size:13px; line-height:1.55; }
+.folio-chart-ic { color:var(--text-soft); vertical-align:middle; margin:0 1px; }
 .folio-sub { font-size:11px; color:var(--text-soft); }
 .folio-item-val { font-size:15px; font-weight:700; }
 .folio-fail { font-size:12px; color:#b5544f; }
@@ -454,7 +464,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="nk-date" id="nk-date"></div>
       </div>
       <div class="folio-card">
-        <div class="income-head">保有株（名前をタップで明細）</div>
+        <div class="income-head">保有株（名前をタップで明細・銘柄をタップでチャート）</div>
         <div id="folio-summary"></div>
         <details class="folio-manage">
           <summary>＋ 銘柄を追加</summary>
@@ -473,11 +483,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           </div>
         </details>
         <div class="folio-note">※「買い/売り/様子見」は週足の移動平均線(13週・26週)とRSI(14週)による機械的な目安です。投資判断はご自身の責任で。</div>
-      </div>
-      <div class="folio-card">
-        <div class="income-head">日別の損益（資産の増減）</div>
-        <div id="pnl-history"></div>
-        <div class="folio-note">※ 現在の保有株の日足から計算した、1日ごとの評価額の増減です。</div>
       </div>
       <div id="cal-grid" class="cal-grid"></div>
 
@@ -533,6 +538,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <div class="gcal-row"><span class="gcal-lbl hers">ちか</span><span class="gt-status" id="gt-status-hers"></span></div>
         </div>
       </details>
+      <div class="folio-card">
+        <div class="income-head">日別の損益（資産の増減）</div>
+        <div id="pnl-history"></div>
+        <div class="folio-note">※ 現在の保有株の日足から計算した、1日ごとの評価額の増減です。</div>
+      </div>
     </div>
 
     <!-- UPLOAD -->
@@ -596,6 +606,19 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 <div class="overlay" id="overlay"><div class="ring"></div><h3>AIがシフトを解析中…</h3><p>しばらくお待ちください</p></div>
 <div class="toast" id="toast"></div>
+
+<!-- 銘柄チャート -->
+<div class="modal-bg" id="chart-modal" onclick="if(event.target===this)closeChart()">
+  <div class="modal">
+    <div class="chart-head">
+      <div class="modal-title" id="chart-title">—</div>
+      <div class="chart-price" id="chart-price"></div>
+    </div>
+    <div class="chart-range" id="chart-range"></div>
+    <div id="chart-body"></div>
+    <div class="modal-actions"><button class="btn-cancel" style="flex:1" onclick="closeChart()">閉じる</button></div>
+  </div>
+</div>
 
 <!-- DAY EDITOR MODAL -->
 <div class="modal-bg" id="day-editor" onclick="if(event.target===this)closeEditor()">
@@ -806,11 +829,13 @@ function holdingLine(h) {
   const q = quotes[h.ticker]; const cur = q?q.currency:'JPY'; const price = q?q.price:null;
   const name = stockName(h);
   const del = `<button class="folio-del" onclick="event.stopPropagation();delHolding('${h.id}','${escapeHtml(name)}')">削除</button>`;
+  const tap = `onclick="openStockChart('${h.ticker}','${escapeHtml(name)}')"`;
   const sig = q && q.signal && SIG[q.signal]
     ? `<span class="sig ${SIG[q.signal][1]}">${SIG[q.signal][0]}${q.rsi!=null?`<span class="sig-rsi">RSI${q.rsi}</span>`:''}</span>` : '';
-  if (price==null) return `<div class="folio-item"><div class="folio-item-main"><b>${escapeHtml(name)}</b> <span class="folio-sub">${h.shares}株</span><br><span class="folio-fail">価格取得失敗（コードを確認）</span></div>${del}</div>`;
+  const chartIcon = '<svg class="folio-chart-ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>';
+  if (price==null) return `<div class="folio-item" ${tap}><div class="folio-item-main"><b>${escapeHtml(name)}</b> ${chartIcon} <span class="folio-sub">${h.shares}株</span><br><span class="folio-fail">価格取得失敗（コードを確認）</span></div>${del}</div>`;
   const v=price*h.shares, g=(price-h.cost)*h.shares, c=h.cost*h.shares, gpct=c?Math.round(g/c*1000)/10:0; const up=g>=0;
-  return `<div class="folio-item"><div class="folio-item-main"><b>${escapeHtml(name)}</b> ${sig} <span class="folio-sub">${h.shares}株 @${curSym(cur)}${price.toLocaleString()}</span><br><span class="folio-item-val">${curSym(cur)}${Math.round(v).toLocaleString()}</span> <span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span></div>${del}</div>`;
+  return `<div class="folio-item" ${tap}><div class="folio-item-main"><b>${escapeHtml(name)}</b> ${chartIcon} ${sig} <span class="folio-sub">${h.shares}株 @${curSym(cur)}${price.toLocaleString()}</span><br><span class="folio-item-val">${curSym(cur)}${Math.round(v).toLocaleString()}</span> <span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span></div>${del}</div>`;
 }
 function toggleFolio(p) {
   const el = document.getElementById('folio-detail-'+p), tg = document.getElementById('folio-tg-'+p);
@@ -839,6 +864,43 @@ async function delHolding(id, name) {
 async function loadPortfolioHistory() {
   let d; try { d = await fetch('/api/portfolio-history').then(r=>r.json()); } catch { return; }
   renderPnlHistory(d.history || []);
+}
+// ── 銘柄チャート ──
+let chartSymbol = null, chartRange = '6mo';
+const RNG_LABEL = { '1mo':'1ヶ月', '6mo':'6ヶ月', '1y':'1年', '5y':'5年' };
+function openStockChart(ticker, name) {
+  chartSymbol = ticker; chartRange = '6mo';
+  document.getElementById('chart-title').textContent = name;
+  document.getElementById('chart-price').textContent = '';
+  document.getElementById('chart-range').innerHTML = Object.keys(RNG_LABEL).map(r=>`<button class="rng-btn ${r===chartRange?'active':''}" data-r="${r}" onclick="setChartRange('${r}')">${RNG_LABEL[r]}</button>`).join('');
+  document.getElementById('chart-modal').classList.add('active');
+  loadStockChart();
+}
+function setChartRange(r){ chartRange=r; document.querySelectorAll('.rng-btn').forEach(b=>b.classList.toggle('active', b.dataset.r===r)); loadStockChart(); }
+function closeChart(){ document.getElementById('chart-modal').classList.remove('active'); }
+async function loadStockChart() {
+  const body = document.getElementById('chart-body');
+  body.innerHTML = '<div class="ev-empty">読み込み中…</div>';
+  let d; try { d = await fetch(`/api/stock-history?symbol=${encodeURIComponent(chartSymbol)}&range=${chartRange}`).then(r=>r.json()); } catch { body.innerHTML='<div class="ev-empty">取得できませんでした</div>'; return; }
+  if (!d.history || d.history.length < 2) { body.innerHTML='<div class="ev-empty">データがありません</div>'; return; }
+  const vals = d.history.map(h=>h.close);
+  const last = vals[vals.length-1], first = vals[0]; const up = last>=first;
+  const chg = last-first, chgPct = first?Math.round(chg/first*1000)/10:0;
+  document.getElementById('chart-price').innerHTML = `${curSym(d.currency)}${last.toLocaleString()} <span class="nk-change ${up?'up':'down'}" style="font-size:12px">${up?'▲+':'▼−'}${curSym(d.currency)}${Math.abs(Math.round(chg)).toLocaleString()} (${up?'+':''}${chgPct}%)</span>`;
+  body.innerHTML = bigChart(d.history, up);
+}
+function bigChart(hist, up) {
+  const vals = hist.map(h=>h.close);
+  const w=320, h=170, padL=2, padR=2, padT=12, padB=4;
+  const min=Math.min(...vals), max=Math.max(...vals), range=(max-min)||1;
+  const X=i=> padL + (i/(vals.length-1))*(w-padL-padR);
+  const Y=v=> padT + (1-(v-min)/range)*(h-padT-padB);
+  const pts = vals.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+  const color = up?'#c0392b':'#2e6da4';
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:180px">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+  </svg>
+  <div class="chart-axis"><span>${hist[0].date}</span><span>高${Math.round(max).toLocaleString()}・安${Math.round(min).toLocaleString()}</span><span>${hist[hist.length-1].date}</span></div>`;
 }
 function renderPnlHistory(hist) {
   const el = document.getElementById('pnl-history');

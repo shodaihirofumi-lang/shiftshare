@@ -196,6 +196,33 @@ app.get('/api/portfolio-history', async (_req, res) => {
   res.json({ history });
 });
 
+// ── 個別銘柄の値動き（チャート用）──
+app.get('/api/stock-history', async (req, res) => {
+  const sym0 = String(req.query.symbol || '').trim();
+  const sym = /^\d{4,5}$/.test(sym0) ? sym0 + '.T' : sym0;
+  if (!sym) return res.status(400).json({ error: 'symbol が必要です' });
+  const range = ['1mo', '6mo', '1y', '5y'].includes(req.query.range) ? req.query.range : '6mo';
+  const interval = (range === '1y' || range === '5y') ? '1wk' : '1d';
+  try {
+    const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&range=${range}`, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    }).then(r => r.json());
+    const r0 = j.chart?.result?.[0];
+    if (!r0) throw new Error('データなし');
+    const ts = r0.timestamp || [];
+    const closes = r0.indicators?.quote?.[0]?.close || [];
+    const fmt = new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', year: '2-digit', month: 'numeric', day: 'numeric' });
+    const history = [];
+    for (let i = 0; i < ts.length; i++) {
+      if (closes[i] == null) continue;
+      history.push({ date: fmt.format(new Date(ts[i] * 1000)), close: Math.round(closes[i] * 100) / 100 });
+    }
+    res.json({ name: r0.meta?.shortName || sym, currency: r0.meta?.currency || 'JPY', history });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── 日経平均株価（Yahoo Finance・キー不要）──
 app.get('/api/nikkei', async (_req, res) => {
   try {
