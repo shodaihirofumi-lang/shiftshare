@@ -1142,7 +1142,7 @@ function renderCalendar() {
     }
     if (bothOff) {
       const badge = document.createElement('div'); badge.className = 'both-off-badge';
-      badge.innerHTML = (bothWx ? weatherIcon(bothWx.code) : '') + '<span>ふたり休み</span>';
+      badge.innerHTML = (bothWx ? weatherIcon(bothWx.code, bothWx.precip) : '') + '<span>ふたり休み</span>';
       block.appendChild(badge);
     }
     grid.appendChild(block);
@@ -1224,8 +1224,15 @@ function weatherCat(code) {
   if ((code>=51 && code<=67) || (code>=80 && code<=82)) return 'rain';
   return 'cloud';
 }
-function weatherIcon(code) {
-  return WX_SVG[weatherCat(code)] || WX_SVG.cloud;
+function weatherIcon(code, precip) {
+  const cat = weatherCat(code);
+  // 雪・雷は天気コード優先
+  if (cat === 'snow' || cat === 'thunder') return WX_SVG[cat];
+  // 降水確率50%以上なら傘マーク
+  if (precip != null && precip >= 50) return WX_SVG.rain;
+  // 50%未満なら傘は出さない（雨コードでも曇り扱い）
+  if (cat === 'rain') return WX_SVG.cloud;
+  return WX_SVG[cat] || WX_SVG.cloud;
 }
 // Open-Meteoの地名検索は主要な日本語地名(東京/大阪等)に弱いので英名へ変換
 const JP_CITY = {
@@ -1468,7 +1475,7 @@ function wxLine(wx) {
   if (!wx) return '<span class="wx"></span>';
   const drop = '<svg class="wx-drop" width="9" height="11" viewBox="0 0 24 24" fill="#4a90c2"><path d="M12 2s7 8 7 13a7 7 0 0 1-14 0c0-5 7-13 7-13z"/></svg>';
   const pop = (wx.precip != null) ? `<span class="wx-pop">${drop}${wx.precip}%</span>` : '';
-  return `<span class="wx">${weatherIcon(wx.code)}<span class="wx-temp">${wx.tmax}°</span>${pop}</span>`;
+  return `<span class="wx">${weatherIcon(wx.code, wx.precip)}<span class="wx-temp">${wx.tmax}°</span>${pop}</span>`;
 }
 function shiftCell(s, person, bothOff, wx) {
   if (!s) return `<div class="shift-cell sc-empty"><div class="sc-head"><span></span>${wxLine(wx)}</div></div>`;
