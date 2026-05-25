@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {} });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -198,5 +198,16 @@ export async function addExpense(ex) {
 export async function deleteExpense(id) {
   if (!cache.expenses) return;
   cache.expenses = cache.expenses.filter(e => e.id !== id);
+  await persist();
+}
+
+// ── GOOGLE CALENDAR 連携（限定公開iCal URL）──
+export function getGcalUrls() {
+  return cache.gcalUrls || {};
+}
+
+export async function saveGcalUrl(person, url) {
+  if (!cache.gcalUrls) cache.gcalUrls = {};
+  cache.gcalUrls[person] = String(url || '').trim().slice(0, 500);
   await persist();
 }

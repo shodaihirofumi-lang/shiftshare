@@ -238,6 +238,21 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .ev-chip.mine { background:var(--mine-bg); color:var(--mine); border-color:var(--mine-border); }
 .ev-chip.hers { background:var(--hers-bg); color:var(--hers); border-color:var(--hers-border); }
 .ev-chip .ev-time { font-weight:700; opacity:.8; }
+.ev-chip.gcal { background:transparent; border-style:dashed; }
+.ev-chip.gcal.mine { color:var(--mine); border-color:var(--mine-border); }
+.ev-chip.gcal.hers { color:var(--hers); border-color:var(--hers-border); }
+
+/* Googleカレンダー連携カード */
+.gcal-card { background:var(--card); border-radius:14px; margin-bottom:16px; box-shadow:var(--shadow-sm); overflow:hidden; }
+.gcal-card summary { display:flex; align-items:center; gap:8px; padding:13px 16px; font-size:13px; font-weight:600; color:var(--text); cursor:pointer; list-style:none; }
+.gcal-card summary::-webkit-details-marker { display:none; }
+.gcal-body { padding:0 16px 14px; }
+.gcal-help { font-size:11px; color:var(--text-soft); line-height:1.6; margin-bottom:12px; }
+.gcal-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.gcal-lbl { font-size:12px; font-weight:700; width:34px; flex-shrink:0; }
+.gcal-lbl.mine { color:var(--mine); }
+.gcal-lbl.hers { color:var(--hers); }
+.gcal-in { flex:1; min-width:0; padding:8px 10px; border:1.5px solid var(--line); border-radius:9px; font-size:12px; font-family:inherit; color:var(--text); background:var(--card); }
 
 /* event person toggle */
 .ev-person-toggle { display:flex; gap:6px; margin-bottom:8px; }
@@ -367,6 +382,17 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           </div>
         </div>
       </div>
+      <details class="gcal-card">
+        <summary>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Googleカレンダー連携
+        </summary>
+        <div class="gcal-body">
+          <p class="gcal-help">Googleカレンダーの「設定 → カレンダーの設定 → カレンダーの統合 → 限定公開URL（iCal形式）」をコピーして貼り付けると、その予定が自動でカレンダーに表示されます。</p>
+          <label class="gcal-row"><span class="gcal-lbl mine">ひろ</span><input id="gcal-mine" class="gcal-in" placeholder="https://calendar.google.com/.../basic.ics" onchange="saveGcalUrl('mine')"></label>
+          <label class="gcal-row"><span class="gcal-lbl hers">ちか</span><input id="gcal-hers" class="gcal-in" placeholder="https://calendar.google.com/.../basic.ics" onchange="saveGcalUrl('hers')"></label>
+        </div>
+      </details>
       <div id="cal-grid" class="cal-grid"></div>
     </div>
 
@@ -498,6 +524,8 @@ let allEvents = [];
 let allExpenses = [];
 let wages = {};
 let locations = {};
+let gcalUrls = {};
+let gcalByDate = {};
 let weather = { mine: {}, hers: {} };
 let lastStatus = {};
 let viewYM = null;
@@ -528,7 +556,34 @@ async function enterApp() {
   await loadCalendar();
   setTimeout(scrollToToday, 100);
   loadWeather();
+  loadGcal();
   setupPush();
+}
+async function loadGcal() {
+  let data;
+  try { data = await fetch('/api/gcal-events').then(r=>r.json()); } catch { return; }
+  gcalByDate = {};
+  for (const p of ['mine','hers']) {
+    for (const e of (data[p] || [])) {
+      const k = `${e.year}-${String(e.month).padStart(2,'0')}-${String(e.day).padStart(2,'0')}`;
+      (gcalByDate[k] ||= []).push({ ...e, person: p });
+    }
+  }
+  renderCalendar();
+}
+async function saveGcalUrl(person) {
+  const url = document.getElementById('gcal-'+person).value.trim();
+  gcalUrls[person] = url;
+  try { await fetch('/api/gcal-url', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person, url}) }); }
+  catch { showToast('連携URLの保存に失敗しました', true); return; }
+  showToast('Googleカレンダーを読み込み中…');
+  loadGcal();
+}
+function gcalChip(e) {
+  const pc = e.person==='mine' ? 'mine' : 'hers';
+  const icon = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  const t = e.time ? `<span class="ev-time">${escapeHtml(e.time)}</span>` : '';
+  return `<span class="ev-chip gcal ${pc}">${icon}${t}${escapeHtml(e.title)}</span>`;
 }
 function scrollToToday() {
   const el = document.querySelector('#cal-grid .cal-date.today');
@@ -600,15 +655,18 @@ function resizeImage(file, max) {
 
 // ── CALENDAR ──
 async function loadCalendar() {
-  const [shifts, status, events, wagesData, locData, expData] = await Promise.all([
+  const [shifts, status, events, wagesData, locData, expData, gcalUrlData] = await Promise.all([
     fetch('/api/shifts').then(r=>r.json()),
     fetch('/api/status').then(r=>r.json()),
     fetch('/api/events').then(r=>r.json()).catch(()=>[]),
     fetch('/api/wages').then(r=>r.json()).catch(()=>({})),
     fetch('/api/locations').then(r=>r.json()).catch(()=>({})),
     fetch('/api/expenses').then(r=>r.json()).catch(()=>[]),
+    fetch('/api/gcal-urls').then(r=>r.json()).catch(()=>({})),
   ]);
   allShifts = shifts; allEvents = events; lastStatus = status; wages = wagesData || {}; locations = locData || {}; allExpenses = expData || [];
+  gcalUrls = gcalUrlData || {};
+  ['mine','hers'].forEach(p => { const el = document.getElementById('gcal-'+p); if (el && document.activeElement !== el) el.value = gcalUrls[p] || ''; });
   if (!viewYM) {
     if (shifts.length) { const last = shifts[shifts.length-1]; viewYM = termOfDate(last.year, last.month, last.day); }
     else { const d = new Date(); viewYM = termOfDate(d.getFullYear(), d.getMonth()+1, d.getDate()); }
@@ -695,9 +753,10 @@ function renderCalendar() {
     row.style.cursor = 'pointer';
     row.addEventListener('click', () => openDayEditor(key));
     grid.appendChild(row);
-    if (evs.length) {
+    const gevs = gcalByDate[key] || [];
+    if (evs.length || gevs.length) {
       const er = document.createElement('div'); er.className = 'event-row';
-      er.innerHTML = evs.map(eventChip).join('');
+      er.innerHTML = evs.map(eventChip).join('') + gevs.map(gcalChip).join('');
       er.addEventListener('click', () => openDayEditor(key));
       grid.appendChild(er);
     }

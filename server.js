@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import multer from 'multer';
 import webpush from 'web-push';
+import ical from 'node-ical';
 import { parseShiftImages, parseExpenseAmount } from './aiParser.js';
 import {
   initDb,
@@ -12,6 +13,7 @@ import {
   getWages, saveWage,
   getLocations, saveLocation,
   getExpenses, addExpense, deleteExpense,
+  getGcalUrls, saveGcalUrl,
 } from './db.js';
 
 const app = express();
@@ -142,6 +144,54 @@ app.post('/api/expense/scan', upload.single('file'), async (req, res) => {
     console.error(e);
     res.status(500).json({ error: `金額の読み取りエラー: ${e.message}` });
   }
+});
+
+// ── GOOGLE CALENDAR 連携 ──
+app.get('/api/gcal-urls', (_req, res) => res.json(getGcalUrls()));
+app.post('/api/gcal-url', async (req, res) => {
+  const { person, url } = req.body;
+  if (!['mine', 'hers'].includes(person)) {
+    return res.status(400).json({ error: 'person は mine または hers のみ' });
+  }
+  await saveGcalUrl(person, url);
+  res.json({ success: true });
+});
+
+function gcalDateParts(d) {
+  return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
+}
+function gcalTime(d, datetype) {
+  if (datetype === 'date') return null; // 終日予定
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+async function fetchGcalEvents(url, winStart, winEnd) {
+  const data = await ical.async.fromURL(url);
+  const out = [];
+  for (const ev of Object.values(data)) {
+    if (ev.type !== 'VEVENT' || !ev.start) continue;
+    const title = (ev.summary || '(無題)').toString().slice(0, 80);
+    if (ev.rrule) {
+      for (const d of ev.rrule.between(winStart, winEnd, true)) {
+        out.push({ ...gcalDateParts(d), title, time: gcalTime(ev.start, ev.datetype) });
+      }
+    } else if (ev.start >= winStart && ev.start <= winEnd) {
+      out.push({ ...gcalDateParts(ev.start), title, time: gcalTime(ev.start, ev.datetype) });
+    }
+  }
+  return out;
+}
+app.get('/api/gcal-events', async (_req, res) => {
+  const urls = getGcalUrls();
+  const now = new Date();
+  const winStart = new Date(now.getTime() - 60 * 86400000);
+  const winEnd = new Date(now.getTime() + 120 * 86400000);
+  const result = { mine: [], hers: [] };
+  for (const p of ['mine', 'hers']) {
+    if (!urls[p]) continue;
+    try { result[p] = await fetchGcalEvents(urls[p], winStart, winEnd); }
+    catch (e) { console.error('gcal', p, e.message); }
+  }
+  res.json(result);
 });
 
 // ── LOCATIONS（居住地・天気用）──
