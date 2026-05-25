@@ -336,8 +336,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 /* ── 保有株カード ── */
 .folio-card { background:var(--card); border-radius:14px; padding:13px 16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
-.folio-row { display:flex; align-items:flex-start; gap:10px; padding:7px 0; }
-.folio-row + .folio-row { border-top:1px solid var(--line-soft); }
+.folio-person + .folio-person { border-top:1px solid var(--line-soft); }
+.folio-row { display:flex; align-items:center; gap:8px; padding:9px 0; cursor:pointer; }
+.folio-tg { font-size:9px; color:var(--text-soft); width:12px; flex-shrink:0; }
+.folio-detail { padding:2px 0 8px 12px; }
+.folio-item { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; background:var(--bg); border-radius:10px; padding:8px 11px; margin-bottom:6px; }
+.folio-item-main { font-size:13px; line-height:1.55; }
+.folio-sub { font-size:11px; color:var(--text-soft); }
+.folio-item-val { font-size:15px; font-weight:700; }
+.folio-fail { font-size:12px; color:#b5544f; }
 .folio-name { font-size:13px; font-weight:700; width:36px; flex-shrink:0; padding-top:1px; }
 .folio-name.mine { color:var(--mine); } .folio-name.hers { color:var(--hers); }
 .folio-lines { display:flex; flex-direction:column; gap:3px; flex:1; }
@@ -428,17 +435,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="nk-date" id="nk-date"></div>
       </div>
       <div class="folio-card">
-        <div class="income-head">保有株</div>
+        <div class="income-head">保有株（名前をタップで明細）</div>
         <div id="folio-summary"></div>
         <details class="folio-manage">
-          <summary>銘柄を管理・追加</summary>
+          <summary>＋ 銘柄を追加</summary>
           <div class="gcal-body">
-            <div id="folio-list"></div>
             <div class="ev-person-toggle">
               <button class="fh-btn active" data-p="mine" onclick="setFolioPerson('mine')">ひろ</button>
               <button class="fh-btn" data-p="hers" onclick="setFolioPerson('hers')">ちか</button>
             </div>
-            <input id="fh-ticker" class="ev-in" placeholder="銘柄コード（例 7203.T / AAPL）">
+            <input id="fh-ticker" class="ev-in" placeholder="銘柄コード（日本株は4桁 例7203 / 米国株 AAPL）">
             <div class="ev-add-row">
               <input id="fh-shares" class="ev-in" type="number" inputmode="decimal" placeholder="株数">
               <input id="fh-cost" class="ev-in" type="number" inputmode="decimal" placeholder="取得単価">
@@ -740,41 +746,40 @@ async function loadHoldings() {
 }
 function setFolioPerson(p){ folioPerson=p; document.querySelectorAll('.fh-btn').forEach(b=>b.classList.toggle('active', b.dataset.p===p)); }
 function renderPortfolio() {
-  // 通貨ごと・人ごとに集計
-  const sum = { mine:{}, hers:{} };
-  for (const h of holdings) {
-    const q = quotes[h.ticker];
-    const cur = q ? q.currency : 'JPY';
-    const price = q ? q.price : h.cost;
-    const p = h.person==='hers' ? 'hers' : 'mine';
-    (sum[p][cur] ||= {value:0, cost:0});
-    sum[p][cur].value += price*h.shares;
-    sum[p][cur].cost += h.cost*h.shares;
-  }
   const sm = document.getElementById('folio-summary');
-  if (sm) sm.innerHTML = ['mine','hers'].map(p=>{
-    const curs = Object.keys(sum[p]);
-    if (!curs.length) return `<div class="folio-row"><span class="folio-name ${p}">${NAMES[p]}</span><span class="folio-empty">未登録</span></div>`;
-    const parts = curs.map(c=>{
-      const {value,cost}=sum[p][c]; const g=value-cost; const gp=cost?Math.round(g/cost*1000)/10:0; const up=g>=0;
-      return `<div class="folio-line"><span class="folio-val">${curSym(c)}${Math.round(value).toLocaleString()}</span><span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(c)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gp}%)</span></div>`;
-    }).join('');
-    return `<div class="folio-row"><span class="folio-name ${p}">${NAMES[p]}</span><div class="folio-lines">${parts}</div></div>`;
-  }).join('');
-  const list = document.getElementById('folio-list');
-  if (!list) return;
-  if (!holdings.length) { list.innerHTML = '<div class="ev-empty">銘柄はまだありません</div>'; return; }
-  list.innerHTML = holdings.map(h=>{
-    const q = quotes[h.ticker]; const cur = q?q.currency:'JPY'; const price = q?q.price:null;
-    const v = price!=null ? price*h.shares : null;
-    const g = price!=null ? (price-h.cost)*h.shares : null; const up = g>=0;
-    const detail = price!=null
-      ? `${curSym(cur)}${price.toLocaleString()} × ${h.shares} = ${curSym(cur)}${Math.round(v).toLocaleString()} <span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${gp(g,h.cost,h.shares)}</span>`
-      : '<span style="color:#b5544f">価格取得失敗</span>';
-    return `<div class="ev-item ${h.person||'mine'}"><div class="ev-item-main"><span class="ev-item-who">${h.person?NAMES[h.person]:''}</span><b>${escapeHtml(q?q.name:h.ticker)}</b> ${detail}</div><button class="ev-del" onclick="delHolding('${h.id}')">×</button></div>`;
+  if (!sm) return;
+  sm.innerHTML = ['mine','hers'].map(p=>{
+    const ph = holdings.filter(h => (h.person==='hers'?'hers':'mine')===p);
+    const byCur = {};
+    for (const h of ph) { const q=quotes[h.ticker]; const cur=q?q.currency:'JPY'; const price=q?q.price:h.cost; (byCur[cur] ||= {value:0,cost:0}); byCur[cur].value+=price*h.shares; byCur[cur].cost+=h.cost*h.shares; }
+    const curs = Object.keys(byCur);
+    const totals = curs.length ? curs.map(c=>{
+      const {value,cost}=byCur[c]; const g=value-cost; const gpct=cost?Math.round(g/cost*1000)/10:0; const up=g>=0;
+      return `<div class="folio-line"><span class="folio-val">${curSym(c)}${Math.round(value).toLocaleString()}</span><span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(c)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span></div>`;
+    }).join('') : '<span class="folio-empty">未登録</span>';
+    const detail = ph.length ? ph.map(holdingLine).join('') : '<div class="ev-empty">登録なし</div>';
+    return `<div class="folio-person">
+      <div class="folio-row" onclick="toggleFolio('${p}')">
+        <span class="folio-tg" id="folio-tg-${p}">▶</span>
+        <span class="folio-name ${p}">${NAMES[p]}</span>
+        <div class="folio-lines">${totals}</div>
+      </div>
+      <div class="folio-detail" id="folio-detail-${p}" style="display:none">${detail}</div>
+    </div>`;
   }).join('');
 }
-function gp(gain, cost, shares){ const c=cost*shares; const p=c?Math.round(gain/c*1000)/10:0; return `${gain>=0?'+':''}${p}%`; }
+function holdingLine(h) {
+  const q = quotes[h.ticker]; const cur = q?q.currency:'JPY'; const price = q?q.price:null; const name = q?q.name:h.ticker;
+  const del = `<button class="ev-del" onclick="event.stopPropagation();delHolding('${h.id}')">×</button>`;
+  if (price==null) return `<div class="folio-item"><div class="folio-item-main"><b>${escapeHtml(name)}</b> <span class="folio-sub">${h.shares}株</span><br><span class="folio-fail">価格取得失敗（コードを確認）</span></div>${del}</div>`;
+  const v=price*h.shares, g=(price-h.cost)*h.shares, c=h.cost*h.shares, gpct=c?Math.round(g/c*1000)/10:0; const up=g>=0;
+  return `<div class="folio-item"><div class="folio-item-main"><b>${escapeHtml(name)}</b> <span class="folio-sub">${h.shares}株 @${curSym(cur)}${price.toLocaleString()}</span><br><span class="folio-item-val">${curSym(cur)}${Math.round(v).toLocaleString()}</span> <span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span></div>${del}</div>`;
+}
+function toggleFolio(p) {
+  const el = document.getElementById('folio-detail-'+p), tg = document.getElementById('folio-tg-'+p);
+  const show = el.style.display === 'none';
+  el.style.display = show ? 'block' : 'none'; tg.textContent = show ? '▼' : '▶';
+}
 async function addHoldingFromUI() {
   const ticker = document.getElementById('fh-ticker').value.trim();
   const shares = parseFloat(document.getElementById('fh-shares').value);

@@ -102,8 +102,10 @@ app.get('/api/quotes', async (req, res) => {
   const symbols = String(req.query.symbols || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 30);
   const out = {};
   for (const sym of symbols) {
+    // 4〜5桁の日本株コードは .T を補う（古いデータ対応）。結果は元のキーで返す
+    const ySym = /^\d{4,5}$/.test(sym) ? sym + '.T' : sym;
     try {
-      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`, {
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ySym)}?interval=1d&range=5d`, {
         headers: { 'User-Agent': 'Mozilla/5.0' },
       }).then(r => r.json());
       const m = j.chart?.result?.[0]?.meta;

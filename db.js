@@ -237,10 +237,13 @@ export function getHoldings() {
 export async function addHolding(h) {
   if (!cache.holdings) cache.holdings = [];
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  let ticker = String(h.ticker || '').trim().toUpperCase().slice(0, 20);
+  // 日本株の4〜5桁コードは自動で .T（東証）を付ける
+  if (/^\d{4,5}$/.test(ticker)) ticker += '.T';
   cache.holdings.push({
     id,
     person: ['mine', 'hers'].includes(h.person) ? h.person : null,
-    ticker: String(h.ticker || '').trim().toUpperCase().slice(0, 20),
+    ticker,
     shares: Number(h.shares) || 0,
     cost: Number(h.cost) || 0,
   });
