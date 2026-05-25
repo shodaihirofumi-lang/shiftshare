@@ -246,6 +246,7 @@ export async function addHolding(h) {
     ticker,
     shares: Number(h.shares) || 0,
     cost: Number(h.cost) || 0,
+    name: String(h.name || '').slice(0, 40),
   });
   await persist();
   return id;
