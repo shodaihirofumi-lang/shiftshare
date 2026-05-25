@@ -97,7 +97,29 @@ app.post('/api/holding/delete', async (req, res) => {
   await deleteHolding(req.body.id);
   res.json({ success: true });
 });
-// 複数銘柄の現在値を取得（Yahoo Finance）
+// テクニカル指標（週足）
+function smaCalc(arr, n) { if (arr.length < n) return null; return arr.slice(-n).reduce((a, b) => a + b, 0) / n; }
+function rsiCalc(arr, period = 14) {
+  if (arr.length < period + 1) return null;
+  let g = 0, l = 0;
+  for (let i = arr.length - period; i < arr.length; i++) { const d = arr[i] - arr[i - 1]; if (d >= 0) g += d; else l -= d; }
+  const ag = g / period, al = l / period;
+  if (al === 0) return 100;
+  return 100 - 100 / (1 + ag / al);
+}
+function techSignal(price, closes) {
+  const ma13 = smaCalc(closes, 13), ma26 = smaCalc(closes, 26), r = rsiCalc(closes, 14);
+  if (ma13 == null || ma26 == null || r == null) return null;
+  const up = ma13 > ma26, above = price >= ma13;
+  let sig;
+  if (r >= 70) sig = 'sell';          // 買われすぎ
+  else if (r <= 30) sig = 'buy';      // 売られすぎ（反発期待）
+  else if (up && above) sig = 'buy';  // 上昇トレンド＋過熱でない
+  else if (!up && !above) sig = 'sell'; // 下降トレンド
+  else sig = 'hold';                  // 様子見
+  return { signal: sig, rsi: Math.round(r) };
+}
+// 複数銘柄の現在値＋週足テクニカル判定（Yahoo Finance）
 app.get('/api/quotes', async (req, res) => {
   const symbols = String(req.query.symbols || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 30);
   const out = {};
@@ -105,16 +127,20 @@ app.get('/api/quotes', async (req, res) => {
     // 4〜5桁の日本株コードは .T を補う（古いデータ対応）。結果は元のキーで返す
     const ySym = /^\d{4,5}$/.test(sym) ? sym + '.T' : sym;
     try {
-      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ySym)}?interval=1d&range=5d`, {
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ySym)}?interval=1wk&range=2y`, {
         headers: { 'User-Agent': 'Mozilla/5.0' },
       }).then(r => r.json());
-      const m = j.chart?.result?.[0]?.meta;
+      const r0 = j.chart?.result?.[0];
+      const m = r0?.meta;
       if (m && m.regularMarketPrice != null) {
+        const closes = (r0.indicators?.quote?.[0]?.close || []).filter(x => x != null);
+        const t = techSignal(m.regularMarketPrice, closes);
         out[sym] = {
           price: m.regularMarketPrice,
-          prevClose: m.chartPreviousClose ?? m.previousClose ?? m.regularMarketPrice,
           currency: m.currency || 'JPY',
           name: m.shortName || m.longName || sym,
+          signal: t?.signal || null,
+          rsi: t?.rsi ?? null,
         };
       }
     } catch { /* skip */ }
