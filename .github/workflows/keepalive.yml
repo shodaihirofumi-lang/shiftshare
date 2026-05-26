@@ -16,7 +16,8 @@ jobs:
     steps:
       - name: Ping ShiftShare
         run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 https://shiftshare.onrender.com/)
+          # HEADリクエスト(-I)で本文を受け取らず、通信量を最小化しつつ起こす
+          code=$(curl -s -I -o /dev/null -w "%{http_code}" --max-time 90 https://shiftshare.onrender.com/)
           echo "HTTP $code"
           # 起動直後はコールドスタートで時間がかかることがあるが、pingで起こせていればOK
           if [ "$code" = "200" ]; then echo "awake"; else echo "warming up (code $code)"; fi
