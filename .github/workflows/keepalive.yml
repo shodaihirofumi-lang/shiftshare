@@ -1,0 +1,22 @@
+name: Keep Render awake
+
+# Renderの無料プランは15分アクセスが無いと眠り、次回起動に〜50秒かかる。
+# 10分ごとにトップページ(静的HTML)へpingして眠らせない＝初回読み込みを速く保つ。
+# pingはAIを呼ばないのでAnthropic APIの課金は発生しない。
+# 24時間稼働でも約730時間/月で無料枠(750時間)内に収まる。
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # 10分ごと（UTC）
+  workflow_dispatch:          # 手動実行も可
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping ShiftShare
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 https://shiftshare.onrender.com/)
+          echo "HTTP $code"
+          # 起動直後はコールドスタートで時間がかかることがあるが、pingで起こせていればOK
+          if [ "$code" = "200" ]; then echo "awake"; else echo "warming up (code $code)"; fi
