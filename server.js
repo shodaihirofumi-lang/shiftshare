@@ -164,7 +164,7 @@ app.get('/api/portfolio-history', async (_req, res) => {
   const allDates = new Set();
   for (const h of hold) {
     try {
-      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(h.ticker)}?interval=1d&range=1mo`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(h.ticker)}?interval=1d&range=1y`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
       const r0 = j.chart?.result?.[0];
       if (!r0) continue;
       const ts = r0.timestamp || [];
