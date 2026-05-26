@@ -75,7 +75,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 }
 .nav-btn {
   display:flex; flex-direction:column; align-items:center; gap:4px; font-size:10px; font-weight:600;
-  color:#bcb2a4; background:none; border:none; cursor:pointer; padding:4px 28px; letter-spacing:1px; transition:color .15s;
+  color:#bcb2a4; background:none; border:none; cursor:pointer; padding:4px 4px; letter-spacing:1px; transition:color .15s;
+  flex:1; min-width:0; white-space:nowrap;
 }
 .nav-btn.active { color:var(--mine); }
 
@@ -563,10 +564,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       </details>
     </div>
 
-    <!-- BOARD（ふたりのメモ・損益） -->
+    <!-- 掲示板 -->
     <div id="tab-board" class="screen">
       <div class="page-top">
-        <div><div class="page-title">ボード</div><div class="page-sub">ふたりのメモと資産の増減</div></div>
+        <div><div class="page-title">掲示板</div><div class="page-sub">行きたい所・やりたいこと</div></div>
       </div>
       <div class="board-card">
         <div class="income-head">ふたりの掲示板（行きたい所・やりたいこと）</div>
@@ -583,6 +584,13 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
             <button class="ev-add-btn" onclick="addNoteFromUI()">追加</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- 損益 -->
+    <div id="tab-pnl" class="screen">
+      <div class="page-top">
+        <div><div class="page-title">損益</div><div class="page-sub">資産の増減</div></div>
       </div>
       <div class="folio-card">
         <div class="income-head">日別の損益（資産の増減）</div>
@@ -645,7 +653,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     </button>
     <button class="nav-btn" id="nav-board" onclick="showTab('board')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
-      ボード
+      掲示板
+    </button>
+    <button class="nav-btn" id="nav-pnl" onclick="showTab('pnl')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+      損益
     </button>
     <button class="nav-btn" id="nav-upload" onclick="showTab('upload')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1022,7 +1034,7 @@ if (sessionStorage.getItem('auth')) enterApp();
 
 // ── TABS ──
 function showTab(name) {
-  ['calendar','board','upload'].forEach(t => {
+  ['calendar','board','pnl','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
