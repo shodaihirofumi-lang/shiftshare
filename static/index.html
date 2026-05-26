@@ -538,27 +538,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           </div>
         </div>
       </div>
-      <div class="folio-card">
-        <div class="income-head">日別の損益（資産の増減）</div>
-        <div id="pnl-history"></div>
-        <div class="folio-note">※ 現在の保有株の日足から計算した、1日ごとの評価額の増減です。</div>
-      </div>
-      <div class="board-card">
-        <div class="income-head">ふたりの掲示板（行きたい所・やりたいこと）</div>
-        <div id="board-list"></div>
-        <div class="ev-add board-add">
-          <div class="ev-person-toggle">
-            <button class="bd-btn active" data-p="both" onclick="setNotePerson('both')">ふたり</button>
-            <button class="bd-btn" data-p="mine" onclick="setNotePerson('mine')">ひろ</button>
-            <button class="bd-btn" data-p="hers" onclick="setNotePerson('hers')">ちか</button>
-          </div>
-          <input id="note-text" class="ev-in" placeholder="行きたい所・やりたいこと（例：箱根に温泉旅行）" maxlength="200">
-          <div class="ev-add-row">
-            <input id="note-link" class="ev-in" placeholder="リンクURL（任意）">
-            <button class="ev-add-btn" onclick="addNoteFromUI()">追加</button>
-          </div>
-        </div>
-      </div>
       <details class="gcal-card">
         <summary>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -582,6 +561,34 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <div class="gcal-row"><span class="gcal-lbl hers">ちか</span><span class="gt-status" id="gt-status-hers"></span></div>
         </div>
       </details>
+    </div>
+
+    <!-- BOARD（ふたりのメモ・損益） -->
+    <div id="tab-board" class="screen">
+      <div class="page-top">
+        <div><div class="page-title">ボード</div><div class="page-sub">ふたりのメモと資産の増減</div></div>
+      </div>
+      <div class="board-card">
+        <div class="income-head">ふたりの掲示板（行きたい所・やりたいこと）</div>
+        <div id="board-list"></div>
+        <div class="ev-add board-add">
+          <div class="ev-person-toggle">
+            <button class="bd-btn active" data-p="both" onclick="setNotePerson('both')">ふたり</button>
+            <button class="bd-btn" data-p="mine" onclick="setNotePerson('mine')">ひろ</button>
+            <button class="bd-btn" data-p="hers" onclick="setNotePerson('hers')">ちか</button>
+          </div>
+          <input id="note-text" class="ev-in" placeholder="行きたい所・やりたいこと（例：箱根に温泉旅行）" maxlength="200">
+          <div class="ev-add-row">
+            <input id="note-link" class="ev-in" placeholder="リンクURL（任意）">
+            <button class="ev-add-btn" onclick="addNoteFromUI()">追加</button>
+          </div>
+        </div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">日別の損益（資産の増減）</div>
+        <div id="pnl-history"></div>
+        <div class="folio-note">※ 現在の保有株の日足から計算した、1日ごとの評価額の増減です。</div>
+      </div>
     </div>
 
     <!-- UPLOAD -->
@@ -635,6 +642,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <button class="nav-btn active" id="nav-calendar" onclick="showTab('calendar')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       カレンダー
+    </button>
+    <button class="nav-btn" id="nav-board" onclick="showTab('board')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+      ボード
     </button>
     <button class="nav-btn" id="nav-upload" onclick="showTab('upload')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1011,10 +1022,11 @@ if (sessionStorage.getItem('auth')) enterApp();
 
 // ── TABS ──
 function showTab(name) {
-  ['calendar','upload'].forEach(t => {
+  ['calendar','board','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
+  window.scrollTo(0, 0);
 }
 
 // ── AVATARS ──
