@@ -1033,7 +1033,6 @@ function renderPnlHistory() {
   };
   let totalHtml = `<div class="pnl-total-lbl">${pnlYM.month}月のトータル損益</div>`;
   totalHtml += persons.map(p => item(NAMES[p], p, totals[p])).join('');
-  if (persons.length > 1) totalHtml += item('ふたり', 'both', persons.reduce((s,p) => s + totals[p], 0));
   if (totalEl) totalEl.innerHTML = totalHtml;
   // 日別（新しい順）
   let rows = '';
@@ -1377,19 +1376,41 @@ function resolvePlace(input) {
   if (JP_CITY[core]) return JP_CITY[core];
   return s;
 }
+// 地名→座標。日本語で市区町村サフィックスが無い名前は「○○市」も試して適切な地点を優先
+// （例: 「吹田」だと熊本の小集落がヒットするので「吹田市」を先に試す）
+async function geocodePlace(loc) {
+  const base = resolvePlace(loc);
+  const cands = [];
+  const isJa = /[぀-ヿ一-鿿]/.test(base);
+  const hasSuffix = /[市区町村]$/.test(base); // 市区町村
+  if (isJa && !hasSuffix) cands.push(base + '市'); // 市
+  cands.push(base);
+  for (const name of cands) {
+    try {
+      const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=ja&format=json`).then(r=>r.json());
+      const g = geo.results && geo.results[0];
+      if (g) return g;
+    } catch { /* try next */ }
+  }
+  return null;
+}
 async function loadWeather() {
   for (const p of ['mine','hers']) {
     const loc = (locations[p] || '').trim();
     if (!loc) { weather[p] = {}; continue; }
-    try {
-      const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(resolvePlace(loc))}&count=1&language=ja&format=json`).then(r=>r.json());
-      const g = geo.results && geo.results[0];
-      if (!g) { weather[p] = {}; continue; }
-      const fc = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.latitude}&longitude=${g.longitude}&daily=weather_code,temperature_2m_max,precipitation_probability_max&timezone=Asia%2FTokyo&past_days=14&forecast_days=16`).then(r=>r.json());
-      const map = {}; const t = fc.daily?.time || [];
-      for (let i=0;i<t.length;i++) map[t[i]] = { code: fc.daily.weather_code[i], tmax: Math.round(fc.daily.temperature_2m_max[i]), precip: fc.daily.precipitation_probability_max?.[i] };
-      weather[p] = map;
-    } catch { weather[p] = {}; }
+    const g = await geocodePlace(loc);
+    if (!g) continue; // 取得失敗時は前回の天気を保持（消さない）
+    let fc = null;
+    for (let attempt = 0; attempt < 2 && !fc; attempt++) {
+      try {
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.latitude}&longitude=${g.longitude}&daily=weather_code,temperature_2m_max,precipitation_probability_max&timezone=Asia%2FTokyo&past_days=14&forecast_days=16`).then(r=>r.json());
+        if (r.daily?.time?.length) fc = r;
+      } catch { /* retry once */ }
+    }
+    if (!fc) continue; // 失敗時も前回保持
+    const map = {}; const t = fc.daily.time;
+    for (let i=0;i<t.length;i++) map[t[i]] = { code: fc.daily.weather_code[i], tmax: Math.round(fc.daily.temperature_2m_max[i]), precip: fc.daily.precipitation_probability_max?.[i] };
+    weather[p] = map;
   }
   renderCalendar();
 }
