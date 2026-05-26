@@ -300,6 +300,29 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .ev-add-row #ev-link { flex:1; }
 .ev-add-btn { flex:0 0 auto; padding:0 16px; border-radius:10px; border:none; background:var(--text); color:var(--card); font-size:13px; font-weight:600; cursor:pointer; }
 
+/* ── ふたりの掲示板 ── */
+.board-card { background:var(--card); border-radius:14px; padding:13px 16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
+.board-add { margin-top:12px; }
+.board-add .ev-add-row .ev-in { flex:1; }
+.bd-btn { flex:1; padding:8px 0; border-radius:9px; border:1.5px solid var(--line); background:var(--card); font-size:12px; font-weight:600; color:var(--text-soft); cursor:pointer; font-family:inherit; }
+.bd-btn.active[data-p=both] { background:var(--text); color:var(--card); border-color:var(--text); }
+.bd-btn.active[data-p=mine] { background:var(--mine-bg); color:var(--mine); border-color:var(--mine); }
+.bd-btn.active[data-p=hers] { background:var(--hers-bg); color:var(--hers); border-color:var(--hers); }
+.board-empty { font-size:12px; color:var(--text-soft); padding:6px 0 4px; }
+.board-item { display:flex; align-items:flex-start; gap:9px; padding:10px 0; border-bottom:1px solid var(--line-soft); }
+.board-item:last-of-type { border-bottom:none; }
+.board-check { flex-shrink:0; width:21px; height:21px; border-radius:6px; border:1.8px solid var(--line); background:var(--card); cursor:pointer; margin-top:1px; display:flex; align-items:center; justify-content:center; padding:0; color:#fff; }
+.board-item.done .board-check { background:var(--mine); border-color:var(--mine); }
+.board-main { flex:1; min-width:0; }
+.board-who { font-size:10px; font-weight:700; padding:1px 7px; border-radius:8px; margin-right:7px; white-space:nowrap; }
+.board-who.mine { background:var(--mine-bg); color:var(--mine); }
+.board-who.hers { background:var(--hers-bg); color:var(--hers); }
+.board-who.both { background:rgba(60,55,50,.08); color:var(--text-soft); }
+.board-text { font-size:14px; color:var(--text); line-height:1.55; word-break:break-word; }
+.board-item.done .board-text { text-decoration:line-through; color:var(--text-soft); }
+.board-link { display:inline-block; font-size:12px; color:var(--mine); margin-top:4px; word-break:break-all; text-decoration:none; }
+.board-del { flex-shrink:0; width:24px; height:24px; border-radius:50%; border:none; background:rgba(60,55,50,.1); color:var(--text); font-size:16px; line-height:1; cursor:pointer; }
+
 /* ── INCOME CARD ── */
 .income-card { background:var(--card); border-radius:14px; padding:13px 16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
 .income-head { font-size:11px; font-weight:600; color:var(--text-soft); letter-spacing:1px; margin-bottom:8px; }
@@ -515,6 +538,27 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           </div>
         </div>
       </div>
+      <div class="folio-card">
+        <div class="income-head">日別の損益（資産の増減）</div>
+        <div id="pnl-history"></div>
+        <div class="folio-note">※ 現在の保有株の日足から計算した、1日ごとの評価額の増減です。</div>
+      </div>
+      <div class="board-card">
+        <div class="income-head">ふたりの掲示板（行きたい所・やりたいこと）</div>
+        <div id="board-list"></div>
+        <div class="ev-add board-add">
+          <div class="ev-person-toggle">
+            <button class="bd-btn active" data-p="both" onclick="setNotePerson('both')">ふたり</button>
+            <button class="bd-btn" data-p="mine" onclick="setNotePerson('mine')">ひろ</button>
+            <button class="bd-btn" data-p="hers" onclick="setNotePerson('hers')">ちか</button>
+          </div>
+          <input id="note-text" class="ev-in" placeholder="行きたい所・やりたいこと（例：箱根に温泉旅行）" maxlength="200">
+          <div class="ev-add-row">
+            <input id="note-link" class="ev-in" placeholder="リンクURL（任意）">
+            <button class="ev-add-btn" onclick="addNoteFromUI()">追加</button>
+          </div>
+        </div>
+      </div>
       <details class="gcal-card">
         <summary>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -538,11 +582,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <div class="gcal-row"><span class="gcal-lbl hers">ちか</span><span class="gt-status" id="gt-status-hers"></span></div>
         </div>
       </details>
-      <div class="folio-card">
-        <div class="income-head">日別の損益（資産の増減）</div>
-        <div id="pnl-history"></div>
-        <div class="folio-note">※ 現在の保有株の日足から計算した、1日ごとの評価額の増減です。</div>
-      </div>
     </div>
 
     <!-- UPLOAD -->
@@ -729,6 +768,7 @@ async function enterApp() {
   loadNikkei();
   loadHoldings();
   loadPortfolioHistory();
+  loadNotes();
   setupPush();
   if (new URLSearchParams(location.search).get('gtasks') === 'connected') {
     showToast('Google ToDo を連携しました');
@@ -1406,6 +1446,65 @@ async function refreshExpenses() {
   rebuildMaps();
   renderCalendar();
   if (editorDate) renderExpenseList(editorDate);
+}
+
+// ── BOARD（ふたりの掲示板：行きたい所・やりたいこと）──
+let allNotes = [];
+let notePerson = 'both';
+async function loadNotes() {
+  try { allNotes = await fetch('/api/notes').then(r=>r.json()); } catch { allNotes = []; }
+  renderNotes();
+}
+function setNotePerson(p) {
+  notePerson = p;
+  document.querySelectorAll('.bd-btn').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+}
+function renderNotes() {
+  const el = document.getElementById('board-list');
+  if (!el) return;
+  if (!allNotes.length) { el.innerHTML = '<div class="board-empty">まだ何もありません。行きたい所ややりたいことを書いてみましょう。</div>'; return; }
+  // 未達成を上・達成済みを下に、各グループ内は新しい順
+  const sorted = [...allNotes].sort((a,b) => (a.done?1:0)-(b.done?1:0) || (b.createdAt||0)-(a.createdAt||0));
+  const check = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  el.innerHTML = sorted.map(n => {
+    const who = n.person==='mine' ? '<span class="board-who mine">ひろ</span>'
+              : n.person==='hers' ? '<span class="board-who hers">ちか</span>'
+              : '<span class="board-who both">ふたり</span>';
+    const link = n.link ? `<a class="board-link" href="${escapeHtml(n.link)}" target="_blank" rel="noopener">${escapeHtml(n.link)}</a>` : '';
+    return `
+    <div class="board-item ${n.done?'done':''}">
+      <button class="board-check" onclick="toggleNote('${n.id}')" title="${n.done?'未達成に戻す':'達成にする'}">${n.done?check:''}</button>
+      <div class="board-main">
+        <div>${who}<span class="board-text">${escapeHtml(n.text)}</span></div>
+        ${link}
+      </div>
+      <button class="board-del" onclick="delNote('${n.id}')">×</button>
+    </div>`;
+  }).join('');
+}
+async function addNoteFromUI() {
+  const text = document.getElementById('note-text').value.trim();
+  if (!text) { showToast('内容を入力してください', true); return; }
+  let link = document.getElementById('note-link').value.trim();
+  if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+  const person = notePerson === 'both' ? null : notePerson;
+  try {
+    const r = await fetch('/api/note', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text, link:link||null, person}) });
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || `保存エラー(${r.status})`); }
+    document.getElementById('note-text').value=''; document.getElementById('note-link').value='';
+    await loadNotes();
+    showToast('掲示板に追加しました');
+  } catch (e) { showToast(`追加に失敗: ${e.message}`, true); }
+}
+async function toggleNote(id) {
+  try { await fetch('/api/note/toggle', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) }); await loadNotes(); }
+  catch { showToast('更新に失敗しました', true); }
+}
+async function delNote(id) {
+  const n = allNotes.find(x => x.id === id);
+  if (n && !confirm(`「${n.text}」を削除しますか？`)) return;
+  try { await fetch('/api/note/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) }); await loadNotes(); }
+  catch { showToast('削除に失敗しました', true); }
 }
 function buildPersonEditor(person, s) {
   const t = edTypes[person];

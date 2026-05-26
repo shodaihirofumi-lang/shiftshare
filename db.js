@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [] });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -256,4 +256,37 @@ export async function deleteHolding(id) {
   if (!cache.holdings) return;
   cache.holdings = cache.holdings.filter(h => h.id !== id);
   await persist();
+}
+
+// ── BOARD（ふたりの掲示板：行きたい所・やりたいこと。日付に紐づかない共有メモ）──
+export function getNotes() {
+  return cache.notes || [];
+}
+
+export async function addNote(n) {
+  if (!cache.notes) cache.notes = [];
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  let link = n.link ? String(n.link).trim().slice(0, 500) : null;
+  cache.notes.push({
+    id,
+    person: ['mine', 'hers'].includes(n.person) ? n.person : null, // null=ふたり
+    text: String(n.text || '').slice(0, 200),
+    link,
+    done: false,
+    createdAt: Date.now(),
+  });
+  await persist();
+  return id;
+}
+
+export async function deleteNote(id) {
+  if (!cache.notes) return;
+  cache.notes = cache.notes.filter(n => n.id !== id);
+  await persist();
+}
+
+export async function toggleNote(id) {
+  if (!cache.notes) return;
+  const n = cache.notes.find(x => x.id === id);
+  if (n) { n.done = !n.done; await persist(); }
 }

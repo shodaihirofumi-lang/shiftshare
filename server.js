@@ -16,6 +16,7 @@ import {
   getGcalUrls, saveGcalUrl,
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding,
+  getNotes, addNote, deleteNote, toggleNote,
 } from './db.js';
 
 const app = express();
@@ -279,6 +280,25 @@ app.post('/api/event', async (req, res) => {
 });
 app.post('/api/event/delete', async (req, res) => {
   await deleteEvent(req.body.id);
+  res.json({ success: true });
+});
+
+// ── BOARD（ふたりの掲示板：行きたい所・やりたいこと）──
+app.get('/api/notes', (_req, res) => res.json(getNotes()));
+app.post('/api/note', async (req, res) => {
+  const { text } = req.body;
+  if (!text || typeof text !== 'string' || !text.trim()) {
+    return res.status(400).json({ error: '内容が必要です' });
+  }
+  const id = await addNote(req.body);
+  res.json({ success: true, id });
+});
+app.post('/api/note/delete', async (req, res) => {
+  await deleteNote(req.body.id);
+  res.json({ success: true });
+});
+app.post('/api/note/toggle', async (req, res) => {
+  await toggleNote(req.body.id);
   res.json({ success: true });
 });
 
