@@ -114,7 +114,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .cal-date.gold { background:var(--gold-bg); color:var(--gold); border:1.5px solid var(--gold-border); }
 .cal-date.today { background:var(--grad); color:#fbf9f5; box-shadow:0 0 0 3px rgba(86,110,120,.3); }
 .today-tag { font-size:8px; font-weight:700; margin-top:3px; background:rgba(255,255,255,.28); padding:1px 5px; border-radius:5px; letter-spacing:.5px; }
-.today-line { font-size:12px; color:var(--mine); font-weight:700; margin-top:4px; }
+.today-line { font-size:15px; color:var(--mine); font-weight:700; margin-top:5px; letter-spacing:.5px; }
 
 .shift-cell { border-radius:14px; padding:8px 11px; display:flex; flex-direction:column; justify-content:flex-start; min-height:64px; background:var(--card); }
 .sc-head { display:flex; justify-content:space-between; align-items:center; width:100%; gap:4px; min-height:20px; }
@@ -1173,8 +1173,9 @@ async function loadCalendar() {
   gcalUrls = gcalUrlData || {};
   ['mine','hers'].forEach(p => { const el = document.getElementById('gcal-'+p); if (el && document.activeElement !== el) el.value = gcalUrls[p] || ''; });
   if (!viewYM) {
-    if (shifts.length) { const last = shifts[shifts.length-1]; viewYM = termOfDate(last.year, last.month, last.day); }
-    else { const d = new Date(); viewYM = termOfDate(d.getFullYear(), d.getMonth()+1, d.getDate()); }
+    // 起動時は常に「今日を含む月度」を表示（今日のセルが必ず見える）
+    const d = new Date();
+    viewYM = termOfDate(d.getFullYear(), d.getMonth()+1, d.getDate());
   }
   rebuildMaps();
   renderCalendar();
@@ -1237,7 +1238,7 @@ function renderCalendar() {
   const now = new Date();
   const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const tl = document.getElementById('today-line');
-  if (tl) tl.textContent = `今日 ${now.getMonth()+1}月${now.getDate()}日（${dayNames[now.getDay()]}）`;
+  if (tl) tl.textContent = `今日 ${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${dayNames[now.getDay()]}）`;
   for (const dt of cycleDays(year, month)) {
     const { year:yy, month:mm, day } = dt;
     const key = `${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
