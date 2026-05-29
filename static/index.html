@@ -1404,13 +1404,34 @@ async function loadWeather() {
     let fc = null;
     for (let attempt = 0; attempt < 2 && !fc; attempt++) {
       try {
-        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.latitude}&longitude=${g.longitude}&daily=weather_code,temperature_2m_max,precipitation_probability_max&timezone=Asia%2FTokyo&past_days=14&forecast_days=16`).then(r=>r.json());
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.latitude}&longitude=${g.longitude}&daily=weather_code,temperature_2m_max,precipitation_probability_max&hourly=weather_code,precipitation_probability&timezone=Asia%2FTokyo&past_days=14&forecast_days=16`).then(r=>r.json());
         if (r.daily?.time?.length) fc = r;
       } catch { /* retry once */ }
     }
     if (!fc) continue; // 失敗時も前回保持
+    // 日中(6〜21時)の時間別から「その日の代表天気」を集計（夜中の雨に引っ張られないように）
+    const dayAgg = {};
+    const hr = fc.hourly;
+    if (hr?.time) {
+      for (let i=0;i<hr.time.length;i++) {
+        const h = +hr.time[i].slice(11,13);
+        if (h < 6 || h > 21) continue;
+        const date = hr.time[i].slice(0,10);
+        const a = dayAgg[date] || (dayAgg[date] = { code: 0, precip: 0 });
+        if (hr.weather_code[i] > a.code) a.code = hr.weather_code[i];        // 日中で最も強い天気
+        const pp = hr.precipitation_probability?.[i] ?? 0;
+        if (pp > a.precip) a.precip = pp;                                     // 日中の最大降水確率
+      }
+    }
     const map = {}; const t = fc.daily.time;
-    for (let i=0;i<t.length;i++) map[t[i]] = { code: fc.daily.weather_code[i], tmax: Math.round(fc.daily.temperature_2m_max[i]), precip: fc.daily.precipitation_probability_max?.[i] };
+    for (let i=0;i<t.length;i++) {
+      const a = dayAgg[t[i]];
+      map[t[i]] = {
+        code: a ? a.code : fc.daily.weather_code[i],
+        tmax: Math.round(fc.daily.temperature_2m_max[i]),
+        precip: a ? a.precip : fc.daily.precipitation_probability_max?.[i],
+      };
+    }
     weather[p] = map;
   }
   renderCalendar();
