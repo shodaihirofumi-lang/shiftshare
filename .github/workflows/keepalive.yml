@@ -13,17 +13,17 @@ name: Keep Render awake
 
 on:
   schedule:
-    - cron: '13 */3 * * *'   # 3時間ごと（:13、正時の混雑を避ける）
+    - cron: '13 * * * *'      # 毎時:13に試行（GitHubは半分以上落とすので頻度を上げて多重起動で埋める）
   workflow_dispatch:          # 手動実行も可
 
 jobs:
   ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 350      # 最大約5.8時間でジョブ終了（GitHubの上限6時間内）
+    timeout-minutes: 358      # 約5h55m、GitHubの上限6時間内
     steps:
-      - name: Ping every 10 min (~5.5h) so Render never sleeps
+      - name: Ping every 10 min (~5h55m) so Render never sleeps
         run: |
-          end=$(( $(date +%s) + 19800 ))   # 5.5時間後まで
+          end=$(( $(date +%s) + 21300 ))   # 5h55m後まで（複数runが重なって隙間ゼロを狙う）
           while [ "$(date +%s)" -lt "$end" ]; do
             # HEADリクエスト(-I)で本文を受け取らず通信量を最小化しつつ起こす
             code=$(curl -s -I -o /dev/null -w "%{http_code}" --max-time 90 https://shiftshare.onrender.com/ || echo "000")
