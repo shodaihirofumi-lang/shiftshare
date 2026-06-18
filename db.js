@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [] });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -289,4 +289,28 @@ export async function toggleNote(id) {
   if (!cache.notes) return;
   const n = cache.notes.find(x => x.id === id);
   if (n) { n.done = !n.done; await persist(); }
+}
+
+// ── MEMOS（ひろ/ちかそれぞれの個人メモ。person別に分離）──
+export function getMemos() {
+  return cache.memos || [];
+}
+
+export async function addMemo(m) {
+  if (!cache.memos) cache.memos = [];
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  cache.memos.push({
+    id,
+    person: m.person === 'hers' ? 'hers' : 'mine',
+    text: String(m.text || '').slice(0, 500),
+    createdAt: Date.now(),
+  });
+  await persist();
+  return id;
+}
+
+export async function deleteMemo(id) {
+  if (!cache.memos) return;
+  cache.memos = cache.memos.filter(m => m.id !== id);
+  await persist();
 }

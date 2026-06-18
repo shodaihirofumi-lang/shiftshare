@@ -17,6 +17,7 @@ import {
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding,
   getNotes, addNote, deleteNote, toggleNote,
+  getMemos, addMemo, deleteMemo,
 } from './db.js';
 
 const app = express();
@@ -32,7 +33,6 @@ app.use(express.static('static', {
   },
 }));
 
-const PASSWORD = process.env.APP_PASSWORD || '1234';
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
 const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:admin@example.com';
@@ -47,14 +47,6 @@ const TASKS_SCOPE = 'https://www.googleapis.com/auth/tasks.readonly';
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
 }
-
-// ── LOGIN ──
-app.post('/api/login', (req, res) => {
-  if (req.body.password !== PASSWORD) {
-    return res.status(401).json({ error: 'パスワードが違います' });
-  }
-  res.json({ success: true });
-});
 
 // ── UPLOAD ──
 app.post('/api/upload', upload.array('files', 2), async (req, res) => {
@@ -299,6 +291,24 @@ app.post('/api/note/delete', async (req, res) => {
 });
 app.post('/api/note/toggle', async (req, res) => {
   await toggleNote(req.body.id);
+  res.json({ success: true });
+});
+
+// ── MEMOS（ひろ/ちかそれぞれの個人メモ）──
+app.get('/api/memos', (_req, res) => res.json(getMemos()));
+app.post('/api/memo', async (req, res) => {
+  const { person, text } = req.body;
+  if (!['mine', 'hers'].includes(person)) {
+    return res.status(400).json({ error: 'person が不正です' });
+  }
+  if (!text || typeof text !== 'string' || !text.trim()) {
+    return res.status(400).json({ error: '内容が必要です' });
+  }
+  const id = await addMemo(req.body);
+  res.json({ success: true, id });
+});
+app.post('/api/memo/delete', async (req, res) => {
+  await deleteMemo(req.body.id);
   res.json({ success: true });
 });
 
