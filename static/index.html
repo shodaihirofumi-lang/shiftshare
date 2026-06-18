@@ -327,17 +327,26 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 /* ── 個人メモ ── */
 .memo-card { background:var(--card); border-radius:14px; padding:13px 16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
-.memo-head { font-size:13px; font-weight:600; color:var(--text-soft); margin-bottom:8px; }
-.memo-name { font-size:13px; font-weight:700; margin-right:2px; }
-.memo-name.mine { color:var(--mine); }
-.memo-name.hers { color:var(--hers); }
-.memo-empty { font-size:12px; color:var(--text-soft); padding:6px 0; }
+.memo-toggle { margin-bottom:10px; }
+.memo-btn { flex:1; padding:9px 0; border-radius:9px; border:1.5px solid var(--line); background:var(--card); font-size:13px; font-weight:700; color:var(--text-soft); cursor:pointer; font-family:inherit; }
+.memo-btn.active[data-p=mine] { background:var(--mine-bg); color:var(--mine); border-color:var(--mine); }
+.memo-btn.active[data-p=hers] { background:var(--hers-bg); color:var(--hers); border-color:var(--hers); }
+.memo-search-wrap { position:relative; margin-bottom:10px; }
+.memo-search-ic { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--text-soft); pointer-events:none; }
+.memo-search { width:100%; padding:9px 30px 9px 32px; border-radius:10px; border:1.5px solid var(--line); font-size:13px; background:var(--bg); color:var(--text); font-family:inherit; }
+.memo-search:focus { outline:none; border-color:var(--text-soft); }
+.memo-search-clr { position:absolute; right:6px; top:50%; transform:translateY(-50%); width:22px; height:22px; border-radius:50%; border:none; background:rgba(60,55,50,.1); color:var(--text); font-size:14px; line-height:1; cursor:pointer; display:none; padding:0; }
+.memo-search-clr.show { display:block; }
+.memo-empty { font-size:12px; color:var(--text-soft); padding:8px 0; text-align:center; }
 .memo-item { display:flex; align-items:flex-start; gap:8px; padding:10px 0; border-bottom:1px solid var(--line-soft); }
 .memo-item:last-of-type { border-bottom:none; }
-.memo-item-text { flex:1; min-width:0; font-size:14px; line-height:1.55; color:var(--text); word-break:break-word; white-space:pre-wrap; }
+.memo-item-main { flex:1; min-width:0; }
+.memo-item-text { font-size:14px; line-height:1.55; color:var(--text); word-break:break-word; white-space:pre-wrap; }
+.memo-item-date { font-size:10px; color:var(--text-soft); margin-top:4px; letter-spacing:.5px; }
 .memo-del { flex-shrink:0; width:24px; height:24px; border-radius:50%; border:none; background:rgba(60,55,50,.1); color:var(--text); font-size:16px; line-height:1; cursor:pointer; }
-.memo-add { margin-top:10px; }
+.memo-add { margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
 .memo-add .ev-add-row .ev-in { flex:1; margin-bottom:0; }
+.memo-hit { background:rgba(217,154,43,.25); border-radius:3px; padding:0 1px; }
 
 /* ── INCOME CARD ── */
 .income-card { background:var(--card); border-radius:14px; padding:13px 16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
@@ -618,22 +627,20 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div><div class="page-title">メモ</div><div class="page-sub">ふたりそれぞれの個人メモ</div></div>
       </div>
       <div class="memo-card">
-        <div class="memo-head"><span class="memo-name mine">ひろ</span>のメモ</div>
-        <div id="memo-list-mine"></div>
-        <div class="ev-add memo-add">
-          <div class="ev-add-row">
-            <input id="memo-text-mine" class="ev-in" placeholder="メモを書く…" maxlength="500">
-            <button class="ev-add-btn" onclick="addMemoFromUI('mine')">追加</button>
-          </div>
+        <div class="ev-person-toggle memo-toggle">
+          <button class="memo-btn active" data-p="mine" onclick="setMemoPerson('mine')">ひろ</button>
+          <button class="memo-btn" data-p="hers" onclick="setMemoPerson('hers')">ちか</button>
         </div>
-      </div>
-      <div class="memo-card">
-        <div class="memo-head"><span class="memo-name hers">ちか</span>のメモ</div>
-        <div id="memo-list-hers"></div>
+        <div class="memo-search-wrap">
+          <svg class="memo-search-ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="memo-search" class="memo-search" placeholder="メモを検索…" oninput="setMemoSearch(this.value)">
+          <button class="memo-search-clr" id="memo-search-clr" onclick="clearMemoSearch()" title="クリア">×</button>
+        </div>
+        <div id="memo-list"></div>
         <div class="ev-add memo-add">
           <div class="ev-add-row">
-            <input id="memo-text-hers" class="ev-in" placeholder="メモを書く…" maxlength="500">
-            <button class="ev-add-btn" onclick="addMemoFromUI('hers')">追加</button>
+            <input id="memo-text" class="ev-in" placeholder="ひろのメモを書く…" maxlength="500">
+            <button class="ev-add-btn" onclick="addMemoFromUI()">追加</button>
           </div>
         </div>
       </div>
@@ -1654,31 +1661,80 @@ async function delNote(id) {
   catch { showToast('削除に失敗しました', true); }
 }
 
-// ── MEMOS（ひろ/ちか別々の個人メモ）──
+// ── MEMOS（ひろ/ちか別々の個人メモ・タブ切替＋検索）──
 let allMemos = [];
+let memoPerson = localStorage.getItem('memoPerson') === 'hers' ? 'hers' : 'mine';
+let memoSearch = '';
 async function loadMemos() {
   try { allMemos = await fetch('/api/memos').then(r=>r.json()); } catch { allMemos = []; }
+  setMemoPerson(memoPerson); // 永続化された選択でトグル/プレースホルダ/一覧を同期
+}
+function setMemoPerson(p) {
+  memoPerson = p;
+  try { localStorage.setItem('memoPerson', p); } catch {}
+  document.querySelectorAll('.memo-btn').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+  const input = document.getElementById('memo-text');
+  if (input) input.placeholder = `${NAMES[p]}のメモを書く…`;
   renderMemos();
 }
-function renderMemos() {
-  for (const p of ['mine','hers']) {
-    const el = document.getElementById('memo-list-'+p);
-    if (!el) continue;
-    const items = allMemos.filter(m => m.person === p).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-    if (!items.length) { el.innerHTML = '<div class="memo-empty">まだメモはありません。下の欄から追加できます。</div>'; continue; }
-    el.innerHTML = items.map(m => `
-      <div class="memo-item">
-        <div class="memo-item-text">${escapeHtml(m.text)}</div>
-        <button class="memo-del" onclick="delMemo('${m.id}')">×</button>
-      </div>`).join('');
-  }
+function setMemoSearch(s) {
+  memoSearch = s;
+  const clr = document.getElementById('memo-search-clr');
+  if (clr) clr.classList.toggle('show', !!s.trim());
+  renderMemos();
 }
-async function addMemoFromUI(person) {
-  const input = document.getElementById('memo-text-'+person);
+function clearMemoSearch() {
+  const input = document.getElementById('memo-search');
+  if (input) input.value = '';
+  setMemoSearch('');
+  if (input) input.focus();
+}
+function memoDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const dow = ['日','月','火','水','木','金','土'][d.getDay()];
+  const now = new Date();
+  const hm = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const sameYear = d.getFullYear() === now.getFullYear();
+  return sameYear
+    ? `${d.getMonth()+1}/${d.getDate()}（${dow}）${hm}`
+    : `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}（${dow}）${hm}`;
+}
+function highlightHit(text, q) {
+  const html = escapeHtml(text);
+  if (!q) return html;
+  const escQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return html.replace(new RegExp(escQ.replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])), 'gi'), m => `<span class="memo-hit">${m}</span>`);
+}
+function renderMemos() {
+  const el = document.getElementById('memo-list');
+  if (!el) return;
+  const q = (memoSearch || '').trim();
+  const qLower = q.toLowerCase();
+  let items = allMemos.filter(m => m.person === memoPerson);
+  if (q) items = items.filter(m => (m.text || '').toLowerCase().includes(qLower));
+  items.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+  if (!items.length) {
+    el.innerHTML = q
+      ? `<div class="memo-empty">「${escapeHtml(q)}」に一致するメモはありません</div>`
+      : '<div class="memo-empty">まだメモはありません。下の欄から追加できます。</div>';
+    return;
+  }
+  el.innerHTML = items.map(m => `
+    <div class="memo-item">
+      <div class="memo-item-main">
+        <div class="memo-item-text">${highlightHit(m.text, q)}</div>
+        <div class="memo-item-date">${memoDate(m.createdAt)}</div>
+      </div>
+      <button class="memo-del" onclick="delMemo('${m.id}')">×</button>
+    </div>`).join('');
+}
+async function addMemoFromUI() {
+  const input = document.getElementById('memo-text');
   const text = input.value.trim();
   if (!text) { showToast('内容を入力してください', true); return; }
   try {
-    const r = await fetch('/api/memo', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person, text}) });
+    const r = await fetch('/api/memo', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person: memoPerson, text}) });
     if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || `保存エラー(${r.status})`); }
     input.value = '';
     await loadMemos();
