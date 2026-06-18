@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {} });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -312,5 +312,26 @@ export async function addMemo(m) {
 export async function deleteMemo(id) {
   if (!cache.memos) return;
   cache.memos = cache.memos.filter(m => m.id !== id);
+  await persist();
+}
+
+export async function editMemo(id, text) {
+  if (!cache.memos) return false;
+  const m = cache.memos.find(x => x.id === id);
+  if (!m) return false;
+  m.text = String(text || '').slice(0, 500);
+  m.updatedAt = Date.now();
+  await persist();
+  return true;
+}
+
+// ── 通知済みのふたり休み日（重複pushを防ぐ）──
+export function getNotifiedOff() {
+  return cache.notifiedOff || {};
+}
+
+export async function markNotifiedOff(dateKey) {
+  if (!cache.notifiedOff) cache.notifiedOff = {};
+  cache.notifiedOff[dateKey] = Date.now();
   await persist();
 }

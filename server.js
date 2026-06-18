@@ -17,7 +17,8 @@ import {
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding,
   getNotes, addNote, deleteNote, toggleNote,
-  getMemos, addMemo, deleteMemo,
+  getMemos, addMemo, deleteMemo, editMemo,
+  getNotifiedOff, markNotifiedOff,
 } from './db.js';
 
 const app = express();
@@ -310,6 +311,50 @@ app.post('/api/memo', async (req, res) => {
 app.post('/api/memo/delete', async (req, res) => {
   await deleteMemo(req.body.id);
   res.json({ success: true });
+});
+app.post('/api/memo/edit', async (req, res) => {
+  const { id, text } = req.body;
+  if (!id) return res.status(400).json({ error: 'id が必要です' });
+  if (!text || typeof text !== 'string' || !text.trim()) {
+    return res.status(400).json({ error: '内容が必要です' });
+  }
+  const ok = await editMemo(id, text);
+  if (!ok) return res.status(404).json({ error: 'メモが見つかりません' });
+  res.json({ success: true });
+});
+
+// ── ふたり休み接近通知（今日〜3日後を確認、未通知の日にpush）──
+app.get('/api/check-both-off-notify', async (_req, res) => {
+  if (!VAPID_PUBLIC || !VAPID_PRIVATE) return res.json({ sent: 0, reason: 'no vapid' });
+  const jstFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const [tY, tM, tD] = jstFmt.format(new Date()).split('-').map(Number);
+  const shifts = getAllShifts();
+  const subs = getPushSubscriptions();
+  const notified = getNotifiedOff();
+  let sent = 0;
+  const fired = [];
+  for (let d = 0; d <= 3; d++) {
+    const dt = new Date(tY, tM - 1, tD); dt.setDate(dt.getDate() + d);
+    const y = dt.getFullYear(), m = dt.getMonth() + 1, day = dt.getDate();
+    const key = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    if (notified[key]) continue;
+    const mine = shifts.find(s => s.year === y && s.month === m && s.day === day && s.person === 'mine');
+    const hers = shifts.find(s => s.year === y && s.month === m && s.day === day && s.person === 'hers');
+    if (!mine || !hers) continue;
+    if (mine.shift_type !== 'off' || hers.shift_type !== 'off') continue;
+    const dayLabel = d === 0 ? '今日' : d === 1 ? '明日' : `${d}日後`;
+    const payload = JSON.stringify({
+      title: '★ ふたり休み',
+      body: `${dayLabel}（${m}月${day}日）はふたり共通のお休みです`,
+    });
+    for (const sub of subs) {
+      webpush.sendNotification(sub, payload).catch(() => {});
+    }
+    await markNotifiedOff(key);
+    sent++;
+    fired.push(key);
+  }
+  res.json({ sent, fired });
 });
 
 // ── WAGES（時給）──

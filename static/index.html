@@ -344,6 +344,13 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .memo-item-text { font-size:14px; line-height:1.55; color:var(--text); word-break:break-word; white-space:pre-wrap; }
 .memo-item-date { font-size:10px; color:var(--text-soft); margin-top:4px; letter-spacing:.5px; }
 .memo-del { flex-shrink:0; width:24px; height:24px; border-radius:50%; border:none; background:rgba(60,55,50,.1); color:var(--text); font-size:16px; line-height:1; cursor:pointer; }
+.memo-edit-btn { flex-shrink:0; width:24px; height:24px; border-radius:50%; border:none; background:rgba(60,55,50,.07); color:var(--text-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+.memo-edit-btn:hover { color:var(--text); }
+.memo-edited { font-size:10px; color:var(--text-soft); margin-left:8px; font-style:italic; }
+.memo-edit-textarea { width:100%; padding:9px 11px; border-radius:8px; border:1.5px solid var(--mine); font-size:14px; line-height:1.55; resize:vertical; min-height:62px; background:var(--card); color:var(--text); font-family:inherit; }
+.memo-edit-actions { display:flex; gap:6px; justify-content:flex-end; margin-top:6px; }
+.memo-edit-cancel { padding:6px 13px; border-radius:7px; border:1.5px solid var(--line); background:var(--card); color:var(--text-soft); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; }
+.memo-edit-save { padding:6px 16px; border-radius:7px; border:none; background:var(--text); color:var(--card); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; }
 .memo-add { margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
 .memo-add .ev-add-row .ev-in { flex:1; margin-bottom:0; }
 .memo-hit { background:rgba(217,154,43,.25); border-radius:3px; padding:0 1px; }
@@ -830,6 +837,8 @@ async function enterApp() {
   loadNotes();
   loadMemos();
   setupPush();
+  // ふたり休みが近づいていたら通知（未通知の日だけ送る）
+  fetch('/api/check-both-off-notify').catch(() => {});
   if (new URLSearchParams(location.search).get('gtasks') === 'connected') {
     showToast('Google ToDo を連携しました');
     history.replaceState({}, '', '/');
@@ -1665,6 +1674,7 @@ async function delNote(id) {
 let allMemos = [];
 let memoPerson = localStorage.getItem('memoPerson') === 'hers' ? 'hers' : 'mine';
 let memoSearch = '';
+let editingMemoId = null;
 async function loadMemos() {
   try { allMemos = await fetch('/api/memos').then(r=>r.json()); } catch { allMemos = []; }
   setMemoPerson(memoPerson); // 永続化された選択でトグル/プレースホルダ/一覧を同期
@@ -1720,14 +1730,57 @@ function renderMemos() {
       : '<div class="memo-empty">まだメモはありません。下の欄から追加できます。</div>';
     return;
   }
-  el.innerHTML = items.map(m => `
-    <div class="memo-item">
-      <div class="memo-item-main">
-        <div class="memo-item-text">${highlightHit(m.text, q)}</div>
-        <div class="memo-item-date">${memoDate(m.createdAt)}</div>
-      </div>
-      <button class="memo-del" onclick="delMemo('${m.id}')">×</button>
-    </div>`).join('');
+  const editIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
+  el.innerHTML = items.map(m => {
+    const edited = m.updatedAt ? '<span class="memo-edited">編集済み</span>' : '';
+    if (m.id === editingMemoId) {
+      return `
+        <div class="memo-item">
+          <div class="memo-item-main">
+            <textarea class="memo-edit-textarea" id="memo-edit-text-${m.id}">${escapeHtml(m.text)}</textarea>
+            <div class="memo-edit-actions">
+              <button class="memo-edit-cancel" onclick="cancelMemoEdit()">キャンセル</button>
+              <button class="memo-edit-save" onclick="saveMemoEdit('${m.id}')">保存</button>
+            </div>
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="memo-item">
+        <div class="memo-item-main">
+          <div class="memo-item-text">${highlightHit(m.text, q)}</div>
+          <div class="memo-item-date">${memoDate(m.createdAt)}${edited}</div>
+        </div>
+        <button class="memo-edit-btn" onclick="startMemoEdit('${m.id}')" title="編集">${editIcon}</button>
+        <button class="memo-del" onclick="delMemo('${m.id}')">×</button>
+      </div>`;
+  }).join('');
+  // フォーカス（編集中の項目があれば textarea にフォーカス）
+  if (editingMemoId) {
+    const ta = document.getElementById('memo-edit-text-' + editingMemoId);
+    if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  }
+}
+function startMemoEdit(id) {
+  editingMemoId = id;
+  renderMemos();
+}
+function cancelMemoEdit() {
+  editingMemoId = null;
+  renderMemos();
+}
+async function saveMemoEdit(id) {
+  const ta = document.getElementById('memo-edit-text-' + id);
+  if (!ta) return;
+  const text = ta.value.trim();
+  if (!text) { showToast('内容を入力してください', true); return; }
+  try {
+    const r = await fetch('/api/memo/edit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, text}) });
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || `保存エラー(${r.status})`); }
+    editingMemoId = null;
+    await loadMemos();
+    showToast('メモを更新しました');
+  } catch (e) { showToast(`更新に失敗: ${e.message}`, true); }
 }
 async function addMemoFromUI() {
   const input = document.getElementById('memo-text');
