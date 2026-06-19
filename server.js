@@ -153,6 +153,31 @@ app.post('/api/holding/sell', async (req, res) => {
 });
 app.get('/api/realized', (_req, res) => res.json(getRealized()));
 app.get('/api/buys', (_req, res) => res.json(getBuys()));
+// 「もしHOLDし続けてたら」: 売却した銘柄の現在価格を取得し、未売却シナリオとの差分を返す
+app.get('/api/hold-replay', async (_req, res) => {
+  const realized = getRealized();
+  if (!realized.length) return res.json([]);
+  const tickers = [...new Set(realized.map(r => r.ticker).filter(Boolean))];
+  const prices = {};
+  for (const t of tickers) {
+    try {
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=1d&range=5d`, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      }).then(r => r.json());
+      const p = j.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (p != null) prices[t] = p;
+    } catch { /* skip this ticker */ }
+  }
+  const enriched = realized.map(r => {
+    const curPrice = prices[r.ticker];
+    if (curPrice == null) return { ...r, currentPrice: null, holdValue: null, holdDelta: null };
+    const holdValue = r.shares * curPrice; // 売らずに保有してたら現在の評価額
+    const soldValue = r.shares * r.sellPrice; // 実際に売却で得た金額
+    const holdDelta = holdValue - soldValue; // 正=HOLDしてた方が得だった、負=売って正解
+    return { ...r, currentPrice: curPrice, holdValue, holdDelta };
+  });
+  res.json(enriched);
+});
 // 取引履歴（買い＋売り）。チャートにマーカーを描画する用途。person/ticker でフィルタ可。
 app.get('/api/transactions', (req, res) => {
   const { person, ticker } = req.query;
@@ -267,12 +292,18 @@ app.get('/api/quotes', async (req, res) => {
       if (m && m.regularMarketPrice != null) {
         const closes = (r0.indicators?.quote?.[0]?.close || []).filter(x => x != null);
         const t = techSignal(m.regularMarketPrice, closes);
+        // 当日変動（ヒートマップ用）
+        const prev = m.chartPreviousClose ?? m.previousClose;
+        const change = prev ? m.regularMarketPrice - prev : 0;
+        const changePct = prev ? (change / prev) * 100 : 0;
         out[sym] = {
           price: m.regularMarketPrice,
           currency: m.currency || 'JPY',
           name: m.shortName || m.longName || sym,
           signal: t?.signal || null,
           rsi: t?.rsi ?? null,
+          change,
+          changePct,
         };
       }
     } catch { /* skip */ }

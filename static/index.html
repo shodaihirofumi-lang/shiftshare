@@ -456,6 +456,30 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .chart-marker-sell { fill:#2e6da4; }
 .chart-legend { display:flex; gap:14px; font-size:10px; color:var(--text-soft); margin-top:6px; justify-content:center; }
 .chart-legend-mark { display:inline-block; width:9px; height:9px; vertical-align:middle; margin-right:3px; }
+/* ── ヒートマップ ── */
+.heatmap-person { margin-bottom:12px; }
+.heatmap-person:last-child { margin-bottom:0; }
+.heatmap-person-name { font-size:11px; font-weight:700; letter-spacing:1px; margin-bottom:5px; }
+.heatmap-person-name.mine { color:var(--mine); } .heatmap-person-name.hers { color:var(--hers); }
+.heatmap-grid { display:flex; flex-wrap:wrap; gap:3px; min-height:62px; }
+.hm-tile { flex-grow:1; flex-basis:60px; min-width:55px; padding:9px 6px; color:#fff; border-radius:6px; cursor:pointer; display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:11px; font-weight:700; text-align:center; line-height:1.25; transition:transform .12s; }
+.hm-tile:active { transform:scale(.97); }
+.hm-tile .hm-name { font-size:11px; font-weight:700; overflow:hidden; text-overflow:ellipsis; max-width:100%; white-space:nowrap; }
+.hm-tile .hm-pct { font-size:10px; font-weight:600; opacity:.94; margin-top:1px; }
+.heatmap-empty { font-size:12px; color:var(--text-soft); padding:6px 0; }
+/* ── HOLDリプレイ ── */
+.replay-item { display:flex; flex-direction:column; gap:2px; padding:9px 0; border-bottom:1px solid var(--line-soft); font-size:12px; }
+.replay-item:last-of-type { border-bottom:none; }
+.replay-head { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.replay-name { font-weight:700; font-size:13px; color:var(--text); }
+.replay-name .replay-who { font-size:10px; font-weight:600; margin-right:4px; }
+.replay-name .replay-who.mine { color:var(--mine); }
+.replay-name .replay-who.hers { color:var(--hers); }
+.replay-meta { color:var(--text-soft); font-size:11px; }
+.replay-delta { font-size:13px; font-weight:700; }
+.replay-delta.miss { color:#c0392b; }
+.replay-delta.good { color:#2e6da4; }
+.replay-detail { font-size:11px; color:var(--text-soft); }
 .sig { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px; white-space:nowrap; }
 .sig-buy { background:#e2efde; color:#2e7d32; }
 .sig-sell { background:#f6e0de; color:#c0392b; }
@@ -654,6 +678,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div id="pnl-total"></div>
         <div id="pnl-history"></div>
         <div class="folio-note">※ 現在の保有株の日足から計算した、1日ごとの評価額の増減です。</div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">保有株ヒートマップ（当日の変動）</div>
+        <div id="heatmap-list"></div>
+        <div class="folio-note">※ 当日の終値変動率を色とサイズで表示。タップで個別チャート。</div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">売却後の値動き（もしHOLDしてたら）</div>
+        <div id="hold-replay"></div>
+        <div class="folio-note">※ 売却後の値動きと、ホールドしてた場合の評価額を比較。学び用です。</div>
       </div>
     </div>
 
@@ -994,12 +1028,112 @@ async function loadRealized() {
   try { allRealized = await fetch('/api/realized').then(r=>r.json()); } catch { allRealized = []; }
   renderPortfolio();
 }
+
+// ── ⑥ ヒートマップ（当日変動率を色とサイズで表示）──
+function hmColor(pct) {
+  // -5%以下=濃い青、0%=ニュートラルグレージュ、+5%以上=濃い赤
+  const clamped = Math.max(-5, Math.min(5, pct));
+  if (clamped >= 0) {
+    // 0→+5: グレージュ→赤
+    const t = clamped / 5;
+    const r = Math.round(176 + (192 - 176) * t);
+    const g = Math.round(168 + (57 - 168) * t);
+    const b = Math.round(158 + (43 - 158) * t);
+    return `rgb(${r},${g},${b})`;
+  } else {
+    // 0→-5: グレージュ→青
+    const t = -clamped / 5;
+    const r = Math.round(176 + (46 - 176) * t);
+    const g = Math.round(168 + (109 - 168) * t);
+    const b = Math.round(158 + (164 - 158) * t);
+    return `rgb(${r},${g},${b})`;
+  }
+}
+function renderHeatmap() {
+  const el = document.getElementById('heatmap-list');
+  if (!el) return;
+  const blocks = [];
+  for (const p of ['mine','hers']) {
+    const ph = holdings.filter(h => (h.person==='hers'?'hers':'mine') === p);
+    if (!ph.length) continue;
+    const items = ph.map(h => {
+      const q = quotes[h.ticker];
+      const price = q ? q.price : h.cost;
+      const value = price * h.shares;
+      const pct = q && q.changePct != null ? q.changePct : 0;
+      return { h, value, pct, name: stockName(h) };
+    });
+    const total = items.reduce((s, i) => s + i.value, 0) || 1;
+    const tiles = items.map(i => {
+      const w = Math.max(0.5, i.value / total * 100); // 最小0.5%でも見えるように
+      const sign = i.pct >= 0 ? '+' : '−';
+      const shortName = i.name.length > 7 ? i.name.slice(0, 6) + '…' : i.name;
+      const tap = `onclick="openStockChart('${i.h.ticker}','${escapeHtml(i.name)}')"`;
+      return `<div class="hm-tile" ${tap} style="flex-grow:${w.toFixed(2)};background:${hmColor(i.pct)}">
+        <div class="hm-name">${escapeHtml(shortName)}</div>
+        <div class="hm-pct">${sign}${Math.abs(i.pct).toFixed(1)}%</div>
+      </div>`;
+    }).join('');
+    blocks.push(`<div class="heatmap-person">
+      <div class="heatmap-person-name ${p}">${NAMES[p]}</div>
+      <div class="heatmap-grid">${tiles}</div>
+    </div>`);
+  }
+  el.innerHTML = blocks.length ? blocks.join('') : '<div class="heatmap-empty">保有株がありません</div>';
+}
+
+// ── ⑨ HOLDリプレイ（売却後の値動き）──
+let holdReplay = [];
+async function loadHoldReplay() {
+  try { holdReplay = await fetch('/api/hold-replay').then(r=>r.json()); } catch { holdReplay = []; }
+  renderHoldReplay();
+}
+function renderHoldReplay() {
+  const el = document.getElementById('hold-replay');
+  if (!el) return;
+  if (!holdReplay.length) { el.innerHTML = '<div class="ev-empty">売却記録がありません</div>'; return; }
+  // 新しい売却順
+  const sorted = [...holdReplay].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  el.innerHTML = sorted.map(r => {
+    const cur = r.currency || 'JPY';
+    const sym = curSym(cur);
+    const date = new Date(r.ts || Date.now());
+    const dStr = `${date.getMonth()+1}/${date.getDate()}`;
+    const personName = NAMES[r.person] || r.person;
+    const display = (r.name && r.name.trim()) ? r.name.trim() : r.ticker;
+    if (r.currentPrice == null) {
+      return `<div class="replay-item">
+        <div class="replay-head">
+          <span class="replay-name"><span class="replay-who ${r.person}">${personName}</span>${escapeHtml(display)}</span>
+          <span class="replay-meta">価格取得失敗</span>
+        </div>
+        <div class="replay-detail">${dStr} 売却 ${r.shares}株 @${sym}${fmtNum(r.sellPrice, cur)}</div>
+      </div>`;
+    }
+    const miss = r.holdDelta > 0; // 売らずにHOLDの方が得だった
+    const label = miss ? 'HOLDの方が得だった' : '売って正解';
+    const signStr = miss ? '+' : '−';
+    return `<div class="replay-item">
+      <div class="replay-head">
+        <span class="replay-name"><span class="replay-who ${r.person}">${personName}</span>${escapeHtml(display)}</span>
+        <span class="replay-delta ${miss?'miss':'good'}">${signStr}${sym}${fmtNum(Math.abs(r.holdDelta), cur)}</span>
+      </div>
+      <div class="replay-detail">${dStr} 売却 ${r.shares}株 @${sym}${fmtNum(r.sellPrice, cur)} → 現在 ${sym}${fmtNum(r.currentPrice, cur)} <span style="opacity:.75">（${label}）</span></div>
+    </div>`;
+  }).join('');
+}
+function fmtNum(n, cur) {
+  if (cur === 'USD') return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  return Math.round(n).toLocaleString();
+}
 async function loadHoldings() {
   try { holdings = await fetch('/api/holdings').then(r=>r.json()); } catch { holdings = []; }
   const syms = [...new Set(holdings.map(h=>h.ticker).filter(Boolean))];
   if (syms.length) { try { quotes = await fetch('/api/quotes?symbols='+encodeURIComponent(syms.join(','))).then(r=>r.json()); } catch { quotes={}; } }
   else quotes = {};
   await loadRealized(); // 実現損益も合わせて反映
+  renderHeatmap();
+  loadHoldReplay(); // 売却した銘柄の現在価格を取って未売却シナリオと比較
 }
 function setFolioPerson(p){ folioPerson=p; document.querySelectorAll('.fh-btn').forEach(b=>b.classList.toggle('active', b.dataset.p===p)); }
 function renderPortfolio() {
