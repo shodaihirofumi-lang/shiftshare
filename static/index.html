@@ -871,6 +871,22 @@ async function loadGtasks() {
       (gtasksByDate[k] ||= []).push({ ...t, person: p });
     }
   }
+  // 期限切れ・エラーは画面で知らせる（テストモードのrefresh tokenは7日で失効するため）
+  const diag = data.diagnostics || {};
+  let needStatusReload = false;
+  for (const p of ['mine','hers']) {
+    const d = diag[p]; if (!d) continue;
+    if (d.error === 'expired') {
+      showToast(`${NAMES[p]}のGoogle連携の有効期限が切れました。連携カードから再連携してください`, true);
+      needStatusReload = true; // サーバー側でトークン削除済み
+    } else if (d.error === 'fetch_failed') {
+      showToast(`${NAMES[p]}のGoogle Tasks取得に失敗（${d.message?.slice(0,40) || 'エラー'}）`, true);
+    } else if (d.connected && d.totalTasks > 0 && d.withDue === 0) {
+      // 接続OKだがタスクは全部期限なし→無言で空表示よりログだけ残す
+      console.info(`[gtasks ${p}] 接続OK・${d.totalTasks}件中、期限付きは0件（期限なしはカレンダー非表示）`);
+    }
+  }
+  if (needStatusReload) loadGoogleStatus();
   renderCalendar();
 }
 function taskChip(t) {

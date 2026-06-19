@@ -449,33 +449,52 @@ async function googleAccessToken(refreshToken) {
       refresh_token: refreshToken, grant_type: 'refresh_token',
     }),
   }).then(r => r.json());
+  if (!tok.access_token) {
+    const err = new Error(`access_token取得失敗: ${tok.error || ''} ${tok.error_description || ''}`.trim());
+    err.tokError = tok.error || 'unknown'; // 'invalid_grant'=refresh token失効（テストモード7日経過/取り消し等）
+    throw err;
+  }
   return tok.access_token;
 }
 async function fetchGoogleTasks(refreshToken) {
   const accessToken = await googleAccessToken(refreshToken);
-  if (!accessToken) return [];
   const headers = { Authorization: `Bearer ${accessToken}` };
   const lists = await fetch('https://tasks.googleapis.com/tasks/v1/users/@me/lists', { headers }).then(r => r.json());
-  const out = [];
+  const items = [];
+  let totalTasks = 0;
   for (const list of (lists.items || [])) {
     const tasks = await fetch(`https://tasks.googleapis.com/tasks/v1/lists/${list.id}/tasks?showCompleted=false&maxResults=100`, { headers }).then(r => r.json());
     for (const t of (tasks.items || [])) {
+      totalTasks++;
       if (!t.due) continue; // 期限のあるタスクのみカレンダーに表示
       const d = new Date(t.due);
-      out.push({ year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(), title: (t.title || '(無題)').toString().slice(0, 80) });
+      items.push({ year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(), title: (t.title || '(無題)').toString().slice(0, 80) });
     }
   }
-  return out;
+  return { items, listsCount: (lists.items || []).length, totalTasks, withDueCount: items.length };
 }
 app.get('/api/gtasks', async (_req, res) => {
   const tokens = getGtasksTokens();
   const result = { mine: [], hers: [] };
+  const diagnostics = {};
   for (const p of ['mine', 'hers']) {
-    if (!tokens[p]) continue;
-    try { result[p] = await fetchGoogleTasks(tokens[p]); }
-    catch (e) { console.error('gtasks', p, e.message); }
+    if (!tokens[p]) { diagnostics[p] = { connected: false }; continue; }
+    try {
+      const r = await fetchGoogleTasks(tokens[p]);
+      result[p] = r.items;
+      diagnostics[p] = { connected: true, lists: r.listsCount, totalTasks: r.totalTasks, withDue: r.withDueCount };
+    } catch (e) {
+      console.error('gtasks', p, e.message);
+      const expired = e.tokError === 'invalid_grant';
+      diagnostics[p] = { connected: true, error: expired ? 'expired' : 'fetch_failed', message: e.message };
+      if (expired) {
+        // refresh tokenが失効しているので削除（次回はstatus=falseになる）
+        await deleteGtasksToken(p);
+        diagnostics[p].cleared = true;
+      }
+    }
   }
-  res.json(result);
+  res.json({ ...result, diagnostics });
 });
 
 // ── GOOGLE CALENDAR 連携 ──
