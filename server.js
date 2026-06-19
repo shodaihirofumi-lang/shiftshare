@@ -16,6 +16,7 @@ import {
   getGcalUrls, saveGcalUrl,
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding, sellHolding, getRealized,
+  setHoldingTargets, markHoldingTargetFired, getBuys,
   getNotes, addNote, deleteNote, toggleNote,
   getMemos, addMemo, deleteMemo, editMemo,
   getNotifiedOff, markNotifiedOff,
@@ -151,6 +152,83 @@ app.post('/api/holding/sell', async (req, res) => {
   }
 });
 app.get('/api/realized', (_req, res) => res.json(getRealized()));
+app.get('/api/buys', (_req, res) => res.json(getBuys()));
+// 取引履歴（買い＋売り）。チャートにマーカーを描画する用途。person/ticker でフィルタ可。
+app.get('/api/transactions', (req, res) => {
+  const { person, ticker } = req.query;
+  const normTicker = (t) => { t = String(t || '').toUpperCase(); return /^\d{4,5}$/.test(t) ? t + '.T' : t; };
+  const tk = ticker ? normTicker(ticker) : null;
+  const buys = getBuys().map(b => ({ ...b, type: 'buy' }));
+  const sells = getRealized().map(s => ({ ...s, type: 'sell', price: s.sellPrice }));
+  let all = [...buys, ...sells];
+  if (person) all = all.filter(x => x.person === person);
+  if (tk) all = all.filter(x => x.ticker === tk);
+  all.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+  res.json(all);
+});
+
+// 目標株価（損切・利確）の設定
+app.post('/api/holding/targets', async (req, res) => {
+  const { id, takeProfit, stopLoss } = req.body;
+  if (!id) return res.status(400).json({ error: 'id が必要です' });
+  const ok = await setHoldingTargets(id, { takeProfit, stopLoss });
+  if (!ok) return res.status(404).json({ error: '保有銘柄が見つかりません' });
+  res.json({ success: true });
+});
+
+// 目標株価アラート: 全保有株の現在値を取って、損切/利確ラインを跨いだら push 通知
+app.get('/api/check-price-targets', async (_req, res) => {
+  if (!VAPID_PUBLIC || !VAPID_PRIVATE) return res.json({ sent: 0, reason: 'no vapid' });
+  const all = getHoldings();
+  const targets = all.filter(h => (h.takeProfit && h.takeProfit > 0) || (h.stopLoss && h.stopLoss > 0));
+  if (!targets.length) return res.json({ sent: 0, reason: 'no targets' });
+  const subs = getPushSubscriptions();
+  const tickers = [...new Set(targets.map(h => h.ticker))];
+  // 現在値を取得
+  const prices = {};
+  for (const sym of tickers) {
+    try {
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      }).then(r => r.json());
+      const p = j.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (p != null) prices[sym] = p;
+    } catch { /* skip */ }
+  }
+  let sent = 0;
+  const fired = [];
+  for (const h of targets) {
+    const p = prices[h.ticker];
+    if (p == null) continue;
+    const cur = h.ticker.endsWith('.T') ? 'JPY' : 'USD';
+    const sym = cur === 'JPY' ? '¥' : '$';
+    const fmt = (n) => cur === 'JPY' ? Math.round(n).toLocaleString() : n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    const fmtTk = (h.name && h.name.trim()) ? `${h.name.trim()}（${h.ticker}）` : h.ticker;
+    const personName = h.person === 'hers' ? 'ちか' : 'ひろ';
+    const fmtFlags = h.targetsFired || {};
+    // 利確: 現在値 >= takeProfit
+    if (h.takeProfit && p >= h.takeProfit && !fmtFlags.tp) {
+      const payload = JSON.stringify({
+        title: `★ 利確ライン到達`,
+        body: `${personName}の${fmtTk} が ${sym}${fmt(p)} (目標 ${sym}${fmt(h.takeProfit)})`,
+      });
+      for (const sub of subs) webpush.sendNotification(sub, payload).catch(() => {});
+      await markHoldingTargetFired(h.id, 'tp');
+      sent++; fired.push({ ticker: h.ticker, kind: 'tp', price: p });
+    }
+    // 損切: 現在値 <= stopLoss
+    if (h.stopLoss && p <= h.stopLoss && !fmtFlags.sl) {
+      const payload = JSON.stringify({
+        title: `▼ 損切ライン到達`,
+        body: `${personName}の${fmtTk} が ${sym}${fmt(p)} (目標 ${sym}${fmt(h.stopLoss)})`,
+      });
+      for (const sub of subs) webpush.sendNotification(sub, payload).catch(() => {});
+      await markHoldingTargetFired(h.id, 'sl');
+      sent++; fired.push({ ticker: h.ticker, kind: 'sl', price: p });
+    }
+  }
+  res.json({ sent, fired });
+});
 // テクニカル指標（週足）
 function smaCalc(arr, n) { if (arr.length < n) return null; return arr.slice(-n).reduce((a, b) => a + b, 0) / n; }
 function rsiCalc(arr, period = 14) {

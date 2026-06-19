@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [] });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -275,6 +275,17 @@ export async function addHolding(h) {
   const person = ['mine', 'hers'].includes(h.person) ? h.person : 'mine';
   const addShares = Number(h.shares) || 0;
   const addCost = Number(h.cost) || 0;
+  // 価格付きの買いは取引履歴に記録（チャートに買いマーカーを出すため）
+  if (addShares > 0 && addCost > 0) {
+    if (!cache.buys) cache.buys = [];
+    cache.buys.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      person, ticker, name: String(h.name || '').slice(0, 40),
+      shares: addShares, price: addCost,
+      currency: ticker.endsWith('.T') ? 'JPY' : 'USD',
+      ts: Date.now(),
+    });
+  }
   // 同じperson×tickerが既にあれば加算し、加重平均で取得単価を更新（2つに分かれて並ばないように）
   const existing = cache.holdings.find(x => x.person === person && x.ticker === ticker);
   if (existing) {
@@ -296,6 +307,30 @@ export async function addHolding(h) {
   });
   await persist();
   return id;
+}
+
+// 損切・利確の目標株価を設定（push通知用＋表示用）。値0/nullで解除。
+export async function setHoldingTargets(id, { takeProfit, stopLoss }) {
+  const h = (cache.holdings || []).find(x => x.id === id);
+  if (!h) return false;
+  const setOrClear = (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : null; };
+  h.takeProfit = setOrClear(takeProfit);
+  h.stopLoss = setOrClear(stopLoss);
+  h.targetsFired = {}; // 変更時に通知済みフラグをリセット
+  await persist();
+  return true;
+}
+
+export async function markHoldingTargetFired(id, kind) {
+  const h = (cache.holdings || []).find(x => x.id === id);
+  if (!h) return;
+  h.targetsFired = h.targetsFired || {};
+  h.targetsFired[kind] = Date.now();
+  await persist();
+}
+
+export function getBuys() {
+  return cache.buys || [];
 }
 
 export async function sellHolding({ person, ticker, shares, sellPrice, currency }) {

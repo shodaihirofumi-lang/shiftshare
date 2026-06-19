@@ -441,6 +441,21 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .sell-preview b { color:var(--text); font-weight:700; }
 .sell-up { color:#c0392b; font-weight:700; font-size:15px; margin-left:6px; }
 .sell-down { color:#2e6da4; font-weight:700; font-size:15px; margin-left:6px; }
+.folio-tgt { flex-shrink:0; padding:6px 11px; border-radius:9px; border:1.5px solid var(--line); background:var(--card); color:var(--text-soft); font-size:11px; font-weight:700; cursor:pointer; }
+.folio-tgt:active { background:var(--bg); }
+.folio-tgt.has { color:var(--gold); border-color:var(--gold); }
+.folio-targets { display:flex; flex-wrap:wrap; gap:5px 10px; margin-top:3px; }
+.tgt-chip { display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:600; padding:1px 7px; border-radius:6px; }
+.tgt-chip.tp { background:rgba(192,57,43,.10); color:#c0392b; }
+.tgt-chip.sl { background:rgba(46,109,164,.10); color:#2e6da4; }
+.tgt-chip-dist { color:var(--text-soft); font-weight:500; margin-left:3px; font-size:10px; }
+.tgt-chip.hit { background:#c0392b; color:#fff; }
+.tgt-chip.sl.hit { background:#2e6da4; color:#fff; }
+/* チャート上の取引マーカー */
+.chart-marker-buy { fill:#c0392b; }
+.chart-marker-sell { fill:#2e6da4; }
+.chart-legend { display:flex; gap:14px; font-size:10px; color:var(--text-soft); margin-top:6px; justify-content:center; }
+.chart-legend-mark { display:inline-block; width:9px; height:9px; vertical-align:middle; margin-right:3px; }
 .sig { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px; white-space:nowrap; }
 .sig-buy { background:#e2efde; color:#2e7d32; }
 .sig-sell { background:#f6e0de; color:#c0392b; }
@@ -754,6 +769,23 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
   </div>
 </div>
 
+<!-- 目標株価モーダル -->
+<div class="modal-bg" id="tgt-modal" onclick="if(event.target===this)closeTargets()">
+  <div class="modal">
+    <div class="modal-title" id="tgt-title">目標株価</div>
+    <div class="modal-sub" id="tgt-sub"></div>
+    <label class="sell-lbl">利確ライン（上回ったら通知）</label>
+    <input id="tgt-tp" type="number" inputmode="decimal" class="ev-in" placeholder="例 3500（空欄で解除）">
+    <label class="sell-lbl">損切ライン（下回ったら通知）</label>
+    <input id="tgt-sl" type="number" inputmode="decimal" class="ev-in" placeholder="例 2800（空欄で解除）">
+    <div id="tgt-preview" class="sell-preview"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeTargets()">キャンセル</button>
+      <button class="btn-save" onclick="doSaveTargets()">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- 売却モーダル -->
 <div class="modal-bg" id="sell-modal" onclick="if(event.target===this)closeSell()">
   <div class="modal">
@@ -875,6 +907,8 @@ async function enterApp() {
   setupPush();
   // ふたり休みが近づいていたら通知（未通知の日だけ送る）
   fetch('/api/check-both-off-notify').catch(() => {});
+  // 株の目標株価（損切・利確）が現在値と交差していたら通知
+  fetch('/api/check-price-targets').catch(() => {});
   if (new URLSearchParams(location.search).get('gtasks') === 'connected') {
     showToast('Google ToDo を連携しました');
     history.replaceState({}, '', '/');
@@ -1009,16 +1043,34 @@ function holdingLine(h) {
   const q = quotes[h.ticker]; const cur = q?q.currency:'JPY'; const price = q?q.price:null;
   const name = stockName(h);
   const sellBtn = `<button class="folio-sell" onclick="event.stopPropagation();openSell('${h.id}')">売る</button>`;
+  const hasTgt = (h.takeProfit && h.takeProfit > 0) || (h.stopLoss && h.stopLoss > 0);
+  const tgtBtn = `<button class="folio-tgt ${hasTgt?'has':''}" onclick="event.stopPropagation();openTargets('${h.id}')" title="損切・利確の目標">目標</button>`;
   const delBtn = `<button class="folio-del" onclick="event.stopPropagation();delHolding('${h.id}','${escapeHtml(name)}')">削除</button>`;
-  const actions = `<div class="folio-actions">${sellBtn}${delBtn}</div>`;
+  const actions = `<div class="folio-actions">${sellBtn}${tgtBtn}${delBtn}</div>`;
   const tap = `onclick="openStockChart('${h.ticker}','${escapeHtml(name)}')"`;
   const sig = q && q.signal && SIG[q.signal]
     ? `<span class="sig ${SIG[q.signal][1]}">${SIG[q.signal][0]}${q.rsi!=null?`<span class="sig-rsi">RSI${q.rsi}</span>`:''}</span>` : '';
   const chartIcon = '<svg class="folio-chart-ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>';
   const avg = h.cost > 0 ? `<span class="folio-avg">取得平均 ${curSym(cur)}${Math.round(h.cost).toLocaleString()}</span>` : '';
-  if (price==null) return `<div class="folio-item" ${tap}><div class="folio-item-main"><b>${escapeHtml(name)}</b> ${chartIcon} <span class="folio-sub">${h.shares}株</span>${avg}<br><span class="folio-fail">価格取得失敗（コードを確認）</span></div>${actions}</div>`;
+  // 目標株価チップ（設定があれば。現在値との距離・到達判定も表示）
+  const tgtChips = (() => {
+    if (!hasTgt) return '';
+    const parts = [];
+    if (h.takeProfit && h.takeProfit > 0) {
+      const hit = price != null && price >= h.takeProfit;
+      const dist = price != null ? Math.round((h.takeProfit - price) / price * 1000) / 10 : null;
+      parts.push(`<span class="tgt-chip tp ${hit?'hit':''}">利確 ${curSym(cur)}${Math.round(h.takeProfit).toLocaleString()}${dist!=null?`<span class="tgt-chip-dist">${hit?'到達':(dist>=0?'+':'')+dist+'%'}</span>`:''}</span>`);
+    }
+    if (h.stopLoss && h.stopLoss > 0) {
+      const hit = price != null && price <= h.stopLoss;
+      const dist = price != null ? Math.round((h.stopLoss - price) / price * 1000) / 10 : null;
+      parts.push(`<span class="tgt-chip sl ${hit?'hit':''}">損切 ${curSym(cur)}${Math.round(h.stopLoss).toLocaleString()}${dist!=null?`<span class="tgt-chip-dist">${hit?'到達':(dist>=0?'+':'')+dist+'%'}</span>`:''}</span>`);
+    }
+    return `<div class="folio-targets">${parts.join('')}</div>`;
+  })();
+  if (price==null) return `<div class="folio-item" ${tap}><div class="folio-item-main"><b>${escapeHtml(name)}</b> ${chartIcon} <span class="folio-sub">${h.shares}株</span>${avg}<br><span class="folio-fail">価格取得失敗（コードを確認）</span>${tgtChips}</div>${actions}</div>`;
   const v=price*h.shares, g=(price-h.cost)*h.shares, c=h.cost*h.shares, gpct=c?Math.round(g/c*1000)/10:0; const up=g>=0;
-  return `<div class="folio-item" ${tap}><div class="folio-item-main"><b>${escapeHtml(name)}</b> ${chartIcon} ${sig} <span class="folio-sub">${h.shares}株 @${curSym(cur)}${price.toLocaleString()}</span>${avg}<br><span class="folio-item-val">${curSym(cur)}${Math.round(v).toLocaleString()}</span> <span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span></div>${actions}</div>`;
+  return `<div class="folio-item" ${tap}><div class="folio-item-main"><b>${escapeHtml(name)}</b> ${chartIcon} ${sig} <span class="folio-sub">${h.shares}株 @${curSym(cur)}${price.toLocaleString()}</span>${avg}<br><span class="folio-item-val">${curSym(cur)}${Math.round(v).toLocaleString()}</span> <span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span>${tgtChips}</div>${actions}</div>`;
 }
 function toggleFolio(p) {
   const el = document.getElementById('folio-detail-'+p), tg = document.getElementById('folio-tg-'+p);
@@ -1083,6 +1135,55 @@ function updateSellPreview() {
     <div style="margin-top:6px">実現損益（予想）<span class="${up?'sell-up':'sell-down'}">${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(r)).toLocaleString()}</span></div>`;
 }
 function closeSell() { document.getElementById('sell-modal').classList.remove('active'); sellingHolding = null; }
+// ── 目標株価（損切・利確） ──
+let targetingHolding = null;
+function openTargets(id) {
+  const h = holdings.find(x => x.id === id);
+  if (!h) return;
+  targetingHolding = h;
+  const name = stockName(h);
+  const q = quotes[h.ticker]; const cur = q?q.currency:'JPY';
+  document.getElementById('tgt-title').textContent = '目標株価：' + name;
+  document.getElementById('tgt-sub').textContent = q ? `現在 ${curSym(cur)}${q.price.toLocaleString()} / 取得平均 ${curSym(cur)}${Math.round(h.cost).toLocaleString()}` : `取得平均 ${curSym(cur)}${Math.round(h.cost).toLocaleString()}`;
+  document.getElementById('tgt-tp').value = h.takeProfit || '';
+  document.getElementById('tgt-sl').value = h.stopLoss || '';
+  document.getElementById('tgt-tp').oninput = updateTargetPreview;
+  document.getElementById('tgt-sl').oninput = updateTargetPreview;
+  updateTargetPreview();
+  document.getElementById('tgt-modal').classList.add('active');
+}
+function updateTargetPreview() {
+  if (!targetingHolding) return;
+  const q = quotes[targetingHolding.ticker]; if (!q) { document.getElementById('tgt-preview').innerHTML = ''; return; }
+  const cur = q.currency || 'JPY';
+  const tp = parseFloat(document.getElementById('tgt-tp').value);
+  const sl = parseFloat(document.getElementById('tgt-sl').value);
+  const lines = [];
+  if (tp > 0) {
+    const dist = (tp - q.price) / q.price * 100;
+    lines.push(`利確 ${curSym(cur)}${tp.toLocaleString()}：現在から <span class="sell-up">${dist>=0?'+':''}${dist.toFixed(1)}%</span>`);
+  }
+  if (sl > 0) {
+    const dist = (sl - q.price) / q.price * 100;
+    lines.push(`損切 ${curSym(cur)}${sl.toLocaleString()}：現在から <span class="sell-down">${dist>=0?'+':''}${dist.toFixed(1)}%</span>`);
+  }
+  document.getElementById('tgt-preview').innerHTML = lines.length ? lines.join('<br>') : '空欄のまま保存すると目標を解除します';
+}
+function closeTargets() { document.getElementById('tgt-modal').classList.remove('active'); targetingHolding = null; }
+async function doSaveTargets() {
+  if (!targetingHolding) return;
+  const tp = parseFloat(document.getElementById('tgt-tp').value);
+  const sl = parseFloat(document.getElementById('tgt-sl').value);
+  try {
+    const r = await fetch('/api/holding/targets', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id: targetingHolding.id, takeProfit: tp, stopLoss: sl})});
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || '保存失敗');
+    closeTargets();
+    await loadHoldings();
+    showToast('目標株価を保存しました');
+  } catch (e) { showToast('保存失敗: '+e.message, true); }
+}
+
 async function doSell() {
   if (!sellingHolding) return;
   const shares = parseFloat(document.getElementById('sell-shares').value);
@@ -1131,15 +1232,32 @@ function closeChart(){ document.getElementById('chart-modal').classList.remove('
 async function loadStockChart() {
   const body = document.getElementById('chart-body');
   body.innerHTML = '<div class="ev-empty">読み込み中…</div>';
-  let d; try { d = await fetch(`/api/stock-history?symbol=${encodeURIComponent(chartSymbol)}&range=${chartRange}`).then(r=>r.json()); } catch { body.innerHTML='<div class="ev-empty">取得できませんでした</div>'; return; }
+  let d, txs = [];
+  try { d = await fetch(`/api/stock-history?symbol=${encodeURIComponent(chartSymbol)}&range=${chartRange}`).then(r=>r.json()); } catch { body.innerHTML='<div class="ev-empty">取得できませんでした</div>'; return; }
   if (!d.history || d.history.length < 2) { body.innerHTML='<div class="ev-empty">データがありません</div>'; return; }
+  try { txs = await fetch(`/api/transactions?ticker=${encodeURIComponent(chartSymbol)}`).then(r=>r.json()); } catch { txs = []; }
   const vals = d.history.map(h=>h.close);
   const last = vals[vals.length-1], first = vals[0]; const up = last>=first;
   const chg = last-first, chgPct = first?Math.round(chg/first*1000)/10:0;
   document.getElementById('chart-price').innerHTML = `${curSym(d.currency)}${last.toLocaleString()} <span class="nk-change ${up?'up':'down'}" style="font-size:12px">${up?'▲+':'▼−'}${curSym(d.currency)}${Math.abs(Math.round(chg)).toLocaleString()} (${up?'+':''}${chgPct}%)</span>`;
-  body.innerHTML = bigChart(d.history, up);
+  body.innerHTML = bigChart(d.history, up, txs);
 }
-function bigChart(hist, up) {
+// 取引のタイムスタンプを history のインデックスに対応付け（範囲外はnull）
+function txIndex(ts, hist) {
+  if (!ts) return null;
+  // Yahooの "yy/m/d" を Date に直すのは曖昧なので、近似でts↔順序にマップ
+  // ヒストリの始点と終点のtsを推定するため、history全体の長さで線形補間
+  // 厳密性より「だいたい正しい位置」優先（チャート表示用）
+  const N = hist.length;
+  // 各バーのおおよそのms間隔
+  const last = new Date(); // 終端＝現在に近い
+  const firstApprox = new Date(last.getTime() - (N-1) * 86400000);
+  if (ts < firstApprox.getTime() - 86400000 * 7) return null; // 範囲外（マージン1週間）
+  if (ts > last.getTime() + 86400000) return null;
+  const idx = Math.round((ts - firstApprox.getTime()) / (last.getTime() - firstApprox.getTime() || 1) * (N - 1));
+  return Math.max(0, Math.min(N-1, idx));
+}
+function bigChart(hist, up, txs) {
   const vals = hist.map(h=>h.close);
   const w=320, h=170, padL=2, padR=2, padT=12, padB=4;
   const min=Math.min(...vals), max=Math.max(...vals), range=(max-min)||1;
@@ -1147,10 +1265,36 @@ function bigChart(hist, up) {
   const Y=v=> padT + (1-(v-min)/range)*(h-padT-padB);
   const pts = vals.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
   const color = up?'#c0392b':'#2e6da4';
+  // 取引マーカー（買い=▲赤・売り=▼青）
+  let markers = '';
+  let hasBuy = false, hasSell = false;
+  if (Array.isArray(txs)) {
+    for (const t of txs) {
+      const idx = txIndex(t.ts, hist);
+      if (idx == null) continue;
+      const x = X(idx);
+      const y = Y(t.price || vals[idx]);
+      if (t.type === 'buy') {
+        hasBuy = true;
+        // 上向き三角（買い）
+        markers += `<polygon class="chart-marker-buy" points="${(x-4).toFixed(1)},${(y+4).toFixed(1)} ${(x+4).toFixed(1)},${(y+4).toFixed(1)} ${x.toFixed(1)},${(y-4).toFixed(1)}"/>`;
+      } else if (t.type === 'sell') {
+        hasSell = true;
+        // 下向き三角（売り）
+        markers += `<polygon class="chart-marker-sell" points="${(x-4).toFixed(1)},${(y-4).toFixed(1)} ${(x+4).toFixed(1)},${(y-4).toFixed(1)} ${x.toFixed(1)},${(y+4).toFixed(1)}"/>`;
+      }
+    }
+  }
+  const legend = (hasBuy || hasSell) ? `<div class="chart-legend">
+    ${hasBuy ? '<span><svg class="chart-legend-mark" viewBox="0 0 10 10"><polygon class="chart-marker-buy" points="1,8 9,8 5,2"/></svg>買い</span>' : ''}
+    ${hasSell ? '<span><svg class="chart-legend-mark" viewBox="0 0 10 10"><polygon class="chart-marker-sell" points="1,2 9,2 5,8"/></svg>売り</span>' : ''}
+  </div>` : '';
   return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:180px">
     <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+    ${markers}
   </svg>
-  <div class="chart-axis"><span>${hist[0].date}</span><span>高${Math.round(max).toLocaleString()}・安${Math.round(min).toLocaleString()}</span><span>${hist[hist.length-1].date}</span></div>`;
+  <div class="chart-axis"><span>${hist[0].date}</span><span>高${Math.round(max).toLocaleString()}・安${Math.round(min).toLocaleString()}</span><span>${hist[hist.length-1].date}</span></div>
+  ${legend}`;
 }
 function renderPnlHistory() {
   const histEl = document.getElementById('pnl-history');
