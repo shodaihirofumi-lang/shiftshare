@@ -15,7 +15,7 @@ import {
   getExpenses, addExpense, deleteExpense,
   getGcalUrls, saveGcalUrl,
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
-  getHoldings, addHolding, deleteHolding,
+  getHoldings, addHolding, deleteHolding, sellHolding, getRealized,
   getNotes, addNote, deleteNote, toggleNote,
   getMemos, addMemo, deleteMemo, editMemo,
   getNotifiedOff, markNotifiedOff,
@@ -91,6 +91,15 @@ app.post('/api/holding/delete', async (req, res) => {
   await deleteHolding(req.body.id);
   res.json({ success: true });
 });
+app.post('/api/holding/sell', async (req, res) => {
+  try {
+    const r = await sellHolding(req.body);
+    res.json({ success: true, ...r });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+app.get('/api/realized', (_req, res) => res.json(getRealized()));
 // テクニカル指標（週足）
 function smaCalc(arr, n) { if (arr.length < n) return null; return arr.slice(-n).reduce((a, b) => a + b, 0) / n; }
 function rsiCalc(arr, period = 14) {

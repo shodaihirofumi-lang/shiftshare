@@ -427,6 +427,17 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .fh-btn.active[data-p=hers] { background:var(--hers-bg); color:var(--hers); border-color:var(--hers); }
 .folio-del { flex-shrink:0; padding:6px 13px; border-radius:9px; border:1.5px solid var(--line); background:var(--card); color:#b5544f; font-size:11px; font-weight:700; cursor:pointer; }
 .folio-del:active { background:#f6e0de; }
+.folio-sell { flex-shrink:0; padding:6px 13px; border-radius:9px; border:1.5px solid var(--mine); background:var(--mine-bg); color:var(--mine); font-size:11px; font-weight:700; cursor:pointer; }
+.folio-sell:active { opacity:.85; }
+.folio-actions { display:flex; flex-direction:column; gap:5px; flex-shrink:0; }
+.folio-avg { font-size:11px; color:var(--text-soft); margin-left:6px; }
+.folio-realized { margin-top:2px; font-size:11px; }
+.folio-realized .folio-realized-lbl { color:var(--text-soft); font-weight:600; letter-spacing:.5px; margin-right:6px; }
+.sell-lbl { display:block; font-size:11px; color:var(--text-soft); letter-spacing:1px; font-weight:600; margin:14px 0 6px; }
+.sell-preview { background:var(--bg); border-radius:10px; padding:11px 14px; margin-top:14px; font-size:13px; color:var(--text-soft); min-height:38px; }
+.sell-preview b { color:var(--text); font-weight:700; }
+.sell-up { color:#c0392b; font-weight:700; font-size:15px; margin-left:6px; }
+.sell-down { color:#2e6da4; font-weight:700; font-size:15px; margin-left:6px; }
 .sig { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px; white-space:nowrap; }
 .sig-buy { background:#e2efde; color:#2e7d32; }
 .sig-sell { background:#f6e0de; color:#c0392b; }
@@ -740,6 +751,23 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
   </div>
 </div>
 
+<!-- 売却モーダル -->
+<div class="modal-bg" id="sell-modal" onclick="if(event.target===this)closeSell()">
+  <div class="modal">
+    <div class="modal-title" id="sell-title">売却</div>
+    <div class="modal-sub" id="sell-sub"></div>
+    <label class="sell-lbl">売却株数</label>
+    <input id="sell-shares" type="number" inputmode="decimal" class="ev-in" placeholder="売る株数">
+    <label class="sell-lbl">売却単価</label>
+    <input id="sell-price" type="number" inputmode="decimal" class="ev-in" placeholder="1株あたりの売却額">
+    <div id="sell-preview" class="sell-preview"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSell()">キャンセル</button>
+      <button class="btn-save" onclick="doSell()">売却を確定</button>
+    </div>
+  </div>
+</div>
+
 <!-- DAY EDITOR MODAL -->
 <div class="modal-bg" id="day-editor" onclick="if(event.target===this)closeEditor()">
   <div class="modal">
@@ -919,12 +947,17 @@ const STOCK_JA = {
 };
 const SIG = { buy:['買い','sig-buy'], sell:['売り','sig-sell'], hold:['様子見','sig-hold'] };
 function stockName(h) { const q = quotes[h.ticker]; return (h.name && h.name.trim()) || STOCK_JA[h.ticker] || (q && q.name) || h.ticker; }
+let allRealized = [];
+async function loadRealized() {
+  try { allRealized = await fetch('/api/realized').then(r=>r.json()); } catch { allRealized = []; }
+  renderPortfolio();
+}
 async function loadHoldings() {
   try { holdings = await fetch('/api/holdings').then(r=>r.json()); } catch { holdings = []; }
   const syms = [...new Set(holdings.map(h=>h.ticker).filter(Boolean))];
   if (syms.length) { try { quotes = await fetch('/api/quotes?symbols='+encodeURIComponent(syms.join(','))).then(r=>r.json()); } catch { quotes={}; } }
   else quotes = {};
-  renderPortfolio();
+  await loadRealized(); // 実現損益も合わせて反映
 }
 function setFolioPerson(p){ folioPerson=p; document.querySelectorAll('.fh-btn').forEach(b=>b.classList.toggle('active', b.dataset.p===p)); }
 function renderPortfolio() {
@@ -933,13 +966,27 @@ function renderPortfolio() {
   sm.innerHTML = ['mine','hers'].map(p=>{
     const ph = holdings.filter(h => (h.person==='hers'?'hers':'mine')===p);
     const byCur = {};
-    for (const h of ph) { const q=quotes[h.ticker]; const cur=q?q.currency:'JPY'; const price=q?q.price:h.cost; (byCur[cur] ||= {value:0,cost:0}); byCur[cur].value+=price*h.shares; byCur[cur].cost+=h.cost*h.shares; }
+    for (const h of ph) {
+      const q=quotes[h.ticker]; const cur=q?q.currency:'JPY'; const price=q?q.price:h.cost;
+      (byCur[cur] ||= {value:0, cost:0, realized:0});
+      byCur[cur].value+=price*h.shares; byCur[cur].cost+=h.cost*h.shares;
+    }
+    // 実現損益も合算（保有が0でも実現があれば通貨ブロックを作る）
+    for (const r of allRealized.filter(x => x.person === p)) {
+      const cur = r.currency || (r.ticker?.endsWith('.T') ? 'JPY' : 'USD');
+      (byCur[cur] ||= {value:0, cost:0, realized:0}).realized += r.realized;
+    }
     const curs = Object.keys(byCur);
     const totals = curs.length ? curs.map(c=>{
-      const {value,cost}=byCur[c]; const g=value-cost; const gpct=cost?Math.round(g/cost*1000)/10:0; const up=g>=0;
-      return `<div class="folio-line"><span class="folio-val">${curSym(c)}${Math.round(value).toLocaleString()}</span><span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(c)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span></div>`;
+      const {value, cost, realized}=byCur[c]; const g=value-cost; const gpct=cost?Math.round(g/cost*1000)/10:0; const up=g>=0;
+      let html = `<div class="folio-line"><span class="folio-val">${curSym(c)}${Math.round(value).toLocaleString()}</span><span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(c)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span></div>`;
+      if (realized !== 0) {
+        const rUp = realized >= 0;
+        html += `<div class="folio-line folio-realized"><span class="folio-realized-lbl">実現累計</span><span class="folio-gain ${rUp?'up':'down'}">${rUp?'▲':'▼'}${rUp?'+':'−'}${curSym(c)}${Math.abs(Math.round(realized)).toLocaleString()}</span></div>`;
+      }
+      return html;
     }).join('') : '<span class="folio-empty">未登録</span>';
-    const detail = ph.length ? ph.map(holdingLine).join('') : '<div class="ev-empty">登録なし</div>';
+    const detail = ph.length ? ph.map(holdingLine).join('') : '<div class="ev-empty">保有銘柄なし（売却済みは実現損益のみ表示）</div>';
     return `<div class="folio-person">
       <div class="folio-row" onclick="toggleFolio('${p}')">
         <span class="folio-tg" id="folio-tg-${p}">▶</span>
@@ -953,14 +1000,17 @@ function renderPortfolio() {
 function holdingLine(h) {
   const q = quotes[h.ticker]; const cur = q?q.currency:'JPY'; const price = q?q.price:null;
   const name = stockName(h);
-  const del = `<button class="folio-del" onclick="event.stopPropagation();delHolding('${h.id}','${escapeHtml(name)}')">削除</button>`;
+  const sellBtn = `<button class="folio-sell" onclick="event.stopPropagation();openSell('${h.id}')">売る</button>`;
+  const delBtn = `<button class="folio-del" onclick="event.stopPropagation();delHolding('${h.id}','${escapeHtml(name)}')">削除</button>`;
+  const actions = `<div class="folio-actions">${sellBtn}${delBtn}</div>`;
   const tap = `onclick="openStockChart('${h.ticker}','${escapeHtml(name)}')"`;
   const sig = q && q.signal && SIG[q.signal]
     ? `<span class="sig ${SIG[q.signal][1]}">${SIG[q.signal][0]}${q.rsi!=null?`<span class="sig-rsi">RSI${q.rsi}</span>`:''}</span>` : '';
   const chartIcon = '<svg class="folio-chart-ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>';
-  if (price==null) return `<div class="folio-item" ${tap}><div class="folio-item-main"><b>${escapeHtml(name)}</b> ${chartIcon} <span class="folio-sub">${h.shares}株</span><br><span class="folio-fail">価格取得失敗（コードを確認）</span></div>${del}</div>`;
+  const avg = h.cost > 0 ? `<span class="folio-avg">取得平均 ${curSym(cur)}${Math.round(h.cost).toLocaleString()}</span>` : '';
+  if (price==null) return `<div class="folio-item" ${tap}><div class="folio-item-main"><b>${escapeHtml(name)}</b> ${chartIcon} <span class="folio-sub">${h.shares}株</span>${avg}<br><span class="folio-fail">価格取得失敗（コードを確認）</span></div>${actions}</div>`;
   const v=price*h.shares, g=(price-h.cost)*h.shares, c=h.cost*h.shares, gpct=c?Math.round(g/c*1000)/10:0; const up=g>=0;
-  return `<div class="folio-item" ${tap}><div class="folio-item-main"><b>${escapeHtml(name)}</b> ${chartIcon} ${sig} <span class="folio-sub">${h.shares}株 @${curSym(cur)}${price.toLocaleString()}</span><br><span class="folio-item-val">${curSym(cur)}${Math.round(v).toLocaleString()}</span> <span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span></div>${del}</div>`;
+  return `<div class="folio-item" ${tap}><div class="folio-item-main"><b>${escapeHtml(name)}</b> ${chartIcon} ${sig} <span class="folio-sub">${h.shares}株 @${curSym(cur)}${price.toLocaleString()}</span>${avg}<br><span class="folio-item-val">${curSym(cur)}${Math.round(v).toLocaleString()}</span> <span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span></div>${actions}</div>`;
 }
 function toggleFolio(p) {
   const el = document.getElementById('folio-detail-'+p), tg = document.getElementById('folio-tg-'+p);
@@ -982,9 +1032,59 @@ async function addHoldingFromUI() {
   } catch (e) { showToast('追加失敗: '+e.message, true); }
 }
 async function delHolding(id, name) {
-  if (!confirm(`「${name||'この銘柄'}」を削除しますか？`)) return;
+  if (!confirm(`「${name||'この銘柄'}」を削除しますか？\n（実現損益として記録したい場合は「売る」を使ってください）`)) return;
   try { await fetch('/api/holding/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) }); await loadHoldings(); await loadPortfolioHistory(); showToast('銘柄を削除しました'); }
   catch { showToast('削除に失敗しました', true); }
+}
+
+// ── 売却 ──
+let sellingHolding = null;
+function openSell(id) {
+  const h = holdings.find(x => x.id === id);
+  if (!h) return;
+  sellingHolding = h;
+  const name = stockName(h);
+  const q = quotes[h.ticker]; const cur = q?q.currency:'JPY';
+  document.getElementById('sell-title').textContent = '売却：' + name;
+  document.getElementById('sell-sub').textContent = `保有 ${h.shares}株 / 取得平均 ${curSym(cur)}${Math.round(h.cost).toLocaleString()}`;
+  document.getElementById('sell-shares').value = h.shares;
+  document.getElementById('sell-price').value = q ? q.price : '';
+  document.getElementById('sell-shares').oninput = updateSellPreview;
+  document.getElementById('sell-price').oninput = updateSellPreview;
+  updateSellPreview();
+  document.getElementById('sell-modal').classList.add('active');
+}
+function updateSellPreview() {
+  if (!sellingHolding) return;
+  const s = parseFloat(document.getElementById('sell-shares').value);
+  const p = parseFloat(document.getElementById('sell-price').value);
+  const cur = (quotes[sellingHolding.ticker]?.currency) || 'JPY';
+  const el = document.getElementById('sell-preview');
+  if (!(s>0) || !(p>0)) { el.innerHTML = '株数と単価を入力すると実現損益の予想を表示します'; return; }
+  const gross = p * s;
+  const r = (p - sellingHolding.cost) * s;
+  const up = r >= 0;
+  el.innerHTML = `<div>売却額：<b>${curSym(cur)}${Math.round(gross).toLocaleString()}</b></div>
+    <div style="margin-top:6px">実現損益（予想）<span class="${up?'sell-up':'sell-down'}">${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(r)).toLocaleString()}</span></div>`;
+}
+function closeSell() { document.getElementById('sell-modal').classList.remove('active'); sellingHolding = null; }
+async function doSell() {
+  if (!sellingHolding) return;
+  const shares = parseFloat(document.getElementById('sell-shares').value);
+  const sellPrice = parseFloat(document.getElementById('sell-price').value);
+  if (!(shares>0)) { showToast('株数を入力してください', true); return; }
+  if (!(sellPrice>0)) { showToast('売却単価を入力してください', true); return; }
+  if (shares > sellingHolding.shares) { showToast(`保有数を超えています（${sellingHolding.shares}株まで）`, true); return; }
+  const cur = (quotes[sellingHolding.ticker]?.currency) || 'JPY';
+  try {
+    const res = await fetch('/api/holding/sell', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person: sellingHolding.person, ticker: sellingHolding.ticker, shares, sellPrice, currency: cur}) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '売却失敗');
+    const up = data.realized >= 0;
+    showToast(`売却完了：実現${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(data.realized)).toLocaleString()}`);
+    closeSell();
+    await loadHoldings(); await loadPortfolioHistory();
+  } catch (e) { showToast('売却失敗: '+e.message, true); }
 }
 let pnlHist = [], pnlYM = null;
 async function loadPortfolioHistory() {

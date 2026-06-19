@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {} });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [] });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -236,26 +236,76 @@ export function getHoldings() {
 
 export async function addHolding(h) {
   if (!cache.holdings) cache.holdings = [];
-  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   let ticker = String(h.ticker || '').trim().toUpperCase().slice(0, 20);
   // 日本株の4〜5桁コードは自動で .T（東証）を付ける
   if (/^\d{4,5}$/.test(ticker)) ticker += '.T';
+  const person = ['mine', 'hers'].includes(h.person) ? h.person : 'mine';
+  const addShares = Number(h.shares) || 0;
+  const addCost = Number(h.cost) || 0;
+  // 同じperson×tickerが既にあれば加算し、加重平均で取得単価を更新（2つに分かれて並ばないように）
+  const existing = cache.holdings.find(x => x.person === person && x.ticker === ticker);
+  if (existing) {
+    const total = existing.shares + addShares;
+    if (addCost > 0 && total > 0) {
+      existing.cost = (existing.shares * existing.cost + addShares * addCost) / total;
+    }
+    existing.shares = total;
+    if (h.name && !existing.name) existing.name = String(h.name).slice(0, 40);
+    await persist();
+    return existing.id;
+  }
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   cache.holdings.push({
-    id,
-    person: ['mine', 'hers'].includes(h.person) ? h.person : null,
-    ticker,
-    shares: Number(h.shares) || 0,
-    cost: Number(h.cost) || 0,
+    id, person, ticker,
+    shares: addShares,
+    cost: addCost,
     name: String(h.name || '').slice(0, 40),
   });
   await persist();
   return id;
 }
 
+export async function sellHolding({ person, ticker, shares, sellPrice, currency }) {
+  if (!['mine','hers'].includes(person)) throw new Error('person が不正です');
+  ticker = String(ticker || '').trim().toUpperCase();
+  if (/^\d{4,5}$/.test(ticker)) ticker += '.T';
+  const h = (cache.holdings || []).find(x => x.person === person && x.ticker === ticker);
+  if (!h) throw new Error('該当する保有銘柄がありません');
+  const soldShares = Number(shares) || 0;
+  const px = Number(sellPrice) || 0;
+  if (soldShares <= 0) throw new Error('売却株数が不正です');
+  if (soldShares > h.shares) throw new Error(`保有数を超えています（保有 ${h.shares}株）`);
+  if (px <= 0) throw new Error('売却単価が不正です');
+  const cur = currency || (ticker.endsWith('.T') ? 'JPY' : 'USD');
+  const realized = (px - h.cost) * soldShares;
+  if (!cache.realized) cache.realized = [];
+  const rid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  cache.realized.push({
+    id: rid, person, ticker,
+    name: h.name || '',
+    shares: soldShares, sellPrice: px, costAtSale: h.cost,
+    realized, currency: cur, ts: Date.now(),
+  });
+  const remaining = h.shares - soldShares;
+  const removed = remaining <= 0;
+  if (removed) {
+    cache.holdings = cache.holdings.filter(x => x.id !== h.id);
+  } else {
+    h.shares = remaining;
+  }
+  await persist();
+  return { realized, costAtSale: h.cost, remaining: Math.max(0, remaining), removed, currency: cur };
+}
+
 export async function deleteHolding(id) {
   if (!cache.holdings) return;
   cache.holdings = cache.holdings.filter(h => h.id !== id);
   await persist();
+}
+
+// ── 実現損益（売却履歴）──
+export function getRealized() {
+  return cache.realized || [];
 }
 
 // ── BOARD（ふたりの掲示板：行きたい所・やりたいこと。日付に紐づかない共有メモ）──
