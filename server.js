@@ -80,11 +80,48 @@ app.get('/api/vapid-key', (_req, res) => res.json({ publicKey: VAPID_PUBLIC }));
 
 // ── 保有株（ポートフォリオ）──
 app.get('/api/holdings', (_req, res) => res.json(getHoldings()));
+// 売買時の自動メモ生成
+const CUR_SYM = { JPY: '¥', USD: '$' };
+function curSymStr(cur) { return CUR_SYM[cur] || (cur + ' '); }
+function inferCurrency(ticker) {
+  const t = String(ticker || '').toUpperCase();
+  // 「.T」付きでも、生の4〜5桁コード（addHoldingで .T が付く前のユーザー入力）でもJPY扱い
+  if (t.endsWith('.T') || /^\d{4,5}$/.test(t)) return 'JPY';
+  return 'USD';
+}
+function fmtMoney(n, cur) {
+  const r = Math.round((n + Number.EPSILON) * 100) / 100;
+  // 円は整数、USDは小数2桁まで
+  return cur === 'USD' ? r.toLocaleString('en-US', { maximumFractionDigits: 2 }) : Math.round(r).toLocaleString();
+}
+function displayName(ticker, name) {
+  const tk = String(ticker || '').toUpperCase();
+  return name && String(name).trim() ? `${String(name).trim()}（${tk}）` : tk;
+}
+function buildBuyMemoText({ ticker, shares, cost, name }) {
+  const cur = inferCurrency(ticker);
+  const sym = curSymStr(cur);
+  const total = cost * shares;
+  return `【買】${displayName(ticker, name)}\n${shares}株 × ${sym}${fmtMoney(cost, cur)} = ${sym}${fmtMoney(total, cur)}`;
+}
+function buildSellMemoText({ ticker, shares, sellPrice, realized, currency, name }) {
+  const cur = currency || inferCurrency(ticker);
+  const sym = curSymStr(cur);
+  const total = sellPrice * shares;
+  const realAbs = Math.abs(realized);
+  const realSign = realized >= 0 ? '+' : '−';
+  return `【売】${displayName(ticker, name)}\n${shares}株 × ${sym}${fmtMoney(sellPrice, cur)} = ${sym}${fmtMoney(total, cur)}\n実現損益 ${realSign}${sym}${fmtMoney(realAbs, cur)}`;
+}
+
 app.post('/api/holding', async (req, res) => {
-  const { person, ticker } = req.body;
+  const { person, ticker, shares, cost, name } = req.body;
   if (!['mine', 'hers'].includes(person)) return res.status(400).json({ error: 'person は mine または hers のみ' });
   if (!ticker || !String(ticker).trim()) return res.status(400).json({ error: '銘柄コードが必要です' });
   const id = await addHolding(req.body);
+  // 価格を入れた買い注文だけメモに自動記録（cost=0は単なる株数追加なのでメモしない）
+  if (Number(shares) > 0 && Number(cost) > 0) {
+    try { await addMemo({ person, text: buildBuyMemoText({ ticker, shares: Number(shares), cost: Number(cost), name }) }); } catch {}
+  }
   res.json({ success: true, id });
 });
 app.post('/api/holding/delete', async (req, res) => {
@@ -94,6 +131,20 @@ app.post('/api/holding/delete', async (req, res) => {
 app.post('/api/holding/sell', async (req, res) => {
   try {
     const r = await sellHolding(req.body);
+    // 売却時は必ずメモに自動記録（実現損益込み）
+    try {
+      await addMemo({
+        person: req.body.person,
+        text: buildSellMemoText({
+          ticker: req.body.ticker,
+          shares: Number(req.body.shares),
+          sellPrice: Number(req.body.sellPrice),
+          realized: r.realized,
+          currency: r.currency,
+          name: r.name,
+        }),
+      });
+    } catch {}
     res.json({ success: true, ...r });
   } catch (e) {
     res.status(400).json({ error: e.message });

@@ -327,7 +327,7 @@ export async function sellHolding({ person, ticker, shares, sellPrice, currency 
     h.shares = remaining;
   }
   await persist();
-  return { realized, costAtSale: h.cost, remaining: Math.max(0, remaining), removed, currency: cur };
+  return { realized, costAtSale: h.cost, remaining: Math.max(0, remaining), removed, currency: cur, name: h.name || '', ticker };
 }
 
 export async function deleteHolding(id) {
