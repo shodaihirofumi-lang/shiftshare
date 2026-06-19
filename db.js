@@ -37,6 +37,39 @@ export async function initDb() {
     }
     console.log('[db] ローカルファイル data.json を使用（クラウドでは消えます）');
   }
+  await mergeDuplicateHoldings();
+}
+
+// 起動時マイグレーション：同 person × ticker の保有が複数あれば加重平均で1つに統合
+async function mergeDuplicateHoldings() {
+  if (!cache.holdings || cache.holdings.length === 0) return;
+  const byKey = new Map(); // person|ticker -> consolidated entry
+  const merged = [];
+  for (const h of cache.holdings) {
+    const key = `${h.person}|${h.ticker}`;
+    const existing = byKey.get(key);
+    if (existing) {
+      const total = existing.shares + h.shares;
+      // 両方コスト>0なら加重平均、片方だけならその値、両方0なら0のまま
+      if (existing.cost > 0 && h.cost > 0 && total > 0) {
+        existing.cost = (existing.shares * existing.cost + h.shares * h.cost) / total;
+      } else if (h.cost > 0) {
+        existing.cost = h.cost;
+      }
+      existing.shares = total;
+      if (h.name && !existing.name) existing.name = h.name;
+    } else {
+      const copy = { ...h };
+      byKey.set(key, copy);
+      merged.push(copy);
+    }
+  }
+  if (merged.length < cache.holdings.length) {
+    const before = cache.holdings.length;
+    cache.holdings = merged;
+    await persist();
+    console.log(`[db] 保有株の重複を統合: ${before} → ${merged.length} 件`);
+  }
 }
 
 async function persist() {

@@ -434,6 +434,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-realized { margin-top:2px; font-size:11px; }
 .folio-realized .folio-realized-lbl { color:var(--text-soft); font-weight:600; letter-spacing:.5px; margin-right:6px; }
 .sell-lbl { display:block; font-size:11px; color:var(--text-soft); letter-spacing:1px; font-weight:600; margin:14px 0 6px; }
+.sell-presets { display:flex; gap:6px; margin-bottom:8px; }
+.sell-preset-btn { flex:1; padding:8px 0; border-radius:8px; border:1.5px solid var(--line); background:var(--card); font-size:12px; font-weight:700; color:var(--text); cursor:pointer; font-family:inherit; }
+.sell-preset-btn:active { background:var(--mine-bg); color:var(--mine); border-color:var(--mine); }
 .sell-preview { background:var(--bg); border-radius:10px; padding:11px 14px; margin-top:14px; font-size:13px; color:var(--text-soft); min-height:38px; }
 .sell-preview b { color:var(--text); font-weight:700; }
 .sell-up { color:#c0392b; font-weight:700; font-size:15px; margin-left:6px; }
@@ -757,7 +760,12 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <div class="modal-title" id="sell-title">売却</div>
     <div class="modal-sub" id="sell-sub"></div>
     <label class="sell-lbl">売却株数</label>
-    <input id="sell-shares" type="number" inputmode="decimal" class="ev-in" placeholder="売る株数">
+    <div class="sell-presets">
+      <button type="button" class="sell-preset-btn" onclick="setSellShares(1)">全部</button>
+      <button type="button" class="sell-preset-btn" onclick="setSellShares(0.5)">半分</button>
+      <button type="button" class="sell-preset-btn" onclick="setSellShares(0.25)">1/4</button>
+    </div>
+    <input id="sell-shares" type="number" inputmode="decimal" class="ev-in" placeholder="売る株数" oninput="updateSellPreview()">
     <label class="sell-lbl">売却単価</label>
     <input id="sell-price" type="number" inputmode="decimal" class="ev-in" placeholder="1株あたりの売却額">
     <div id="sell-preview" class="sell-preview"></div>
@@ -1053,6 +1061,13 @@ function openSell(id) {
   document.getElementById('sell-price').oninput = updateSellPreview;
   updateSellPreview();
   document.getElementById('sell-modal').classList.add('active');
+}
+function setSellShares(ratio) {
+  if (!sellingHolding) return;
+  // 切り捨てで売却株数を計算（少なくとも1株、保有数を超えない）
+  const n = Math.min(sellingHolding.shares, Math.max(1, Math.floor(sellingHolding.shares * ratio)));
+  document.getElementById('sell-shares').value = n;
+  updateSellPreview();
 }
 function updateSellPreview() {
   if (!sellingHolding) return;
