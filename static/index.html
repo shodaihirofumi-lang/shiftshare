@@ -480,6 +480,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .replay-delta.miss { color:#c0392b; }
 .replay-delta.good { color:#2e6da4; }
 .replay-detail { font-size:11px; color:var(--text-soft); }
+/* ── 資産推移グラフ ── */
+.asset-line { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; margin-bottom:6px; }
+.asset-line:last-of-type { margin-bottom:10px; }
+.asset-who { font-size:11px; font-weight:700; min-width:24px; letter-spacing:.5px; }
+.asset-who.mine { color:var(--mine); } .asset-who.hers { color:var(--hers); }
+.asset-val { font-size:16px; font-weight:700; color:var(--text); }
+.asset-chg { font-size:12px; font-weight:700; }
+.asset-chg.up { color:#c0392b; } .asset-chg.down { color:#2e6da4; }
+#asset-chart-body { margin-top:4px; }
 .sig { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px; white-space:nowrap; }
 .sig-buy { background:#e2efde; color:#2e7d32; }
 .sig-sell { background:#f6e0de; color:#c0392b; }
@@ -672,6 +681,13 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <button class="mn-btn" id="pnl-prev" onclick="changePnlMonth(-1)">‹</button>
         <div id="pnl-month-label">—</div>
         <button class="mn-btn" id="pnl-next" onclick="changePnlMonth(1)">›</button>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">資産推移</div>
+        <div id="asset-summary"></div>
+        <div class="chart-range" id="asset-range"></div>
+        <div id="asset-chart-body"></div>
+        <div class="folio-note">※ 評価額の推移（過去1年・現在の保有株ベース、JPY換算）。</div>
       </div>
       <div class="folio-card">
         <div class="income-head">日別の損益（資産の増減）</div>
@@ -1337,10 +1353,83 @@ async function doSell() {
   } catch (e) { showToast('売却失敗: '+e.message, true); }
 }
 let pnlHist = [], pnlYM = null;
+let assetRange = '6mo';
+const ASSET_RNG_LBL = { '1mo':'1ヶ月', '6mo':'6ヶ月', '1y':'1年' };
+const ASSET_RNG_DAYS = { '1mo': 22, '6mo': 125, '1y': 260 };
 async function loadPortfolioHistory() {
   let d; try { d = await fetch('/api/portfolio-history').then(r=>r.json()); } catch { return; }
   pnlHist = d.history || [];
   renderPnlHistory();
+  renderAssetChart();
+}
+function setAssetRange(r) {
+  assetRange = r;
+  renderAssetChart();
+}
+function renderAssetChart() {
+  const sumEl = document.getElementById('asset-summary');
+  const rngEl = document.getElementById('asset-range');
+  const bodyEl = document.getElementById('asset-chart-body');
+  if (!sumEl || !bodyEl || !rngEl) return;
+  // 期間切替ボタン
+  rngEl.innerHTML = Object.keys(ASSET_RNG_LBL).map(r =>
+    `<button class="rng-btn ${r===assetRange?'active':''}" onclick="setAssetRange('${r}')">${ASSET_RNG_LBL[r]}</button>`
+  ).join('');
+  if (!pnlHist || pnlHist.length < 2) {
+    sumEl.innerHTML = '';
+    bodyEl.innerHTML = '<div class="ev-empty">履歴がありません（保有銘柄を登録すると表示されます）</div>';
+    return;
+  }
+  // 期間でスライス
+  const n = ASSET_RNG_DAYS[assetRange] || pnlHist.length;
+  const data = pnlHist.slice(-n);
+  if (data.length < 2) {
+    sumEl.innerHTML = '';
+    bodyEl.innerHTML = '<div class="ev-empty">この期間のデータが不足しています</div>';
+    return;
+  }
+  // データのある人
+  const persons = ['mine', 'hers'].filter(p => data.some(d => d[p] > 0));
+  // サマリー（期首→期末の変化）
+  const lines = persons.map(p => {
+    const first = data[0][p] || 0;
+    const last = data[data.length - 1][p] || 0;
+    const chg = last - first;
+    const pct = first ? (chg / first) * 100 : 0;
+    const up = chg >= 0;
+    return `<div class="asset-line">
+      <span class="asset-who ${p}">${NAMES[p]}</span>
+      <span class="asset-val">¥${Math.round(last).toLocaleString()}</span>
+      <span class="asset-chg ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}¥${Math.abs(Math.round(chg)).toLocaleString()} (${up?'+':''}${pct.toFixed(1)}%)</span>
+    </div>`;
+  });
+  sumEl.innerHTML = lines.join('');
+  bodyEl.innerHTML = assetChartSvg(data, persons);
+}
+function assetChartSvg(data, persons) {
+  const w = 320, h = 160, padL = 4, padR = 4, padT = 12, padB = 4;
+  const allVals = [];
+  for (const d of data) for (const p of persons) if (d[p] != null) allVals.push(d[p]);
+  if (!allVals.length) return '<div class="ev-empty">データなし</div>';
+  const min = Math.min(...allVals);
+  const max = Math.max(...allVals);
+  const range = (max - min) || 1;
+  const X = (i) => padL + (i / (data.length - 1)) * (w - padL - padR);
+  const Y = (v) => padT + (1 - (v - min) / range) * (h - padT - padB);
+  // 人の線色（カラーパレットに合わせる：teal=ひろ・mauve=ちか）
+  const colors = { mine: '#7da6a2', hers: '#a76b80' };
+  let polys = '';
+  for (const p of persons) {
+    const pts = data.map((d, i) => `${X(i).toFixed(1)},${Y(d[p] || min).toFixed(1)}`).join(' ');
+    polys += `<polyline points="${pts}" fill="none" stroke="${colors[p]}" stroke-width="2" stroke-linejoin="round"/>`;
+  }
+  const fmtDate = (s) => s.slice(5).replace('-', '/'); // YYYY-MM-DD → MM/DD
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:170px">${polys}</svg>
+    <div class="chart-axis">
+      <span>${fmtDate(data[0].date)}</span>
+      <span>高¥${Math.round(max).toLocaleString()}・安¥${Math.round(min).toLocaleString()}</span>
+      <span>${fmtDate(data[data.length-1].date)}</span>
+    </div>`;
 }
 function changePnlMonth(delta) {
   if (!pnlYM) return;
