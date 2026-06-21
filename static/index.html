@@ -2362,6 +2362,7 @@ async function addMemoFromUI() {
     if (memoImgPending) body.img = memoImgPending;
     const r = await fetch('/api/memo', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || `保存エラー(${r.status})`); }
+    const data = await r.json();
     input.value = '';
     memoImgPending = null;
     const wrap = document.getElementById('memo-pending-img-wrap');
@@ -2369,7 +2370,11 @@ async function addMemoFromUI() {
     const fi = document.getElementById('memo-img-input');
     if (fi) fi.value = '';
     await loadMemos();
-    showToast('メモを追加しました');
+    if (data.imgError) {
+      showToast(`テキストは保存しました。${data.imgError}`, true);
+    } else {
+      showToast('メモを追加しました');
+    }
   } catch (e) { showToast(`追加に失敗: ${e.message}`, true); }
 }
 async function delMemo(id) {
@@ -2444,9 +2449,15 @@ async function saveEditor() {
     }
     // 日別写真を保存（変更あれば）
     if (edDayPhotoChanged) {
-      await fetch('/api/day-photo', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ date: editorDate, img: edDayPhotoData || null }) });
-      dayPhotos[editorDate] = edDayPhotoData || undefined;
-      if (!edDayPhotoData) delete dayPhotos[editorDate];
+      const pr = await fetch('/api/day-photo', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ date: editorDate, img: edDayPhotoData || null }) });
+      if (!pr.ok) {
+        const pe = await pr.json().catch(()=>({}));
+        showToast(pe.error || '写真の保存に失敗しました', true);
+        edDayPhotoData = null; // ローカルも戻す
+      } else {
+        dayPhotos[editorDate] = edDayPhotoData || undefined;
+        if (!edDayPhotoData) delete dayPhotos[editorDate];
+      }
       edDayPhotoChanged = false;
     }
     closeEditor();

@@ -450,14 +450,24 @@ app.post('/api/note/toggle', async (req, res) => {
 // ── MEMOS（ひろ/ちかそれぞれの個人メモ）──
 app.get('/api/memos', (_req, res) => res.json(getMemos()));
 app.post('/api/memo', async (req, res) => {
-  const { person, text } = req.body;
+  const { person, text, img } = req.body;
   if (!['mine', 'hers'].includes(person)) {
     return res.status(400).json({ error: 'person が不正です' });
   }
-  if (!text || typeof text !== 'string' || !text.trim()) {
+  if (!text?.trim() && !img) {
     return res.status(400).json({ error: '内容が必要です' });
   }
-  const id = await addMemo(req.body);
+  // テキストは必ず保存（画像なし）
+  const id = await addMemo({ person, text: text || '' });
+  // 画像は別途試みる。失敗しても本文メモは残す
+  if (img) {
+    try {
+      await setMemoImage(id, img);
+    } catch (e) {
+      console.error('[memo/img] 保存失敗:', e.message);
+      return res.json({ success: true, id, imgError: 'ストレージ容量が不足しているため画像を保存できませんでした' });
+    }
+  }
   res.json({ success: true, id });
 });
 app.post('/api/memo/delete', async (req, res) => {
@@ -479,9 +489,14 @@ app.post('/api/memo/edit', async (req, res) => {
 app.post('/api/memo/image', async (req, res) => {
   const { id, img } = req.body;
   if (!id) return res.status(400).json({ error: 'id が必要です' });
-  const ok = await setMemoImage(id, img || null);
-  if (!ok) return res.status(404).json({ error: 'メモが見つかりません' });
-  res.json({ success: true });
+  try {
+    const ok = await setMemoImage(id, img || null);
+    if (!ok) return res.status(404).json({ error: 'メモが見つかりません' });
+    res.json({ success: true });
+  } catch (e) {
+    console.error('[memo/image] 保存失敗:', e.message);
+    res.status(507).json({ error: 'ストレージ容量が不足しているため画像を保存できませんでした' });
+  }
 });
 
 // カレンダー日別写真
@@ -489,8 +504,13 @@ app.get('/api/day-photos', (_req, res) => res.json(getPhotos()));
 app.post('/api/day-photo', async (req, res) => {
   const { date, img } = req.body;
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'date (YYYY-MM-DD) が必要です' });
-  await setPhoto(date, img || null);
-  res.json({ success: true });
+  try {
+    await setPhoto(date, img || null);
+    res.json({ success: true });
+  } catch (e) {
+    console.error('[day-photo] 保存失敗:', e.message);
+    res.status(507).json({ error: 'ストレージ容量が不足しているため写真を保存できませんでした' });
+  }
 });
 
 // ── ふたり休み接近通知（今日〜3日後を確認、未通知の日にpush）──
