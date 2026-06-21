@@ -576,9 +576,9 @@ export async function setPhoto(date, img) {
 // ── 日記（AI生成テキストをdate単位で保存）──
 export function getDiaries() { return cache.diaries || {}; }
 export function getDiary(date) { return (cache.diaries || {})[date] || null; }
-export async function setDiary(date, text) {
+export async function setDiary(date, data) {
   if (!cache.diaries) cache.diaries = {};
-  if (text) cache.diaries[date] = { text, generatedAt: Date.now() };
+  if (data) cache.diaries[date] = data;
   else delete cache.diaries[date];
   await persist();
 }

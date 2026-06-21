@@ -522,17 +522,23 @@ app.post('/api/diary/delete', async (req, res) => {
   await setDiary(date, null);
   res.json({ success: true });
 });
-// AI日記生成（Claude Haiku: 安価・高速）
+// 日記テキスト保存（生テキストのみ、AI不使用）
+app.post('/api/diary/save', async (req, res) => {
+  const { date, raw } = req.body;
+  if (!date) return res.status(400).json({ error: 'date が必要です' });
+  const existing = getDiary(date) || {};
+  if (raw) await setDiary(date, { ...existing, raw, savedAt: Date.now() });
+  else await setDiary(date, raw ? { ...existing, raw, savedAt: Date.now() } : null);
+  res.json({ success: true });
+});
+
+// AI日記整理（Claude Haiku: ユーザーが書いた文章を読みやすく整形）
 app.post('/api/diary/generate', async (req, res) => {
-  const { date, context } = req.body;
-  if (!date || !context) return res.status(400).json({ error: 'date と context が必要です' });
+  const { date, raw } = req.body;
+  if (!date || !raw) return res.status(400).json({ error: 'date と raw が必要です' });
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
   try {
-    const prompt = `以下は${date}（カップルのシフト共有アプリ）の記録です。
-これを読みやすいカジュアルな日記の一文にまとめてください。
-箇条書き不要。2〜4文の自然な日本語で。主語は「ふたり」「ひろ」「ちか」など適切に使い分けてください。
-
-${context}`;
+    const prompt = `以下は日記の下書きです。読点・改行・言葉の流れを整えて、読みやすい自然な日本語にしてください。内容や事実は変えないでください。\n\n${raw}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -542,7 +548,7 @@ ${context}`;
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
+        max_tokens: 600,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
@@ -552,7 +558,8 @@ ${context}`;
     }
     const data = await response.json();
     const text = data.content?.[0]?.text?.trim() || '';
-    await setDiary(date, text);
+    const existing = getDiary(date) || {};
+    await setDiary(date, { ...existing, raw, text, generatedAt: Date.now() });
     res.json({ success: true, text });
   } catch (e) {
     console.error('[diary/generate]', e.message);

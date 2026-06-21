@@ -530,9 +530,12 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-line-icon { flex-shrink:0; width:16px; text-align:center; }
 .diary-ai-text { font-size:13.5px; color:var(--text); line-height:1.75; margin:10px 0 8px; padding:10px 12px; background:var(--bg); border-radius:9px; border-left:3px solid var(--accent); white-space:pre-wrap; }
 .diary-ai-footer { font-size:10px; color:var(--text-soft); margin-top:4px; }
-.diary-actions { display:flex; gap:8px; margin-top:8px; }
+.diary-textarea { width:100%; box-sizing:border-box; border-radius:9px; border:1.5px solid var(--line-soft); background:var(--bg); color:var(--text); font-size:13px; padding:10px 12px; resize:vertical; min-height:80px; font-family:inherit; line-height:1.6; margin:8px 0 6px; }
+.diary-textarea:focus { outline:none; border-color:var(--accent); }
+.diary-actions { display:flex; gap:8px; margin-top:4px; }
 .diary-btn-ai { flex:1; padding:8px 0; border-radius:9px; border:none; background:var(--accent); color:#fff; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .15s; }
 .diary-btn-ai:disabled { opacity:.5; cursor:default; }
+.diary-save-btn { padding:8px 14px; border-radius:9px; border:1.5px solid var(--line-soft); background:var(--card); font-size:12px; color:var(--text-soft); cursor:pointer; }
 .diary-btn-del { padding:8px 12px; border-radius:9px; border:1.5px solid var(--line-soft); background:var(--card); font-size:11px; color:var(--text-soft); cursor:pointer; }
 .diary-empty { text-align:center; padding:40px 0; font-size:13px; color:var(--text-soft); }
 /* ── 資産推移グラフ ── */
@@ -2708,7 +2711,6 @@ function renderDiary() {
   const el = document.getElementById('diary-list');
   if (!el) return;
 
-  // データがある日をすべて収集（シフト・予定・出費・メモ・取引・写真）
   const dateSet = new Set();
   Object.keys(shiftsByDate||{}).forEach(k => dateSet.add(k));
   Object.keys(eventsByDate||{}).forEach(k => dateSet.add(k));
@@ -2716,8 +2718,7 @@ function renderDiary() {
   (allMemos||[]).forEach(m => {
     if (!m.createdAt) return;
     const d = new Date(m.createdAt);
-    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    dateSet.add(k);
+    dateSet.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
   });
   (allExpenses||[]).forEach(e => {
     dateSet.add(`${e.year}-${String(e.month).padStart(2,'0')}-${String(e.day).padStart(2,'0')}`);
@@ -2727,10 +2728,12 @@ function renderDiary() {
     const d = new Date(t.ts);
     dateSet.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
   });
+  // 日記を書いた日も必ず表示
+  Object.keys(allDiaries).forEach(k => { if (allDiaries[k]?.raw || allDiaries[k]?.text) dateSet.add(k); });
 
-  const dates = [...dateSet].sort((a,b) => b.localeCompare(a)); // 新しい順
+  const dates = [...dateSet].sort((a,b) => b.localeCompare(a));
   if (!dates.length) {
-    el.innerHTML = '<div class="diary-empty">まだ記録がありません<br>シフトや予定を登録すると自動で日記になります</div>';
+    el.innerHTML = '<div class="diary-empty">まだ記録がありません</div>';
     return;
   }
 
@@ -2739,57 +2742,75 @@ function renderDiary() {
   let html = '';
   for (const dateKey of dates) {
     const { year, month, day } = parseKey(dateKey);
+    const photo = dayPhotos[dateKey];
+    const tmpl = buildDiaryTemplate(dateKey);
+    const diary = allDiaries[dateKey];
+    if (!tmpl && !photo && !diary) continue;
+
     const ym = `${year}年${month}月`;
     if (ym !== lastYM) {
       html += `<div class="diary-month">${ym}</div>`;
       lastYM = ym;
     }
     const dow = DOWS[new Date(year, month-1, day).getDay()];
-    const photo = dayPhotos[dateKey];
-    const tmpl = buildDiaryTemplate(dateKey);
-    const diary = allDiaries[dateKey];
-    const aiHtml = diary
+    const rawVal = escapeHtml(diary?.raw || '');
+    const organizedHtml = diary?.text
       ? `<div class="diary-ai-text">${escapeHtml(diary.text)}</div>
-         <div class="diary-ai-footer">AI生成 ${new Date(diary.generatedAt).toLocaleDateString('ja-JP')}</div>`
+         <div class="diary-ai-footer">✨ 整理済み ${new Date(diary.generatedAt).toLocaleDateString('ja-JP')}</div>`
       : '';
-    const context = buildDiaryContext(dateKey);
-    const hasData = tmpl || photo;
-    if (!hasData) continue;
     html += `<div class="diary-entry" id="diary-${dateKey}">
       <div class="diary-date">${month}月${day}日</div>
       <div class="diary-dow">${dow}曜日</div>
       ${photo ? `<img class="diary-photo" src="${photo}" onclick="openLightbox('${photo}')" alt="${dateKey}の写真">` : ''}
       ${tmpl ? `<div class="diary-lines">${tmpl}</div>` : ''}
-      ${aiHtml}
+      <textarea class="diary-textarea" id="diary-raw-${dateKey}" placeholder="今日のことを書いてみよう...">${rawVal}</textarea>
+      ${organizedHtml}
       <div class="diary-actions">
-        <button class="diary-btn-ai" id="diary-btn-${dateKey}" onclick="generateDiary('${dateKey}')" ${!context?'disabled':''}>
-          ${diary ? '✨ AIで書き直す' : '✨ AIで文章にする'}
-        </button>
-        ${diary ? `<button class="diary-btn-del" onclick="deleteDiary('${dateKey}')">削除</button>` : ''}
+        <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}')">保存</button>
+        <button class="diary-btn-ai" id="diary-btn-${dateKey}" onclick="generateDiary('${dateKey}')">✨ 整理する</button>
+        ${diary?.raw || diary?.text ? `<button class="diary-btn-del" onclick="deleteDiary('${dateKey}')">削除</button>` : ''}
       </div>
     </div>`;
   }
   el.innerHTML = html || '<div class="diary-empty">記録のある日がありません</div>';
 }
 
+async function saveDiaryRaw(dateKey) {
+  const ta = document.getElementById(`diary-raw-${dateKey}`);
+  if (!ta) return;
+  const raw = ta.value.trim();
+  try {
+    await fetch('/api/diary/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: dateKey, raw }),
+    });
+    if (!allDiaries[dateKey]) allDiaries[dateKey] = {};
+    allDiaries[dateKey].raw = raw;
+    showToast('保存しました');
+  } catch { showToast('保存に失敗しました', true); }
+}
+
 async function generateDiary(dateKey) {
+  const ta = document.getElementById(`diary-raw-${dateKey}`);
+  const raw = (ta ? ta.value : '').trim() || (allDiaries[dateKey]?.raw || '');
+  if (!raw) { showToast('先に日記を書いてください', true); return; }
   const btn = document.getElementById(`diary-btn-${dateKey}`);
-  if (btn) { btn.disabled = true; btn.textContent = '生成中…'; }
-  const context = buildDiaryContext(dateKey);
+  if (btn) { btn.disabled = true; btn.textContent = '整理中…'; }
   try {
     const r = await fetch('/api/diary/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: dateKey, context }),
+      body: JSON.stringify({ date: dateKey, raw }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.error || '生成に失敗しました');
-    allDiaries[dateKey] = { text: data.text, generatedAt: Date.now() };
+    if (!r.ok) throw new Error(data.error || '整理に失敗しました');
+    allDiaries[dateKey] = { ...(allDiaries[dateKey]||{}), raw, text: data.text, generatedAt: Date.now() };
     renderDiary();
-    showToast('日記を生成しました');
+    showToast('整理しました');
   } catch (e) {
-    showToast(`生成に失敗: ${e.message}`, true);
-    if (btn) { btn.disabled = false; btn.textContent = '✨ AIで文章にする'; }
+    showToast(`失敗: ${e.message}`, true);
+    if (btn) { btn.disabled = false; btn.textContent = '✨ 整理する'; }
   }
 }
 
