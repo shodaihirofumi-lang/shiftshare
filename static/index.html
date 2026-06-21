@@ -640,27 +640,27 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .pnl-brate-amt { font-size:10px; color:var(--text-soft); display:block; }
 
 /* ── 損益 VS バトル ── */
-.vs-card { background:var(--bg); border-radius:13px; padding:16px 14px 12px; margin-bottom:14px; }
+.vs-card { background:var(--bg); border-radius:16px; padding:22px 16px 18px; margin-bottom:14px; }
 .vs-row { display:flex; align-items:center; justify-content:space-between; gap:4px; }
 .vs-person { flex:1; text-align:center; }
-.vs-crown { font-size:18px; display:block; line-height:1; margin-bottom:2px; }
-.vs-crown-empty { display:block; height:24px; }
-.vs-name { font-size:11px; font-weight:800; letter-spacing:.5px; margin-bottom:5px; }
+.vs-crown { font-size:26px; display:block; line-height:1; margin-bottom:4px; }
+.vs-crown-empty { display:block; height:32px; }
+.vs-name { font-size:13px; font-weight:800; letter-spacing:.5px; margin-bottom:7px; }
 .vs-name.mine { color:var(--mine); }
 .vs-name.hers { color:var(--hers); }
-.vs-rate { font-size:28px; font-weight:900; letter-spacing:-1.5px; line-height:1; }
+.vs-rate { font-size:38px; font-weight:900; letter-spacing:-2px; line-height:1; }
 .vs-rate.up { color:#c0392b; }
 .vs-rate.down { color:#2e6da4; }
-.vs-pnl-sub { font-size:11px; color:var(--text-soft); margin-top:4px; }
-.vs-badge { font-size:20px; flex-shrink:0; padding:0 2px; opacity:.7; }
-.vs-bar-wrap { margin-top:14px; }
-.vs-bar { height:14px; border-radius:7px; overflow:hidden; display:flex; }
+.vs-pnl-sub { font-size:12px; color:var(--text-soft); margin-top:6px; }
+.vs-badge { font-size:26px; flex-shrink:0; padding:0 4px; opacity:.7; }
+.vs-bar-wrap { margin-top:18px; }
+.vs-bar { height:18px; border-radius:9px; overflow:hidden; display:flex; }
 .vs-bar-hers { background:var(--hers); transition:width .7s cubic-bezier(.4,0,.2,1); }
 .vs-bar-mine { background:var(--mine); transition:width .7s cubic-bezier(.4,0,.2,1); }
-.vs-bar-labels { display:flex; justify-content:space-between; font-size:10px; font-weight:700; margin-top:5px; opacity:.75; }
+.vs-bar-labels { display:flex; justify-content:space-between; font-size:11px; font-weight:700; margin-top:6px; opacity:.75; }
 .vs-bar-labels .lbl-hers { color:var(--hers); }
 .vs-bar-labels .lbl-mine { color:var(--mine); }
-.vs-winner { text-align:center; font-size:13px; font-weight:700; color:var(--text); margin-top:10px; padding:7px 12px; background:var(--card); border-radius:8px; }
+.vs-winner { text-align:center; font-size:15px; font-weight:700; color:var(--text); margin-top:12px; padding:10px 14px; background:var(--card); border-radius:10px; }
 
 /* ── 2人同時休み（きらびやか）── */
 .day-block.both-off {
@@ -838,15 +838,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="folio-note">※ 評価額の推移（過去1年・現在の保有株ベース、JPY換算）。</div>
       </div>
       <div class="folio-card">
-        <div class="income-head">月別バトル</div>
-        <div id="month-battles"></div>
-      </div>
-      <div class="folio-card">
         <div class="income-head">日別バトル</div>
         <div id="vs-card"></div>
         <div id="pnl-total"></div>
         <div id="pnl-history"></div>
         <div class="folio-note">※ 現在の保有株の日足から計算した、1日ごとの評価額の増減です。</div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">月別バトル</div>
+        <div id="month-battles"></div>
       </div>
       <div class="folio-card">
         <div class="income-head">保有株ヒートマップ（当日の変動）</div>
