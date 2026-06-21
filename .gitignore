@@ -1,6 +1,7 @@
 node_modules/
 .env
 data.json
+photos.json
 *.db
 venv/
 .DS_Store

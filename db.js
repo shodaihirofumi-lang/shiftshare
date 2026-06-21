@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], steps: {}, stepGoal: 8000 });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -338,6 +338,23 @@ export function getLocations() {
 export async function saveLocation(person, location) {
   if (!cache.locations) cache.locations = {};
   cache.locations[person] = String(location || '').slice(0, 60);
+  await persist();
+}
+
+// ── STEPS（歩数。日ごと person別。スマホから自動POSTで記録）──
+export function getSteps() {
+  return { steps: cache.steps || {}, goal: cache.stepGoal || 8000 };
+}
+
+export async function saveSteps(date, person, steps) {
+  if (!cache.steps) cache.steps = {};
+  if (!cache.steps[date]) cache.steps[date] = {};
+  cache.steps[date][person] = Math.max(0, Math.round(Number(steps) || 0));
+  await persist();
+}
+
+export async function saveStepGoal(goal) {
+  cache.stepGoal = Math.max(1, Math.round(Number(goal) || 8000));
   await persist();
 }
 
