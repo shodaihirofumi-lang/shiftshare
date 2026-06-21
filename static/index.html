@@ -612,6 +612,37 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .pnl-total-item.down { color:#2e6da4; }
 .pnl-total-item .pnl-who { font-size:11px; }
 
+/* ── 月別バトル一覧 ── */
+.mb-row { display:flex; align-items:center; gap:8px; padding:9px 0; }
+.mb-row + .mb-row { border-top:1px solid var(--line-soft); }
+.mb-month-label { font-size:12px; font-weight:700; color:var(--text-soft); width:28px; flex-shrink:0; }
+.mb-rates { display:flex; align-items:center; gap:6px; flex:1; min-width:0; }
+.mb-rate { font-size:13px; font-weight:800; min-width:52px; white-space:nowrap; }
+.mb-mini-bar { flex:1; height:7px; border-radius:4px; overflow:hidden; display:flex; }
+.mb-mini-bar-hers { background:var(--hers); }
+.mb-mini-bar-mine { background:var(--mine); }
+.mb-win { font-size:11px; font-weight:700; flex-shrink:0; min-width:44px; text-align:right; }
+
+/* ── 日別バトル行 ── */
+.pnl-battle-row { padding:10px 0; }
+.pnl-battle-row + .pnl-battle-row { border-top:1px solid var(--line-soft); }
+.pnl-battle-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; }
+.pnl-battle-date { font-size:12px; font-weight:700; color:var(--text-soft); }
+.pnl-battle-winner { font-size:12px; font-weight:700; }
+.pnl-battle-rates { display:flex; align-items:center; gap:6px; }
+.pnl-brate { flex:1; text-align:center; }
+.pnl-brate-pct { font-size:20px; font-weight:900; display:block; letter-spacing:-1px; line-height:1.1; }
+.pnl-brate-pct.up { color:#c0392b; }
+.pnl-brate-pct.down { color:#2e6da4; }
+.pnl-brate-name { font-size:10px; font-weight:700; display:block; margin-top:2px; }
+.pnl-brate-name.mine { color:var(--mine); }
+.pnl-brate-name.hers { color:var(--hers); }
+.pnl-brate-amt { font-size:10px; color:var(--text-soft); display:block; }
+.pnl-bvs { font-size:16px; opacity:.45; flex-shrink:0; }
+.pnl-day-bar { height:7px; border-radius:4px; overflow:hidden; display:flex; margin-top:8px; }
+.pnl-day-bar-hers { background:var(--hers); transition:width .4s ease; }
+.pnl-day-bar-mine { background:var(--mine); transition:width .4s ease; }
+
 /* ── 損益 VS バトル ── */
 .vs-card { background:var(--bg); border-radius:13px; padding:16px 14px 12px; margin-bottom:14px; }
 .vs-row { display:flex; align-items:center; justify-content:space-between; gap:4px; }
@@ -811,7 +842,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="folio-note">※ 評価額の推移（過去1年・現在の保有株ベース、JPY換算）。</div>
       </div>
       <div class="folio-card">
-        <div class="income-head">日別の損益（資産の増減）</div>
+        <div class="income-head">月別バトル</div>
+        <div id="month-battles"></div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">日別バトル</div>
         <div id="vs-card"></div>
         <div id="pnl-total"></div>
         <div id="pnl-history"></div>
@@ -1725,12 +1760,15 @@ function renderPnlHistory() {
   if (hist.length < 2) return clear('履歴がありません（銘柄を登録すると表示されます）');
   const persons = ['mine','hers'].filter(p => hist.some(d => d[p] > 0));
   if (!persons.length) return clear('履歴がありません');
-  // 全期間の日次変化（前日比）を計算
+  // 全期間の日次変化（前日比 ¥ + 率）を計算
   const changes = [];
   for (let i = 1; i < hist.length; i++) {
     const [y,mo,da] = hist[i].date.split('-').map(Number);
     const c = { y, mo, da };
-    for (const p of persons) c[p] = hist[i][p] - hist[i-1][p];
+    for (const p of persons) {
+      c[p] = hist[i][p] - hist[i-1][p];
+      c[p+'Rate'] = hist[i-1][p] > 0 ? c[p] / hist[i-1][p] * 100 : 0;
+    }
     changes.push(c);
   }
   // 利用可能な月（昇順）
@@ -1744,81 +1782,142 @@ function renderPnlHistory() {
   if (prevBtn) prevBtn.disabled = idx <= 0;
   if (nextBtn) nextBtn.disabled = idx >= months.length-1;
   const mc = changes.filter(c => c.y === pnlYM.year && c.mo === pnlYM.month);
-  // トータル損益（この月の前日比の合計）を一番上に
   const totals = {}; for (const p of persons) totals[p] = mc.reduce((s,c) => s + c[p], 0);
 
-  // ── VS バトルカード ──
+  // ── 月初基準値ヘルパー ──
+  const getBase = ym => {
+    let prev = null;
+    for (let i = hist.length-1; i >= 0; i--) {
+      const [hy,hm] = hist[i].date.split('-').map(Number);
+      if (hy*100+hm < ym) { prev = hist[i]; break; }
+    }
+    return prev || hist.find(d => { const [hy,hm] = d.date.split('-').map(Number); return hy*100+hm === ym; });
+  };
+
+  // 月ごとのレートを全月分計算
+  const monthlyRates = months.map(ym => {
+    const y = Math.floor(ym/100), m = ym % 100;
+    const mch = changes.filter(c => c.y===y && c.mo===m);
+    const mt = {}; for (const p of persons) mt[p] = mch.reduce((s,c) => s+c[p], 0);
+    const base = getBase(ym);
+    const r = {}; for (const p of persons) r[p] = base?.[p] > 0 ? mt[p]/base[p]*100 : 0;
+    return { ym, y, m, rates: r, totals: mt };
+  });
+
+  // ── バトル共通ヘルパー ──
+  const fmtR = r => (r >= 0 ? '+' : '') + r.toFixed(2) + '%';
+  const fmtA = v => (v >= 0 ? '+' : '−') + '¥' + Math.abs(Math.round(v)).toLocaleString();
+  const calcDiv = (rm, rh) => {
+    const diff = rm - rh;
+    const mx = Math.max(Math.abs(rm), Math.abs(rh), 0.01) * 2;
+    return Math.max(0.05, Math.min(0.95, 0.5 + diff/mx));
+  };
+  const hasBoth = persons.includes('mine') && persons.includes('hers');
+
+  // ── 月別バトル一覧 ──
+  const mbEl = document.getElementById('month-battles');
+  if (mbEl) {
+    let mbHtml = '';
+    for (let i = monthlyRates.length-1; i >= 0; i--) {
+      const { y, m, rates: r, totals: t } = monthlyRates[i];
+      if (!hasBoth) {
+        const p = persons[0];
+        mbHtml += `<div class="mb-row"><span class="mb-month-label">${m}月</span>
+          <span class="mb-rate" style="color:var(--${p})">${fmtR(r[p])}</span>
+          <span class="mb-win" style="color:var(--text-soft)">${fmtA(t[p])}</span></div>`;
+        continue;
+      }
+      const div = calcDiv(r.mine, r.hers);
+      const w = Math.abs(r.mine-r.hers) < 0.01 ? null : r.mine > r.hers ? 'mine' : 'hers';
+      mbHtml += `<div class="mb-row">
+        <span class="mb-month-label">${m}月</span>
+        <div class="mb-rates">
+          <span class="mb-rate" style="color:var(--hers)">${fmtR(r.hers)}</span>
+          <div class="mb-mini-bar">
+            <div class="mb-mini-bar-hers" style="width:${((1-div)*100).toFixed(1)}%"></div>
+            <div class="mb-mini-bar-mine" style="width:${(div*100).toFixed(1)}%"></div>
+          </div>
+          <span class="mb-rate" style="color:var(--mine)">${fmtR(r.mine)}</span>
+        </div>
+        <span class="mb-win">${w ? '👑'+NAMES[w] : '⚖️'}</span>
+      </div>`;
+    }
+    mbEl.innerHTML = mbHtml || '<div class="ev-empty">データがありません</div>';
+  }
+
+  // ── 当月 VS バトルカード ──
   const vsEl = document.getElementById('vs-card');
-  if (vsEl && persons.includes('mine') && persons.includes('hers')) {
-    const monthCode = pnlYM.year * 100 + pnlYM.month;
-    // この月の直前のエントリ（月初の基準値）
-    let prevEntry = null;
-    for (let i = hist.length - 1; i >= 0; i--) {
-      const [hy, hm] = hist[i].date.split('-').map(Number);
-      if (hy * 100 + hm < monthCode) { prevEntry = hist[i]; break; }
-    }
-    const firstOfMonth = hist.find(d => { const [y,m] = d.date.split('-').map(Number); return y*100+m === monthCode; });
-    const rates = {};
-    for (const p of ['mine','hers']) {
-      const base = prevEntry?.[p] || firstOfMonth?.[p] || 0;
-      rates[p] = base > 0 ? (totals[p] / base) * 100 : 0;
-    }
-    const diff = rates.mine - rates.hers;
-    const maxAbs = Math.max(Math.abs(rates.mine), Math.abs(rates.hers), 0.01) * 2;
-    const divider = Math.max(0.05, Math.min(0.95, 0.5 + diff / maxAbs));
-    const fmtRate = r => (r >= 0 ? '+' : '') + r.toFixed(2) + '%';
-    const fmtPnl  = v => (v >= 0 ? '+' : '−') + '¥' + Math.abs(Math.round(v)).toLocaleString();
-    const winner = Math.abs(diff) < 0.01 ? null : diff > 0 ? 'mine' : 'hers';
+  if (vsEl && hasBoth) {
+    const cur = monthlyRates.find(mr => mr.y===pnlYM.year && mr.m===pnlYM.month);
+    const r = cur?.rates || { mine:0, hers:0 };
+    const t = cur?.totals || totals;
+    const div = calcDiv(r.mine, r.hers);
+    const w = Math.abs(r.mine-r.hers) < 0.01 ? null : r.mine > r.hers ? 'mine' : 'hers';
     const mkPerson = p => {
-      const cls = rates[p] >= 0 ? 'up' : 'down';
-      const crown = winner === p ? '<span class="vs-crown">👑</span>' : '<span class="vs-crown-empty"></span>';
-      return `<div class="vs-person">
-        ${crown}
+      const crown = w===p ? '<span class="vs-crown">👑</span>' : '<span class="vs-crown-empty"></span>';
+      return `<div class="vs-person">${crown}
         <div class="vs-name ${p}">${NAMES[p]}</div>
-        <div class="vs-rate ${cls}">${fmtRate(rates[p])}</div>
-        <div class="vs-pnl-sub">${fmtPnl(totals[p])}</div>
+        <div class="vs-rate ${r[p]>=0?'up':'down'}">${fmtR(r[p])}</div>
+        <div class="vs-pnl-sub">${fmtA(t[p])}</div>
       </div>`;
     };
-    const winnerMsg = winner
-      ? `🔥 ${NAMES[winner]} リード！（差 ${Math.abs(diff).toFixed(2)}%）`
-      : '⚖️ 引き分け！';
     vsEl.innerHTML = `<div class="vs-card">
-      <div class="vs-row">
-        ${mkPerson('hers')}
-        <div class="vs-badge">⚔️</div>
-        ${mkPerson('mine')}
-      </div>
+      <div class="vs-row">${mkPerson('hers')}<div class="vs-badge">⚔️</div>${mkPerson('mine')}</div>
       <div class="vs-bar-wrap">
         <div class="vs-bar">
-          <div class="vs-bar-hers" style="width:${((1-divider)*100).toFixed(1)}%"></div>
-          <div class="vs-bar-mine" style="width:${(divider*100).toFixed(1)}%"></div>
+          <div class="vs-bar-hers" style="width:${((1-div)*100).toFixed(1)}%"></div>
+          <div class="vs-bar-mine" style="width:${(div*100).toFixed(1)}%"></div>
         </div>
         <div class="vs-bar-labels"><span class="lbl-hers">ちか</span><span class="lbl-mine">ひろ</span></div>
-        <div class="vs-winner">${winnerMsg}</div>
+        <div class="vs-winner">${w ? '🔥 '+NAMES[w]+' リード！（差 '+Math.abs(r.mine-r.hers).toFixed(2)+'%）' : '⚖️ 引き分け！'}</div>
       </div>
     </div>`;
     vsEl.style.display = '';
-  } else if (vsEl) {
-    vsEl.style.display = 'none';
-  }
+  } else if (vsEl) { vsEl.style.display = 'none'; }
 
-  const item = (label, cls, v) => {
+  // トータル（率＋金額）
+  const item = (label, cls, v, rate) => {
     const up = v >= 0;
-    return `<span class="pnl-total-item ${up?'up':'down'}"><span class="pnl-who ${cls}">${label}</span>${up?'+':'−'}¥${Math.abs(Math.round(v)).toLocaleString()}</span>`;
+    return `<span class="pnl-total-item ${up?'up':'down'}"><span class="pnl-who ${cls}">${label}</span>${fmtR(rate)} <small style="font-size:12px">${fmtA(v)}</small></span>`;
   };
-  let totalHtml = `<div class="pnl-total-lbl">${pnlYM.month}月のトータル損益</div>`;
-  totalHtml += persons.map(p => item(NAMES[p], p, totals[p])).join('');
+  const curRates = monthlyRates.find(mr => mr.y===pnlYM.year && mr.m===pnlYM.month)?.rates || {};
+  let totalHtml = `<div class="pnl-total-lbl">${pnlYM.month}月 合計</div>`;
+  totalHtml += persons.map(p => item(NAMES[p], p, totals[p], curRates[p]||0)).join('');
   if (totalEl) totalEl.innerHTML = totalHtml;
-  // 日別（新しい順）
+
+  // ── 日別バトル（新しい順）──
+  const DOW = ['日','月','火','水','木','金','土'];
   let rows = '';
   for (let i = mc.length-1; i >= 0; i--) {
     const c = mc[i];
-    const dow = ['日','月','火','水','木','金','土'][new Date(c.y, c.mo-1, c.da).getDay()];
-    const cells = persons.map(p => {
-      const up = c[p] >= 0;
-      return `<span class="pnl-cell ${up?'up':'down'}"><span class="pnl-who ${p}">${NAMES[p]}</span>${up?'+':'−'}¥${Math.abs(Math.round(c[p])).toLocaleString()}</span>`;
-    }).join('');
-    rows += `<div class="pnl-row"><span class="pnl-date">${c.mo}/${c.da}<small>(${dow})</small></span><div class="pnl-cells">${cells}</div></div>`;
+    const dow = DOW[new Date(c.y, c.mo-1, c.da).getDay()];
+    if (hasBoth) {
+      const rm = c.mineRate||0, rh = c.hersRate||0;
+      const div = calcDiv(rm, rh);
+      const w = Math.abs(rm-rh) < 0.01 ? null : rm > rh ? 'mine' : 'hers';
+      const mkSide = p => `<div class="pnl-brate">
+        <span class="pnl-brate-pct ${(c[p+'Rate']||0)>=0?'up':'down'}">${fmtR(c[p+'Rate']||0)}</span>
+        <span class="pnl-brate-name ${p}">${NAMES[p]}</span>
+        <span class="pnl-brate-amt">${fmtA(c[p])}</span>
+      </div>`;
+      rows += `<div class="pnl-battle-row">
+        <div class="pnl-battle-head">
+          <span class="pnl-battle-date">${c.mo}/${c.da}（${dow}）</span>
+          <span class="pnl-battle-winner">${w ? '👑'+NAMES[w] : '⚖️'}</span>
+        </div>
+        <div class="pnl-battle-rates">${mkSide('hers')}<span class="pnl-bvs">⚔️</span>${mkSide('mine')}</div>
+        <div class="pnl-day-bar">
+          <div class="pnl-day-bar-hers" style="width:${((1-div)*100).toFixed(1)}%"></div>
+          <div class="pnl-day-bar-mine" style="width:${(div*100).toFixed(1)}%"></div>
+        </div>
+      </div>`;
+    } else {
+      const p = persons[0];
+      rows += `<div class="pnl-row">
+        <span class="pnl-date">${c.mo}/${c.da}<small>(${dow})</small></span>
+        <span class="pnl-cell ${c[p]>=0?'up':'down'}">${fmtR(c[p+'Rate']||0)} <small>${fmtA(c[p])}</small></span>
+      </div>`;
+    }
   }
   histEl.innerHTML = rows || '<div class="ev-empty">この月のデータはありません</div>';
 }
