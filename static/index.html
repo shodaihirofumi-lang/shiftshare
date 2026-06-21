@@ -661,6 +661,12 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .vs-bar-labels .lbl-hers { color:var(--hers); }
 .vs-bar-labels .lbl-mine { color:var(--mine); }
 .vs-winner { text-align:center; font-size:15px; font-weight:700; color:var(--text); margin-top:12px; padding:10px 14px; background:var(--card); border-radius:10px; }
+.vs-date-label { font-size:11px; font-weight:700; color:var(--text-soft); margin-bottom:14px; letter-spacing:.5px; }
+.vs-record { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px; padding:10px 14px; background:var(--card); border-radius:10px; }
+.vs-record-item { font-size:15px; font-weight:800; }
+.vs-record-item.mine { color:var(--mine); }
+.vs-record-item.hers { color:var(--hers); }
+.vs-record-sep { font-size:11px; color:var(--text-soft); font-weight:700; }
 
 /* ── 2人同時休み（きらびやか）── */
 .day-block.both-off {
@@ -1853,9 +1859,18 @@ function renderPnlHistory() {
   // ── 当月 VS バトルカード ──
   const vsEl = document.getElementById('vs-card');
   if (vsEl && hasBoth) {
-    const cur = monthlyRates.find(mr => mr.y===pnlYM.year && mr.m===pnlYM.month);
-    const r = cur?.rates || { mine:0, hers:0 };
-    const t = cur?.totals || totals;
+    // 最新日のデータ
+    const lastDay = mc[mc.length - 1];
+    const r = lastDay ? { mine: lastDay.mineRate||0, hers: lastDay.hersRate||0 } : { mine:0, hers:0 };
+    const t = lastDay ? { mine: lastDay.mine||0, hers: lastDay.hers||0 } : { mine:0, hers:0 };
+    const DOW2 = ['日','月','火','水','木','金','土'];
+    const dateLabel = lastDay ? `${lastDay.mo}/${lastDay.da}（${DOW2[new Date(lastDay.y,lastDay.mo-1,lastDay.da).getDay()]}）` : '';
+    // 月間勝敗集計
+    const wins = { mine:0, hers:0 };
+    for (const c of mc) {
+      const rm = c.mineRate||0, rh = c.hersRate||0;
+      if (Math.abs(rm-rh) >= 0.01) { if (rm > rh) wins.mine++; else wins.hers++; }
+    }
     const div = calcDiv(r.mine, r.hers);
     const w = Math.abs(r.mine-r.hers) < 0.01 ? null : r.mine > r.hers ? 'mine' : 'hers';
     const mkPerson = p => {
@@ -1867,6 +1882,7 @@ function renderPnlHistory() {
       </div>`;
     };
     vsEl.innerHTML = `<div class="vs-card">
+      <div class="vs-date-label">📅 ${dateLabel} 直近の日次バトル</div>
       <div class="vs-row">${mkPerson('hers')}<div class="vs-badge">⚔️</div>${mkPerson('mine')}</div>
       <div class="vs-bar-wrap">
         <div class="vs-bar">
@@ -1874,7 +1890,12 @@ function renderPnlHistory() {
           <div class="vs-bar-mine" style="width:${(div*100).toFixed(1)}%"></div>
         </div>
         <div class="vs-bar-labels"><span class="lbl-hers">ちか</span><span class="lbl-mine">ひろ</span></div>
-        <div class="vs-winner">${w ? '🔥 '+NAMES[w]+' リード！（差 '+Math.abs(r.mine-r.hers).toFixed(2)+'%）' : '⚖️ 引き分け！'}</div>
+        <div class="vs-winner">${w ? '🔥 '+NAMES[w]+' の勝ち！（差 '+Math.abs(r.mine-r.hers).toFixed(2)+'%）' : '⚖️ 引き分け！'}</div>
+      </div>
+      <div class="vs-record">
+        <span class="vs-record-item hers">${NAMES.hers} ${wins.hers}勝</span>
+        <span class="vs-record-sep">vs</span>
+        <span class="vs-record-item mine">${NAMES.mine} ${wins.mine}勝</span>
       </div>
     </div>`;
     vsEl.style.display = '';
