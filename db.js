@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {} });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -571,6 +571,16 @@ export async function setPhoto(date, img) {
     if (useRedis) await redis.hdel(PHOTOS_KEY, field);
     else await persistPhotos();
   }
+}
+
+// ── 日記（AI生成テキストをdate単位で保存）──
+export function getDiaries() { return cache.diaries || {}; }
+export function getDiary(date) { return (cache.diaries || {})[date] || null; }
+export async function setDiary(date, text) {
+  if (!cache.diaries) cache.diaries = {};
+  if (text) cache.diaries[date] = { text, generatedAt: Date.now() };
+  else delete cache.diaries[date];
+  await persist();
 }
 
 // ── 通知済みのふたり休み日（重複pushを防ぐ）──

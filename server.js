@@ -20,6 +20,7 @@ import {
   getNotes, addNote, deleteNote, toggleNote,
   getMemos, addMemo, deleteMemo, editMemo, setMemoImage,
   getPhotos, getPhoto, setPhoto,
+  getDiaries, getDiary, setDiary,
   getNotifiedOff, markNotifiedOff,
 } from './db.js';
 
@@ -510,6 +511,52 @@ app.post('/api/day-photo', async (req, res) => {
   } catch (e) {
     console.error('[day-photo] 保存失敗:', e.message);
     res.status(507).json({ error: 'ストレージ容量が不足しているため写真を保存できませんでした' });
+  }
+});
+
+// ── 日記 ──
+app.get('/api/diaries', (_req, res) => res.json(getDiaries()));
+app.post('/api/diary/delete', async (req, res) => {
+  const { date } = req.body;
+  if (!date) return res.status(400).json({ error: 'date が必要です' });
+  await setDiary(date, null);
+  res.json({ success: true });
+});
+// AI日記生成（Claude Haiku: 安価・高速）
+app.post('/api/diary/generate', async (req, res) => {
+  const { date, context } = req.body;
+  if (!date || !context) return res.status(400).json({ error: 'date と context が必要です' });
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
+  try {
+    const prompt = `以下は${date}（カップルのシフト共有アプリ）の記録です。
+これを読みやすいカジュアルな日記の一文にまとめてください。
+箇条書き不要。2〜4文の自然な日本語で。主語は「ふたり」「ひろ」「ちか」など適切に使い分けてください。
+
+${context}`;
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+    if (!response.ok) {
+      const e = await response.json().catch(() => ({}));
+      throw new Error(e.error?.message || `API error ${response.status}`);
+    }
+    const data = await response.json();
+    const text = data.content?.[0]?.text?.trim() || '';
+    await setDiary(date, text);
+    res.json({ success: true, text });
+  } catch (e) {
+    console.error('[diary/generate]', e.message);
+    res.status(500).json({ error: e.message });
   }
 });
 

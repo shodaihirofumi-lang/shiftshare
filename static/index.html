@@ -70,13 +70,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 /* ── BOTTOM NAV ── */
 .bottom-nav {
   position:fixed; bottom:0; left:0; right:0; background:var(--card);
-  border-top:1px solid var(--line-soft); display:flex; justify-content:space-around;
+  border-top:1px solid var(--line-soft); display:flex; justify-content:flex-start;
+  overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none;
   padding:11px 0 max(20px,env(safe-area-inset-bottom)); box-shadow:0 -4px 22px rgba(60,55,50,.07); z-index:100;
 }
+.bottom-nav::-webkit-scrollbar { display:none; }
 .nav-btn {
   display:flex; flex-direction:column; align-items:center; gap:3px; font-size:9px; font-weight:600;
-  color:#bcb2a4; background:none; border:none; cursor:pointer; padding:4px 2px; letter-spacing:.5px; transition:color .15s;
-  flex:1; min-width:0; white-space:nowrap;
+  color:#bcb2a4; background:none; border:none; cursor:pointer; padding:4px 6px; letter-spacing:.5px; transition:color .15s;
+  flex:0 0 auto; min-width:52px; white-space:nowrap;
 }
 .nav-btn.active { color:var(--mine); }
 
@@ -515,6 +517,24 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 /* ── 画像ライトボックス ── */
 .lightbox { position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:9999; display:flex; align-items:center; justify-content:center; cursor:zoom-out; }
 .lightbox img { max-width:96vw; max-height:90vh; border-radius:8px; object-fit:contain; }
+/* ── 日記タブ ── */
+.diary-month { font-size:11px; font-weight:700; letter-spacing:2px; color:var(--text-soft); text-align:center; margin:20px 0 10px; position:relative; }
+.diary-month::before,.diary-month::after { content:''; position:absolute; top:50%; width:28%; height:1px; background:var(--line-soft); }
+.diary-month::before { left:0; } .diary-month::after { right:0; }
+.diary-entry { background:var(--card); border-radius:14px; padding:16px; margin-bottom:14px; box-shadow:0 2px 10px rgba(60,55,50,.06); }
+.diary-date { font-size:26px; font-weight:800; color:var(--text); letter-spacing:-0.5px; line-height:1; }
+.diary-dow { font-size:13px; font-weight:700; color:var(--text-soft); margin-bottom:10px; margin-top:2px; }
+.diary-photo { width:100%; max-height:200px; object-fit:cover; border-radius:10px; margin-bottom:10px; cursor:zoom-in; display:block; }
+.diary-lines { font-size:12px; color:var(--text-soft); line-height:1.7; margin-bottom:10px; }
+.diary-line { display:flex; gap:6px; align-items:flex-start; }
+.diary-line-icon { flex-shrink:0; width:16px; text-align:center; }
+.diary-ai-text { font-size:13.5px; color:var(--text); line-height:1.75; margin:10px 0 8px; padding:10px 12px; background:var(--bg); border-radius:9px; border-left:3px solid var(--accent); white-space:pre-wrap; }
+.diary-ai-footer { font-size:10px; color:var(--text-soft); margin-top:4px; }
+.diary-actions { display:flex; gap:8px; margin-top:8px; }
+.diary-btn-ai { flex:1; padding:8px 0; border-radius:9px; border:none; background:var(--accent); color:#fff; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .15s; }
+.diary-btn-ai:disabled { opacity:.5; cursor:default; }
+.diary-btn-del { padding:8px 12px; border-radius:9px; border:1.5px solid var(--line-soft); background:var(--card); font-size:11px; color:var(--text-soft); cursor:pointer; }
+.diary-empty { text-align:center; padding:40px 0; font-size:13px; color:var(--text-soft); }
 /* ── 資産推移グラフ ── */
 .asset-line { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; margin-bottom:6px; }
 .asset-line:last-of-type { margin-bottom:10px; }
@@ -783,6 +803,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       </div>
     </div>
 
+    <!-- 日記 -->
+    <div id="tab-diary" class="screen">
+      <div class="page-top">
+        <div><div class="page-title">日記</div><div class="page-sub">ふたりの記録をまとめて</div></div>
+      </div>
+      <div id="diary-list"></div>
+    </div>
+
     <!-- UPLOAD -->
     <div id="tab-upload" class="screen">
       <div class="page-top">
@@ -850,6 +878,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <button class="nav-btn" id="nav-memo" onclick="showTab('memo')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       メモ
+    </button>
+    <button class="nav-btn" id="nav-diary" onclick="showTab('diary')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      日記
     </button>
     <button class="nav-btn" id="nav-upload" onclick="showTab('upload')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1022,6 +1054,7 @@ async function enterApp() {
   loadMemos();
   loadTrades();
   loadDayPhotos();
+  loadDiaries();
   setupPush();
   // ふたり休みが近づいていたら通知（未通知の日だけ送る）
   fetch('/api/check-both-off-notify').catch(() => {});
@@ -1695,10 +1728,11 @@ enterApp();
 
 // ── TABS ──
 function showTab(name) {
-  ['calendar','board','pnl','trades','memo','upload'].forEach(t => {
+  ['calendar','board','pnl','trades','memo','diary','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
+  if (name === 'diary') renderDiary();
   window.scrollTo(0, 0);
 }
 
@@ -2545,6 +2579,226 @@ function urlB64(s) {
   const pad = '='.repeat((4-s.length%4)%4);
   const b = (s+pad).replace(/-/g,'+').replace(/_/g,'/');
   return Uint8Array.from([...atob(b)].map(c=>c.charCodeAt(0)));
+}
+
+// ── 日記 ──
+let allDiaries = {};
+async function loadDiaries() {
+  try { allDiaries = await fetch('/api/diaries').then(r => r.json()); } catch { allDiaries = {}; }
+}
+
+// その日のデータを文章コンテキストとして組み立てる（AI送信用）
+function buildDiaryContext(dateKey) {
+  const lines = [];
+  const { year, month, day } = parseKey(dateKey);
+
+  // シフト
+  const shifts = shiftsByDate[dateKey] || {};
+  const shiftLines = ['mine','hers'].map(p => {
+    const s = shifts[p];
+    if (!s) return null;
+    const who = NAMES[p];
+    if (s.shift_type === 'off') return `${who}: 休み（${s.label || '公休'}）`;
+    if (s.shift_type === 'work') {
+      const t = s.start_time && s.end_time ? ` ${s.start_time}〜${s.end_time}` : '';
+      return `${who}: 仕事${t}`;
+    }
+    return null;
+  }).filter(Boolean);
+  if (shiftLines.length) lines.push('【シフト】' + shiftLines.join(' / '));
+
+  // 予定
+  const evs = (eventsByDate[dateKey] || []).map(e => {
+    const who = e.person ? NAMES[e.person] + 'の' : '';
+    const t = e.time ? ` ${e.time}` : '';
+    return `${who}${e.title}${t}`;
+  });
+  if (evs.length) lines.push('【予定】' + evs.join('、'));
+
+  // 出費
+  const exps = (allExpenses || []).filter(e => {
+    const k = `${e.year}-${String(e.month).padStart(2,'0')}-${String(e.day).padStart(2,'0')}`;
+    return k === dateKey;
+  });
+  if (exps.length) {
+    const expLines = exps.map(e => `${NAMES[e.person]}¥${e.amount.toLocaleString()}${e.memo?' ('+e.memo+')':''}`);
+    lines.push('【出費】' + expLines.join('、'));
+  }
+
+  // メモ（当日タイムスタンプ）
+  const dayStart = new Date(year, month-1, day).getTime();
+  const dayEnd = dayStart + 86400000;
+  const todayMemos = (allMemos||[]).filter(m => m.createdAt >= dayStart && m.createdAt < dayEnd && m.text);
+  if (todayMemos.length) lines.push('【メモ】' + todayMemos.map(m => m.text).join('、'));
+
+  // 取引
+  const trades = (allTrades||[]).filter(t => {
+    const d = new Date(t.ts||0);
+    return d.getFullYear()===year && d.getMonth()+1===month && d.getDate()===day;
+  });
+  if (trades.length) {
+    const trLines = trades.map(t => {
+      const name = (t.name||t.ticker||'').trim();
+      const isBuy = t.type==='buy';
+      const sym = curSym(t.currency||'JPY');
+      const price = isBuy ? t.price : t.sellPrice;
+      return `${NAMES[t.person]}が${name}を${isBuy?'購入':'売却'}(${t.shares}株 @${sym}${fmtNum(price,t.currency||'JPY')})`;
+    });
+    lines.push('【株取引】' + trLines.join('、'));
+  }
+
+  return lines.join('\n');
+}
+
+// その日のデータを見やすくレンダリングするHTMLを返す（テンプレート式、AI不要）
+function buildDiaryTemplate(dateKey) {
+  const { year, month, day } = parseKey(dateKey);
+  const rows = [];
+
+  const shifts = shiftsByDate[dateKey] || {};
+  for (const p of ['mine','hers']) {
+    const s = shifts[p];
+    if (!s) continue;
+    const who = NAMES[p];
+    if (s.shift_type === 'off') rows.push({ icon:'🌸', text:`${who}: 休み${s.label && s.label!=='公休' ? '（'+s.label+'）' : ''}` });
+    else if (s.shift_type === 'work') {
+      const t = s.start_time && s.end_time ? ` ${s.start_time}〜${s.end_time}` : '';
+      rows.push({ icon:'💼', text:`${who}: 仕事${t}` });
+    }
+  }
+
+  for (const e of (eventsByDate[dateKey]||[])) {
+    const who = e.person ? NAMES[e.person]+'の' : '';
+    const t = e.time ? ` ${e.time}` : '';
+    rows.push({ icon:'📍', text:`${who}${e.title}${t}` });
+  }
+
+  const dayStart = new Date(year, month-1, day).getTime();
+  const dayEnd = dayStart + 86400000;
+  const exps = (allExpenses||[]).filter(e => {
+    const k = `${e.year}-${String(e.month).padStart(2,'0')}-${String(e.day).padStart(2,'0')}`;
+    return k === dateKey;
+  });
+  for (const e of exps) {
+    rows.push({ icon:'💰', text:`${NAMES[e.person]} ¥${e.amount.toLocaleString()}${e.memo?' — '+e.memo:''}` });
+  }
+
+  const todayMemos = (allMemos||[]).filter(m => m.createdAt >= dayStart && m.createdAt < dayEnd && m.text);
+  for (const m of todayMemos) rows.push({ icon:'📝', text: m.text });
+
+  const trades = (allTrades||[]).filter(t => {
+    const d = new Date(t.ts||0);
+    return d.getFullYear()===year && d.getMonth()+1===month && d.getDate()===day;
+  });
+  for (const t of trades) {
+    const name = (t.name||t.ticker||'').trim();
+    const isBuy = t.type==='buy';
+    const sym = curSym(t.currency||'JPY');
+    const price = isBuy ? t.price : t.sellPrice;
+    rows.push({ icon: isBuy?'📈':'📉', text:`${NAMES[t.person]}が${name}を${isBuy?'購入':'売却'} ${t.shares}株 @${sym}${fmtNum(price,t.currency||'JPY')}` });
+  }
+
+  if (!rows.length) return '';
+  return rows.map(r =>
+    `<div class="diary-line"><span class="diary-line-icon">${r.icon}</span><span>${escapeHtml(r.text)}</span></div>`
+  ).join('');
+}
+
+function renderDiary() {
+  const el = document.getElementById('diary-list');
+  if (!el) return;
+
+  // データがある日をすべて収集（シフト・予定・出費・メモ・取引・写真）
+  const dateSet = new Set();
+  Object.keys(shiftsByDate||{}).forEach(k => dateSet.add(k));
+  Object.keys(eventsByDate||{}).forEach(k => dateSet.add(k));
+  Object.keys(dayPhotos||{}).forEach(d => dateSet.add(d));
+  (allMemos||[]).forEach(m => {
+    if (!m.createdAt) return;
+    const d = new Date(m.createdAt);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    dateSet.add(k);
+  });
+  (allExpenses||[]).forEach(e => {
+    dateSet.add(`${e.year}-${String(e.month).padStart(2,'0')}-${String(e.day).padStart(2,'0')}`);
+  });
+  (allTrades||[]).forEach(t => {
+    if (!t.ts) return;
+    const d = new Date(t.ts);
+    dateSet.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+  });
+
+  const dates = [...dateSet].sort((a,b) => b.localeCompare(a)); // 新しい順
+  if (!dates.length) {
+    el.innerHTML = '<div class="diary-empty">まだ記録がありません<br>シフトや予定を登録すると自動で日記になります</div>';
+    return;
+  }
+
+  const DOWS = ['日','月','火','水','木','金','土'];
+  let lastYM = '';
+  let html = '';
+  for (const dateKey of dates) {
+    const { year, month, day } = parseKey(dateKey);
+    const ym = `${year}年${month}月`;
+    if (ym !== lastYM) {
+      html += `<div class="diary-month">${ym}</div>`;
+      lastYM = ym;
+    }
+    const dow = DOWS[new Date(year, month-1, day).getDay()];
+    const photo = dayPhotos[dateKey];
+    const tmpl = buildDiaryTemplate(dateKey);
+    const diary = allDiaries[dateKey];
+    const aiHtml = diary
+      ? `<div class="diary-ai-text">${escapeHtml(diary.text)}</div>
+         <div class="diary-ai-footer">AI生成 ${new Date(diary.generatedAt).toLocaleDateString('ja-JP')}</div>`
+      : '';
+    const context = buildDiaryContext(dateKey);
+    const hasData = tmpl || photo;
+    if (!hasData) continue;
+    html += `<div class="diary-entry" id="diary-${dateKey}">
+      <div class="diary-date">${month}月${day}日</div>
+      <div class="diary-dow">${dow}曜日</div>
+      ${photo ? `<img class="diary-photo" src="${photo}" onclick="openLightbox('${photo}')" alt="${dateKey}の写真">` : ''}
+      ${tmpl ? `<div class="diary-lines">${tmpl}</div>` : ''}
+      ${aiHtml}
+      <div class="diary-actions">
+        <button class="diary-btn-ai" id="diary-btn-${dateKey}" onclick="generateDiary('${dateKey}')" ${!context?'disabled':''}>
+          ${diary ? '✨ AIで書き直す' : '✨ AIで文章にする'}
+        </button>
+        ${diary ? `<button class="diary-btn-del" onclick="deleteDiary('${dateKey}')">削除</button>` : ''}
+      </div>
+    </div>`;
+  }
+  el.innerHTML = html || '<div class="diary-empty">記録のある日がありません</div>';
+}
+
+async function generateDiary(dateKey) {
+  const btn = document.getElementById(`diary-btn-${dateKey}`);
+  if (btn) { btn.disabled = true; btn.textContent = '生成中…'; }
+  const context = buildDiaryContext(dateKey);
+  try {
+    const r = await fetch('/api/diary/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: dateKey, context }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || '生成に失敗しました');
+    allDiaries[dateKey] = { text: data.text, generatedAt: Date.now() };
+    renderDiary();
+    showToast('日記を生成しました');
+  } catch (e) {
+    showToast(`生成に失敗: ${e.message}`, true);
+    if (btn) { btn.disabled = false; btn.textContent = '✨ AIで文章にする'; }
+  }
+}
+
+async function deleteDiary(dateKey) {
+  try {
+    await fetch('/api/diary/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({date:dateKey}) });
+    delete allDiaries[dateKey];
+    renderDiary();
+  } catch { showToast('削除に失敗しました', true); }
 }
 
 // ── 画像圧縮（共通ユーティリティ）──
