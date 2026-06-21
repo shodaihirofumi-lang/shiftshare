@@ -19,7 +19,7 @@ import {
   setHoldingTargets, markHoldingTargetFired, getBuys,
   getNotes, addNote, deleteNote, toggleNote,
   getMemos, addMemo, deleteMemo, editMemo, setMemoImage,
-  getPhotos, addPhoto, deletePhoto,
+  getPhotos, addPhoto, deletePhoto, reloadPhotoCache,
   getDiaries, getDiary, setDiary, getMonthlyDiaries, setMonthlyDiary,
   getNotifiedOff, markNotifiedOff,
 } from './db.js';
@@ -928,6 +928,12 @@ function sendPushNotification(uploader) {
     webpush.sendNotification(sub, payload).catch(() => {});
   }
 }
+
+// 写真キャッシュ強制リロード（起動時にRedis接続失敗した場合のリカバリ）
+app.post('/api/photos/reload', async (_req, res) => {
+  await reloadPhotoCache();
+  res.json({ success: true });
+});
 
 // ── 株式スクリーニング（日経225） ──
 const NIKKEI225 = [

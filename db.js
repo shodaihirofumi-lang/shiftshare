@@ -52,16 +52,38 @@ export async function initDb() {
 // 写真専用ストアをロード（Redis Hash / ローカルファイル）
 async function loadPhotoCache() {
   if (useRedis) {
-    try {
-      const all = await redis.hgetall(PHOTOS_KEY);
-      photoCache = all || {};
-    } catch { photoCache = {}; }
+    // 起動直後にRedis接続が確立しきれていないことがあるため3回リトライ
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const all = await redis.hgetall(PHOTOS_KEY);
+        photoCache = all || {};
+        console.log(`[db] 写真ストア: ${Object.keys(photoCache).length} 件`);
+        return;
+      } catch (e) {
+        console.error(`[db] 写真ストア読み込み失敗 (${attempt}/3):`, e.message);
+        if (attempt < 3) await new Promise(r => setTimeout(r, 1500 * attempt));
+      }
+    }
+    photoCache = {};
+    console.error('[db] 写真ストア読み込み3回失敗 — 空で起動（写真は Redis に残っています）');
   } else {
     try {
       photoCache = JSON.parse(fs.readFileSync(PHOTOS_FILE, 'utf8'));
     } catch { photoCache = {}; }
+    console.log(`[db] 写真ストア(ローカル): ${Object.keys(photoCache).length} 件`);
   }
-  console.log(`[db] 写真ストア: ${Object.keys(photoCache).length} 件`);
+}
+
+// 起動後に写真キャッシュをRedisから再ロード（エラーリカバリ用）
+export async function reloadPhotoCache() {
+  if (!useRedis) return;
+  try {
+    const all = await redis.hgetall(PHOTOS_KEY);
+    photoCache = all || {};
+    console.log(`[db] 写真ストア再ロード: ${Object.keys(photoCache).length} 件`);
+  } catch (e) {
+    console.error('[db] 写真ストア再ロード失敗:', e.message);
+  }
 }
 
 // 写真専用ストアを永続化
@@ -602,8 +624,10 @@ export async function addPhoto(date, person, img) {
   const field = `photo:${date}:${id}`;
   const value = JSON.stringify({ person: person || null, img });
   photoCache[field] = value;
-  if (useRedis) await redis.hset(PHOTOS_KEY, { [field]: value });
-  else await persistPhotos();
+  if (useRedis) {
+    try { await redis.hset(PHOTOS_KEY, { [field]: value }); }
+    catch (e) { console.error('[db] 写真保存失敗:', e.message); }
+  } else await persistPhotos();
   return id;
 }
 
@@ -611,8 +635,10 @@ export async function deletePhoto(date, id) {
   const field = `photo:${date}:${id}`;
   if (!photoCache[field]) return false;
   delete photoCache[field];
-  if (useRedis) await redis.hdel(PHOTOS_KEY, field);
-  else await persistPhotos();
+  if (useRedis) {
+    try { await redis.hdel(PHOTOS_KEY, field); }
+    catch (e) { console.error('[db] 写真削除失敗:', e.message); }
+  } else await persistPhotos();
   return true;
 }
 
