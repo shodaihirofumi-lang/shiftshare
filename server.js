@@ -19,7 +19,7 @@ import {
   setHoldingTargets, markHoldingTargetFired, getBuys,
   getNotes, addNote, deleteNote, toggleNote,
   getMemos, addMemo, deleteMemo, editMemo, setMemoImage,
-  getPhotos, getPhoto, setPhoto,
+  getPhotos, addPhoto, deletePhoto,
   getDiaries, getDiary, setDiary, getMonthlyDiaries, setMonthlyDiary,
   getNotifiedOff, markNotifiedOff,
 } from './db.js';
@@ -526,18 +526,25 @@ app.post('/api/memo/image', async (req, res) => {
   }
 });
 
-// カレンダー日別写真
+// カレンダー日別写真（複数枚対応）
 app.get('/api/day-photos', (_req, res) => res.json(getPhotos()));
 app.post('/api/day-photo', async (req, res) => {
-  const { date, img } = req.body;
+  const { date, person, img } = req.body;
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'date (YYYY-MM-DD) が必要です' });
+  if (!img) return res.status(400).json({ error: 'img が必要です' });
   try {
-    await setPhoto(date, img || null);
-    res.json({ success: true });
+    const id = await addPhoto(date, person || null, img);
+    res.json({ success: true, id });
   } catch (e) {
     console.error('[day-photo] 保存失敗:', e.message);
     res.status(507).json({ error: 'ストレージ容量が不足しているため写真を保存できませんでした' });
   }
+});
+app.post('/api/day-photo/delete', async (req, res) => {
+  const { date, id } = req.body;
+  if (!date || !id) return res.status(400).json({ error: 'date と id が必要です' });
+  await deletePhoto(date, id);
+  res.json({ success: true });
 });
 
 // ── 日記 ──

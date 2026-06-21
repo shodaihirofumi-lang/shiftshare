@@ -511,8 +511,12 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .memo-item-img { margin-top:6px; width:100%; max-height:200px; object-fit:cover; border-radius:8px; cursor:pointer; display:block; }
 /* ── カレンダー日別写真 ── */
 .ed-photo-section { margin-top:12px; }
-.ed-photo-preview { margin:6px 0; }
-.ed-photo-preview img { width:100%; max-height:200px; object-fit:cover; border-radius:10px; }
+.ed-photos-grid { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.ed-photo-item { position:relative; flex:1 1 calc(50% - 3px); min-width:calc(50% - 3px); }
+.ed-photo-item:only-child { flex:1 1 100%; min-width:100%; }
+.ed-photo-item img { width:100%; max-height:160px; object-fit:cover; border-radius:8px; display:block; cursor:zoom-in; }
+.ed-photo-del { position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.45); color:#fff; border:none; cursor:pointer; font-size:13px; line-height:22px; text-align:center; padding:0; }
+.ed-photo-add-btns { display:flex; gap:8px; margin-top:4px; }
 .day-has-photo { position:absolute; bottom:2px; right:2px; width:6px; height:6px; border-radius:50%; background:var(--mine); }
 /* ── 画像ライトボックス ── */
 .lightbox { position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:9999; display:flex; align-items:center; justify-content:center; cursor:zoom-out; }
@@ -526,7 +530,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-date { font-size:26px; font-weight:800; color:var(--text); letter-spacing:-0.5px; line-height:1; }
 .diary-today-badge { display:inline-block; font-size:11px; font-weight:700; background:var(--mine); color:#fff; border-radius:6px; padding:1px 7px; margin-left:8px; vertical-align:middle; }
 .diary-dow { font-size:13px; font-weight:700; color:var(--text-soft); margin-bottom:10px; margin-top:2px; }
-.diary-photo { width:100%; max-height:200px; object-fit:cover; border-radius:10px; margin-bottom:10px; cursor:zoom-in; display:block; }
+.diary-photos-grid { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.diary-photo-item { position:relative; flex:1 1 calc(50% - 3px); min-width:calc(50% - 3px); }
+.diary-photo-item:only-child { flex:1 1 100%; min-width:100%; }
+.diary-photo { width:100%; max-height:200px; object-fit:cover; border-radius:10px; cursor:zoom-in; display:block; }
+.photo-person-badge { position:absolute; bottom:6px; left:6px; font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; pointer-events:none; }
+.photo-person-badge.mine { background:var(--mine); color:#fff; }
+.photo-person-badge.hers { background:var(--hers); color:#fff; }
+.diary-photo-item .diary-photo-del-btn { position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.45); color:#fff; border:none; cursor:pointer; font-size:13px; line-height:22px; text-align:center; padding:0; display:block; margin:0; }
 .diary-lines { font-size:12px; color:var(--text-soft); line-height:1.7; margin-bottom:10px; }
 .diary-line { display:flex; gap:6px; align-items:flex-start; }
 .diary-line-icon { flex-shrink:0; width:16px; text-align:center; }
@@ -537,7 +548,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-section-label.sl-ai { color:var(--gold); border-color:var(--gold-border); }
 .diary-ai-text { font-size:13.5px; color:var(--text); line-height:1.8; padding:10px 12px; background:var(--gold-bg); border-radius:9px; white-space:pre-wrap; margin-top:6px; }
 .diary-ai-footer { font-size:10px; color:var(--text-soft); margin-top:4px; }
-.diary-textarea { width:100%; box-sizing:border-box; border-radius:9px; border:1.5px solid var(--line); background:var(--bg); color:var(--text); font-size:13px; padding:10px 12px; resize:vertical; min-height:80px; font-family:inherit; line-height:1.6; }
+.diary-textarea { width:100%; box-sizing:border-box; border-radius:9px; border:1.5px solid var(--line); background:var(--bg); color:var(--text); font-size:14px; padding:12px 14px; resize:vertical; min-height:180px; font-family:inherit; line-height:1.7; }
 .diary-textarea.ta-mine:focus { outline:none; border-color:var(--mine); box-shadow:0 0 0 3px var(--mine-bg); }
 .diary-textarea.ta-hers:focus { outline:none; border-color:var(--hers); box-shadow:0 0 0 3px var(--hers-bg); }
 .diary-person-row { display:flex; justify-content:flex-end; margin-top:5px; }
@@ -565,8 +576,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .monthly-person-header.mph-hers { background:var(--hers-bg); color:var(--hers); }
 .monthly-person-text { font-size:13px; line-height:1.8; color:var(--text); white-space:pre-wrap; }
 .diary-photo-btn-area { margin-bottom:10px; }
-.diary-photo-add-btn { display:inline-block; padding:6px 12px; border-radius:8px; background:var(--card); border:1.5px dashed var(--border); color:var(--text-soft); font-size:12px; cursor:pointer; }
-.diary-photo-del-btn { display:block; padding:4px 10px; border-radius:6px; border:none; background:var(--card); color:var(--text-soft); font-size:11px; cursor:pointer; margin-top:5px; }
+.diary-photo-add-btns { display:flex; gap:6px; margin-top:4px; }
+.diary-photo-add-btn { flex:1; padding:7px 0; border-radius:8px; background:var(--card); border:1.5px dashed var(--border); color:var(--text-soft); font-size:12px; cursor:pointer; text-align:center; }
 /* ── 資産推移グラフ ── */
 .asset-line { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; margin-bottom:6px; }
 .asset-line:last-of-type { margin-bottom:10px; }
@@ -1041,13 +1052,17 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
     <div class="ed-photo-section">
       <div class="ed-events-head">この日の写真</div>
-      <div class="ed-photo-preview" id="ed-photo-preview"></div>
-      <label class="scan-btn">
-        <input type="file" accept="image/*" id="ed-photo-input" onchange="onDayPhotoSelect(this.files[0])" hidden>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        写真を追加 / 変更
-      </label>
-      <button id="ed-photo-del-btn" style="display:none;margin-top:6px;width:100%" class="btn-cancel" onclick="removeDayPhoto()">写真を削除</button>
+      <div class="ed-photos-grid" id="ed-photos-grid"></div>
+      <div class="ed-photo-add-btns">
+        <label class="scan-btn" style="flex:1;text-align:center">
+          <input type="file" accept="image/*" onchange="onEdPhotoSelect(this.files[0],'mine')" hidden>
+          📷 ひろ
+        </label>
+        <label class="scan-btn" style="flex:1;text-align:center">
+          <input type="file" accept="image/*" onchange="onEdPhotoSelect(this.files[0],'hers')" hidden>
+          📷 ちか
+        </label>
+      </div>
     </div>
 
     <div class="modal-actions">
@@ -2155,8 +2170,8 @@ function openDayEditor(key) {
   document.getElementById('exp-amount').value = '';
   document.getElementById('exp-memo').value = '';
   // カレンダー写真をロード
-  edDayPhotoData = dayPhotos[key] || null;
-  renderEdPhoto();
+  edDayPhotos = [...(dayPhotos[key] || [])];
+  renderEdPhotos();
   document.getElementById('day-editor').classList.add('active');
 }
 function renderEventList(key) {
@@ -2539,19 +2554,6 @@ async function saveEditor() {
       const r = await fetch('/api/expense', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({year,month,day,person:expPerson,amount:pendingAmount,memo}) });
       if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || `出費の保存エラー(${r.status})`); }
     }
-    // 日別写真を保存（変更あれば）
-    if (edDayPhotoChanged) {
-      const pr = await fetch('/api/day-photo', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ date: editorDate, img: edDayPhotoData || null }) });
-      if (!pr.ok) {
-        const pe = await pr.json().catch(()=>({}));
-        showToast(pe.error || '写真の保存に失敗しました', true);
-        edDayPhotoData = null; // ローカルも戻す
-      } else {
-        dayPhotos[editorDate] = edDayPhotoData || undefined;
-        if (!edDayPhotoData) delete dayPhotos[editorDate];
-      }
-      edDayPhotoChanged = false;
-    }
     closeEditor();
     showToast('保存しました');
     await loadCalendar();
@@ -2800,12 +2802,12 @@ function renderDiary() {
   let html = '';
   for (const dateKey of dates) {
     const { year, month, day } = parseKey(dateKey);
-    const photo = dayPhotos[dateKey];
+    const photos = dayPhotos[dateKey] || [];
     const tmpl = buildDiaryTemplate(dateKey);
     const diary = allDiaries[dateKey];
     const isToday = dateKey === todayKey;
     const hasDiary = !!(diary?.mine?.raw || diary?.hers?.raw || diary?.text);
-    if (!isToday && !tmpl && !photo && !hasDiary) continue;
+    if (!isToday && !tmpl && !photos.length && !hasDiary) continue;
 
     const ym = `${year}年${month}月`;
     if (ym !== lastYM) {
@@ -2828,12 +2830,7 @@ function renderDiary() {
     html += `<div class="diary-entry${isToday?' diary-today':''}" id="diary-${dateKey}">
       <div class="diary-date">${month}月${day}日${todayBadge}</div>
       <div class="diary-dow">${dow}曜日</div>
-      <div class="diary-photo-btn-area" id="diary-photo-area-${dateKey}">
-        ${photo
-          ? `<img class="diary-photo" src="${photo}" onclick="openLightbox('${photo}')" alt="${dateKey}の写真">
-             <button class="diary-photo-del-btn" onclick="removeDiaryPhoto('${dateKey}')">🗑 写真を削除</button>`
-          : `<button class="diary-photo-add-btn" onclick="addDiaryPhoto('${dateKey}')">📷 写真を追加</button>`}
-      </div>
+      <div class="diary-photo-btn-area" id="diary-photo-area-${dateKey}">${diaryPhotoAreaHtml(dateKey, photos)}</div>
       ${tmpl ? `<div class="diary-lines">${tmpl}</div>` : ''}
       <div class="diary-section">
         <div class="diary-section-label sl-mine">ひろの日記</div>
@@ -3000,8 +2997,30 @@ async function deleteDiary(dateKey) {
   } catch { showToast('削除に失敗しました', true); }
 }
 
+// ── 写真エリア共通HTML生成 ──
+function diaryPhotoAreaHtml(dateKey, photos) {
+  const grid = photos.map(p => {
+    const badge = p.person ? `<span class="photo-person-badge ${p.person}">${NAMES[p.person]}</span>` : '';
+    return `<div class="diary-photo-item">
+      <img class="diary-photo" src="${p.img}" onclick="openLightbox(this.src)" alt="">
+      ${badge}
+      <button class="diary-photo-del-btn" onclick="removeDiaryPhoto('${dateKey}','${p.id}')">🗑</button>
+    </div>`;
+  }).join('');
+  return `<div class="diary-photos-grid">${grid}</div>
+    <div class="diary-photo-add-btns">
+      <button class="diary-photo-add-btn" onclick="addDiaryPhoto('${dateKey}','mine')">📷 ひろ</button>
+      <button class="diary-photo-add-btn" onclick="addDiaryPhoto('${dateKey}','hers')">📷 ちか</button>
+    </div>`;
+}
+
+function renderDiaryPhotoArea(dateKey) {
+  const area = document.getElementById(`diary-photo-area-${dateKey}`);
+  if (area) area.innerHTML = diaryPhotoAreaHtml(dateKey, dayPhotos[dateKey] || []);
+}
+
 // ── 日記タブ 写真追加/削除 ──
-function addDiaryPhoto(dateKey) {
+function addDiaryPhoto(dateKey, person) {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*';
@@ -3014,29 +3033,29 @@ function addDiaryPhoto(dateKey) {
     const r = await fetch('/api/day-photo', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: dateKey, img }),
+      body: JSON.stringify({ date: dateKey, person, img }),
     });
     if (!r.ok) { showToast('保存に失敗しました', true); return; }
-    dayPhotos[dateKey] = img;
-    const area = document.getElementById(`diary-photo-area-${dateKey}`);
-    if (area) area.innerHTML =
-      `<img class="diary-photo" src="${img}" onclick="openLightbox('${img}')" alt="${dateKey}の写真">
-       <button class="diary-photo-del-btn" onclick="removeDiaryPhoto('${dateKey}')">🗑 写真を削除</button>`;
+    const { id } = await r.json();
+    if (!dayPhotos[dateKey]) dayPhotos[dateKey] = [];
+    dayPhotos[dateKey].push({ id, person, img });
+    renderDiaryPhotoArea(dateKey);
     showToast('写真を追加しました');
   };
   input.click();
 }
 
-async function removeDiaryPhoto(dateKey) {
-  await fetch('/api/day-photo', {
+async function removeDiaryPhoto(dateKey, id) {
+  await fetch('/api/day-photo/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date: dateKey, img: null }),
+    body: JSON.stringify({ date: dateKey, id }),
   });
-  delete dayPhotos[dateKey];
-  const area = document.getElementById(`diary-photo-area-${dateKey}`);
-  if (area) area.innerHTML =
-    `<button class="diary-photo-add-btn" onclick="addDiaryPhoto('${dateKey}')">📷 写真を追加</button>`;
+  if (dayPhotos[dateKey]) {
+    dayPhotos[dateKey] = dayPhotos[dateKey].filter(p => p.id !== id);
+    if (!dayPhotos[dateKey].length) delete dayPhotos[dateKey];
+  }
+  renderDiaryPhotoArea(dateKey);
   showToast('写真を削除しました');
 }
 
@@ -3096,37 +3115,56 @@ function clearMemoImgPending() {
   if (fi) fi.value = '';
 }
 
-// ── カレンダー写真 ──
+// ── カレンダー写真（複数枚対応）──
 let dayPhotos = {};
-let edDayPhotoData = null;
-let edDayPhotoChanged = false;
+let edDayPhotos = [];
 async function loadDayPhotos() {
   try { dayPhotos = await fetch('/api/day-photos').then(r => r.json()); } catch { dayPhotos = {}; }
 }
-function renderEdPhoto() {
-  const prev = document.getElementById('ed-photo-preview');
-  const delBtn = document.getElementById('ed-photo-del-btn');
-  if (!prev) return;
-  if (edDayPhotoData) {
-    prev.innerHTML = `<img src="${edDayPhotoData}" onclick="openLightbox('${edDayPhotoData}')" alt="この日の写真" style="cursor:zoom-in">`;
-    if (delBtn) delBtn.style.display = '';
-  } else {
-    prev.innerHTML = '';
-    if (delBtn) delBtn.style.display = 'none';
-  }
+function renderEdPhotos() {
+  const grid = document.getElementById('ed-photos-grid');
+  if (!grid) return;
+  grid.innerHTML = edDayPhotos.map(p => {
+    const badge = p.person ? `<span class="photo-person-badge ${p.person}">${NAMES[p.person]}</span>` : '';
+    return `<div class="ed-photo-item">
+      <img src="${p.img}" onclick="openLightbox(this.src)" alt="写真">
+      ${badge}
+      <button class="ed-photo-del" onclick="deleteEdPhoto('${p.id}')">×</button>
+    </div>`;
+  }).join('');
 }
-async function onDayPhotoSelect(file) {
+async function onEdPhotoSelect(file, person) {
   if (!file) return;
-  const compressed = await compressImage(file, 900, 0.72);
-  if (!compressed) { showToast('画像の読み込みに失敗しました', true); return; }
-  edDayPhotoData = compressed;
-  edDayPhotoChanged = true;
-  renderEdPhoto();
+  const img = await compressImage(file, 900, 0.72);
+  if (!img) { showToast('画像の読み込みに失敗しました', true); return; }
+  showToast('保存中…');
+  const r = await fetch('/api/day-photo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date: editorDate, person, img }),
+  });
+  if (!r.ok) { showToast('写真の保存に失敗しました', true); return; }
+  const { id } = await r.json();
+  const entry = { id, person, img };
+  if (!dayPhotos[editorDate]) dayPhotos[editorDate] = [];
+  dayPhotos[editorDate].push(entry);
+  edDayPhotos.push(entry);
+  renderEdPhotos();
+  showToast('写真を追加しました');
 }
-function removeDayPhoto() {
-  edDayPhotoData = null;
-  edDayPhotoChanged = true;
-  renderEdPhoto();
+async function deleteEdPhoto(id) {
+  await fetch('/api/day-photo/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date: editorDate, id }),
+  });
+  edDayPhotos = edDayPhotos.filter(p => p.id !== id);
+  if (dayPhotos[editorDate]) {
+    dayPhotos[editorDate] = dayPhotos[editorDate].filter(p => p.id !== id);
+    if (!dayPhotos[editorDate].length) delete dayPhotos[editorDate];
+  }
+  renderEdPhotos();
+  showToast('写真を削除しました');
 }
 
 // ── 取引タブ ──

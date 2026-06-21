@@ -45,6 +45,7 @@ export async function initDb() {
   }
   await loadPhotoCache();
   await migratePhotosToSeparateStore(); // 旧来のインライン画像を分離
+  await migratePhotoSingleToMulti();   // 写真1枚→複数枚形式へ
   await mergeDuplicateHoldings();
 }
 
@@ -550,27 +551,69 @@ export async function editMemo(id, text) {
   return true;
 }
 
-// ── カレンダー日別写真（photoCache の photo:* キーで管理）──
+// 起動時マイグレーション：photo:{date}（旧・1枚）→ photo:{date}:{id}（新・複数枚）
+async function migratePhotoSingleToMulti() {
+  const toMigrate = [];
+  for (const k of Object.keys(photoCache)) {
+    if (!k.startsWith('photo:')) continue;
+    const rest = k.slice(6);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rest)) toMigrate.push(rest);
+  }
+  if (!toMigrate.length) return;
+  for (const date of toMigrate) {
+    const oldField = `photo:${date}`;
+    const img = photoCache[oldField];
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    const newField = `photo:${date}:${id}`;
+    const value = JSON.stringify({ person: null, img });
+    photoCache[newField] = value;
+    delete photoCache[oldField];
+    if (useRedis) {
+      await redis.hset(PHOTOS_KEY, { [newField]: value });
+      await redis.hdel(PHOTOS_KEY, oldField);
+    }
+  }
+  if (!useRedis) await persistPhotos();
+  console.log(`[db] 写真マイグレーション(1枚→複数): ${toMigrate.length}件`);
+}
+
+// ── カレンダー日別写真（複数枚・person付き）──
+// 返り値: { 'YYYY-MM-DD': [{ id, person, img }] }
 export function getPhotos() {
-  // { date: base64 } の形で返す
   const out = {};
   for (const [k, v] of Object.entries(photoCache)) {
-    if (k.startsWith('photo:')) out[k.slice(6)] = v;
+    if (!k.startsWith('photo:')) continue;
+    const rest = k.slice(6); // '{date}:{id}'
+    const sep = rest.indexOf(':');
+    if (sep === -1) continue; // 旧形式（migration済みでなければスキップ）
+    const date = rest.slice(0, sep);
+    const id = rest.slice(sep + 1);
+    try {
+      const entry = JSON.parse(v);
+      if (!out[date]) out[date] = [];
+      out[date].push({ id, person: entry.person || null, img: entry.img });
+    } catch {}
   }
   return out;
 }
-export function getPhoto(date) { return photoCache[`photo:${date}`] || null; }
-export async function setPhoto(date, img) {
-  const field = `photo:${date}`;
-  if (img) {
-    photoCache[field] = img;
-    if (useRedis) await redis.hset(PHOTOS_KEY, { [field]: img });
-    else await persistPhotos();
-  } else {
-    delete photoCache[field];
-    if (useRedis) await redis.hdel(PHOTOS_KEY, field);
-    else await persistPhotos();
-  }
+
+export async function addPhoto(date, person, img) {
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  const field = `photo:${date}:${id}`;
+  const value = JSON.stringify({ person: person || null, img });
+  photoCache[field] = value;
+  if (useRedis) await redis.hset(PHOTOS_KEY, { [field]: value });
+  else await persistPhotos();
+  return id;
+}
+
+export async function deletePhoto(date, id) {
+  const field = `photo:${date}:${id}`;
+  if (!photoCache[field]) return false;
+  delete photoCache[field];
+  if (useRedis) await redis.hdel(PHOTOS_KEY, field);
+  else await persistPhotos();
+  return true;
 }
 
 // ── 日記（AI生成テキストをdate単位で保存）──
