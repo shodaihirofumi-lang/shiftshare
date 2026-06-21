@@ -647,6 +647,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .pnl-battle-row + .pnl-battle-row { border-top:1px solid var(--line-soft); }
 .pnl-battle-date { font-size:12px; font-weight:700; color:var(--text-soft); margin-bottom:5px; }
 .pnl-brate-amt { font-size:10px; color:var(--text-soft); display:block; }
+.pnl-realized-row { font-size:9px; font-weight:700; margin-top:1px; }
+.pnl-realized-row.up { color:#c0392b; } .pnl-realized-row.down { color:#2e6da4; }
 
 /* ── 損益 VS バトル ── */
 .vs-card { background:var(--bg); border-radius:16px; padding:22px 16px 18px; margin-bottom:14px; }
@@ -1822,6 +1824,28 @@ function renderPnlHistory() {
   const mc = changes.filter(c => c.y === pnlYM.year && c.mo === pnlYM.month);
   const totals = {}; for (const p of persons) totals[p] = mc.reduce((s,c) => s + c[p], 0);
 
+  // 実現損益を日付・月ごとに集計（通貨別）
+  const realDate = {}, realMonth = {};
+  for (const rv of (allRealized || [])) {
+    const d = new Date(rv.ts);
+    const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const mk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const cur = rv.currency || 'JPY';
+    if (!realDate[dk]) realDate[dk] = {};
+    if (!realDate[dk][rv.person]) realDate[dk][rv.person] = {};
+    realDate[dk][rv.person][cur] = (realDate[dk][rv.person][cur] || 0) + rv.realized;
+    if (!realMonth[mk]) realMonth[mk] = {};
+    if (!realMonth[mk][rv.person]) realMonth[mk][rv.person] = {};
+    realMonth[mk][rv.person][cur] = (realMonth[mk][rv.person][cur] || 0) + rv.realized;
+  }
+  const fmtReal = (rvByCur) => {
+    if (!rvByCur) return '';
+    return Object.entries(rvByCur).filter(([,v]) => Math.abs(v) >= 1).map(([cur, v]) => {
+      const sym = cur === 'USD' ? '$' : '¥';
+      return `<span class="pnl-realized-row ${v>=0?'up':'down'}">実現 ${v>=0?'+':'−'}${sym}${Math.abs(Math.round(v)).toLocaleString()}</span>`;
+    }).join('');
+  };
+
   // ── 月初基準値ヘルパー ──
   const getBase = ym => {
     let prev = null;
@@ -1860,9 +1884,11 @@ function renderPnlHistory() {
       const { y, m, rates: r, totals: t } = monthlyRates[i];
       if (!hasBoth) {
         const p = persons[0];
+        const mk1 = `${y}-${String(m).padStart(2,'0')}`;
         mbHtml += `<div class="mb-row"><span class="mb-month-label">${m}月</span>
           <span class="mb-rate" style="color:var(--${p})">${fmtR(r[p])}</span>
-          <span class="mb-win" style="color:var(--text-soft)">${fmtA(t[p])}</span></div>`;
+          <span class="mb-win" style="color:var(--text-soft)">${fmtA(t[p])}</span>
+          ${fmtReal(realMonth[mk1]?.[p])}</div>`;
         continue;
       }
       const div = calcDiv(r.mine, r.hers);
@@ -1874,7 +1900,8 @@ function renderPnlHistory() {
         const style = isW ? `background:var(--${p}-bg);border:1.5px solid var(--${p}-border);` : 'border:1.5px solid transparent;';
         const crown = isW ? `<span class="mb-player-crown">👑</span>` : '';
         const rateCls = r[p] >= 0 ? 'up' : 'down';
-        return `<div class="mb-player${cls}" style="${style}">${crown}<div><span class="mb-player-name ${p}">${NAMES[p]}</span><br><span class="mb-player-rate ${rateCls}">${fmtR(r[p])}</span></div></div>`;
+        const mk = `${y}-${String(m).padStart(2,'0')}`;
+        return `<div class="mb-player${cls}" style="${style}">${crown}<div><span class="mb-player-name ${p}">${NAMES[p]}</span><br><span class="mb-player-rate ${rateCls}">${fmtR(r[p])}</span><span class="pnl-brate-amt">${fmtA(t[p])}</span>${fmtReal(realMonth[mk]?.[p])}</div></div>`;
       };
       mbHtml += `<div class="mb-row">
         <span class="mb-month-label">${m}月</span>
@@ -1964,7 +1991,8 @@ function renderPnlHistory() {
         const style = isW ? `background:var(--${p}-bg);border:1.5px solid var(--${p}-border);` : 'border:1.5px solid transparent;';
         const crown = isW ? `<span class="mb-player-crown">👑</span>` : '';
         const rateCls = (c[p+'Rate']||0) >= 0 ? 'up' : 'down';
-        return `<div class="mb-player${cls}" style="${style}">${crown}<div><span class="mb-player-name ${p}">${NAMES[p]}</span><br><span class="mb-player-rate ${rateCls}">${fmtR(c[p+'Rate']||0)}</span><span class="pnl-brate-amt">${fmtA(c[p])}</span></div></div>`;
+        const dk = `${c.y}-${String(c.mo).padStart(2,'0')}-${String(c.da).padStart(2,'0')}`;
+        return `<div class="mb-player${cls}" style="${style}">${crown}<div><span class="mb-player-name ${p}">${NAMES[p]}</span><br><span class="mb-player-rate ${rateCls}">${fmtR(c[p+'Rate']||0)}</span><span class="pnl-brate-amt">${fmtA(c[p])}</span>${fmtReal(realDate[dk]?.[p])}</div></div>`;
       };
       rows += `<div class="pnl-battle-row">
         <div class="pnl-battle-date">${c.mo}/${c.da}（${dow}）</div>
@@ -1982,9 +2010,10 @@ function renderPnlHistory() {
       </div>`;
     } else {
       const p = persons[0];
+      const dk2 = `${c.y}-${String(c.mo).padStart(2,'0')}-${String(c.da).padStart(2,'0')}`;
       rows += `<div class="pnl-row">
         <span class="pnl-date">${c.mo}/${c.da}<small>(${dow})</small></span>
-        <span class="pnl-cell ${c[p]>=0?'up':'down'}">${fmtR(c[p+'Rate']||0)} <small>${fmtA(c[p])}</small></span>
+        <span class="pnl-cell ${c[p]>=0?'up':'down'}">${fmtR(c[p+'Rate']||0)} <small>${fmtA(c[p])}</small>${fmtReal(realDate[dk2]?.[p])}</span>
       </div>`;
     }
   }
