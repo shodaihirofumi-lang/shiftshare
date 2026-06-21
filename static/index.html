@@ -558,7 +558,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-empty { text-align:center; padding:40px 0; font-size:13px; color:var(--text-soft); }
 .monthly-btn { padding:8px 14px; border-radius:10px; border:none; background:var(--gold); color:#fff; font-size:12px; font-weight:700; cursor:pointer; }
 .monthly-modal-box { max-width:500px; width:calc(100% - 32px); max-height:80vh; display:flex; flex-direction:column; }
-.monthly-modal-content { flex:1; overflow-y:auto; padding:12px 0; font-size:13px; line-height:1.8; color:var(--text); white-space:pre-wrap; }
+.monthly-modal-content { flex:1; overflow-y:auto; padding:12px 0; font-size:13px; line-height:1.8; color:var(--text); }
+.monthly-person-section { margin-bottom:16px; }
+.monthly-person-header { font-size:12px; font-weight:700; padding:4px 10px; border-radius:7px; display:inline-block; margin-bottom:8px; }
+.monthly-person-header.mph-mine { background:var(--mine-bg); color:var(--mine); }
+.monthly-person-header.mph-hers { background:var(--hers-bg); color:var(--hers); }
+.monthly-person-text { font-size:13px; line-height:1.8; color:var(--text); white-space:pre-wrap; }
+.diary-photo-btn-area { margin-bottom:10px; }
+.diary-photo-add-btn { display:inline-block; padding:6px 12px; border-radius:8px; background:var(--card); border:1.5px dashed var(--border); color:var(--text-soft); font-size:12px; cursor:pointer; }
+.diary-photo-del-btn { display:block; padding:4px 10px; border-radius:6px; border:none; background:var(--card); color:var(--text-soft); font-size:11px; cursor:pointer; margin-top:5px; }
 /* ── 資産推移グラフ ── */
 .asset-line { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; margin-bottom:6px; }
 .asset-line:last-of-type { margin-bottom:10px; }
@@ -845,7 +853,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         </div>
         <div id="monthly-modal-content" class="monthly-modal-content"></div>
         <div style="margin-top:12px;display:flex;gap:8px">
-          <button class="diary-btn-ai" id="monthly-gen-btn" onclick="generateMonthlyDiary()">✨ 生成する</button>
+          <button class="diary-btn-person diary-btn-person-mine" id="monthly-gen-mine-btn" onclick="generateMonthlyDiary('mine')">✨ ひろ生成</button>
+          <button class="diary-btn-person diary-btn-person-hers" id="monthly-gen-hers-btn" onclick="generateMonthlyDiary('hers')">✨ ちか生成</button>
         </div>
       </div>
     </div>
@@ -2819,7 +2828,12 @@ function renderDiary() {
     html += `<div class="diary-entry${isToday?' diary-today':''}" id="diary-${dateKey}">
       <div class="diary-date">${month}月${day}日${todayBadge}</div>
       <div class="diary-dow">${dow}曜日</div>
-      ${photo ? `<img class="diary-photo" src="${photo}" onclick="openLightbox('${photo}')" alt="${dateKey}の写真">` : ''}
+      <div class="diary-photo-btn-area" id="diary-photo-area-${dateKey}">
+        ${photo
+          ? `<img class="diary-photo" src="${photo}" onclick="openLightbox('${photo}')" alt="${dateKey}の写真">
+             <button class="diary-photo-del-btn" onclick="removeDiaryPhoto('${dateKey}')">🗑 写真を削除</button>`
+          : `<button class="diary-photo-add-btn" onclick="addDiaryPhoto('${dateKey}')">📷 写真を追加</button>`}
+      </div>
       ${tmpl ? `<div class="diary-lines">${tmpl}</div>` : ''}
       <div class="diary-section">
         <div class="diary-section-label sl-mine">ひろの日記</div>
@@ -2924,44 +2938,57 @@ async function loadMonthlyDiaries() {
 }
 
 let currentDiaryYM = '';
+
+function renderMonthlyContent() {
+  const existing = allMonthlyDiaries[currentDiaryYM] || {};
+  const mkSection = (person, label, cls) => {
+    const d = existing[person];
+    return `<div class="monthly-person-section">
+      <div class="monthly-person-header ${cls}">${label}の月間まとめ</div>
+      ${d?.text
+        ? `<div class="monthly-person-text">${renderDiaryText(d.text)}</div>
+           <div class="diary-ai-footer">生成日 ${new Date(d.generatedAt).toLocaleDateString('ja-JP')}</div>`
+        : `<div class="diary-ai-footer">まだ生成されていません</div>`}
+    </div>`;
+  };
+  return mkSection('mine','ひろ','mph-mine') + mkSection('hers','ちか','mph-hers');
+}
+
 function openMonthlyDiary() {
   const now = new Date();
   currentDiaryYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const [y, m] = currentDiaryYM.split('-');
   document.getElementById('monthly-modal-title').textContent = `${y}年${m}月の記録`;
-  const existing = allMonthlyDiaries[currentDiaryYM];
-  const content = document.getElementById('monthly-modal-content');
-  if (existing) {
-    content.innerHTML = renderDiaryText(existing.text) +
-      `<div class="diary-ai-footer" style="margin-top:8px">生成日 ${new Date(existing.generatedAt).toLocaleDateString('ja-JP')}</div>`;
-  } else {
-    content.textContent = 'まだ月間まとめがありません。「生成する」を押してください。';
-  }
+  document.getElementById('monthly-modal-content').innerHTML = renderMonthlyContent();
   document.getElementById('monthly-modal').style.display = 'flex';
 }
+
 function closeMonthlyModal() {
   document.getElementById('monthly-modal').style.display = 'none';
 }
-async function generateMonthlyDiary() {
-  const btn = document.getElementById('monthly-gen-btn');
+
+async function generateMonthlyDiary(person) {
+  const btnId = `monthly-gen-${person}-btn`;
+  const btn = document.getElementById(btnId);
   if (btn) { btn.disabled = true; btn.textContent = '生成中…'; }
   try {
     const r = await fetch('/api/diary/monthly', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ yearMonth: currentDiaryYM }),
+      body: JSON.stringify({ yearMonth: currentDiaryYM, person }),
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || '生成に失敗しました');
-    allMonthlyDiaries[currentDiaryYM] = { text: data.text, generatedAt: Date.now() };
-    const content = document.getElementById('monthly-modal-content');
-    content.innerHTML = renderDiaryText(data.text) +
-      `<div class="diary-ai-footer" style="margin-top:8px">生成日 ${new Date().toLocaleDateString('ja-JP')}</div>`;
-    if (btn) { btn.disabled = false; btn.textContent = '✨ 生成し直す'; }
+    if (!allMonthlyDiaries[currentDiaryYM]) allMonthlyDiaries[currentDiaryYM] = {};
+    allMonthlyDiaries[currentDiaryYM][person] = { text: data.text, generatedAt: Date.now() };
+    document.getElementById('monthly-modal-content').innerHTML = renderMonthlyContent();
+    const label = person === 'mine' ? 'ひろ' : 'ちか';
+    if (btn) { btn.disabled = false; btn.textContent = `✨ ${label}生成し直す`; }
     showToast('月間まとめを生成しました ✨');
   } catch (e) {
     showToast(`生成失敗: ${e.message}`, true);
-    if (btn) { btn.disabled = false; btn.textContent = '✨ 生成する'; }
+    const label = person === 'mine' ? 'ひろ' : 'ちか';
+    if (btn) { btn.disabled = false; btn.textContent = `✨ ${label}生成`; }
   }
 }
 
@@ -2971,6 +2998,46 @@ async function deleteDiary(dateKey) {
     delete allDiaries[dateKey];
     renderDiary();
   } catch { showToast('削除に失敗しました', true); }
+}
+
+// ── 日記タブ 写真追加/削除 ──
+function addDiaryPhoto(dateKey) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    showToast('写真を保存中…');
+    const img = await compressImage(file);
+    if (!img) { showToast('画像の読み込みに失敗しました', true); return; }
+    const r = await fetch('/api/day-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: dateKey, img }),
+    });
+    if (!r.ok) { showToast('保存に失敗しました', true); return; }
+    dayPhotos[dateKey] = img;
+    const area = document.getElementById(`diary-photo-area-${dateKey}`);
+    if (area) area.innerHTML =
+      `<img class="diary-photo" src="${img}" onclick="openLightbox('${img}')" alt="${dateKey}の写真">
+       <button class="diary-photo-del-btn" onclick="removeDiaryPhoto('${dateKey}')">🗑 写真を削除</button>`;
+    showToast('写真を追加しました');
+  };
+  input.click();
+}
+
+async function removeDiaryPhoto(dateKey) {
+  await fetch('/api/day-photo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date: dateKey, img: null }),
+  });
+  delete dayPhotos[dateKey];
+  const area = document.getElementById(`diary-photo-area-${dateKey}`);
+  if (area) area.innerHTML =
+    `<button class="diary-photo-add-btn" onclick="addDiaryPhoto('${dateKey}')">📷 写真を追加</button>`;
+  showToast('写真を削除しました');
 }
 
 // ── 画像圧縮（共通ユーティリティ）──

@@ -602,24 +602,28 @@ ${raw}`;
 // 月間まとめ
 app.get('/api/monthly-diaries', (_req, res) => res.json(getMonthlyDiaries()));
 app.post('/api/diary/monthly', async (req, res) => {
-  const { yearMonth } = req.body;
-  if (!yearMonth) return res.status(400).json({ error: 'yearMonth が必要です' });
+  const { yearMonth, person } = req.body;
+  if (!yearMonth || !person) return res.status(400).json({ error: 'yearMonth と person が必要です' });
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
   const diaries = getDiaries();
   const entries = [];
   for (const [date, d] of Object.entries(diaries)) {
     if (!date.startsWith(yearMonth)) continue;
-    if (d.mine?.text || d.mine?.raw) entries.push({ date, name: 'ひろ', text: d.mine.text || d.mine.raw });
-    if (d.hers?.text || d.hers?.raw) entries.push({ date, name: 'ちか', text: d.hers.text || d.hers.raw });
+    const pData = d[person];
+    if (pData?.text || pData?.raw) entries.push({ date, text: pData.text || pData.raw });
   }
-  if (!entries.length) return res.status(400).json({ error: `${yearMonth}の日記がありません` });
+  if (!entries.length) {
+    const name = person === 'mine' ? 'ひろ' : 'ちか';
+    return res.status(400).json({ error: `${yearMonth}の${name}の日記がありません` });
+  }
   entries.sort((a, b) => a.date.localeCompare(b.date));
   const [y, m] = yearMonth.split('-');
-  const prompt = `以下は${y}年${m}月のカップル（ひろとちか）の日記です。
+  const personName = person === 'mine' ? 'ひろ' : 'ちか';
+  const prompt = `以下は${y}年${m}月の${personName}の日記です。
 note.comに投稿できる月間ブログ記事として、見出し（##）を使いながら、読者が楽しめる文章にまとめてください。
-ふたりそれぞれの個性・言葉のくせを活かし、1ヶ月を振り返る読んで楽しいブログ記事風に。
+${personName}の言葉のくせや個性をそのまま活かし、1ヶ月を振り返る読んで楽しいブログ記事風に。箇条書きは避け、自然な文章で。
 
-${entries.map(e => `【${e.name} ${e.date}】\n${e.text}`).join('\n\n')}`;
+${entries.map(e => `【${e.date}】\n${e.text}`).join('\n\n')}`;
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -640,7 +644,8 @@ ${entries.map(e => `【${e.name} ${e.date}】\n${e.text}`).join('\n\n')}`;
     }
     const data = await response.json();
     const text = data.content?.[0]?.text?.trim() || '';
-    await setMonthlyDiary(yearMonth, { text, generatedAt: Date.now() });
+    const existing = getMonthlyDiaries()[yearMonth] || {};
+    await setMonthlyDiary(yearMonth, { ...existing, [person]: { text, generatedAt: Date.now() } });
     res.json({ success: true, text });
   } catch (e) {
     console.error('[diary/monthly]', e.message);
