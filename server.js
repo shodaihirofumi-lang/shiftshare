@@ -929,6 +929,134 @@ function sendPushNotification(uploader) {
   }
 }
 
+// ── 株式スクリーニング（日経225） ──
+const NIKKEI225 = [
+  '1332','1333','1605','1721','1801','1802','1803','1808','1812','1925',
+  '1928','1963','2002','2269','2282','2413','2432','2501','2502','2503',
+  '2531','2587','2801','2802','2871','2914','3086','3092','3099','3382',
+  '3402','3407','3436','3659','3861','3863','4004','4005','4021','4042',
+  '4043','4061','4063','4151','4183','4188','4208','4324','4385','4452',
+  '4502','4503','4506','4507','4519','4523','4543','4568','4578','4661',
+  '4689','4704','4751','4755','4901','4902','4911','5019','5020','5101',
+  '5108','5201','5202','5214','5232','5233','5301','5332','5333','5401',
+  '5406','5411','5541','5631','5706','5711','5713','5714','5715','5801',
+  '5802','5803','6098','6103','6113','6146','6178','6273','6301','6302',
+  '6305','6326','6361','6367','6370','6471','6472','6473','6479','6501',
+  '6503','6504','6506','6526','6645','6674','6701','6702','6703','6706',
+  '6723','6724','6752','6753','6758','6762','6770','6841','6902','6920',
+  '6952','6954','6971','6976','6981','7003','7004','7011','7012','7013',
+  '7186','7201','7202','7203','7205','7211','7261','7267','7269','7270',
+  '7272','7731','7733','7735','7741','7751','7752','7762','7832','7911',
+  '7912','7974','8001','8002','8015','8031','8035','8053','8058','8233',
+  '8252','8253','8267','8306','8308','8309','8316','8331','8354','8355',
+  '8411','8473','8591','8601','8604','8628','8630','8697','8750','8766',
+  '8795','8801','8802','8804','8830','9001','9005','9007','9008','9009',
+  '9020','9021','9022','9064','9101','9104','9107','9202','9301','9432',
+  '9433','9434','9531','9532','9602','9613','9735','9766','9983','9984',
+];
+
+function emaArr(prices, period) {
+  const k = 2 / (period + 1);
+  const out = [prices[0]];
+  for (let i = 1; i < prices.length; i++) out.push(prices[i] * k + out[i-1] * (1-k));
+  return out;
+}
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return null;
+  const ch = closes.slice(1).map((v, i) => v - closes[i]);
+  let ag = 0, al = 0;
+  for (let i = 0; i < period; i++) { ag += Math.max(0, ch[i]); al += Math.max(0, -ch[i]); }
+  ag /= period; al /= period;
+  for (let i = period; i < ch.length; i++) {
+    ag = (ag*(period-1) + Math.max(0, ch[i])) / period;
+    al = (al*(period-1) + Math.max(0, -ch[i])) / period;
+  }
+  return al === 0 ? 100 : 100 - 100 / (1 + ag / al);
+}
+function calcMACD(closes) {
+  if (closes.length < 35) return null;
+  const e12 = emaArr(closes, 12), e26 = emaArr(closes, 26);
+  const ml = e12.map((v, i) => v - e26[i]);
+  const sl = emaArr(ml.slice(25), 9);
+  return { macd: ml[ml.length-1], signal: sl[sl.length-1], prevMacd: ml[ml.length-2], prevSignal: sl[sl.length-2] };
+}
+function calcBB(closes, period = 20) {
+  if (closes.length < period) return null;
+  const s = closes.slice(-period);
+  const mean = s.reduce((a, v) => a+v, 0) / period;
+  const std = Math.sqrt(s.reduce((a, v) => a+(v-mean)**2, 0) / period);
+  return { lower: mean - 2*std, price: closes[closes.length-1] };
+}
+function scoreStock(closes) {
+  const signals = [];
+  const rsi = calcRSI(closes);
+  if (rsi !== null && rsi <= 35) signals.push(`RSI ${rsi.toFixed(0)}`);
+  const macd = calcMACD(closes);
+  if (macd) {
+    if (macd.prevMacd <= macd.prevSignal && macd.macd > macd.signal)
+      signals.push('MACDゴールデンクロス');
+    else if (macd.macd > macd.signal && macd.macd < 0)
+      signals.push('MACD強気転換中');
+  }
+  const bb = calcBB(closes);
+  if (bb && bb.price <= bb.lower) signals.push('BB-2σ以下');
+  return { count: signals.length, signals, rsi };
+}
+
+let screening = { status: 'idle', date: '', results: [], done: 0, total: NIKKEI225.length };
+
+app.get('/api/screening', (_req, res) => {
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+  if (screening.status === 'done' && screening.date === today)
+    return res.json({ status: 'done', results: screening.results });
+  if (screening.status === 'running')
+    return res.json({ status: 'running', done: screening.done, total: screening.total });
+  screening = { status: 'running', date: today, results: [], done: 0, total: NIKKEI225.length };
+  runScreening(today);
+  res.json({ status: 'running', done: 0, total: NIKKEI225.length });
+});
+
+app.post('/api/screening/refresh', (_req, res) => {
+  if (screening.status === 'running') return res.json({ status: 'running' });
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+  screening = { status: 'running', date: today, results: [], done: 0, total: NIKKEI225.length };
+  runScreening(today);
+  res.json({ status: 'running', done: 0, total: NIKKEI225.length });
+});
+
+async function runScreening(date) {
+  const BATCH = 12, candidates = [];
+  for (let i = 0; i < NIKKEI225.length; i += BATCH) {
+    await Promise.all(NIKKEI225.slice(i, i+BATCH).map(async code => {
+      try {
+        const sym = `${code}.T`;
+        const r = await fetch(
+          `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=4mo`,
+          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+        );
+        const d = await r.json();
+        const result = d?.chart?.result?.[0];
+        const closes = result?.indicators?.quote?.[0]?.close?.filter(v => v != null);
+        if (!closes || closes.length < 35) return;
+        const score = scoreStock(closes);
+        if (score.count >= 2) candidates.push({
+          code, symbol: sym,
+          name: result.meta?.shortName || result.meta?.longName || code,
+          price: closes[closes.length-1],
+          signals: score.count, reasons: score.signals, rsi: score.rsi,
+        });
+      } catch {}
+      screening.done++;
+    }));
+    if (i + BATCH < NIKKEI225.length) await new Promise(r => setTimeout(r, 300));
+  }
+  candidates.sort((a, b) => b.signals - a.signals || (a.rsi||50) - (b.rsi||50));
+  screening.results = candidates.slice(0, 5);
+  screening.status = 'done';
+  screening.date = date;
+  console.log(`[screening] ${date} 完了: ${candidates.length}銘柄ヒット → 上位${screening.results.length}銘柄`);
+}
+
 const PORT = process.env.PORT || 8000;
 await initDb();
 app.listen(PORT, () => {

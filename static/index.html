@@ -668,6 +668,25 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .vs-record-item.hers { color:var(--hers); }
 .vs-record-sep { font-size:11px; color:var(--text-soft); font-weight:700; }
 
+/* ── スクリーニング ── */
+.screening-item { padding:10px 0; display:flex; align-items:flex-start; gap:10px; }
+.screening-item + .screening-item { border-top:1px solid var(--line-soft); }
+.screening-rank { font-size:20px; width:26px; flex-shrink:0; line-height:1.4; }
+.screening-info { flex:1; min-width:0; }
+.screening-name { font-size:14px; font-weight:700; }
+.screening-code { font-size:11px; color:var(--text-soft); margin-left:5px; }
+.screening-price { font-size:15px; font-weight:800; margin-top:2px; }
+.screening-reasons { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+.screening-tag { font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; background:var(--mine-bg); color:var(--mine); border:1px solid var(--mine-border); }
+.screening-sig { font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; margin-left:4px; }
+.screening-sig.s3 { background:#fff3cd; color:#856404; border:1px solid #ffe083; }
+.screening-sig.s2 { background:var(--hers-bg); color:var(--hers); border:1px solid var(--hers-border); }
+.screening-progress { text-align:center; padding:20px 0; color:var(--text-soft); font-size:13px; line-height:1.8; }
+.screening-prog-bar { height:5px; background:var(--line-soft); border-radius:3px; margin:8px 0 0; overflow:hidden; }
+.screening-prog-fill { height:100%; background:var(--mine); border-radius:3px; transition:width .4s; }
+.screening-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.screening-refresh-btn { font-size:11px; padding:4px 11px; border-radius:7px; border:1px solid var(--line-soft); background:var(--card); color:var(--text-soft); cursor:pointer; }
+
 /* ── 2人同時休み（きらびやか）── */
 .day-block.both-off {
   border:1.5px solid #e3c068; border-radius:16px;
@@ -870,6 +889,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <div id="tab-trades" class="screen">
       <div class="page-top">
         <div><div class="page-title">取引</div><div class="page-sub">売買の記録</div></div>
+      </div>
+      <div class="folio-card">
+        <div class="screening-head">
+          <div class="income-head" style="margin:0">買いスクリーニング（日経225）</div>
+          <button class="screening-refresh-btn" onclick="refreshScreening()">🔄 再スキャン</button>
+        </div>
+        <div id="screening-content"><div class="screening-progress">タブを開くと自動スキャンします</div></div>
+        <div class="folio-note">※ MACD・RSI・BBバンドで2つ以上の買いシグナルを検出。投資は自己責任で。</div>
       </div>
       <div class="folio-card">
         <div class="trades-filter" id="trades-filter"></div>
@@ -2008,6 +2035,7 @@ function showTab(name) {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
+  if (name === 'trades') { loadScreening(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
@@ -2019,6 +2047,74 @@ function showTab(name) {
     return;
   }
   window.scrollTo(0, 0);
+}
+
+// ── スクリーニング ──
+let _screeningPoll = null;
+
+async function loadScreening() {
+  const el = document.getElementById('screening-content');
+  if (!el) return;
+  try {
+    const d = await fetch('/api/screening').then(r => r.json());
+    handleScreeningResp(d);
+  } catch { el.innerHTML = '<div class="screening-progress">接続エラー</div>'; }
+}
+
+async function refreshScreening() {
+  const el = document.getElementById('screening-content');
+  if (!el) return;
+  if (_screeningPoll) { clearInterval(_screeningPoll); _screeningPoll = null; }
+  el.innerHTML = '<div class="screening-progress">🔍 スキャン開始中...</div>';
+  try {
+    const d = await fetch('/api/screening/refresh', { method:'POST' }).then(r => r.json());
+    handleScreeningResp(d);
+  } catch { el.innerHTML = '<div class="screening-progress">接続エラー</div>'; }
+}
+
+function handleScreeningResp(d) {
+  const el = document.getElementById('screening-content');
+  if (!el) return;
+  if (d.status === 'running') {
+    const pct = d.total > 0 ? Math.round(d.done / d.total * 100) : 0;
+    el.innerHTML = `<div class="screening-progress">🔍 スキャン中... ${d.done}/${d.total}銘柄 (${pct}%)<br><small>最大1分ほどかかります</small><div class="screening-prog-bar"><div class="screening-prog-fill" style="width:${pct}%"></div></div></div>`;
+    if (!_screeningPoll) {
+      _screeningPoll = setInterval(async () => {
+        try {
+          const dd = await fetch('/api/screening').then(r => r.json());
+          handleScreeningResp(dd);
+          if (dd.status !== 'running') { clearInterval(_screeningPoll); _screeningPoll = null; }
+        } catch {}
+      }, 3000);
+    }
+    return;
+  }
+  if (_screeningPoll) { clearInterval(_screeningPoll); _screeningPoll = null; }
+  if (d.status === 'done') renderScreeningResults(d.results);
+}
+
+function renderScreeningResults(results) {
+  const el = document.getElementById('screening-content');
+  if (!el) return;
+  const today = new Date().toLocaleDateString('ja-JP', { timeZone:'Asia/Tokyo', month:'long', day:'numeric' });
+  if (!results || results.length === 0) {
+    el.innerHTML = `<div class="screening-progress">本日（${today}）は条件を満たす銘柄がありませんでした</div>`;
+    return;
+  }
+  const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+  el.innerHTML = `<div style="font-size:10px;color:var(--text-soft);margin-bottom:8px">${today} スキャン結果</div>` +
+    results.map((s, i) => {
+      const sigCls = s.signals >= 3 ? 's3' : 's2';
+      const tags = s.reasons.map(r => `<span class="screening-tag">${r}</span>`).join('');
+      return `<div class="screening-item">
+        <span class="screening-rank">${medals[i]||'•'}</span>
+        <div class="screening-info">
+          <div><span class="screening-name">${s.name}</span><span class="screening-code">${s.code}</span><span class="screening-sig ${sigCls}">${s.signals}/3シグナル</span></div>
+          <div class="screening-price">¥${s.price.toLocaleString(undefined,{maximumFractionDigits:1})}</div>
+          <div class="screening-reasons">${tags}</div>
+        </div>
+      </div>`;
+    }).join('');
 }
 
 // ── AVATARS ──
