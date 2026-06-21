@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {} });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [] });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -43,39 +43,33 @@ export async function initDb() {
     }
     console.log('[db] ローカルファイル data.json を使用（クラウドでは消えます）');
   }
-  await loadPhotoCache();
-  await migratePhotosToSeparateStore(); // 旧来のインライン画像を分離
-  await migratePhotoSingleToMulti();   // 写真1枚→複数枚形式へ
+  await migratePhotosToSeparateStore(); // 旧来のインライン画像を分離（photoIndex更新前に実行）
+  await migratePhotoSingleToMulti();   // 写真1枚→複数枚形式へ（photoIndex更新前に実行）
+  await buildPhotoIndexFromHash();     // 初回: Redis hash から photoIndex を構築
+  await loadPhotoCache();             // photoIndex を元に個別 hget で写真を取得
   await mergeDuplicateHoldings();
 }
 
-// HSCAN で Redis Hash を少量ずつ読む（hgetall は 1MB 制限で大量の写真に失敗するため）
-async function hscanAll(key) {
-  const result = {};
-  let cursor = 0;
-  let batches = 0;
-  do {
-    const [nextCursor, entries] = await redis.hscan(key, cursor, { count: 3 });
-    const arr = entries || [];
-    for (let i = 0; i + 1 < arr.length; i += 2) {
-      if (arr[i]) result[arr[i]] = arr[i + 1];
-    }
-    cursor = typeof nextCursor === 'number' ? nextCursor : (parseInt(nextCursor) || 0);
-    if (++batches > 2000) break;
-  } while (cursor !== 0);
-  return result;
-}
-
-// 写真専用ストアをロード（HSCAN で少量ずつ取得 — hgetall だと 1MB 制限に引っかかる）
+// 写真専用ストアをロード
+// photoIndex（メインblobに保存）を元に個別 hget で 1 枚ずつ取得する。
+// hgetall / hscan は Upstash 無料プランの 1MB レスポンス制限でファイルが増えると失敗するため使わない。
 async function loadPhotoCache() {
   if (useRedis) {
-    try {
-      photoCache = await hscanAll(PHOTOS_KEY);
-      console.log(`[db] 写真ストア: ${Object.keys(photoCache).length} 件`);
-    } catch (e) {
-      console.error('[db] 写真ストア読み込み失敗:', e.message);
-      photoCache = {};
+    photoCache = {};
+    const index = cache.photoIndex || [];
+    let loaded = 0;
+    for (const entry of index) {
+      try {
+        const v = await redis.hget(PHOTOS_KEY, entry.field);
+        if (v !== null && v !== undefined) {
+          photoCache[entry.field] = typeof v === 'string' ? v : JSON.stringify(v);
+          loaded++;
+        }
+      } catch (e) {
+        console.error(`[db] 写真hget失敗(${entry.field}):`, e.message);
+      }
     }
+    console.log(`[db] 写真ストア: ${loaded}/${index.length} 件`);
   } else {
     try {
       photoCache = JSON.parse(fs.readFileSync(PHOTOS_FILE, 'utf8'));
@@ -87,11 +81,50 @@ async function loadPhotoCache() {
 // 起動後に写真キャッシュをRedisから再ロード（エラーリカバリ用）
 export async function reloadPhotoCache() {
   if (!useRedis) return;
+  const index = cache.photoIndex || [];
+  let loaded = 0;
+  for (const entry of index) {
+    try {
+      const v = await redis.hget(PHOTOS_KEY, entry.field);
+      if (v !== null && v !== undefined) {
+        photoCache[entry.field] = typeof v === 'string' ? v : JSON.stringify(v);
+        loaded++;
+      }
+    } catch (e) {
+      console.error(`[db] 写真再ロードhget失敗(${entry.field}):`, e.message);
+    }
+  }
+  console.log(`[db] 写真ストア再ロード: ${loaded}/${index.length} 件`);
+}
+
+// 既存の Redis hash から photoIndex を構築（初回デプロイ時の1回限りマイグレーション）
+// HKEYS はフィールド名のみ返す（写真データ含まず）ため 1MB 制限に引っかからない
+async function buildPhotoIndexFromHash() {
+  if (!useRedis) return;
+  if ((cache.photoIndex || []).length > 0) return; // 既にインデックスあり → スキップ
   try {
-    photoCache = await hscanAll(PHOTOS_KEY);
-    console.log(`[db] 写真ストア再ロード: ${Object.keys(photoCache).length} 件`);
+    const fields = await redis.hkeys(PHOTOS_KEY);
+    if (!fields || fields.length === 0) {
+      if (!cache.photoIndex) { cache.photoIndex = []; await persist(); }
+      console.log('[db] 写真hash: フィールドなし（新規または空）');
+      return;
+    }
+    cache.photoIndex = fields
+      .filter(f => f.startsWith('photo:') || f.startsWith('memo-img:'))
+      .map(field => {
+        let date = null;
+        if (field.startsWith('photo:')) {
+          const rest = field.slice(6);
+          const sep = rest.indexOf(':');
+          if (sep >= 0) date = rest.slice(0, sep);
+        }
+        return { field, person: null, date };
+      });
+    await persist();
+    console.log(`[db] 写真インデックス構築完了: ${cache.photoIndex.length} 件`);
   } catch (e) {
-    console.error('[db] 写真ストア再ロード失敗:', e.message);
+    console.error('[db] 写真インデックス構築失敗:', e.message);
+    if (!cache.photoIndex) { cache.photoIndex = []; await persist(); }
   }
 }
 
@@ -529,13 +562,17 @@ export async function addMemo(m) {
   };
   if (m.img) entry.hasImg = true; // 画像は分離ストアへ、フラグのみ本体に
   cache.memos.push(entry);
-  await persist();
   if (m.img) {
     const field = `memo-img:${id}`;
     photoCache[field] = m.img;
+    if (!cache.photoIndex) cache.photoIndex = [];
+    if (!cache.photoIndex.some(e => e.field === field)) {
+      cache.photoIndex.push({ field, person: entry.person || null, date: null });
+    }
     if (useRedis) await redis.hset(PHOTOS_KEY, { [field]: m.img });
     else await persistPhotos();
   }
+  await persist();
   return id;
 }
 
@@ -546,12 +583,17 @@ export async function setMemoImage(id, img) {
   if (img) {
     photoCache[field] = img;
     m.hasImg = true;
+    if (!cache.photoIndex) cache.photoIndex = [];
+    if (!cache.photoIndex.some(e => e.field === field)) {
+      cache.photoIndex.push({ field, person: m.person || null, date: null });
+    }
     if (useRedis) await redis.hset(PHOTOS_KEY, { [field]: img });
     else await persistPhotos();
-    await persist(); // hasImg フラグを保存
+    await persist();
   } else {
     delete photoCache[field];
     delete m.hasImg;
+    if (cache.photoIndex) cache.photoIndex = cache.photoIndex.filter(e => e.field !== field);
     if (useRedis) await redis.hdel(PHOTOS_KEY, field);
     else await persistPhotos();
     await persist();
@@ -566,6 +608,7 @@ export async function deleteMemo(id) {
   const field = `memo-img:${id}`;
   if (photoCache[field]) {
     delete photoCache[field];
+    if (cache.photoIndex) cache.photoIndex = cache.photoIndex.filter(e => e.field !== field);
     if (useRedis) await redis.hdel(PHOTOS_KEY, field);
     else await persistPhotos();
   }
@@ -633,10 +676,16 @@ export async function addPhoto(date, person, img) {
   const field = `photo:${date}:${id}`;
   const value = JSON.stringify({ person: person || null, img });
   photoCache[field] = value;
+  // photoIndex を更新してメインblobに保存（起動時に個別 hget で参照するため）
+  if (!cache.photoIndex) cache.photoIndex = [];
+  if (!cache.photoIndex.some(e => e.field === field)) {
+    cache.photoIndex.push({ field, person: person || null, date });
+  }
   if (useRedis) {
     try { await redis.hset(PHOTOS_KEY, { [field]: value }); }
     catch (e) { console.error('[db] 写真保存失敗:', e.message); }
   } else await persistPhotos();
+  await persist(); // photoIndex を永続化
   return id;
 }
 
@@ -644,10 +693,13 @@ export async function deletePhoto(date, id) {
   const field = `photo:${date}:${id}`;
   if (!photoCache[field]) return false;
   delete photoCache[field];
+  // photoIndex からも削除
+  if (cache.photoIndex) cache.photoIndex = cache.photoIndex.filter(e => e.field !== field);
   if (useRedis) {
     try { await redis.hdel(PHOTOS_KEY, field); }
     catch (e) { console.error('[db] 写真削除失敗:', e.message); }
   } else await persistPhotos();
+  await persist(); // photoIndex を永続化
   return true;
 }
 
