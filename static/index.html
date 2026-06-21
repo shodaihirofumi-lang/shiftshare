@@ -2107,13 +2107,14 @@ function renderScreeningResults(results) {
       const sigCls = s.signals >= 3 ? 's3' : 's2';
       const tags = s.reasons.map(r => `<span class="screening-tag">${r}</span>`).join('');
       const jaName = STOCK_JA[s.symbol] || s.name;
-      return `<div class="screening-item">
+      return `<div class="screening-item" onclick="openStockChart('${s.symbol}','${jaName.replace(/'/g,'')}')" style="cursor:pointer">
         <span class="screening-rank">${medals[i]||'•'}</span>
         <div class="screening-info">
           <div><span class="screening-name">${jaName}</span><span class="screening-code">${s.code}</span><span class="screening-sig ${sigCls}">${s.signals}/3シグナル</span></div>
           <div class="screening-price">¥${s.price.toLocaleString(undefined,{maximumFractionDigits:1})}</div>
           <div class="screening-reasons">${tags}</div>
         </div>
+        <span style="font-size:16px;color:var(--text-soft);align-self:center">›</span>
       </div>`;
     }).join('');
 }
