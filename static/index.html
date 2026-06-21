@@ -2833,15 +2833,6 @@ function renderDiary() {
       <div class="diary-photo-btn-area" id="diary-photo-area-${dateKey}">${diaryPhotoAreaHtml(dateKey, photos)}</div>
       ${tmpl ? `<div class="diary-lines">${tmpl}</div>` : ''}
       <div class="diary-section">
-        <div class="diary-section-label sl-mine">ひろの日記</div>
-        <textarea class="diary-textarea ta-mine" id="diary-raw-mine-${dateKey}" placeholder="今日のことを書いてみよう...">${rawMine}</textarea>
-        <div class="diary-person-btns">
-          <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','mine')">保存</button>
-          <button class="diary-btn-person diary-btn-person-mine" id="diary-gen-mine-${dateKey}" onclick="generatePersonDiary('${dateKey}','mine')">✨ まとめる</button>
-        </div>
-        <div id="diary-sum-mine-${dateKey}">${mkSum('mine','ひろ','sl-mine')}</div>
-      </div>
-      <div class="diary-section">
         <div class="diary-section-label sl-hers">ちかの日記</div>
         <textarea class="diary-textarea ta-hers" id="diary-raw-hers-${dateKey}" placeholder="今日のことを書いてみよう...">${rawHers}</textarea>
         <div class="diary-person-btns">
@@ -2849,6 +2840,15 @@ function renderDiary() {
           <button class="diary-btn-person diary-btn-person-hers" id="diary-gen-hers-${dateKey}" onclick="generatePersonDiary('${dateKey}','hers')">✨ まとめる</button>
         </div>
         <div id="diary-sum-hers-${dateKey}">${mkSum('hers','ちか','sl-hers')}</div>
+      </div>
+      <div class="diary-section">
+        <div class="diary-section-label sl-mine">ひろの日記</div>
+        <textarea class="diary-textarea ta-mine" id="diary-raw-mine-${dateKey}" placeholder="今日のことを書いてみよう...">${rawMine}</textarea>
+        <div class="diary-person-btns">
+          <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','mine')">保存</button>
+          <button class="diary-btn-person diary-btn-person-mine" id="diary-gen-mine-${dateKey}" onclick="generatePersonDiary('${dateKey}','mine')">✨ まとめる</button>
+        </div>
+        <div id="diary-sum-mine-${dateKey}">${mkSum('mine','ひろ','sl-mine')}</div>
       </div>
       ${hasDiary ? `<div class="diary-actions"><button class="diary-btn-del" id="diary-del-${dateKey}" onclick="deleteDiary('${dateKey}')">削除</button></div>` : ''}
     </div>`;
