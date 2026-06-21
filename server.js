@@ -20,7 +20,7 @@ import {
   getNotes, addNote, deleteNote, toggleNote,
   getMemos, addMemo, deleteMemo, editMemo, setMemoImage,
   getPhotos, getPhoto, setPhoto,
-  getDiaries, getDiary, setDiary,
+  getDiaries, getDiary, setDiary, getMonthlyDiaries, setMonthlyDiary,
   getNotifiedOff, markNotifiedOff,
 } from './db.js';
 
@@ -557,17 +557,20 @@ app.post('/api/diary/save', async (req, res) => {
   res.json({ success: true });
 });
 
-// AI日記まとめ（ひろ+ちかの原文をひとつにまとめる）
+// AI日記まとめ（person別、note.com投稿形式）
 app.post('/api/diary/generate', async (req, res) => {
-  const { date, rawMine, rawHers } = req.body;
-  if (!date) return res.status(400).json({ error: 'date が必要です' });
-  if (!rawMine && !rawHers) return res.status(400).json({ error: '日記を書いてください' });
+  const { date, person, raw } = req.body;
+  if (!date || !['mine','hers'].includes(person) || !raw)
+    return res.status(400).json({ error: 'date, person, raw が必要です' });
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
   try {
-    const parts = [];
-    if (rawMine) parts.push(`ひろ: ${rawMine}`);
-    if (rawHers) parts.push(`ちか: ${rawHers}`);
-    const prompt = `${date}のカップルの日記です。ふたりが書いた内容を変えずに、ひとつの自然な日記文としてまとめてください。2〜5文、箇条書き不要。\n\n${parts.join('\n')}`;
+    const personName = person === 'mine' ? 'ひろ' : 'ちか';
+    const prompt = `以下は${personName}が書いた${date}の日記です。
+note.comに投稿できる読み物として、見出し（##）を使いながら、読者を意識した文章にまとめてください。
+${personName}の言葉のくせや個性はそのまま活かしてください。箇条書きは避け、自然な文章の流れで書いてください。
+
+${personName}の日記:
+${raw}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -577,7 +580,7 @@ app.post('/api/diary/generate', async (req, res) => {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 600,
+        max_tokens: 800,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
@@ -588,10 +591,59 @@ app.post('/api/diary/generate', async (req, res) => {
     const data = await response.json();
     const text = data.content?.[0]?.text?.trim() || '';
     const existing = getDiary(date) || {};
-    await setDiary(date, { ...existing, text, generatedAt: Date.now() });
+    await setDiary(date, { ...existing, [person]: { ...(existing[person]||{}), text, generatedAt: Date.now() } });
     res.json({ success: true, text });
   } catch (e) {
     console.error('[diary/generate]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 月間まとめ
+app.get('/api/monthly-diaries', (_req, res) => res.json(getMonthlyDiaries()));
+app.post('/api/diary/monthly', async (req, res) => {
+  const { yearMonth } = req.body;
+  if (!yearMonth) return res.status(400).json({ error: 'yearMonth が必要です' });
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
+  const diaries = getDiaries();
+  const entries = [];
+  for (const [date, d] of Object.entries(diaries)) {
+    if (!date.startsWith(yearMonth)) continue;
+    if (d.mine?.text || d.mine?.raw) entries.push({ date, name: 'ひろ', text: d.mine.text || d.mine.raw });
+    if (d.hers?.text || d.hers?.raw) entries.push({ date, name: 'ちか', text: d.hers.text || d.hers.raw });
+  }
+  if (!entries.length) return res.status(400).json({ error: `${yearMonth}の日記がありません` });
+  entries.sort((a, b) => a.date.localeCompare(b.date));
+  const [y, m] = yearMonth.split('-');
+  const prompt = `以下は${y}年${m}月のカップル（ひろとちか）の日記です。
+note.comに投稿できる月間ブログ記事として、見出し（##）を使いながら、読者が楽しめる文章にまとめてください。
+ふたりそれぞれの個性・言葉のくせを活かし、1ヶ月を振り返る読んで楽しいブログ記事風に。
+
+${entries.map(e => `【${e.name} ${e.date}】\n${e.text}`).join('\n\n')}`;
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+    if (!response.ok) {
+      const e = await response.json().catch(() => ({}));
+      throw new Error(e.error?.message || `API error ${response.status}`);
+    }
+    const data = await response.json();
+    const text = data.content?.[0]?.text?.trim() || '';
+    await setMonthlyDiary(yearMonth, { text, generatedAt: Date.now() });
+    res.json({ success: true, text });
+  } catch (e) {
+    console.error('[diary/monthly]', e.message);
     res.status(500).json({ error: e.message });
   }
 });

@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {} });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {} });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -580,6 +580,13 @@ export async function setDiary(date, data) {
   if (!cache.diaries) cache.diaries = {};
   if (data) cache.diaries[date] = data;
   else delete cache.diaries[date];
+  await persist();
+}
+export function getMonthlyDiaries() { return cache.monthlyDiaries || {}; }
+export async function setMonthlyDiary(ym, data) {
+  if (!cache.monthlyDiaries) cache.monthlyDiaries = {};
+  if (data) cache.monthlyDiaries[ym] = data;
+  else delete cache.monthlyDiaries[ym];
   await persist();
 }
 
