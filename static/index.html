@@ -653,31 +653,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .pnl-realized-row { font-size:11px; font-weight:700; margin-top:2px; display:block; }
 .pnl-realized-row.up { color:#c0392b; } .pnl-realized-row.down { color:#2e6da4; }
 
-/* ── 歩数 ── */
-.steps-row { display:flex; align-items:center; gap:8px; padding:7px 0; }
-.steps-row + .steps-row { border-top:1px solid var(--line-soft); }
-.steps-name { font-size:13px; font-weight:800; width:34px; flex-shrink:0; }
-.steps-name.mine { color:var(--mine); }
-.steps-name.hers { color:var(--hers); }
-.steps-num { font-size:17px; font-weight:900; color:var(--text); white-space:nowrap; }
-.steps-num small { font-size:11px; font-weight:700; color:var(--text-soft); margin-left:3px; }
-.steps-crown { font-size:15px; }
-.steps-bar-wrap { display:block; flex:1; height:10px; background:var(--bg); border-radius:5px; overflow:hidden; min-width:40px; }
-.steps-bar { display:block; height:100%; border-radius:5px; }
-.steps-bar.mine { background:var(--mine); }
-.steps-bar.hers { background:var(--hers); }
-.steps-week-title { font-size:12px; font-weight:700; color:var(--text-soft); margin:12px 0 4px; }
-.steps-week-row { display:flex; align-items:center; gap:8px; padding:3px 0; }
-.steps-week-date { width:50px; font-size:11px; color:var(--text-soft); flex-shrink:0; }
-.steps-week-bars { flex:1; display:flex; flex-direction:column; gap:3px; min-width:0; }
-.steps-wk-line { display:flex; align-items:center; gap:6px; }
-.steps-wk-bar { height:7px; border-radius:4px; min-width:2px; }
-.steps-wk-bar.mine { background:var(--mine); }
-.steps-wk-bar.hers { background:var(--hers); }
-.steps-wk-val { font-size:11px; font-weight:700; white-space:nowrap; }
-.st-btn { padding:5px 14px; border:1px solid var(--line); background:var(--card); color:var(--text-soft); border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; }
-.st-btn.active { background:var(--accent,#2e6da4); color:#fff; border-color:transparent; }
-
 /* ── 損益 VS バトル ── */
 .vs-card { background:var(--bg); border-radius:16px; padding:22px 16px 18px; margin-bottom:14px; }
 .vs-row { display:flex; align-items:center; justify-content:space-between; gap:4px; }
@@ -774,29 +749,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="leg"><span class="leg-ava mine" id="leg-ava-mine"></span><span id="leg-name-mine">ひろ</span></div>
         <div class="leg"><span class="leg-ava hers" id="leg-ava-hers"></span><span id="leg-name-hers">ちか</span></div>
         <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div>ふたり休み</div>
-      </div>
-      <div class="folio-card" id="steps-card">
-        <div class="income-head">👟 今日の歩数バトル</div>
-        <div id="steps-today"></div>
-        <div id="steps-week"></div>
-        <details class="folio-manage">
-          <summary>手動入力・目標設定</summary>
-          <div class="gcal-body">
-            <div class="ev-person-toggle">
-              <button class="st-btn active" data-p="mine" onclick="setStepPerson('mine')">ひろ</button>
-              <button class="st-btn" data-p="hers" onclick="setStepPerson('hers')">ちか</button>
-            </div>
-            <div class="ev-add-row">
-              <input id="st-steps" class="ev-in" type="number" inputmode="numeric" placeholder="今日の歩数">
-              <button class="ev-add-btn" onclick="saveStepFromUI()">記録</button>
-            </div>
-            <div class="ev-add-row">
-              <input id="st-goal" class="ev-in" type="number" inputmode="numeric" placeholder="目標歩数（例 8000）">
-              <button class="ev-add-btn" onclick="saveStepGoalFromUI()">目標</button>
-            </div>
-          </div>
-        </details>
-        <div class="folio-note">※ iPhoneは「ショートカット」、Androidは自動化アプリから毎日自動で記録できます。手動入力でもOK。</div>
       </div>
       <div class="nikkei-card">
         <div class="nk-head">日経平均株価</div>
@@ -1269,7 +1221,6 @@ async function enterApp() {
   loadDayPhotos();
   loadDiaries();
   loadMonthlyDiaries();
-  loadSteps();
   setupPush();
   // ふたり休みが近づいていたら通知（未通知の日だけ送る）
   fetch('/api/check-both-off-notify').catch(() => {});
@@ -2262,85 +2213,6 @@ function resizeImage(file, max) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-}
-
-// ── STEPS（歩数バトル）──
-let stepPerson = 'mine';
-let stepsData = { steps: {}, goal: 8000 };
-function localDateKey(d = new Date()) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-function setStepPerson(p) {
-  stepPerson = p;
-  document.querySelectorAll('#steps-card .st-btn').forEach(b => b.classList.toggle('active', b.dataset.p === p));
-}
-async function loadSteps() {
-  try { stepsData = await fetch('/api/steps').then(r => r.json()); }
-  catch { stepsData = { steps: {}, goal: 8000 }; }
-  renderSteps();
-}
-function renderSteps() {
-  const elT = document.getElementById('steps-today');
-  if (!elT) return;
-  const steps = stepsData.steps || {};
-  const goal = stepsData.goal || 8000;
-  const today = steps[localDateKey()] || {};
-  const maxToday = Math.max(goal, today.mine || 0, today.hers || 0, 1);
-  const mineV = today.mine, hersV = today.hers;
-  const winner = (mineV == null && hersV == null) ? null
-    : (mineV || 0) === (hersV || 0) ? null
-    : (mineV || 0) > (hersV || 0) ? 'mine' : 'hers';
-  const row = (p) => {
-    const v = today[p];
-    const pct = v != null ? Math.round((v / goal) * 100) : 0;
-    const w = v != null ? Math.min(100, (v / maxToday) * 100) : 0;
-    const crown = (winner === p) ? ' <span class="steps-crown">👑</span>' : '';
-    const num = v != null ? `${v.toLocaleString()}<small>歩 / 目標${pct}%</small>` : `<small>未記録</small>`;
-    return `<div class="steps-row"><span class="steps-name ${p}">${NAMES[p]}</span><span class="steps-num">${num}</span>${crown}<span class="steps-bar-wrap"><span class="steps-bar ${p}" style="width:${w}%"></span></span></div>`;
-  };
-  elT.innerHTML = row('mine') + row('hers');
-
-  // 直近7日
-  const wkEl = document.getElementById('steps-week');
-  if (wkEl) {
-    let maxWk = goal;
-    for (const d of Object.values(steps)) maxWk = Math.max(maxWk, d.mine || 0, d.hers || 0);
-    const dows = ['日','月','火','水','木','金','土'];
-    let wk = '';
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const day = steps[localDateKey(d)] || {};
-      const line = (p) => {
-        const v = day[p];
-        const w = v ? Math.min(100, (v / maxWk) * 100) : 0;
-        return `<div class="steps-wk-line"><div class="steps-wk-bar ${p}" style="width:${w}%"></div><span class="steps-wk-val" style="color:var(--${p})">${v ? v.toLocaleString() : '—'}</span></div>`;
-      };
-      wk += `<div class="steps-week-row"><span class="steps-week-date">${d.getMonth()+1}/${d.getDate()}(${dows[d.getDay()]})</span><span class="steps-week-bars">${line('mine')}${line('hers')}</span></div>`;
-    }
-    wkEl.innerHTML = `<div class="steps-week-title">この1週間</div>${wk}`;
-  }
-}
-async function saveStepFromUI() {
-  const inp = document.getElementById('st-steps');
-  const v = inp.value;
-  if (v === '' || Number(v) < 0) { showToast('歩数を入力してください', true); return; }
-  try {
-    await fetch('/api/steps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ person: stepPerson, steps: Number(v), date: localDateKey() }) });
-    inp.value = '';
-    showToast(`${NAMES[stepPerson]}の歩数を記録しました`);
-    await loadSteps();
-  } catch { showToast('記録に失敗しました', true); }
-}
-async function saveStepGoalFromUI() {
-  const inp = document.getElementById('st-goal');
-  const v = inp.value;
-  if (!v || Number(v) < 1) { showToast('目標歩数を入力してください', true); return; }
-  try {
-    await fetch('/api/step-goal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal: Number(v) }) });
-    inp.value = '';
-    showToast('目標を設定しました');
-    await loadSteps();
-  } catch { showToast('設定に失敗しました', true); }
 }
 
 // ── CALENDAR ──

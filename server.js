@@ -12,7 +12,6 @@ import {
   getEvents, addEvent, deleteEvent,
   getWages, saveWage,
   getLocations, saveLocation,
-  getSteps, saveSteps, saveStepGoal,
   getExpenses, addExpense, deleteExpense,
   getGcalUrls, saveGcalUrl,
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
@@ -46,8 +45,6 @@ const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:admin@example.com';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const BASE_URL = process.env.BASE_URL || 'https://shiftshare.onrender.com';
-// 歩数の自動POST用トークン（スマホのショートカット/自動化アプリ用）。未設定なら認証なしで受け付ける。
-const STEPS_TOKEN = process.env.STEPS_TOKEN || '';
 const GOOGLE_REDIRECT = `${BASE_URL}/api/google/callback`;
 const TASKS_SCOPE = 'https://www.googleapis.com/auth/tasks.readonly';
 
@@ -717,34 +714,6 @@ app.post('/api/wage', async (req, res) => {
     return res.status(400).json({ error: 'person は mine または hers のみ' });
   }
   await saveWage(person, wage);
-  res.json({ success: true });
-});
-
-// ── STEPS（歩数。iPhoneショートカット / Android自動化アプリから自動POST）──
-const jstToday = () => {
-  const d = new Date(Date.now() + 9 * 3600 * 1000);
-  return d.toISOString().slice(0, 10);
-};
-app.get('/api/steps', (_req, res) => res.json(getSteps()));
-app.post('/api/steps', async (req, res) => {
-  const { token, person, steps } = req.body;
-  if (STEPS_TOKEN && token !== STEPS_TOKEN) {
-    return res.status(401).json({ error: 'token が違います' });
-  }
-  if (!['mine', 'hers'].includes(person)) {
-    return res.status(400).json({ error: 'person は mine（ひろ）または hers（ちか）のみ' });
-  }
-  const n = Number(steps);
-  if (!Number.isFinite(n) || n < 0) {
-    return res.status(400).json({ error: 'steps は0以上の数値で' });
-  }
-  // date は YYYY-MM-DD。スマホ側の現地日付を優先、無ければ日本時間の今日。
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(req.body.date || '') ? req.body.date : jstToday();
-  await saveSteps(date, person, n);
-  res.json({ success: true, date, person, steps: Math.round(n) });
-});
-app.post('/api/step-goal', async (req, res) => {
-  await saveStepGoal(req.body.goal);
   res.json({ success: true });
 });
 
