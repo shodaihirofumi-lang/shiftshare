@@ -2106,10 +2106,11 @@ function renderScreeningResults(results) {
     results.map((s, i) => {
       const sigCls = s.signals >= 3 ? 's3' : 's2';
       const tags = s.reasons.map(r => `<span class="screening-tag">${r}</span>`).join('');
+      const jaName = STOCK_JA[s.symbol] || s.name;
       return `<div class="screening-item">
         <span class="screening-rank">${medals[i]||'•'}</span>
         <div class="screening-info">
-          <div><span class="screening-name">${s.name}</span><span class="screening-code">${s.code}</span><span class="screening-sig ${sigCls}">${s.signals}/3シグナル</span></div>
+          <div><span class="screening-name">${jaName}</span><span class="screening-code">${s.code}</span><span class="screening-sig ${sigCls}">${s.signals}/3シグナル</span></div>
           <div class="screening-price">¥${s.price.toLocaleString(undefined,{maximumFractionDigits:1})}</div>
           <div class="screening-reasons">${tags}</div>
         </div>
