@@ -613,15 +613,25 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .pnl-total-item .pnl-who { font-size:11px; }
 
 /* ── 月別バトル一覧 ── */
-.mb-row { display:flex; align-items:center; gap:8px; padding:9px 0; }
+.mb-row { display:flex; align-items:center; gap:6px; padding:8px 0; }
 .mb-row + .mb-row { border-top:1px solid var(--line-soft); }
-.mb-month-label { font-size:12px; font-weight:700; color:var(--text-soft); width:28px; flex-shrink:0; }
-.mb-rates { display:flex; align-items:center; gap:6px; flex:1; min-width:0; }
-.mb-rate { font-size:13px; font-weight:800; min-width:52px; white-space:nowrap; }
-.mb-mini-bar { flex:1; height:7px; border-radius:4px; overflow:hidden; display:flex; }
-.mb-mini-bar-hers { background:var(--hers); }
-.mb-mini-bar-mine { background:var(--mine); }
-.mb-win { font-size:11px; font-weight:700; flex-shrink:0; min-width:44px; text-align:right; }
+.mb-month-label { font-size:12px; font-weight:700; color:var(--text-soft); width:26px; flex-shrink:0; }
+.mb-player { display:flex; align-items:center; gap:4px; padding:5px 9px; border-radius:9px; flex-shrink:0; min-width:82px; }
+.mb-player.winner.hers { background:var(--hers-bg); border:1.5px solid var(--hers-border); }
+.mb-player.winner.mine { background:var(--mine-bg); border:1.5px solid var(--mine-border); }
+.mb-player:not(.winner) { opacity:.65; }
+.mb-player-crown { font-size:13px; flex-shrink:0; }
+.mb-player-name { font-size:11px; font-weight:800; }
+.mb-player-name.mine { color:var(--mine); }
+.mb-player-name.hers { color:var(--hers); }
+.mb-player-rate { font-size:15px; font-weight:900; margin-left:3px; }
+.mb-player-rate.up { color:#c0392b; }
+.mb-player-rate.down { color:#2e6da4; }
+.mb-middle { flex:1; display:flex; flex-direction:column; align-items:stretch; gap:3px; min-width:0; }
+.mb-bar { height:7px; border-radius:4px; overflow:hidden; display:flex; }
+.mb-bar-hers { background:var(--hers); }
+.mb-bar-mine { background:var(--mine); }
+.mb-diff { font-size:9px; color:var(--text-soft); text-align:center; }
 
 /* ── 日別バトル行 ── */
 .pnl-battle-row { padding:10px 0; }
@@ -1829,17 +1839,26 @@ function renderPnlHistory() {
       }
       const div = calcDiv(r.mine, r.hers);
       const w = Math.abs(r.mine-r.hers) < 0.01 ? null : r.mine > r.hers ? 'mine' : 'hers';
+      const diffAbs = Math.abs(r.mine - r.hers);
+      const diffStr = diffAbs >= 0.01 ? `差 ${diffAbs.toFixed(2)}%` : '同率';
+      const mkMbPlayer = (p, isW) => {
+        const cls = isW ? ` winner ${p}` : '';
+        const style = isW ? `background:var(--${p}-bg);border:1.5px solid var(--${p}-border);` : 'border:1.5px solid transparent;';
+        const crown = isW ? `<span class="mb-player-crown">👑</span>` : '';
+        const rateCls = r[p] >= 0 ? 'up' : 'down';
+        return `<div class="mb-player${cls}" style="${style}">${crown}<div><span class="mb-player-name ${p}">${NAMES[p]}</span><br><span class="mb-player-rate ${rateCls}">${fmtR(r[p])}</span></div></div>`;
+      };
       mbHtml += `<div class="mb-row">
         <span class="mb-month-label">${m}月</span>
-        <div class="mb-rates">
-          <span class="mb-rate" style="color:var(--hers)">${fmtR(r.hers)}</span>
-          <div class="mb-mini-bar">
-            <div class="mb-mini-bar-hers" style="width:${((1-div)*100).toFixed(1)}%"></div>
-            <div class="mb-mini-bar-mine" style="width:${(div*100).toFixed(1)}%"></div>
+        ${mkMbPlayer('hers', w==='hers')}
+        <div class="mb-middle">
+          <div class="mb-bar">
+            <div class="mb-bar-hers" style="width:${((1-div)*100).toFixed(1)}%"></div>
+            <div class="mb-bar-mine" style="width:${(div*100).toFixed(1)}%"></div>
           </div>
-          <span class="mb-rate" style="color:var(--mine)">${fmtR(r.mine)}</span>
+          <span class="mb-diff">${w ? diffStr : '⚖️同率'}</span>
         </div>
-        <span class="mb-win">${w ? '👑'+NAMES[w] : '⚖️'}</span>
+        ${mkMbPlayer('mine', w==='mine')}
       </div>`;
     }
     mbEl.innerHTML = mbHtml || '<div class="ev-empty">データがありません</div>';
