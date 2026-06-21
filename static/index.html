@@ -2798,10 +2798,10 @@ function renderDiary() {
         <textarea class="diary-textarea ta-hers" id="diary-raw-hers-${dateKey}" placeholder="今日のことを書いてみよう...">${rawHers}</textarea>
         <div class="diary-person-row"><button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','hers')">保存</button></div>
       </div>
-      ${summaryHtml}
+      <div class="diary-summary-section">${summaryHtml}</div>
       <div class="diary-actions">
         <button class="diary-btn-ai" id="diary-btn-${dateKey}" onclick="generateDiary('${dateKey}')">✨ まとめる</button>
-        ${hasDiary ? `<button class="diary-btn-del" onclick="deleteDiary('${dateKey}')">削除</button>` : ''}
+        ${hasDiary ? `<button class="diary-btn-del" id="diary-del-${dateKey}" onclick="deleteDiary('${dateKey}')">削除</button>` : ''}
       </div>
     </div>`;
   }
@@ -2838,13 +2838,32 @@ async function generateDiary(dateKey) {
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || 'まとめに失敗しました');
+
+    // allDiaries を更新
     if (!allDiaries[dateKey]) allDiaries[dateKey] = {};
     allDiaries[dateKey].text = data.text;
     allDiaries[dateKey].generatedAt = Date.now();
-    renderDiary();
-    showToast('まとめました');
+
+    // テキストエリアを消さずにサマリーだけ部分更新
+    const summaryWrap = document.querySelector(`#diary-${dateKey} .diary-summary-section`);
+    if (summaryWrap) {
+      const dateStr = new Date().toLocaleDateString('ja-JP');
+      summaryWrap.innerHTML = `<div class="diary-section">
+        <div class="diary-section-label sl-ai">✨ まとめ</div>
+        <div class="diary-ai-text">${escapeHtml(data.text)}</div>
+        <div class="diary-ai-footer">まとめ日 ${dateStr}</div>
+      </div>`;
+      summaryWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    // 削除ボタンを追加（まだなければ）
+    const actions = document.querySelector(`#diary-${dateKey} .diary-actions`);
+    if (actions && !document.getElementById(`diary-del-${dateKey}`)) {
+      actions.insertAdjacentHTML('beforeend', `<button class="diary-btn-del" id="diary-del-${dateKey}" onclick="deleteDiary('${dateKey}')">削除</button>`);
+    }
+    if (btn) { btn.disabled = false; btn.textContent = '✨ まとめ直す'; }
+    showToast('まとめました ✨');
   } catch (e) {
-    showToast(`失敗: ${e.message}`, true);
+    showToast(`まとめ失敗: ${e.message}`, true);
     if (btn) { btn.disabled = false; btn.textContent = '✨ まとめる'; }
   }
 }
