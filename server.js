@@ -18,7 +18,8 @@ import {
   getHoldings, addHolding, deleteHolding, sellHolding, getRealized,
   setHoldingTargets, markHoldingTargetFired, getBuys,
   getNotes, addNote, deleteNote, toggleNote,
-  getMemos, addMemo, deleteMemo, editMemo,
+  getMemos, addMemo, deleteMemo, editMemo, setMemoImage,
+  getPhotos, getPhoto, setPhoto,
   getNotifiedOff, markNotifiedOff,
 } from './db.js';
 
@@ -115,14 +116,10 @@ function buildSellMemoText({ ticker, shares, sellPrice, realized, currency, name
 }
 
 app.post('/api/holding', async (req, res) => {
-  const { person, ticker, shares, cost, name } = req.body;
+  const { person, ticker } = req.body;
   if (!['mine', 'hers'].includes(person)) return res.status(400).json({ error: 'person は mine または hers のみ' });
   if (!ticker || !String(ticker).trim()) return res.status(400).json({ error: '銘柄コードが必要です' });
   const id = await addHolding(req.body);
-  // 価格を入れた買い注文だけメモに自動記録（cost=0は単なる株数追加なのでメモしない）
-  if (Number(shares) > 0 && Number(cost) > 0) {
-    try { await addMemo({ person, text: buildBuyMemoText({ ticker, shares: Number(shares), cost: Number(cost), name }) }); } catch {}
-  }
   res.json({ success: true, id });
 });
 app.post('/api/holding/delete', async (req, res) => {
@@ -132,20 +129,6 @@ app.post('/api/holding/delete', async (req, res) => {
 app.post('/api/holding/sell', async (req, res) => {
   try {
     const r = await sellHolding(req.body);
-    // 売却時は必ずメモに自動記録（実現損益込み）
-    try {
-      await addMemo({
-        person: req.body.person,
-        text: buildSellMemoText({
-          ticker: req.body.ticker,
-          shares: Number(req.body.shares),
-          sellPrice: Number(req.body.sellPrice),
-          realized: r.realized,
-          currency: r.currency,
-          name: r.name,
-        }),
-      });
-    } catch {}
     res.json({ success: true, ...r });
   } catch (e) {
     res.status(400).json({ error: e.message });
@@ -489,6 +472,24 @@ app.post('/api/memo/edit', async (req, res) => {
   }
   const ok = await editMemo(id, text);
   if (!ok) return res.status(404).json({ error: 'メモが見つかりません' });
+  res.json({ success: true });
+});
+
+// メモ画像の追加・更新・削除
+app.post('/api/memo/image', async (req, res) => {
+  const { id, img } = req.body;
+  if (!id) return res.status(400).json({ error: 'id が必要です' });
+  const ok = await setMemoImage(id, img || null);
+  if (!ok) return res.status(404).json({ error: 'メモが見つかりません' });
+  res.json({ success: true });
+});
+
+// カレンダー日別写真
+app.get('/api/day-photos', (_req, res) => res.json(getPhotos()));
+app.post('/api/day-photo', async (req, res) => {
+  const { date, img } = req.body;
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'date (YYYY-MM-DD) が必要です' });
+  await setPhoto(date, img || null);
   res.json({ success: true });
 });
 

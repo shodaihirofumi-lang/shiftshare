@@ -14,7 +14,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], photos: {} });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -417,14 +417,25 @@ export function getMemos() {
 export async function addMemo(m) {
   if (!cache.memos) cache.memos = [];
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  cache.memos.push({
+  const entry = {
     id,
     person: m.person === 'hers' ? 'hers' : 'mine',
     text: String(m.text || '').slice(0, 500),
     createdAt: Date.now(),
-  });
+  };
+  if (m.img) entry.img = m.img;
+  cache.memos.push(entry);
   await persist();
   return id;
+}
+
+export async function setMemoImage(id, img) {
+  const m = (cache.memos || []).find(x => x.id === id);
+  if (!m) return false;
+  if (img) m.img = img;
+  else delete m.img;
+  await persist();
+  return true;
 }
 
 export async function deleteMemo(id) {
@@ -441,6 +452,16 @@ export async function editMemo(id, text) {
   m.updatedAt = Date.now();
   await persist();
   return true;
+}
+
+// ── カレンダー日別写真 ──
+export function getPhotos() { return cache.photos || {}; }
+export function getPhoto(date) { return (cache.photos || {})[date] || null; }
+export async function setPhoto(date, img) {
+  if (!cache.photos) cache.photos = {};
+  if (img) cache.photos[date] = img;
+  else delete cache.photos[date];
+  await persist();
 }
 
 // ── 通知済みのふたり休み日（重複pushを防ぐ）──
