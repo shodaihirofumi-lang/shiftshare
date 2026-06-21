@@ -604,12 +604,13 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-note { font-size:10px; color:var(--text-soft); margin-top:8px; line-height:1.55; }
 .pnl-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; }
 .pnl-row + .pnl-row { border-top:1px solid var(--line-soft); }
-.pnl-date { font-size:13px; font-weight:600; color:var(--text); white-space:nowrap; }
-.pnl-date small { font-size:10px; color:var(--text-soft); margin-left:2px; }
+.pnl-date { font-size:14px; font-weight:600; color:var(--text); white-space:nowrap; }
+.pnl-date small { font-size:13px; color:var(--text); margin-left:2px; }
 .pnl-cells { display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; }
-.pnl-cell { font-size:13px; font-weight:700; white-space:nowrap; }
+.pnl-cell { font-size:14px; font-weight:700; white-space:nowrap; }
 .pnl-cell.up { color:#c0392b; }
 .pnl-cell.down { color:#2e6da4; }
+.pnl-cell small { font-size:13px; }
 .pnl-who { font-size:10px; font-weight:700; margin-right:3px; }
 .pnl-who.mine { color:var(--mine); }
 .pnl-who.hers { color:var(--hers); }
@@ -645,8 +646,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 /* ── 日別バトル行 ── */
 .pnl-battle-row { padding:8px 0; }
 .pnl-battle-row + .pnl-battle-row { border-top:1px solid var(--line-soft); }
-.pnl-battle-date { font-size:12px; font-weight:700; color:var(--text-soft); margin-bottom:5px; }
-.pnl-brate-amt { font-size:12px; font-weight:600; color:var(--text); display:block; }
+.pnl-battle-date { font-size:14px; font-weight:700; color:var(--text); margin-bottom:5px; }
+.pnl-brate-amt { font-size:13px; font-weight:700; display:block; }
+.pnl-brate-amt.up { color:#c0392b; }
+.pnl-brate-amt.down { color:#2e6da4; }
 .pnl-realized-row { font-size:11px; font-weight:700; margin-top:2px; display:block; }
 .pnl-realized-row.up { color:#c0392b; } .pnl-realized-row.down { color:#2e6da4; }
 
@@ -1901,7 +1904,7 @@ function renderPnlHistory() {
         const crown = isW ? `<span class="mb-player-crown">👑</span>` : '';
         const rateCls = r[p] >= 0 ? 'up' : 'down';
         const mk = `${y}-${String(m).padStart(2,'0')}`;
-        return `<div class="mb-player${cls}" style="${style}">${crown}<div><span class="mb-player-name ${p}">${NAMES[p]}</span><br><span class="mb-player-rate ${rateCls}">${fmtR(r[p])}</span><span class="pnl-brate-amt">${fmtA(t[p])}</span>${fmtReal(realMonth[mk]?.[p])}</div></div>`;
+        return `<div class="mb-player${cls}" style="${style}">${crown}<div><span class="mb-player-name ${p}">${NAMES[p]}</span><br><span class="mb-player-rate ${rateCls}">${fmtR(r[p])}</span><span class="pnl-brate-amt ${rateCls}">${fmtA(t[p])}</span>${fmtReal(realMonth[mk]?.[p])}</div></div>`;
       };
       mbHtml += `<div class="mb-row">
         <span class="mb-month-label">${m}月</span>
@@ -1992,7 +1995,7 @@ function renderPnlHistory() {
         const crown = isW ? `<span class="mb-player-crown">👑</span>` : '';
         const rateCls = (c[p+'Rate']||0) >= 0 ? 'up' : 'down';
         const dk = `${c.y}-${String(c.mo).padStart(2,'0')}-${String(c.da).padStart(2,'0')}`;
-        return `<div class="mb-player${cls}" style="${style}">${crown}<div><span class="mb-player-name ${p}">${NAMES[p]}</span><br><span class="mb-player-rate ${rateCls}">${fmtR(c[p+'Rate']||0)}</span><span class="pnl-brate-amt">${fmtA(c[p])}</span>${fmtReal(realDate[dk]?.[p])}</div></div>`;
+        return `<div class="mb-player${cls}" style="${style}">${crown}<div><span class="mb-player-name ${p}">${NAMES[p]}</span><br><span class="mb-player-rate ${rateCls}">${fmtR(c[p+'Rate']||0)}</span><span class="pnl-brate-amt ${rateCls}">${fmtA(c[p])}</span>${fmtReal(realDate[dk]?.[p])}</div></div>`;
       };
       rows += `<div class="pnl-battle-row">
         <div class="pnl-battle-date">${c.mo}/${c.da}（${dow}）</div>
