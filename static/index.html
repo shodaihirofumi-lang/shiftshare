@@ -634,24 +634,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .mb-diff { font-size:9px; color:var(--text-soft); text-align:center; }
 
 /* ── 日別バトル行 ── */
-.pnl-battle-row { padding:10px 0; }
+.pnl-battle-row { padding:8px 0; }
 .pnl-battle-row + .pnl-battle-row { border-top:1px solid var(--line-soft); }
-.pnl-battle-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; }
-.pnl-battle-date { font-size:12px; font-weight:700; color:var(--text-soft); }
-.pnl-battle-winner { font-size:12px; font-weight:700; }
-.pnl-battle-rates { display:flex; align-items:center; gap:6px; }
-.pnl-brate { flex:1; text-align:center; }
-.pnl-brate-pct { font-size:20px; font-weight:900; display:block; letter-spacing:-1px; line-height:1.1; }
-.pnl-brate-pct.up { color:#c0392b; }
-.pnl-brate-pct.down { color:#2e6da4; }
-.pnl-brate-name { font-size:10px; font-weight:700; display:block; margin-top:2px; }
-.pnl-brate-name.mine { color:var(--mine); }
-.pnl-brate-name.hers { color:var(--hers); }
+.pnl-battle-date { font-size:12px; font-weight:700; color:var(--text-soft); margin-bottom:5px; }
 .pnl-brate-amt { font-size:10px; color:var(--text-soft); display:block; }
-.pnl-bvs { font-size:16px; opacity:.45; flex-shrink:0; }
-.pnl-day-bar { height:7px; border-radius:4px; overflow:hidden; display:flex; margin-top:8px; }
-.pnl-day-bar-hers { background:var(--hers); transition:width .4s ease; }
-.pnl-day-bar-mine { background:var(--mine); transition:width .4s ease; }
 
 /* ── 損益 VS バトル ── */
 .vs-card { background:var(--bg); border-radius:13px; padding:16px 14px 12px; margin-bottom:14px; }
@@ -1914,20 +1900,27 @@ function renderPnlHistory() {
       const rm = c.mineRate||0, rh = c.hersRate||0;
       const div = calcDiv(rm, rh);
       const w = Math.abs(rm-rh) < 0.01 ? null : rm > rh ? 'mine' : 'hers';
-      const mkSide = p => `<div class="pnl-brate">
-        <span class="pnl-brate-pct ${(c[p+'Rate']||0)>=0?'up':'down'}">${fmtR(c[p+'Rate']||0)}</span>
-        <span class="pnl-brate-name ${p}">${NAMES[p]}</span>
-        <span class="pnl-brate-amt">${fmtA(c[p])}</span>
-      </div>`;
+      const diffAbsD = Math.abs(rm - rh);
+      const diffStrD = diffAbsD >= 0.01 ? `差 ${diffAbsD.toFixed(2)}%` : '同率';
+      const mkDayPlayer = (p, isW) => {
+        const cls = isW ? ` winner ${p}` : '';
+        const style = isW ? `background:var(--${p}-bg);border:1.5px solid var(--${p}-border);` : 'border:1.5px solid transparent;';
+        const crown = isW ? `<span class="mb-player-crown">👑</span>` : '';
+        const rateCls = (c[p+'Rate']||0) >= 0 ? 'up' : 'down';
+        return `<div class="mb-player${cls}" style="${style}">${crown}<div><span class="mb-player-name ${p}">${NAMES[p]}</span><br><span class="mb-player-rate ${rateCls}">${fmtR(c[p+'Rate']||0)}</span><span class="pnl-brate-amt">${fmtA(c[p])}</span></div></div>`;
+      };
       rows += `<div class="pnl-battle-row">
-        <div class="pnl-battle-head">
-          <span class="pnl-battle-date">${c.mo}/${c.da}（${dow}）</span>
-          <span class="pnl-battle-winner">${w ? '👑'+NAMES[w] : '⚖️'}</span>
-        </div>
-        <div class="pnl-battle-rates">${mkSide('hers')}<span class="pnl-bvs">⚔️</span>${mkSide('mine')}</div>
-        <div class="pnl-day-bar">
-          <div class="pnl-day-bar-hers" style="width:${((1-div)*100).toFixed(1)}%"></div>
-          <div class="pnl-day-bar-mine" style="width:${(div*100).toFixed(1)}%"></div>
+        <div class="pnl-battle-date">${c.mo}/${c.da}（${dow}）</div>
+        <div class="mb-row" style="padding:0">
+          ${mkDayPlayer('hers', w==='hers')}
+          <div class="mb-middle">
+            <div class="mb-bar">
+              <div class="mb-bar-hers" style="width:${((1-div)*100).toFixed(1)}%"></div>
+              <div class="mb-bar-mine" style="width:${(div*100).toFixed(1)}%"></div>
+            </div>
+            <span class="mb-diff">${w ? diffStrD : '⚖️同率'}</span>
+          </div>
+          ${mkDayPlayer('mine', w==='mine')}
         </div>
       </div>`;
     } else {
