@@ -561,6 +561,12 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-btn-person-hers { background:var(--hers); color:#fff; }
 .diary-heading { font-size:14px; font-weight:700; color:var(--text); margin:12px 0 5px; padding-left:8px; border-left:3px solid var(--gold); }
 .diary-ai-text { font-size:13px; color:var(--text); line-height:1.8; padding:10px 12px; background:var(--bg); border-radius:9px; white-space:pre-wrap; margin-top:6px; }
+.diary-title { font-size:16px; font-weight:900; color:var(--text); margin:4px 0 6px; line-height:1.3; }
+.diary-toc-start { font-size:11px; font-weight:700; color:var(--text-soft); margin:8px 0 2px; letter-spacing:.5px; }
+.diary-toc-item { font-size:11px; color:var(--text-soft); padding:1px 0 1px 10px; }
+.diary-subheading { font-size:13px; font-weight:700; color:var(--text); margin:8px 0 3px; padding-left:6px; }
+.diary-inline-photo { margin:8px 0; }
+.diary-inline-photo img { max-width:100%; border-radius:10px; display:block; }
 .diary-ai-footer { font-size:10px; color:var(--text-soft); margin-top:4px; }
 .diary-actions { display:flex; gap:8px; margin-top:12px; }
 .diary-btn-ai { flex:1; padding:9px 0; border-radius:9px; border:none; background:var(--gold); color:#fff; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .15s; }
@@ -3134,12 +3140,13 @@ function renderDiary() {
     const mkSum = (p, label, sl) => {
       const d2 = diary?.[p];
       if (!d2?.text) return '';
+      const personPhotos = photos.filter(ph => ph.person === p);
       return `<div class="diary-section" style="margin-top:8px">
         <div class="diary-section-label ${sl}">✨ ${label}のまとめ
           <button class="diary-share-btn" onclick="copyDiarySection(this)">📋 コピー</button>
           <button class="diary-share-btn" onclick="shareDiarySection(this,'${label}の日記まとめ（${month}月${day}日）')">↗ 共有</button>
         </div>
-        <div class="diary-ai-text">${renderDiaryText(d2.text)}</div>
+        <div class="diary-ai-text" data-raw="${encodeURIComponent(d2.text)}">${renderDiaryText(d2.text, personPhotos)}</div>
         <div class="diary-ai-footer">まとめ日 ${new Date(d2.generatedAt).toLocaleDateString('ja-JP')}</div>
       </div>`;
     };
@@ -3179,13 +3186,20 @@ function renderDiary() {
 }
 
 function copyDiarySection(btn) {
-  const text = btn.closest('.diary-section')?.querySelector('.diary-ai-text')?.innerText || '';
+  const aiDiv = btn.closest('.diary-section')?.querySelector('.diary-ai-text');
+  const text = aiDiv?.dataset?.raw ? decodeURIComponent(aiDiv.dataset.raw) : (aiDiv?.innerText || '');
   navigator.clipboard.writeText(text).then(() => showToast('コピーしました')).catch(() => showToast('コピー失敗', true));
 }
 async function shareDiarySection(btn, title) {
-  const text = btn.closest('.diary-section')?.querySelector('.diary-ai-text')?.innerText || '';
+  const aiDiv = btn.closest('.diary-section')?.querySelector('.diary-ai-text');
+  const text = aiDiv?.dataset?.raw ? decodeURIComponent(aiDiv.dataset.raw) : (aiDiv?.innerText || '');
   if (navigator.share) { try { await navigator.share({ title, text }); } catch {} }
   else { navigator.clipboard.writeText(text).then(() => showToast('コピーしました')); }
+}
+function copyMonthlyText(btn) {
+  const textDiv = btn.closest('.monthly-person-section')?.querySelector('.monthly-person-text');
+  const text = textDiv?.dataset?.raw ? decodeURIComponent(textDiv.dataset.raw) : (textDiv?.innerText || '');
+  navigator.clipboard.writeText(text).then(() => showToast('コピーしました')).catch(() => showToast('コピー失敗', true));
 }
 async function shareRawDiary(dateKey, person) {
   const text = document.getElementById(`diary-raw-${person}-${dateKey}`)?.value || '';
@@ -3210,11 +3224,22 @@ async function saveDiaryRaw(dateKey, person) {
   } catch { showToast('保存に失敗しました', true); }
 }
 
-function renderDiaryText(text) {
+function renderDiaryText(text, photos = []) {
   if (!text) return '';
+  const markerNums = ['①','②','③','④','⑤'];
+  let inToc = false;
   return text.split('\n').map(line => {
-    if (line.startsWith('## ')) return `<div class="diary-heading">${escapeHtml(line.slice(3))}</div>`;
-    if (line === '') return '<br>';
+    if (line.startsWith('# ')) { inToc = false; return `<div class="diary-title">${escapeHtml(line.slice(2))}</div>`; }
+    if (line.startsWith('## 目次')) { inToc = true; return `<div class="diary-toc-start">目次</div>`; }
+    if (line.startsWith('## ')) { inToc = false; return `<div class="diary-heading">${escapeHtml(line.slice(3))}</div>`; }
+    if (line.startsWith('### ')) { inToc = false; return `<div class="diary-subheading">${escapeHtml(line.slice(4))}</div>`; }
+    if (line === '') { return inToc ? '' : '<br>'; }
+    if (inToc) return `<div class="diary-toc-item">• ${escapeHtml(line.replace(/^[-・]\s*/, ''))}</div>`;
+    for (let i = 0; i < markerNums.length; i++) {
+      if (line.includes(`【写真${markerNums[i]}】`) && photos[i]) {
+        return `<div class="diary-inline-photo"><img src="${photos[i].img}" alt="写真${i+1}"></div>`;
+      }
+    }
     return escapeHtml(line);
   }).join('\n');
 }
@@ -3235,7 +3260,7 @@ async function generatePersonDiary(dateKey, person) {
     const r = await fetch('/api/diary/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: dateKey, person, raw }),
+      body: JSON.stringify({ date: dateKey, person, raw, photoCount: (dayPhotos[dateKey]||[]).filter(p=>p.person===person).length }),
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || 'まとめに失敗しました');
@@ -3246,12 +3271,13 @@ async function generatePersonDiary(dateKey, person) {
     const sl = person === 'mine' ? 'sl-mine' : 'sl-hers';
     const sumEl = document.getElementById(`diary-sum-${person}-${dateKey}`);
     if (sumEl) {
+      const pPhotos = (dayPhotos[dateKey]||[]).filter(p=>p.person===person);
       sumEl.innerHTML = `<div class="diary-section" style="margin-top:8px">
         <div class="diary-section-label ${sl}">✨ ${label}のまとめ
           <button class="diary-share-btn" onclick="copyDiarySection(this)">📋 コピー</button>
-          <button class="diary-share-btn" onclick="shareDiarySection(this,'${label}の月間まとめ')">↗ 共有</button>
+          <button class="diary-share-btn" onclick="shareDiarySection(this,'${label}の日記まとめ')">↗ 共有</button>
         </div>
-        <div class="diary-ai-text">${renderDiaryText(data.text)}</div>
+        <div class="diary-ai-text" data-raw="${encodeURIComponent(data.text)}">${renderDiaryText(data.text, pPhotos)}</div>
         <div class="diary-ai-footer">まとめ日 ${new Date().toLocaleDateString('ja-JP')}</div>
       </div>`;
       sumEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -3281,10 +3307,11 @@ function renderMonthlyContent() {
   const existing = allMonthlyDiaries[currentDiaryYM] || {};
   const mkSection = (person, label, cls) => {
     const d = existing[person];
+    const copyBtn = d?.text ? `<button class="diary-share-btn" style="margin-left:6px;font-weight:400" onclick="copyMonthlyText(this)">📋 コピー</button>` : '';
     return `<div class="monthly-person-section">
-      <div class="monthly-person-header ${cls}">${label}の月間まとめ</div>
+      <div class="monthly-person-header ${cls}">${label}の月間まとめ${copyBtn}</div>
       ${d?.text
-        ? `<div class="monthly-person-text">${renderDiaryText(d.text)}</div>
+        ? `<div class="monthly-person-text" data-raw="${encodeURIComponent(d.text)}">${renderDiaryText(d.text)}</div>
            <div class="diary-ai-footer">生成日 ${new Date(d.generatedAt).toLocaleDateString('ja-JP')}</div>`
         : `<div class="diary-ai-footer">まだ生成されていません</div>`}
     </div>`;

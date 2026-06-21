@@ -566,16 +566,25 @@ app.post('/api/diary/save', async (req, res) => {
 
 // AI日記まとめ（person別、note.com投稿形式）
 app.post('/api/diary/generate', async (req, res) => {
-  const { date, person, raw } = req.body;
+  const { date, person, raw, photoCount } = req.body;
   if (!date || !['mine','hers'].includes(person) || !raw)
     return res.status(400).json({ error: 'date, person, raw が必要です' });
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
   try {
     const personName = person === 'mine' ? 'ひろ' : 'ちか';
-    const prompt = `以下は${personName}が書いた${date}の日記です。
-note.comに投稿できる読み物として、見出し（##）を使いながら、読者を意識した文章にまとめてください。
-${personName}の言葉のくせや個性はそのまま活かしてください。箇条書きは避け、自然な文章の流れで書いてください。
-
+    const [, mo, da] = date.split('-');
+    const photoHint = Number(photoCount) > 0
+      ? `\n写真が${photoCount}枚あります。文章の自然な流れに合わせて「【写真①】」「【写真②】」…を独立した行に入れて写真の位置を示してください（実際の枚数のみ）。`
+      : '';
+    const prompt = `以下は${personName}が書いた${mo}月${da}日の日記です。
+note.comに投稿できる読み物として、以下の形式でまとめてください：
+・最初に「# （キャッチーなタイトル）」
+・続けて「## 目次」に「- 見出し名」の箇条書きで目次
+・各セクションは「## 見出し名」で区切る
+・段落は2〜3行を目安に改行する
+・箇条書きは使わず自然な文章で
+・${personName}の言葉のくせや個性はそのまま活かす
+${photoHint}
 ${personName}の日記:
 ${raw}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -587,7 +596,7 @@ ${raw}`;
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 800,
+        max_tokens: 1200,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
@@ -627,8 +636,13 @@ app.post('/api/diary/monthly', async (req, res) => {
   const [y, m] = yearMonth.split('-');
   const personName = person === 'mine' ? 'ひろ' : 'ちか';
   const prompt = `以下は${y}年${m}月の${personName}の日記です。
-note.comに投稿できる月間ブログ記事として、見出し（##）を使いながら、読者が楽しめる文章にまとめてください。
-${personName}の言葉のくせや個性をそのまま活かし、1ヶ月を振り返る読んで楽しいブログ記事風に。箇条書きは避け、自然な文章で。
+note.comに投稿できる月間ブログ記事として、以下の形式でまとめてください：
+・最初に「# （キャッチーなタイトル）」
+・続けて「## 目次」に「- 見出し名」の箇条書きで目次
+・各セクションは「## 見出し名」で区切る（テーマや週単位などで）
+・段落は2〜3行を目安に改行する
+・箇条書きは使わず自然な文章で
+・${personName}の言葉のくせや個性をそのまま活かし、1ヶ月を振り返る読んで楽しいブログ記事風に
 
 ${entries.map(e => `【${e.date}】\n${e.text}`).join('\n\n')}`;
   try {
@@ -641,7 +655,7 @@ ${entries.map(e => `【${e.date}】\n${e.text}`).join('\n\n')}`;
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1500,
+        max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
