@@ -117,10 +117,21 @@ function buildSellMemoText({ ticker, shares, sellPrice, realized, currency, name
 }
 
 app.post('/api/holding', async (req, res) => {
-  const { person, ticker } = req.body;
+  const { person, ticker, name, shares, price, currency } = req.body;
   if (!['mine', 'hers'].includes(person)) return res.status(400).json({ error: 'person は mine または hers のみ' });
   if (!ticker || !String(ticker).trim()) return res.status(400).json({ error: '銘柄コードが必要です' });
   const id = await addHolding(req.body);
+  // 購入を今日の日記に自動追記
+  if (price && parseFloat(price) > 0 && shares) {
+    try {
+      const jstDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date());
+      const sym = (currency||'JPY')==='JPY' ? '¥' : '$';
+      const note = `${name||ticker}を${shares}株購入 @${sym}${Number(price).toLocaleString()}`;
+      const ex = getDiary(jstDate) || {};
+      const pd = ex[person] || {};
+      await setDiary(jstDate, { ...ex, [person]: { ...pd, raw: pd.raw ? pd.raw+'\n'+note : note, savedAt: Date.now() } });
+    } catch {}
+  }
   res.json({ success: true, id });
 });
 app.post('/api/holding/delete', async (req, res) => {
@@ -130,6 +141,21 @@ app.post('/api/holding/delete', async (req, res) => {
 app.post('/api/holding/sell', async (req, res) => {
   try {
     const r = await sellHolding(req.body);
+    // 売却を今日の日記に自動追記
+    const { person, shares, sellPrice, currency } = req.body;
+    if (['mine','hers'].includes(person) && shares && sellPrice) {
+      try {
+        const jstDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date());
+        const sym = (currency||'JPY')==='JPY' ? '¥' : '$';
+        const displayName = r.name || req.body.ticker || '';
+        const realSign = (r.realized||0) >= 0 ? '+' : '';
+        const realAmt = (currency||'JPY')==='JPY' ? Math.round(r.realized||0).toLocaleString() : (r.realized||0).toFixed(2);
+        const note = `${displayName}を${shares}株売却 @${sym}${Number(sellPrice).toLocaleString()} (${realSign}${sym}${realAmt})`;
+        const ex = getDiary(jstDate) || {};
+        const pd = ex[person] || {};
+        await setDiary(jstDate, { ...ex, [person]: { ...pd, raw: pd.raw ? pd.raw+'\n'+note : note, savedAt: Date.now() } });
+      } catch {}
+    }
     res.json({ success: true, ...r });
   } catch (e) {
     res.status(400).json({ error: e.message });
@@ -522,23 +548,26 @@ app.post('/api/diary/delete', async (req, res) => {
   await setDiary(date, null);
   res.json({ success: true });
 });
-// 日記テキスト保存（生テキストのみ、AI不使用）
+// 日記テキスト保存（person 別）
 app.post('/api/diary/save', async (req, res) => {
-  const { date, raw } = req.body;
-  if (!date) return res.status(400).json({ error: 'date が必要です' });
+  const { date, person, raw } = req.body;
+  if (!date || !['mine','hers'].includes(person)) return res.status(400).json({ error: 'date と person が必要です' });
   const existing = getDiary(date) || {};
-  if (raw) await setDiary(date, { ...existing, raw, savedAt: Date.now() });
-  else await setDiary(date, raw ? { ...existing, raw, savedAt: Date.now() } : null);
+  await setDiary(date, { ...existing, [person]: { ...(existing[person]||{}), raw: raw||'', savedAt: Date.now() } });
   res.json({ success: true });
 });
 
-// AI日記整理（Claude Haiku: ユーザーが書いた文章を読みやすく整形）
+// AI日記まとめ（ひろ+ちかの原文をひとつにまとめる）
 app.post('/api/diary/generate', async (req, res) => {
-  const { date, raw } = req.body;
-  if (!date || !raw) return res.status(400).json({ error: 'date と raw が必要です' });
+  const { date, rawMine, rawHers } = req.body;
+  if (!date) return res.status(400).json({ error: 'date が必要です' });
+  if (!rawMine && !rawHers) return res.status(400).json({ error: '日記を書いてください' });
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
   try {
-    const prompt = `以下は日記の下書きです。読点・改行・言葉の流れを整えて、読みやすい自然な日本語にしてください。内容や事実は変えないでください。\n\n${raw}`;
+    const parts = [];
+    if (rawMine) parts.push(`ひろ: ${rawMine}`);
+    if (rawHers) parts.push(`ちか: ${rawHers}`);
+    const prompt = `${date}のカップルの日記です。ふたりが書いた内容を変えずに、ひとつの自然な日記文としてまとめてください。2〜5文、箇条書き不要。\n\n${parts.join('\n')}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -559,7 +588,7 @@ app.post('/api/diary/generate', async (req, res) => {
     const data = await response.json();
     const text = data.content?.[0]?.text?.trim() || '';
     const existing = getDiary(date) || {};
-    await setDiary(date, { ...existing, raw, text, generatedAt: Date.now() });
+    await setDiary(date, { ...existing, text, generatedAt: Date.now() });
     res.json({ success: true, text });
   } catch (e) {
     console.error('[diary/generate]', e.message);

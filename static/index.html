@@ -530,16 +530,22 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-lines { font-size:12px; color:var(--text-soft); line-height:1.7; margin-bottom:10px; }
 .diary-line { display:flex; gap:6px; align-items:flex-start; }
 .diary-line-icon { flex-shrink:0; width:16px; text-align:center; }
-.diary-write-label { font-size:11px; font-weight:700; color:var(--mine); margin-top:10px; margin-bottom:4px; letter-spacing:.5px; }
-.diary-ai-text { font-size:13.5px; color:var(--text); line-height:1.75; margin:10px 0 8px; padding:10px 12px; background:var(--bg); border-radius:9px; border-left:3px solid var(--mine); white-space:pre-wrap; }
+.diary-section { margin-top:14px; }
+.diary-section-label { font-size:10px; font-weight:800; letter-spacing:1.5px; padding-bottom:5px; border-bottom:1.5px solid var(--line-soft); margin-bottom:8px; }
+.diary-section-label.sl-mine { color:var(--mine); border-color:var(--mine-border); }
+.diary-section-label.sl-hers { color:var(--hers); border-color:var(--hers-border); }
+.diary-section-label.sl-ai { color:var(--gold); border-color:var(--gold-border); }
+.diary-ai-text { font-size:13.5px; color:var(--text); line-height:1.8; padding:10px 12px; background:var(--gold-bg); border-radius:9px; white-space:pre-wrap; margin-top:6px; }
 .diary-ai-footer { font-size:10px; color:var(--text-soft); margin-top:4px; }
-.diary-textarea { width:100%; box-sizing:border-box; border-radius:9px; border:1.5px solid var(--mine); background:var(--bg); color:var(--text); font-size:13px; padding:10px 12px; resize:vertical; min-height:100px; font-family:inherit; line-height:1.6; margin-bottom:6px; }
-.diary-textarea:focus { outline:none; border-color:var(--mine); box-shadow:0 0 0 3px var(--mine-bg); }
-.diary-actions { display:flex; gap:8px; margin-top:4px; }
-.diary-btn-ai { flex:1; padding:8px 0; border-radius:9px; border:none; background:var(--mine); color:#fff; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .15s; }
+.diary-textarea { width:100%; box-sizing:border-box; border-radius:9px; border:1.5px solid var(--line); background:var(--bg); color:var(--text); font-size:13px; padding:10px 12px; resize:vertical; min-height:80px; font-family:inherit; line-height:1.6; }
+.diary-textarea.ta-mine:focus { outline:none; border-color:var(--mine); box-shadow:0 0 0 3px var(--mine-bg); }
+.diary-textarea.ta-hers:focus { outline:none; border-color:var(--hers); box-shadow:0 0 0 3px var(--hers-bg); }
+.diary-person-row { display:flex; justify-content:flex-end; margin-top:5px; }
+.diary-save-btn { padding:6px 14px; border-radius:8px; border:1.5px solid var(--line-soft); background:var(--card); font-size:11px; color:var(--text-soft); cursor:pointer; }
+.diary-actions { display:flex; gap:8px; margin-top:14px; }
+.diary-btn-ai { flex:1; padding:9px 0; border-radius:9px; border:none; background:var(--gold); color:#fff; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .15s; }
 .diary-btn-ai:disabled { opacity:.5; cursor:default; }
-.diary-save-btn { padding:8px 14px; border-radius:9px; border:1.5px solid var(--line-soft); background:var(--card); font-size:12px; color:var(--text-soft); cursor:pointer; }
-.diary-btn-del { padding:8px 12px; border-radius:9px; border:1.5px solid var(--line-soft); background:var(--card); font-size:11px; color:var(--text-soft); cursor:pointer; }
+.diary-btn-del { padding:9px 12px; border-radius:9px; border:1.5px solid var(--line-soft); background:var(--card); font-size:11px; color:var(--text-soft); cursor:pointer; }
 .diary-empty { text-align:center; padding:40px 0; font-size:13px; color:var(--text-soft); }
 /* ── 資産推移グラフ ── */
 .asset-line { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; margin-bottom:6px; }
@@ -1738,7 +1744,16 @@ function showTab(name) {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
-  if (name === 'diary') renderDiary();
+  if (name === 'diary') {
+    renderDiary();
+    const now = new Date();
+    const tk = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    setTimeout(() => {
+      const el = document.getElementById('diary-' + tk);
+      if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+    }, 0);
+    return;
+  }
   window.scrollTo(0, 0);
 }
 
@@ -2749,7 +2764,8 @@ function renderDiary() {
     const tmpl = buildDiaryTemplate(dateKey);
     const diary = allDiaries[dateKey];
     const isToday = dateKey === todayKey;
-    if (!isToday && !tmpl && !photo && !diary) continue;
+    const hasDiary = !!(diary?.mine?.raw || diary?.hers?.raw || diary?.text);
+    if (!isToday && !tmpl && !photo && !hasDiary) continue;
 
     const ym = `${year}年${month}月`;
     if (ym !== lastYM) {
@@ -2757,10 +2773,14 @@ function renderDiary() {
       lastYM = ym;
     }
     const dow = DOWS[new Date(year, month-1, day).getDay()];
-    const rawVal = escapeHtml(diary?.raw || '');
-    const organizedHtml = diary?.text
-      ? `<div class="diary-ai-text">${escapeHtml(diary.text)}</div>
-         <div class="diary-ai-footer">✨ 整理済み ${new Date(diary.generatedAt).toLocaleDateString('ja-JP')}</div>`
+    const rawMine = escapeHtml(diary?.mine?.raw || '');
+    const rawHers = escapeHtml(diary?.hers?.raw || '');
+    const summaryHtml = diary?.text
+      ? `<div class="diary-section">
+           <div class="diary-section-label sl-ai">✨ まとめ</div>
+           <div class="diary-ai-text">${escapeHtml(diary.text)}</div>
+           <div class="diary-ai-footer">まとめ日 ${new Date(diary.generatedAt).toLocaleDateString('ja-JP')}</div>
+         </div>`
       : '';
     const todayBadge = isToday ? '<span class="diary-today-badge">今日</span>' : '';
     html += `<div class="diary-entry${isToday?' diary-today':''}" id="diary-${dateKey}">
@@ -2768,55 +2788,64 @@ function renderDiary() {
       <div class="diary-dow">${dow}曜日</div>
       ${photo ? `<img class="diary-photo" src="${photo}" onclick="openLightbox('${photo}')" alt="${dateKey}の写真">` : ''}
       ${tmpl ? `<div class="diary-lines">${tmpl}</div>` : ''}
-      <div class="diary-write-label">✏️ 日記を書く</div>
-      <textarea class="diary-textarea" id="diary-raw-${dateKey}" placeholder="今日のことを自由に書いてみよう">${rawVal}</textarea>
-      ${organizedHtml}
+      <div class="diary-section">
+        <div class="diary-section-label sl-mine">ひろの日記</div>
+        <textarea class="diary-textarea ta-mine" id="diary-raw-mine-${dateKey}" placeholder="今日のことを書いてみよう...">${rawMine}</textarea>
+        <div class="diary-person-row"><button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','mine')">保存</button></div>
+      </div>
+      <div class="diary-section">
+        <div class="diary-section-label sl-hers">ちかの日記</div>
+        <textarea class="diary-textarea ta-hers" id="diary-raw-hers-${dateKey}" placeholder="今日のことを書いてみよう...">${rawHers}</textarea>
+        <div class="diary-person-row"><button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','hers')">保存</button></div>
+      </div>
+      ${summaryHtml}
       <div class="diary-actions">
-        <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}')">保存</button>
-        <button class="diary-btn-ai" id="diary-btn-${dateKey}" onclick="generateDiary('${dateKey}')">✨ 整理する</button>
-        ${diary?.raw || diary?.text ? `<button class="diary-btn-del" onclick="deleteDiary('${dateKey}')">削除</button>` : ''}
+        <button class="diary-btn-ai" id="diary-btn-${dateKey}" onclick="generateDiary('${dateKey}')">✨ まとめる</button>
+        ${hasDiary ? `<button class="diary-btn-del" onclick="deleteDiary('${dateKey}')">削除</button>` : ''}
       </div>
     </div>`;
   }
   el.innerHTML = html || '<div class="diary-empty">記録がありません</div>';
 }
 
-async function saveDiaryRaw(dateKey) {
-  const ta = document.getElementById(`diary-raw-${dateKey}`);
+async function saveDiaryRaw(dateKey, person) {
+  const ta = document.getElementById(`diary-raw-${person}-${dateKey}`);
   if (!ta) return;
   const raw = ta.value.trim();
   try {
     await fetch('/api/diary/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: dateKey, raw }),
+      body: JSON.stringify({ date: dateKey, person, raw }),
     });
     if (!allDiaries[dateKey]) allDiaries[dateKey] = {};
-    allDiaries[dateKey].raw = raw;
+    allDiaries[dateKey][person] = { ...(allDiaries[dateKey][person]||{}), raw };
     showToast('保存しました');
   } catch { showToast('保存に失敗しました', true); }
 }
 
 async function generateDiary(dateKey) {
-  const ta = document.getElementById(`diary-raw-${dateKey}`);
-  const raw = (ta ? ta.value : '').trim() || (allDiaries[dateKey]?.raw || '');
-  if (!raw) { showToast('先に日記を書いてください', true); return; }
+  const rawMine = (document.getElementById(`diary-raw-mine-${dateKey}`)?.value || '').trim() || (allDiaries[dateKey]?.mine?.raw || '');
+  const rawHers = (document.getElementById(`diary-raw-hers-${dateKey}`)?.value || '').trim() || (allDiaries[dateKey]?.hers?.raw || '');
+  if (!rawMine && !rawHers) { showToast('先に日記を書いてください', true); return; }
   const btn = document.getElementById(`diary-btn-${dateKey}`);
-  if (btn) { btn.disabled = true; btn.textContent = '整理中…'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'まとめ中…'; }
   try {
     const r = await fetch('/api/diary/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: dateKey, raw }),
+      body: JSON.stringify({ date: dateKey, rawMine, rawHers }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.error || '整理に失敗しました');
-    allDiaries[dateKey] = { ...(allDiaries[dateKey]||{}), raw, text: data.text, generatedAt: Date.now() };
+    if (!r.ok) throw new Error(data.error || 'まとめに失敗しました');
+    if (!allDiaries[dateKey]) allDiaries[dateKey] = {};
+    allDiaries[dateKey].text = data.text;
+    allDiaries[dateKey].generatedAt = Date.now();
     renderDiary();
-    showToast('整理しました');
+    showToast('まとめました');
   } catch (e) {
     showToast(`失敗: ${e.message}`, true);
-    if (btn) { btn.disabled = false; btn.textContent = '✨ 整理する'; }
+    if (btn) { btn.disabled = false; btn.textContent = '✨ まとめる'; }
   }
 }
 
