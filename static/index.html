@@ -565,6 +565,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-actions { display:flex; gap:8px; margin-top:12px; }
 .diary-btn-ai { flex:1; padding:9px 0; border-radius:9px; border:none; background:var(--gold); color:#fff; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .15s; }
 .diary-btn-ai:disabled { opacity:.5; cursor:default; }
+.diary-share-btn { font-size:11px; padding:2px 8px; border-radius:6px; border:1px solid var(--line-soft); background:var(--card); color:var(--text-soft); cursor:pointer; margin-left:5px; vertical-align:middle; }
+.diary-raw-share-btn { font-size:11px; padding:3px 10px; border-radius:6px; border:1px solid var(--line-soft); background:var(--card); color:var(--text-soft); cursor:pointer; }
+.diary-person-photo-area { margin-bottom:8px; }
 .diary-btn-del { padding:9px 12px; border-radius:9px; border:1.5px solid var(--line-soft); background:var(--card); font-size:11px; color:var(--text-soft); cursor:pointer; }
 .diary-empty { text-align:center; padding:40px 0; font-size:13px; color:var(--text-soft); }
 .monthly-btn { padding:8px 14px; border-radius:10px; border:none; background:var(--gold); color:#fff; font-size:12px; font-weight:700; cursor:pointer; }
@@ -2035,6 +2038,7 @@ function showTab(name) {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
+  if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
   if (name === 'trades') { loadScreening(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
@@ -3104,8 +3108,8 @@ function renderDiary() {
     if (d?.mine?.raw || d?.mine?.text || d?.hers?.raw || d?.hers?.text) dateSet.add(k);
   });
 
-  // 今日を必ず先頭、以降は新しい順
-  const dates = [todayKey, ...[...dateSet].filter(k => k !== todayKey).sort((a,b) => b.localeCompare(a))];
+  // 今日を必ず先頭、以降は新しい順（未来日付は非表示）
+  const dates = [todayKey, ...[...dateSet].filter(k => k !== todayKey && k <= todayKey).sort((a,b) => b.localeCompare(a))];
 
   const DOWS = ['日','月','火','水','木','金','土'];
   let lastYM = '';
@@ -3131,7 +3135,10 @@ function renderDiary() {
       const d2 = diary?.[p];
       if (!d2?.text) return '';
       return `<div class="diary-section" style="margin-top:8px">
-        <div class="diary-section-label ${sl}">✨ ${label}のまとめ</div>
+        <div class="diary-section-label ${sl}">✨ ${label}のまとめ
+          <button class="diary-share-btn" onclick="copyDiarySection(this)">📋 コピー</button>
+          <button class="diary-share-btn" onclick="shareDiarySection(this,'${label}の日記まとめ（${month}月${day}日）')">↗ 共有</button>
+        </div>
         <div class="diary-ai-text">${renderDiaryText(d2.text)}</div>
         <div class="diary-ai-footer">まとめ日 ${new Date(d2.generatedAt).toLocaleDateString('ja-JP')}</div>
       </div>`;
@@ -3140,10 +3147,12 @@ function renderDiary() {
     html += `<div class="diary-entry${isToday?' diary-today':''}" id="diary-${dateKey}">
       <div class="diary-date">${month}月${day}日${todayBadge}</div>
       <div class="diary-dow">${dow}曜日</div>
-      <div class="diary-photo-btn-area" id="diary-photo-area-${dateKey}">${diaryPhotoAreaHtml(dateKey, photos)}</div>
       ${tmpl ? `<div class="diary-lines">${tmpl}</div>` : ''}
       <div class="diary-section">
-        <div class="diary-section-label sl-hers">ちかの日記</div>
+        <div class="diary-section-label sl-hers">ちかの日記
+          <button class="diary-share-btn" onclick="shareRawDiary('${dateKey}','hers')">↗ 共有</button>
+        </div>
+        <div class="diary-person-photo-area" id="diary-photo-area-hers-${dateKey}">${diaryPhotoAreaHtml(dateKey, photos, 'hers')}</div>
         <textarea class="diary-textarea ta-hers" id="diary-raw-hers-${dateKey}" placeholder="今日のことを書いてみよう...">${rawHers}</textarea>
         <div class="diary-person-btns">
           <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','hers')">保存</button>
@@ -3152,7 +3161,10 @@ function renderDiary() {
         <div id="diary-sum-hers-${dateKey}">${mkSum('hers','ちか','sl-hers')}</div>
       </div>
       <div class="diary-section">
-        <div class="diary-section-label sl-mine">ひろの日記</div>
+        <div class="diary-section-label sl-mine">ひろの日記
+          <button class="diary-share-btn" onclick="shareRawDiary('${dateKey}','mine')">↗ 共有</button>
+        </div>
+        <div class="diary-person-photo-area" id="diary-photo-area-mine-${dateKey}">${diaryPhotoAreaHtml(dateKey, photos, 'mine')}</div>
         <textarea class="diary-textarea ta-mine" id="diary-raw-mine-${dateKey}" placeholder="今日のことを書いてみよう...">${rawMine}</textarea>
         <div class="diary-person-btns">
           <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','mine')">保存</button>
@@ -3164,6 +3176,22 @@ function renderDiary() {
     </div>`;
   }
   el.innerHTML = html || '<div class="diary-empty">記録がありません</div>';
+}
+
+function copyDiarySection(btn) {
+  const text = btn.closest('.diary-section')?.querySelector('.diary-ai-text')?.innerText || '';
+  navigator.clipboard.writeText(text).then(() => showToast('コピーしました')).catch(() => showToast('コピー失敗', true));
+}
+async function shareDiarySection(btn, title) {
+  const text = btn.closest('.diary-section')?.querySelector('.diary-ai-text')?.innerText || '';
+  if (navigator.share) { try { await navigator.share({ title, text }); } catch {} }
+  else { navigator.clipboard.writeText(text).then(() => showToast('コピーしました')); }
+}
+async function shareRawDiary(dateKey, person) {
+  const text = document.getElementById(`diary-raw-${person}-${dateKey}`)?.value || '';
+  const title = (person === 'mine' ? 'ひろ' : 'ちか') + 'の日記';
+  if (navigator.share) { try { await navigator.share({ title, text }); } catch {} }
+  else { navigator.clipboard.writeText(text).then(() => showToast('コピーしました')); }
 }
 
 async function saveDiaryRaw(dateKey, person) {
@@ -3219,7 +3247,10 @@ async function generatePersonDiary(dateKey, person) {
     const sumEl = document.getElementById(`diary-sum-${person}-${dateKey}`);
     if (sumEl) {
       sumEl.innerHTML = `<div class="diary-section" style="margin-top:8px">
-        <div class="diary-section-label ${sl}">✨ ${label}のまとめ</div>
+        <div class="diary-section-label ${sl}">✨ ${label}のまとめ
+          <button class="diary-share-btn" onclick="copyDiarySection(this)">📋 コピー</button>
+          <button class="diary-share-btn" onclick="shareDiarySection(this,'${label}の月間まとめ')">↗ 共有</button>
+        </div>
         <div class="diary-ai-text">${renderDiaryText(data.text)}</div>
         <div class="diary-ai-footer">まとめ日 ${new Date().toLocaleDateString('ja-JP')}</div>
       </div>`;
@@ -3308,25 +3339,23 @@ async function deleteDiary(dateKey) {
 }
 
 // ── 写真エリア共通HTML生成 ──
-function diaryPhotoAreaHtml(dateKey, photos) {
-  const grid = photos.map(p => {
-    const badge = p.person ? `<span class="photo-person-badge ${p.person}">${NAMES[p.person]}</span>` : '';
-    return `<div class="diary-photo-item">
-      <img class="diary-photo" src="${p.img}" onclick="openLightbox(this.src)" alt="">
-      ${badge}
-      <button class="diary-photo-del-btn" onclick="removeDiaryPhoto('${dateKey}','${p.id}')">🗑</button>
-    </div>`;
-  }).join('');
-  return `<div class="diary-photos-grid">${grid}</div>
-    <div class="diary-photo-add-btns">
-      <button class="diary-photo-add-btn" onclick="addDiaryPhoto('${dateKey}','mine')">📷 ひろ</button>
-      <button class="diary-photo-add-btn" onclick="addDiaryPhoto('${dateKey}','hers')">📷 ちか</button>
-    </div>`;
+function diaryPhotoAreaHtml(dateKey, photos, person) {
+  const filtered = person ? photos.filter(p => p.person === person) : photos;
+  const grid = filtered.map(p => `<div class="diary-photo-item">
+    <img class="diary-photo" src="${p.img}" onclick="openLightbox(this.src)" alt="">
+    <button class="diary-photo-del-btn" onclick="removeDiaryPhoto('${dateKey}','${p.id}')">🗑</button>
+  </div>`).join('');
+  const gridHtml = filtered.length > 0 ? `<div class="diary-photos-grid">${grid}</div>` : '';
+  const p = person || 'mine';
+  return gridHtml + `<div class="diary-photo-add-btns"><button class="diary-photo-add-btn" onclick="addDiaryPhoto('${dateKey}','${p}')">📷 写真を追加</button></div>`;
 }
 
 function renderDiaryPhotoArea(dateKey) {
-  const area = document.getElementById(`diary-photo-area-${dateKey}`);
-  if (area) area.innerHTML = diaryPhotoAreaHtml(dateKey, dayPhotos[dateKey] || []);
+  const photos = dayPhotos[dateKey] || [];
+  ['mine','hers'].forEach(p => {
+    const area = document.getElementById(`diary-photo-area-${p}-${dateKey}`);
+    if (area) area.innerHTML = diaryPhotoAreaHtml(dateKey, photos, p);
+  });
 }
 
 // ── 日記タブ 写真追加/削除 ──
