@@ -2830,6 +2830,18 @@ async function generateDiary(dateKey) {
   if (!rawMine && !rawHers) { showToast('先に日記を書いてください', true); return; }
   const btn = document.getElementById(`diary-btn-${dateKey}`);
   if (btn) { btn.disabled = true; btn.textContent = 'まとめ中…'; }
+
+  // 原文を先に保存（まとめ後も残るよう）
+  if (!allDiaries[dateKey]) allDiaries[dateKey] = {};
+  if (rawMine) {
+    allDiaries[dateKey].mine = { ...(allDiaries[dateKey].mine||{}), raw: rawMine, savedAt: Date.now() };
+    fetch('/api/diary/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ date: dateKey, person: 'mine', raw: rawMine }) }).catch(()=>{});
+  }
+  if (rawHers) {
+    allDiaries[dateKey].hers = { ...(allDiaries[dateKey].hers||{}), raw: rawHers, savedAt: Date.now() };
+    fetch('/api/diary/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ date: dateKey, person: 'hers', raw: rawHers }) }).catch(()=>{});
+  }
+
   try {
     const r = await fetch('/api/diary/generate', {
       method: 'POST',
