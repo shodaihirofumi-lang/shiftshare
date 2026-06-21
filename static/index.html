@@ -902,9 +902,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div class="folio-card">
         <div class="screening-head">
           <div class="income-head" style="margin:0">買いスクリーニング（日経225）</div>
-          <button class="screening-refresh-btn" onclick="refreshScreening()">🔄 再スキャン</button>
+          <button class="screening-refresh-btn" onclick="refreshScreening()">🔍 スキャン</button>
         </div>
-        <div id="screening-content"><div class="screening-progress">タブを開くと自動スキャンします</div></div>
+        <div id="screening-content"><div class="screening-progress">「スキャン」ボタンを押すと買いシグナル銘柄を検索します</div></div>
         <div class="folio-note">※ MACD・RSI・BBバンドで2つ以上の買いシグナルを検出。投資は自己責任で。</div>
       </div>
       <div class="folio-card">
@@ -2045,7 +2045,7 @@ function showTab(name) {
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
   if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
-  if (name === 'trades') { loadScreening(); window.scrollTo(0,0); return; }
+  if (name === 'trades') { window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
