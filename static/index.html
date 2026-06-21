@@ -453,6 +453,22 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .tgt-chip-dist { color:var(--text-soft); font-weight:500; margin-left:3px; font-size:10px; }
 .tgt-chip.hit { background:#c0392b; color:#fff; }
 .tgt-chip.sl.hit { background:#2e6da4; color:#fff; }
+/* AI株式分析 */
+.btn-ai-analyze { width:100%; margin:10px 0 4px; padding:10px 12px; background:linear-gradient(135deg,#6c3fc5,#4a90d9); color:#fff; border:none; border-radius:9px; font-size:14px; font-weight:700; cursor:pointer; letter-spacing:.02em; }
+.btn-ai-analyze:disabled { opacity:.55; cursor:default; }
+.ai-result-box { background:var(--surface2,var(--bg)); border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; margin:6px 0 2px; font-size:13px; }
+.ai-chart-shape { color:var(--text); line-height:1.55; margin-bottom:10px; }
+.ai-levels { display:flex; flex-direction:column; gap:2px; }
+.ai-level-row { display:flex; align-items:center; gap:6px; padding:4px 0; }
+.ai-level-label { font-size:11px; color:var(--text-soft); width:82px; flex-shrink:0; }
+.ai-level-val { font-weight:700; font-size:14px; flex:1; }
+.ai-level-val.tp { color:#c0392b; }
+.ai-level-val.sl { color:#2e6da4; }
+.ai-fill-btn { font-size:11px; padding:3px 9px; border:1.5px solid var(--line); background:var(--card); border-radius:6px; cursor:pointer; color:var(--text); font-weight:600; }
+.ai-fill-btn:active { opacity:.75; }
+.ai-level-reason { font-size:11px; color:var(--text-soft); padding-left:88px; margin-bottom:4px; line-height:1.45; }
+.ai-comment { margin-top:8px; padding:6px 10px; background:rgba(108,63,197,.08); border-left:3px solid #8a5fd8; border-radius:0 6px 6px 0; font-size:12px; color:var(--text); line-height:1.5; }
+.ai-error { color:#e74c3c; font-size:13px; }
 /* チャート上の取引マーカー */
 .chart-marker-buy { fill:#c0392b; }
 .chart-marker-sell { fill:#2e6da4; }
@@ -1122,6 +1138,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
   <div class="modal">
     <div class="modal-title" id="tgt-title">目標株価</div>
     <div class="modal-sub" id="tgt-sub"></div>
+    <button class="btn-ai-analyze" id="tgt-ai-btn" onclick="doStockAnalysis()">🤖 AIに利確・損切を提案してもらう</button>
+    <div id="tgt-ai-result" class="ai-result-box" style="display:none"></div>
     <label class="sell-lbl">利確ライン（上回ったら通知）</label>
     <input id="tgt-tp" type="number" inputmode="decimal" class="ev-in" placeholder="例 3500（空欄で解除）">
     <label class="sell-lbl">損切ライン（下回ったら通知）</label>
@@ -1643,7 +1661,58 @@ function updateTargetPreview() {
   }
   document.getElementById('tgt-preview').innerHTML = lines.length ? lines.join('<br>') : '空欄のまま保存すると目標を解除します';
 }
-function closeTargets() { document.getElementById('tgt-modal').classList.remove('active'); targetingHolding = null; }
+function closeTargets() {
+  document.getElementById('tgt-modal').classList.remove('active');
+  targetingHolding = null;
+  const box = document.getElementById('tgt-ai-result');
+  box.style.display = 'none'; box.innerHTML = '';
+  const btn = document.getElementById('tgt-ai-btn');
+  btn.disabled = false; btn.textContent = '🤖 AIに利確・損切を提案してもらう';
+}
+async function doStockAnalysis() {
+  if (!targetingHolding) return;
+  const btn = document.getElementById('tgt-ai-btn');
+  const box = document.getElementById('tgt-ai-result');
+  btn.disabled = true; btn.textContent = '分析中…';
+  box.style.display = 'none'; box.innerHTML = '';
+  try {
+    const r = await fetch('/api/stock-analysis?id=' + encodeURIComponent(targetingHolding.id));
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || '分析失敗');
+    const cs = d.currency === 'JPY' ? '¥' : '$';
+    const fmt = n => n != null ? cs + Number(n).toLocaleString() : '—';
+    const fillTp = d.takeProfit != null ? `<button class="ai-fill-btn" onclick="fillTarget('tp',${d.takeProfit})">入力</button>` : '';
+    const fillSl = d.stopLoss != null ? `<button class="ai-fill-btn" onclick="fillTarget('sl',${d.stopLoss})">入力</button>` : '';
+    box.innerHTML = `
+      <div class="ai-chart-shape">${escapeHtml(d.chartShape || '')}</div>
+      <div class="ai-levels">
+        <div class="ai-level-row">
+          <span class="ai-level-label">AI推奨 利確</span>
+          <span class="ai-level-val tp">${fmt(d.takeProfit)}</span>${fillTp}
+        </div>
+        ${d.tpReason ? `<div class="ai-level-reason">${escapeHtml(d.tpReason)}</div>` : ''}
+        <div class="ai-level-row">
+          <span class="ai-level-label">AI推奨 損切</span>
+          <span class="ai-level-val sl">${fmt(d.stopLoss)}</span>${fillSl}
+        </div>
+        ${d.slReason ? `<div class="ai-level-reason">${escapeHtml(d.slReason)}</div>` : ''}
+      </div>
+      ${d.comment ? `<div class="ai-comment">${escapeHtml(d.comment)}</div>` : ''}
+    `;
+    box.style.display = 'block';
+  } catch (e) {
+    box.innerHTML = `<div class="ai-error">⚠ ${escapeHtml(e.message)}</div>`;
+    box.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = '🤖 AIに利確・損切を提案してもらう';
+  }
+}
+function fillTarget(type, val) {
+  if (val == null) return;
+  if (type === 'tp') document.getElementById('tgt-tp').value = val;
+  else document.getElementById('tgt-sl').value = val;
+  updateTargetPreview();
+}
 async function doSaveTargets() {
   if (!targetingHolding) return;
   const tp = parseFloat(document.getElementById('tgt-tp').value);

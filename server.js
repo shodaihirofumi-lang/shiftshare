@@ -306,6 +306,89 @@ app.get('/api/earnings', (_req, res) => {
   res.json(list);
 });
 
+// 保有銘柄のAI分析: チャートの形を判定し、利確/損切の目安価格を提案
+app.get('/api/stock-analysis', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
+  const h = getHoldings().find(x => x.id === req.query.id);
+  if (!h) return res.status(404).json({ error: '保有銘柄が見つかりません' });
+  const symbol = h.ticker;
+  const cur = symbol.endsWith('.T') ? 'JPY' : 'USD';
+  const cs = cur === 'JPY' ? '¥' : '$';
+  let r0;
+  try {
+    const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+    r0 = j.chart?.result?.[0];
+  } catch {}
+  if (!r0) return res.status(502).json({ error: '株価データを取得できませんでした' });
+  const q = r0.indicators?.quote?.[0] || {};
+  const closes = (q.close || []).filter(v => v != null);
+  const highs = (q.high || []).filter(v => v != null);
+  const lows = (q.low || []).filter(v => v != null);
+  if (closes.length < 30) return res.status(400).json({ error: 'チャートデータが不足しています' });
+  const price = r0.meta?.regularMarketPrice ?? closes[closes.length - 1];
+  const round = (n) => cur === 'JPY' ? Math.round(n) : Math.round(n * 100) / 100;
+  const ma = (n) => closes.length >= n ? closes.slice(-n).reduce((a, b) => a + b, 0) / n : null;
+  const ma25 = ma(25), ma75 = ma(75), ma200 = ma(200);
+  const rsi = rsiCalc(closes, 14);
+  const high52 = Math.max(...closes), low52 = Math.min(...closes);
+  const recent = closes.slice(-60);
+  const recentHigh = Math.max(...recent), recentLow = Math.min(...recent);
+  let atr = null;
+  if (highs.length === closes.length && lows.length === closes.length) {
+    const trs = [];
+    for (let i = 1; i < closes.length; i++) {
+      const tr = Math.max(highs[i] - lows[i], Math.abs(highs[i] - closes[i - 1]), Math.abs(lows[i] - closes[i - 1]));
+      if (Number.isFinite(tr)) trs.push(tr);
+    }
+    if (trs.length >= 14) atr = trs.slice(-14).reduce((a, b) => a + b, 0) / 14;
+  }
+  const chg = (n) => closes.length > n ? (price - closes[closes.length - 1 - n]) / closes[closes.length - 1 - n] * 100 : null;
+  const step = Math.max(1, Math.floor(closes.length / 40));
+  const series = closes.filter((_, i) => i % step === 0).map(v => round(v));
+  const f = (n) => n == null ? '不明' : `${cs}${round(n).toLocaleString()}`;
+  const summary = `銘柄: ${h.name || symbol} (${symbol}) 通貨:${cur}
+現在値: ${f(price)}
+取得平均(あなたの買値): ${f(h.cost)}
+25日移動平均: ${f(ma25)} / 75日: ${f(ma75)} / 200日: ${f(ma200)}
+RSI(14): ${rsi != null ? Math.round(rsi) : '不明'}
+52週高値: ${f(high52)} / 52週安値: ${f(low52)}
+直近60日高値: ${f(recentHigh)} / 直近60日安値: ${f(recentLow)}
+ATR(14・1日の変動幅の目安): ${f(atr)}
+騰落率: 5日 ${chg(5) != null ? chg(5).toFixed(1) : '?'}% / 20日 ${chg(20) != null ? chg(20).toFixed(1) : '?'}% / 60日 ${chg(60) != null ? chg(60).toFixed(1) : '?'}%
+終値の推移(古い→新しい): ${series.join(', ')}`;
+  const prompt = `あなたは株式テクニカル分析のアシスタントです。以下の保有銘柄データから、(1)チャートの形・トレンドの判断 (2)利確の目安価格 (3)損切の目安価格 を示してください。
+利確は現在値より上、損切は現在値より下の現実的な水準にし、移動平均・直近高安値・ATR・サポート/レジスタンスを根拠にすること。
+出力は次のJSONだけ（前後に文章やコードブロックを付けない）:
+{"chartShape":"チャートの形とトレンドの説明を日本語で2〜3文","takeProfit":数値,"stopLoss":数値,"tpReason":"利確水準にした理由を日本語1文","slReason":"損切水準にした理由を日本語1文","comment":"一言アドバイスを日本語1文"}
+価格(takeProfit/stopLoss)は${cur === 'JPY' ? '整数' : '小数1〜2桁'}の数値のみ。
+
+データ:
+${summary}`;
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 700, messages: [{ role: 'user', content: prompt }] }),
+    });
+    if (!response.ok) { const e = await response.json().catch(() => ({})); throw new Error(e.error?.message || `API error ${response.status}`); }
+    const data = await response.json();
+    const text = data.content?.[0]?.text?.trim() || '';
+    let parsed = null;
+    try { const m = text.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); } catch {}
+    res.json({
+      chartShape: parsed?.chartShape ?? text,
+      takeProfit: Number.isFinite(Number(parsed?.takeProfit)) ? round(Number(parsed.takeProfit)) : null,
+      stopLoss: Number.isFinite(Number(parsed?.stopLoss)) ? round(Number(parsed.stopLoss)) : null,
+      tpReason: parsed?.tpReason ?? '', slReason: parsed?.slReason ?? '', comment: parsed?.comment ?? '',
+      currency: cur, price: round(price),
+      levels: { ma25: ma25 != null ? round(ma25) : null, ma75: ma75 != null ? round(ma75) : null, high52: round(high52), low52: round(low52), recentHigh: round(recentHigh), recentLow: round(recentLow), rsi: rsi != null ? Math.round(rsi) : null },
+    });
+  } catch (e) {
+    console.error('[stock-analysis]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // 目標株価（損切・利確）の設定
 app.post('/api/holding/targets', async (req, res) => {
   const { id, takeProfit, stopLoss, earningsDate } = req.body;
