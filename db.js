@@ -3,6 +3,9 @@ import { Redis } from '@upstash/redis';
 
 const DB_FILE = 'data.json';
 const REDIS_KEY = 'shiftshare:data';
+// 写真は別Key/別ファイルに分離（メインblobを軽く保つため）
+const PHOTOS_KEY = 'shiftshare:photos'; // Redis Hash: field=photo:{date} or memo-img:{id}
+const PHOTOS_FILE = 'photos.json';
 
 // Upstash Redis を使うのは環境変数が両方ある時だけ。
 // 無ければローカルファイル(data.json)にフォールバック（ローカル開発用）。
@@ -14,10 +17,13 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], photos: {} });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [] });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
+// 写真専用キャッシュ（メインのpersist()とは独立）
+// key: "photo:{YYYY-MM-DD}" or "memo-img:{memoId}" → base64 string
+let photoCache = {};
 
 export async function initDb() {
   if (useRedis) {
@@ -37,7 +43,68 @@ export async function initDb() {
     }
     console.log('[db] ローカルファイル data.json を使用（クラウドでは消えます）');
   }
+  await loadPhotoCache();
+  await migratePhotosToSeparateStore(); // 旧来のインライン画像を分離
   await mergeDuplicateHoldings();
+}
+
+// 写真専用ストアをロード（Redis Hash / ローカルファイル）
+async function loadPhotoCache() {
+  if (useRedis) {
+    try {
+      const all = await redis.hgetall(PHOTOS_KEY);
+      photoCache = all || {};
+    } catch { photoCache = {}; }
+  } else {
+    try {
+      photoCache = JSON.parse(fs.readFileSync(PHOTOS_FILE, 'utf8'));
+    } catch { photoCache = {}; }
+  }
+  console.log(`[db] 写真ストア: ${Object.keys(photoCache).length} 件`);
+}
+
+// 写真専用ストアを永続化
+async function persistPhotos() {
+  if (!useRedis) {
+    fs.writeFileSync(PHOTOS_FILE, JSON.stringify(photoCache), 'utf8');
+  }
+  // Redis は各 set/del 操作で個別に書き込むので不要
+}
+
+// 起動時マイグレーション：旧設計（メインblobのphotos/memo.img）を分離ストアへ移動
+async function migratePhotosToSeparateStore() {
+  let changed = false;
+  // カレンダー写真（cache.photos）を分離
+  if (cache.photos && Object.keys(cache.photos).length > 0) {
+    for (const [date, img] of Object.entries(cache.photos)) {
+      const field = `photo:${date}`;
+      if (!photoCache[field]) {
+        photoCache[field] = img;
+        if (useRedis) await redis.hset(PHOTOS_KEY, { [field]: img });
+      }
+    }
+    delete cache.photos;
+    changed = true;
+    console.log('[db] カレンダー写真をメインblobから分離しました');
+  }
+  // メモ内の img フィールドを分離（hasImg フラグに置換）
+  for (const m of cache.memos || []) {
+    if (m.img) {
+      const field = `memo-img:${m.id}`;
+      if (!photoCache[field]) {
+        photoCache[field] = m.img;
+        if (useRedis) await redis.hset(PHOTOS_KEY, { [field]: m.img });
+      }
+      m.hasImg = true;
+      delete m.img;
+      changed = true;
+    }
+  }
+  if (changed) {
+    await persist();
+    await persistPhotos();
+    console.log('[db] 写真マイグレーション完了');
+  }
 }
 
 // 起動時マイグレーション：同 person × ticker の保有が複数あれば加重平均で1つに統合
@@ -411,7 +478,12 @@ export async function toggleNote(id) {
 
 // ── MEMOS（ひろ/ちかそれぞれの個人メモ。person別に分離）──
 export function getMemos() {
-  return cache.memos || [];
+  // hasImg フラグがあればphotoCache から画像を注入して返す
+  return (cache.memos || []).map(m => {
+    if (!m.hasImg) return m;
+    const img = photoCache[`memo-img:${m.id}`];
+    return img ? { ...m, img } : m;
+  });
 }
 
 export async function addMemo(m) {
@@ -423,24 +495,48 @@ export async function addMemo(m) {
     text: String(m.text || '').slice(0, 500),
     createdAt: Date.now(),
   };
-  if (m.img) entry.img = m.img;
+  if (m.img) entry.hasImg = true; // 画像は分離ストアへ、フラグのみ本体に
   cache.memos.push(entry);
   await persist();
+  if (m.img) {
+    const field = `memo-img:${id}`;
+    photoCache[field] = m.img;
+    if (useRedis) await redis.hset(PHOTOS_KEY, { [field]: m.img });
+    else await persistPhotos();
+  }
   return id;
 }
 
 export async function setMemoImage(id, img) {
   const m = (cache.memos || []).find(x => x.id === id);
   if (!m) return false;
-  if (img) m.img = img;
-  else delete m.img;
-  await persist();
+  const field = `memo-img:${id}`;
+  if (img) {
+    photoCache[field] = img;
+    m.hasImg = true;
+    if (useRedis) await redis.hset(PHOTOS_KEY, { [field]: img });
+    else await persistPhotos();
+    await persist(); // hasImg フラグを保存
+  } else {
+    delete photoCache[field];
+    delete m.hasImg;
+    if (useRedis) await redis.hdel(PHOTOS_KEY, field);
+    else await persistPhotos();
+    await persist();
+  }
   return true;
 }
 
 export async function deleteMemo(id) {
   if (!cache.memos) return;
   cache.memos = cache.memos.filter(m => m.id !== id);
+  // 写真も一緒に削除
+  const field = `memo-img:${id}`;
+  if (photoCache[field]) {
+    delete photoCache[field];
+    if (useRedis) await redis.hdel(PHOTOS_KEY, field);
+    else await persistPhotos();
+  }
   await persist();
 }
 
@@ -454,14 +550,27 @@ export async function editMemo(id, text) {
   return true;
 }
 
-// ── カレンダー日別写真 ──
-export function getPhotos() { return cache.photos || {}; }
-export function getPhoto(date) { return (cache.photos || {})[date] || null; }
+// ── カレンダー日別写真（photoCache の photo:* キーで管理）──
+export function getPhotos() {
+  // { date: base64 } の形で返す
+  const out = {};
+  for (const [k, v] of Object.entries(photoCache)) {
+    if (k.startsWith('photo:')) out[k.slice(6)] = v;
+  }
+  return out;
+}
+export function getPhoto(date) { return photoCache[`photo:${date}`] || null; }
 export async function setPhoto(date, img) {
-  if (!cache.photos) cache.photos = {};
-  if (img) cache.photos[date] = img;
-  else delete cache.photos[date];
-  await persist();
+  const field = `photo:${date}`;
+  if (img) {
+    photoCache[field] = img;
+    if (useRedis) await redis.hset(PHOTOS_KEY, { [field]: img });
+    else await persistPhotos();
+  } else {
+    delete photoCache[field];
+    if (useRedis) await redis.hdel(PHOTOS_KEY, field);
+    else await persistPhotos();
+  }
 }
 
 // ── 通知済みのふたり休み日（重複pushを防ぐ）──
