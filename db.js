@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {} });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -415,6 +415,7 @@ export async function addHolding(h) {
       person, ticker, name: String(h.name || '').slice(0, 40),
       shares: addShares, price: addCost,
       currency: ticker.endsWith('.T') ? 'JPY' : 'USD',
+      reason: String(h.reason || '').slice(0, 200) || null,
       ts: Date.now(),
     });
   }
@@ -442,15 +443,27 @@ export async function addHolding(h) {
 }
 
 // 損切・利確の目標株価を設定（push通知用＋表示用）。値0/nullで解除。
-export async function setHoldingTargets(id, { takeProfit, stopLoss }) {
+export async function setHoldingTargets(id, { takeProfit, stopLoss, earningsDate }) {
   const h = (cache.holdings || []).find(x => x.id === id);
   if (!h) return false;
   const setOrClear = (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : null; };
   h.takeProfit = setOrClear(takeProfit);
   h.stopLoss = setOrClear(stopLoss);
+  // 決算発表日（任意・手動入力）。YYYY-MM-DD のみ受け付け、それ以外は解除。
+  if (earningsDate !== undefined) {
+    h.earningsDate = /^\d{4}-\d{2}-\d{2}$/.test(earningsDate || '') ? earningsDate : null;
+    h.earningsNotified = null; // 日付変更で通知済みフラグをリセット
+  }
   h.targetsFired = {}; // 変更時に通知済みフラグをリセット
   await persist();
   return true;
+}
+
+export async function markHoldingEarningsNotified(id, dateKey) {
+  const h = (cache.holdings || []).find(x => x.id === id);
+  if (!h) return;
+  h.earningsNotified = dateKey;
+  await persist();
 }
 
 export async function markHoldingTargetFired(id, kind) {
@@ -465,7 +478,7 @@ export function getBuys() {
   return cache.buys || [];
 }
 
-export async function sellHolding({ person, ticker, shares, sellPrice, currency }) {
+export async function sellHolding({ person, ticker, shares, sellPrice, currency, reason }) {
   if (!['mine','hers'].includes(person)) throw new Error('person が不正です');
   ticker = String(ticker || '').trim().toUpperCase();
   if (/^\d{4,5}$/.test(ticker)) ticker += '.T';
@@ -484,7 +497,9 @@ export async function sellHolding({ person, ticker, shares, sellPrice, currency 
     id: rid, person, ticker,
     name: h.name || '',
     shares: soldShares, sellPrice: px, costAtSale: h.cost,
-    realized, currency: cur, ts: Date.now(),
+    realized, currency: cur,
+    reason: String(reason || '').slice(0, 200) || null,
+    ts: Date.now(),
   });
   const remaining = h.shares - soldShares;
   const removed = remaining <= 0;
@@ -728,5 +743,20 @@ export function getNotifiedOff() {
 export async function markNotifiedOff(dateKey) {
   if (!cache.notifiedOff) cache.notifiedOff = {};
   cache.notifiedOff[dateKey] = Date.now();
+  await persist();
+}
+
+// ── 急騰・急落アラートの通知済み管理（同日同方向の重複通知を防ぐ。key=`YYYY-MM-DD:TICKER:up|down`）──
+export function hasMoveAlert(key) {
+  return !!(cache.moveAlerts && cache.moveAlerts[key]);
+}
+
+export async function markMoveAlert(key, todayKey) {
+  if (!cache.moveAlerts) cache.moveAlerts = {};
+  // 当日以外の古いキーは掃除（肥大化防止）
+  for (const k of Object.keys(cache.moveAlerts)) {
+    if (todayKey && !k.startsWith(todayKey + ':')) delete cache.moveAlerts[k];
+  }
+  cache.moveAlerts[key] = Date.now();
   await persist();
 }

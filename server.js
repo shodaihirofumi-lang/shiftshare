@@ -16,7 +16,8 @@ import {
   getGcalUrls, saveGcalUrl,
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding, sellHolding, getRealized,
-  setHoldingTargets, markHoldingTargetFired, getBuys,
+  setHoldingTargets, markHoldingTargetFired, markHoldingEarningsNotified, getBuys,
+  hasMoveAlert, markMoveAlert,
   getNotes, addNote, deleteNote, toggleNote,
   getMemos, addMemo, deleteMemo, editMemo, setMemoImage,
   getPhotos, addPhoto, deletePhoto, reloadPhotoCache,
@@ -202,64 +203,183 @@ app.get('/api/transactions', (req, res) => {
   res.json(all);
 });
 
+// 売買の振り返りをAIが分析（買い＋売り＋理由メモ＋実現損益から傾向を指摘）
+app.get('/api/trade-review', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
+  const person = ['mine', 'hers'].includes(req.query.person) ? req.query.person : null;
+  let buys = getBuys().map(b => ({ ...b, type: 'buy' }));
+  let sells = getRealized().map(s => ({ ...s, type: 'sell' }));
+  if (person) { buys = buys.filter(b => b.person === person); sells = sells.filter(s => s.person === person); }
+  const all = [...buys, ...sells].sort((a, b) => (a.ts || 0) - (b.ts || 0));
+  if (all.length < 2) return res.status(400).json({ error: '分析するには売買記録が少なすぎます（2件以上必要）' });
+  const lines = all.map(t => {
+    const d = new Date(t.ts || 0);
+    const ds = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+    const who = t.person === 'hers' ? 'ちか' : 'ひろ';
+    const nm = (t.name && t.name.trim()) ? t.name.trim() : t.ticker;
+    const sym = (t.currency || 'JPY') === 'JPY' ? '¥' : '$';
+    if (t.type === 'buy') return `${ds} ${who} 買 ${nm} ${t.shares}株 @${sym}${t.price}${t.reason ? `（理由:${t.reason}）` : ''}`;
+    const r = t.realized || 0;
+    return `${ds} ${who} 売 ${nm} ${t.shares}株 @${sym}${t.sellPrice} 実現${r >= 0 ? '+' : ''}${sym}${Math.round(r)}${t.reason ? `（理由:${t.reason}）` : ''}`;
+  }).join('\n');
+  const prompt = `あなたは個人投資家のやさしい売買コーチです。以下の売買記録から、良かった点と改善点を具体的に指摘してください。
+形式：
+・最初に1〜2文の総評
+・「👍 良い点」を2〜3個（箇条書き）
+・「🔧 改善点」を2〜3個（箇条書き。例：損切りが早い/遅い、利確が早すぎ、根拠なき売買、特定銘柄への偏り など）
+・最後に一言アドバイス
+専門用語は避け、励ます口調で。データにないことは推測しすぎないこと。
+
+売買記録:
+${lines}`;
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] }),
+    });
+    if (!response.ok) { const e = await response.json().catch(() => ({})); throw new Error(e.error?.message || `API error ${response.status}`); }
+    const data = await response.json();
+    res.json({ text: data.content?.[0]?.text?.trim() || '', count: all.length });
+  } catch (e) {
+    console.error('[trade-review]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 配当（インカム）: 各保有株の過去1年の配当履歴から年間配当・利回りを計算
+app.get('/api/dividends', async (_req, res) => {
+  const holdings = getHoldings();
+  if (!holdings.length) return res.json({ byHolding: [], totals: { mine: 0, hers: 0, combined: 0 }, exCalendar: [], usdjpy: null });
+  let usdjpy = 150;
+  try {
+    const fx = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDJPY=X?interval=1d&range=5d', { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+    const p = fx.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (p) usdjpy = p;
+  } catch {}
+  const yearAgo = Date.now() - 365 * 86400000;
+  const tickers = [...new Set(holdings.map(h => h.ticker))];
+  const info = {};
+  for (const sym of tickers) {
+    try {
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1y&events=div`, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      }).then(r => r.json());
+      const r0 = j.chart?.result?.[0];
+      const divs = r0?.events?.dividends ? Object.values(r0.events.dividends) : [];
+      const ttm = divs.filter(d => (d.date * 1000) >= yearAgo).reduce((a, d) => a + (d.amount || 0), 0);
+      const lastEx = divs.length ? Math.max(...divs.map(d => d.date * 1000)) : null;
+      info[sym] = { price: r0?.meta?.regularMarketPrice ?? null, ttm, lastEx };
+    } catch { info[sym] = { price: null, ttm: 0, lastEx: null }; }
+  }
+  const byHolding = [];
+  const totals = { mine: 0, hers: 0, combined: 0 };
+  const exCalendar = [];
+  for (const h of holdings) {
+    const inf = info[h.ticker] || {};
+    const cur = h.ticker.endsWith('.T') ? 'JPY' : 'USD';
+    const divPS = inf.ttm || 0;
+    const annual = divPS * (h.shares || 0);
+    const annualJpy = cur === 'USD' ? annual * usdjpy : annual;
+    const yld = (inf.price && divPS) ? (divPS / inf.price * 100) : 0;
+    if (annualJpy > 0) totals[h.person] = (totals[h.person] || 0) + annualJpy;
+    byHolding.push({ id: h.id, person: h.person, ticker: h.ticker, name: h.name || '', shares: h.shares, currency: cur, price: inf.price, divPerShare: divPS, annual, annualJpy, yield: yld, lastEx: inf.lastEx });
+    if (inf.lastEx && divPS > 0) exCalendar.push({ person: h.person, ticker: h.ticker, name: h.name || '', currency: cur, lastEx: inf.lastEx, amount: divPS });
+  }
+  totals.combined = (totals.mine || 0) + (totals.hers || 0);
+  byHolding.sort((a, b) => b.annualJpy - a.annualJpy);
+  exCalendar.sort((a, b) => b.lastEx - a.lastEx);
+  res.json({ byHolding, totals, exCalendar, usdjpy });
+});
+
+// 決算カレンダー: 手動入力した決算発表日を持つ保有株を日付順に返す
+app.get('/api/earnings', (_req, res) => {
+  const jstDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date());
+  const today = new Date(jstDate + 'T00:00:00+09:00');
+  const list = getHoldings()
+    .filter(h => /^\d{4}-\d{2}-\d{2}$/.test(h.earningsDate || ''))
+    .map(h => ({
+      id: h.id, person: h.person, ticker: h.ticker, name: h.name || '', earningsDate: h.earningsDate,
+      daysUntil: Math.round((new Date(h.earningsDate + 'T00:00:00+09:00') - today) / 86400000),
+    }))
+    .sort((a, b) => a.earningsDate.localeCompare(b.earningsDate));
+  res.json(list);
+});
+
 // 目標株価（損切・利確）の設定
 app.post('/api/holding/targets', async (req, res) => {
-  const { id, takeProfit, stopLoss } = req.body;
+  const { id, takeProfit, stopLoss, earningsDate } = req.body;
   if (!id) return res.status(400).json({ error: 'id が必要です' });
-  const ok = await setHoldingTargets(id, { takeProfit, stopLoss });
+  const ok = await setHoldingTargets(id, { takeProfit, stopLoss, earningsDate });
   if (!ok) return res.status(404).json({ error: '保有銘柄が見つかりません' });
   res.json({ success: true });
 });
 
-// 目標株価アラート: 全保有株の現在値を取って、損切/利確ラインを跨いだら push 通知
+// 株アラート: 全保有株の現在値を取得し、(1)利確/損切ライン到達 (2)急騰/急落(前日比±5%) (3)決算が近い を push 通知
+const MOVE_ALERT_PCT = 5;
 app.get('/api/check-price-targets', async (_req, res) => {
   if (!VAPID_PUBLIC || !VAPID_PRIVATE) return res.json({ sent: 0, reason: 'no vapid' });
   const all = getHoldings();
-  const targets = all.filter(h => (h.takeProfit && h.takeProfit > 0) || (h.stopLoss && h.stopLoss > 0));
-  if (!targets.length) return res.json({ sent: 0, reason: 'no targets' });
+  if (!all.length) return res.json({ sent: 0, reason: 'no holdings' });
   const subs = getPushSubscriptions();
-  const tickers = [...new Set(targets.map(h => h.ticker))];
-  // 現在値を取得
-  const prices = {};
-  for (const sym of tickers) {
+  if (!subs.length) return res.json({ sent: 0, reason: 'no subscribers' });
+  const jstDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date());
+  const notify = (obj) => { const payload = JSON.stringify(obj); for (const sub of subs) webpush.sendNotification(sub, payload).catch(() => {}); };
+  const tickers = [...new Set(all.map(h => h.ticker))];
+  // 現在値＋前日終値を取得
+  const data = {};
+  for (const symT of tickers) {
     try {
-      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`, {
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symT)}?interval=1d&range=5d`, {
         headers: { 'User-Agent': 'Mozilla/5.0' },
       }).then(r => r.json());
-      const p = j.chart?.result?.[0]?.meta?.regularMarketPrice;
-      if (p != null) prices[sym] = p;
+      const meta = j.chart?.result?.[0]?.meta;
+      if (meta?.regularMarketPrice != null) {
+        // previousClose=前営業日終値（chartPreviousCloseはレンジ起点なので急騰誤検知の元。使わない）
+        data[symT] = { price: meta.regularMarketPrice, prevClose: meta.previousClose ?? meta.regularMarketPreviousClose ?? null };
+      }
     } catch { /* skip */ }
   }
   let sent = 0;
   const fired = [];
-  for (const h of targets) {
-    const p = prices[h.ticker];
-    if (p == null) continue;
+  for (const h of all) {
+    const d = data[h.ticker];
+    if (!d) continue;
+    const p = d.price;
     const cur = h.ticker.endsWith('.T') ? 'JPY' : 'USD';
     const sym = cur === 'JPY' ? '¥' : '$';
     const fmt = (n) => cur === 'JPY' ? Math.round(n).toLocaleString() : n.toLocaleString('en-US', { maximumFractionDigits: 2 });
     const fmtTk = (h.name && h.name.trim()) ? `${h.name.trim()}（${h.ticker}）` : h.ticker;
     const personName = h.person === 'hers' ? 'ちか' : 'ひろ';
-    const fmtFlags = h.targetsFired || {};
-    // 利確: 現在値 >= takeProfit
-    if (h.takeProfit && p >= h.takeProfit && !fmtFlags.tp) {
-      const payload = JSON.stringify({
-        title: `★ 利確ライン到達`,
-        body: `${personName}の${fmtTk} が ${sym}${fmt(p)} (目標 ${sym}${fmt(h.takeProfit)})`,
-      });
-      for (const sub of subs) webpush.sendNotification(sub, payload).catch(() => {});
-      await markHoldingTargetFired(h.id, 'tp');
-      sent++; fired.push({ ticker: h.ticker, kind: 'tp', price: p });
+    const flags = h.targetsFired || {};
+    // (1) 利確 / 損切
+    if (h.takeProfit && p >= h.takeProfit && !flags.tp) {
+      notify({ title: '★ 利確ライン到達', body: `${personName}の${fmtTk} が ${sym}${fmt(p)} (目標 ${sym}${fmt(h.takeProfit)})` });
+      await markHoldingTargetFired(h.id, 'tp'); sent++; fired.push({ ticker: h.ticker, kind: 'tp' });
     }
-    // 損切: 現在値 <= stopLoss
-    if (h.stopLoss && p <= h.stopLoss && !fmtFlags.sl) {
-      const payload = JSON.stringify({
-        title: `▼ 損切ライン到達`,
-        body: `${personName}の${fmtTk} が ${sym}${fmt(p)} (目標 ${sym}${fmt(h.stopLoss)})`,
-      });
-      for (const sub of subs) webpush.sendNotification(sub, payload).catch(() => {});
-      await markHoldingTargetFired(h.id, 'sl');
-      sent++; fired.push({ ticker: h.ticker, kind: 'sl', price: p });
+    if (h.stopLoss && p <= h.stopLoss && !flags.sl) {
+      notify({ title: '▼ 損切ライン到達', body: `${personName}の${fmtTk} が ${sym}${fmt(p)} (目標 ${sym}${fmt(h.stopLoss)})` });
+      await markHoldingTargetFired(h.id, 'sl'); sent++; fired.push({ ticker: h.ticker, kind: 'sl' });
+    }
+    // (2) 急騰 / 急落（前日比 ±MOVE_ALERT_PCT%。同日同方向は1回だけ）
+    if (d.prevClose && d.prevClose > 0) {
+      const chg = (p - d.prevClose) / d.prevClose * 100;
+      if (Math.abs(chg) >= MOVE_ALERT_PCT) {
+        const dir = chg >= 0 ? 'up' : 'down';
+        const key = `${jstDate}:${h.ticker}:${dir}`;
+        if (!hasMoveAlert(key)) {
+          notify({ title: dir === 'up' ? '📈 急騰' : '📉 急落', body: `${personName}の${fmtTk} が前日比 ${chg >= 0 ? '+' : ''}${chg.toFixed(1)}% (${sym}${fmt(p)})` });
+          await markMoveAlert(key, jstDate); sent++; fired.push({ ticker: h.ticker, kind: 'move', chg: Math.round(chg * 10) / 10 });
+        }
+      }
+    }
+    // (3) 決算が近い（当日 or 翌日。1日1回）
+    if (h.earningsDate && h.earningsNotified !== jstDate) {
+      const days = Math.round((new Date(h.earningsDate + 'T00:00:00+09:00') - new Date(jstDate + 'T00:00:00+09:00')) / 86400000);
+      if (days >= 0 && days <= 1) {
+        notify({ title: '📅 決算が近い', body: `${personName}の${fmtTk} の決算は${days === 0 ? '今日' : '明日'}（${h.earningsDate}）` });
+        await markHoldingEarningsNotified(h.id, jstDate); sent++; fired.push({ ticker: h.ticker, kind: 'earnings', days });
+      }
     }
   }
   res.json({ sent, fired });

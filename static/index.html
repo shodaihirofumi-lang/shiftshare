@@ -653,6 +653,37 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .pnl-realized-row { font-size:11px; font-weight:700; margin-top:2px; display:block; }
 .pnl-realized-row.up { color:#c0392b; } .pnl-realized-row.down { color:#2e6da4; }
 
+/* 売買理由・AI振り返り */
+.trade-reason { font-size:11px; color:var(--text-soft); margin-top:3px; line-height:1.45; }
+.review-text { font-size:12.5px; line-height:1.7; color:var(--text); }
+.review-h { font-weight:800; margin:8px 0 2px; }
+.review-p { margin:4px 0; }
+.review-li { padding-left:14px; position:relative; margin:2px 0; }
+.review-li::before { content:'•'; position:absolute; left:2px; color:var(--text-soft); }
+.review-meta { font-size:10px; color:var(--text-soft); margin-top:8px; text-align:right; }
+/* 配当 */
+.div-totals { background:var(--bg); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+.div-total-main { font-size:14px; font-weight:700; }
+.div-total-main b { font-size:17px; color:var(--gold); margin-left:4px; }
+.div-total-sub { font-size:12px; color:var(--text-soft); margin-top:4px; }
+.div-row { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 0; }
+.div-row + .div-row { border-top:1px solid var(--line-soft); }
+.div-row-l { display:flex; align-items:center; gap:5px; min-width:0; }
+.div-name { font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.div-row-r { display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; }
+.div-yield { font-size:11px; color:var(--text-soft); }
+.div-amt { font-size:13px; font-weight:700; }
+/* 決算カレンダー */
+.earn-row { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 0; }
+.earn-row + .earn-row { border-top:1px solid var(--line-soft); }
+.earn-l { display:flex; align-items:center; gap:5px; min-width:0; }
+.earn-name { font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.earn-r { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.earn-date { font-size:13px; font-weight:700; }
+.earn-when { font-size:11px; color:var(--text-soft); min-width:46px; text-align:right; }
+.earn-row.soon .earn-when { color:#c0392b; font-weight:700; }
+.earn-row.past { opacity:.5; }
+
 /* ── 損益 VS バトル ── */
 .vs-card { background:var(--bg); border-radius:16px; padding:22px 16px 18px; margin-bottom:14px; }
 .vs-row { display:flex; align-items:center; justify-content:space-between; gap:4px; }
@@ -776,6 +807,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
               <input id="fh-cost" class="ev-in" type="number" inputmode="decimal" placeholder="取得単価">
               <button class="ev-add-btn" onclick="addHoldingFromUI()">追加</button>
             </div>
+            <input id="fh-reason" class="ev-in" placeholder="買う理由（任意・例：好決算で押し目買い）" maxlength="200" style="margin-top:6px">
           </div>
         </details>
         <div class="folio-note">※「買い/売り/様子見」は週足の移動平均線(13週・26週)とRSI(14週)による機械的な目安です。投資判断はご自身の責任で。</div>
@@ -888,6 +920,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div id="month-battles"></div>
       </div>
       <div class="folio-card">
+        <div class="income-head">配当（インカム）</div>
+        <div id="dividends-content"><div class="screening-progress">損益タブを開くと読み込みます</div></div>
+        <div class="folio-note">※ 過去1年の配当実績から計算した年間配当・利回り。ドル建ては円換算。</div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">決算カレンダー</div>
+        <div id="earnings-content"></div>
+        <div class="folio-note">※ 保有株の「🎯目標」設定で決算発表日を登録すると、ここに並び前日に通知します。</div>
+      </div>
+      <div class="folio-card">
         <div class="income-head">保有株ヒートマップ（当日の変動）</div>
         <div id="heatmap-list"></div>
         <div class="folio-note">※ 当日の終値変動率を色とサイズで表示。タップで個別チャート。</div>
@@ -911,6 +953,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         </div>
         <div id="screening-content"><div class="screening-progress">「スキャン」ボタンを押すと買いシグナル銘柄を検索します</div></div>
         <div class="folio-note">※ MACD・RSI・BBバンドで2つ以上の買いシグナルを検出。投資は自己責任で。</div>
+      </div>
+      <div class="folio-card">
+        <div class="screening-head">
+          <div class="income-head" style="margin:0">🧠 AIで売買を振り返る</div>
+          <button class="screening-refresh-btn" onclick="loadTradeReview()">診断する</button>
+        </div>
+        <div id="review-content"><div class="screening-progress">「診断する」を押すと、売買の傾向をAIが分析します</div></div>
+        <div class="folio-note">※ 買う/売る理由メモと実現損益から、良い点・改善点をやさしくコメントします。</div>
       </div>
       <div class="folio-card">
         <div class="trades-filter" id="trades-filter"></div>
@@ -1076,6 +1126,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <input id="tgt-tp" type="number" inputmode="decimal" class="ev-in" placeholder="例 3500（空欄で解除）">
     <label class="sell-lbl">損切ライン（下回ったら通知）</label>
     <input id="tgt-sl" type="number" inputmode="decimal" class="ev-in" placeholder="例 2800（空欄で解除）">
+    <label class="sell-lbl">決算発表日（任意・前日に通知）</label>
+    <input id="tgt-earn" type="date" class="ev-in">
     <div id="tgt-preview" class="sell-preview"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeTargets()">キャンセル</button>
@@ -1098,6 +1150,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <input id="sell-shares" type="number" inputmode="decimal" class="ev-in" placeholder="売る株数" oninput="updateSellPreview()">
     <label class="sell-lbl">売却単価</label>
     <input id="sell-price" type="number" inputmode="decimal" class="ev-in" placeholder="1株あたりの売却額">
+    <label class="sell-lbl">売る理由（任意）</label>
+    <input id="sell-reason" class="ev-in" placeholder="例：目標到達で利確 / 想定が崩れた" maxlength="200">
     <div id="sell-preview" class="sell-preview"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSell()">キャンセル</button>
@@ -1499,12 +1553,13 @@ async function addHoldingFromUI() {
   const name = document.getElementById('fh-name').value.trim();
   const shares = parseFloat(document.getElementById('fh-shares').value);
   const cost = parseFloat(document.getElementById('fh-cost').value);
+  const reason = document.getElementById('fh-reason').value.trim();
   if (!ticker) { showToast('銘柄コードを入力してください', true); return; }
   if (!(shares>0)) { showToast('株数を入力してください', true); return; }
   try {
-    const r = await fetch('/api/holding', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person:folioPerson, ticker, name, shares, cost:cost||0}) });
+    const r = await fetch('/api/holding', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person:folioPerson, ticker, name, shares, cost:cost||0, reason}) });
     if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error||'エラー'); }
-    document.getElementById('fh-ticker').value=''; document.getElementById('fh-name').value=''; document.getElementById('fh-shares').value=''; document.getElementById('fh-cost').value='';
+    document.getElementById('fh-ticker').value=''; document.getElementById('fh-name').value=''; document.getElementById('fh-shares').value=''; document.getElementById('fh-cost').value=''; document.getElementById('fh-reason').value='';
     await loadHoldings(); showToast('銘柄を追加しました');
   } catch (e) { showToast('追加失敗: '+e.message, true); }
 }
@@ -1526,6 +1581,7 @@ function openSell(id) {
   document.getElementById('sell-sub').textContent = `保有 ${h.shares}株 / 取得平均 ${curSym(cur)}${Math.round(h.cost).toLocaleString()}`;
   document.getElementById('sell-shares').value = h.shares;
   document.getElementById('sell-price').value = q ? q.price : '';
+  document.getElementById('sell-reason').value = '';
   document.getElementById('sell-shares').oninput = updateSellPreview;
   document.getElementById('sell-price').oninput = updateSellPreview;
   updateSellPreview();
@@ -1564,6 +1620,7 @@ function openTargets(id) {
   document.getElementById('tgt-sub').textContent = q ? `現在 ${curSym(cur)}${q.price.toLocaleString()} / 取得平均 ${curSym(cur)}${Math.round(h.cost).toLocaleString()}` : `取得平均 ${curSym(cur)}${Math.round(h.cost).toLocaleString()}`;
   document.getElementById('tgt-tp').value = h.takeProfit || '';
   document.getElementById('tgt-sl').value = h.stopLoss || '';
+  document.getElementById('tgt-earn').value = h.earningsDate || '';
   document.getElementById('tgt-tp').oninput = updateTargetPreview;
   document.getElementById('tgt-sl').oninput = updateTargetPreview;
   updateTargetPreview();
@@ -1591,8 +1648,9 @@ async function doSaveTargets() {
   if (!targetingHolding) return;
   const tp = parseFloat(document.getElementById('tgt-tp').value);
   const sl = parseFloat(document.getElementById('tgt-sl').value);
+  const earningsDate = document.getElementById('tgt-earn').value || '';
   try {
-    const r = await fetch('/api/holding/targets', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id: targetingHolding.id, takeProfit: tp, stopLoss: sl})});
+    const r = await fetch('/api/holding/targets', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id: targetingHolding.id, takeProfit: tp, stopLoss: sl, earningsDate})});
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || '保存失敗');
     closeTargets();
@@ -1609,8 +1667,9 @@ async function doSell() {
   if (!(sellPrice>0)) { showToast('売却単価を入力してください', true); return; }
   if (shares > sellingHolding.shares) { showToast(`保有数を超えています（${sellingHolding.shares}株まで）`, true); return; }
   const cur = (quotes[sellingHolding.ticker]?.currency) || 'JPY';
+  const reason = document.getElementById('sell-reason').value.trim();
   try {
-    const res = await fetch('/api/holding/sell', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person: sellingHolding.person, ticker: sellingHolding.ticker, shares, sellPrice, currency: cur}) });
+    const res = await fetch('/api/holding/sell', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person: sellingHolding.person, ticker: sellingHolding.ticker, shares, sellPrice, currency: cur, reason}) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '売却失敗');
     const up = data.realized >= 0;
@@ -2078,6 +2137,7 @@ function showTab(name) {
   });
   if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
   if (name === 'trades') { window.scrollTo(0,0); return; }
+  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
@@ -3614,7 +3674,84 @@ function renderTrades() {
           ${realizedHtml}
         </div>
         <div class="trade-detail">${dStr}　${t.shares}株 @${sym}${fmtNum(price, cur)}　合計 ${sym}${fmtNum(t.shares * price, cur)}</div>
+        ${t.reason ? `<div class="trade-reason">💬 ${escapeHtml(t.reason)}</div>` : ''}
       </div>
+    </div>`;
+  }).join('');
+}
+
+// ── AI売買振り返り ──
+async function loadTradeReview() {
+  const el = document.getElementById('review-content');
+  if (!el) return;
+  el.innerHTML = '<div class="screening-progress">AIが分析中…（10秒ほど）</div>';
+  try {
+    const r = await fetch('/api/trade-review');
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || '分析に失敗しました');
+    el.innerHTML = `<div class="review-text">${formatReview(d.text)}</div><div class="review-meta">${d.count}件の売買から分析</div>`;
+  } catch (e) {
+    el.innerHTML = `<div class="screening-progress">${escapeHtml(e.message)}</div>`;
+  }
+}
+function formatReview(text) {
+  if (!text) return '';
+  return text.split('\n').map(line => {
+    const t = line.trim();
+    if (!t) return '';
+    if (/^(👍|🔧|💡|👎|⚠️)/.test(t)) return `<div class="review-h">${escapeHtml(t)}</div>`;
+    if (/^[・\-•]/.test(t)) return `<div class="review-li">${escapeHtml(t.replace(/^[・\-•]\s*/, ''))}</div>`;
+    return `<div class="review-p">${escapeHtml(t)}</div>`;
+  }).join('');
+}
+
+// ── 配当（インカム）──
+async function loadDividends() {
+  const el = document.getElementById('dividends-content');
+  if (!el) return;
+  el.innerHTML = '<div class="screening-progress">配当データを取得中…</div>';
+  let d; try { d = await fetch('/api/dividends').then(r => r.json()); } catch { el.innerHTML = '<div class="screening-progress">接続エラー</div>'; return; }
+  renderDividends(d);
+}
+function renderDividends(d) {
+  const el = document.getElementById('dividends-content');
+  if (!el) return;
+  const yen = n => '¥' + Math.round(n || 0).toLocaleString();
+  if (!d.byHolding || !d.byHolding.length) { el.innerHTML = '<div class="screening-progress">保有株がありません</div>'; return; }
+  const withDiv = d.byHolding.filter(h => h.annualJpy > 0);
+  let html = `<div class="div-totals">
+    <div class="div-total-main">二人の年間配当<b>${yen(d.totals.combined)}</b></div>
+    <div class="div-total-sub"><span class="pnl-who mine">${NAMES.mine}</span>${yen(d.totals.mine)}　<span class="pnl-who hers">${NAMES.hers}</span>${yen(d.totals.hers)}</div>
+  </div>`;
+  if (!withDiv.length) {
+    html += '<div class="screening-progress">配当実績のある銘柄がありません（無配 or データ未取得）</div>';
+  } else {
+    html += withDiv.map(h => {
+      const nm = (h.name && h.name.trim()) ? h.name.trim() : h.ticker;
+      return `<div class="div-row">
+        <div class="div-row-l"><span class="pnl-who ${h.person}">${NAMES[h.person]}</span><span class="div-name">${escapeHtml(nm)}</span></div>
+        <div class="div-row-r"><span class="div-yield">利回り ${h.yield.toFixed(2)}%</span><span class="div-amt">年 ${yen(h.annualJpy)}</span></div>
+      </div>`;
+    }).join('');
+  }
+  el.innerHTML = html;
+}
+
+// ── 決算カレンダー ──
+async function loadEarnings() {
+  const el = document.getElementById('earnings-content');
+  if (!el) return;
+  let list; try { list = await fetch('/api/earnings').then(r => r.json()); } catch { return; }
+  if (!list.length) { el.innerHTML = '<div class="screening-progress">決算日が登録された銘柄はありません</div>'; return; }
+  el.innerHTML = list.map(e => {
+    const nm = (e.name && e.name.trim()) ? e.name.trim() : e.ticker;
+    const past = e.daysUntil < 0;
+    const soon = e.daysUntil >= 0 && e.daysUntil <= 3;
+    const when = past ? '終了' : e.daysUntil === 0 ? '今日' : e.daysUntil === 1 ? '明日' : `あと${e.daysUntil}日`;
+    const [, mo, da] = e.earningsDate.split('-');
+    return `<div class="earn-row${soon ? ' soon' : ''}${past ? ' past' : ''}">
+      <div class="earn-l"><span class="pnl-who ${e.person}">${NAMES[e.person]}</span><span class="earn-name">${escapeHtml(nm)}</span></div>
+      <div class="earn-r"><span class="earn-date">${mo}/${da}</span><span class="earn-when">${when}</span></div>
     </div>`;
   }).join('');
 }
