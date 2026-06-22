@@ -615,6 +615,13 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .asset-chg { font-size:12px; font-weight:700; }
 .asset-chg.up { color:#c0392b; } .asset-chg.down { color:#2e6da4; }
 #asset-chart-body { margin-top:4px; }
+.asset-breakdown { width:100%; margin-top:4px; }
+.asset-breakdown summary { font-size:11px; color:var(--text-soft); cursor:pointer; padding:2px 0; }
+.asset-bk-list { padding:4px 0 2px; }
+.asset-bk-row { display:flex; align-items:baseline; gap:6px; padding:2px 0; font-size:11px; border-bottom:1px solid var(--border); }
+.asset-bk-name { min-width:60px; color:var(--text-soft); }
+.asset-bk-calc { flex:1; font-size:10px; color:var(--text-soft); }
+.asset-bk-val { font-weight:700; color:var(--text); white-space:nowrap; }
 .sig { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px; white-space:nowrap; }
 .sig-buy { background:#e2efde; color:#2e7d32; }
 .sig-sell { background:#f6e0de; color:#c0392b; }
@@ -1755,13 +1762,14 @@ async function doSell() {
     await loadHoldings(); await loadPortfolioHistory();
   } catch (e) { showToast('売却失敗: '+e.message, true); }
 }
-let pnlHist = [], pnlYM = null;
+let pnlHist = [], pnlYM = null, pnlUsdjpy = 157;
 let assetRange = '6mo';
 const ASSET_RNG_LBL = { '1mo':'1ヶ月', '6mo':'6ヶ月', '1y':'1年' };
 const ASSET_RNG_DAYS = { '1mo': 22, '6mo': 125, '1y': 260 };
 async function loadPortfolioHistory() {
   let d; try { d = await fetch('/api/portfolio-history').then(r=>r.json()); } catch { return; }
   pnlHist = d.history || [];
+  if (d.usdjpy) pnlUsdjpy = d.usdjpy;
   renderPnlHistory();
   renderAssetChart();
 }
@@ -1800,10 +1808,24 @@ function renderAssetChart() {
     const chg = last - first;
     const pct = first ? (chg / first) * 100 : 0;
     const up = chg >= 0;
+    // 内訳: 保有銘柄別の円換算評価額
+    const myH = (holdings || []).filter(h => (h.person === 'hers' ? 'hers' : 'mine') === p);
+    const bkRows = myH.map(h => {
+      const q = quotes[h.ticker]; const price = q?.price || h.cost || 0;
+      const cur = q?.currency || 'JPY'; const fx = cur === 'USD' ? pnlUsdjpy : 1;
+      const valJpy = Math.round(price * h.shares * fx);
+      const calcStr = cur === 'USD'
+        ? `$${Number(price.toFixed(2)).toLocaleString()} × ${h.shares}株 × ¥${Math.round(pnlUsdjpy)}`
+        : `¥${Math.round(price).toLocaleString()} × ${h.shares}株`;
+      return `<div class="asset-bk-row"><span class="asset-bk-name">${h.name||h.ticker}</span><span class="asset-bk-calc">${calcStr}</span><span class="asset-bk-val">¥${valJpy.toLocaleString()}</span></div>`;
+    }).join('');
+    const bkSum = myH.reduce((s, h) => { const q=quotes[h.ticker]; const pr=q?.price||h.cost||0; const fx=(q?.currency||'JPY')==='USD'?pnlUsdjpy:1; return s+pr*h.shares*fx; }, 0);
+    const breakdown = bkRows ? `<details class="asset-breakdown"><summary>内訳を見る（銘柄別円換算）</summary><div class="asset-bk-list">${bkRows}<div class="asset-bk-row" style="font-weight:700"><span class="asset-bk-name">合計</span><span class="asset-bk-calc"></span><span class="asset-bk-val">¥${Math.round(bkSum).toLocaleString()}</span></div></div></details>` : '';
     return `<div class="asset-line">
       <span class="asset-who ${p}">${NAMES[p]}</span>
       <span class="asset-val">¥${Math.round(last).toLocaleString()}</span>
       <span class="asset-chg ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}¥${Math.abs(Math.round(chg)).toLocaleString()} (${up?'+':''}${pct.toFixed(1)}%)</span>
+      ${breakdown}
     </div>`;
   });
   sumEl.innerHTML = lines.join('');

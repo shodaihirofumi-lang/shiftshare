@@ -592,7 +592,7 @@ app.get('/api/portfolio-history', async (_req, res) => {
     });
     history.push({ date, mine: Math.round(mine), hers: Math.round(hers) });
   }
-  res.json({ history });
+  res.json({ history, usdjpy: Math.round(usdjpy * 100) / 100 });
 });
 
 // ── 個別銘柄の値動き（チャート用）──
