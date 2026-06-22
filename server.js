@@ -120,21 +120,23 @@ function buildSellMemoText({ ticker, shares, sellPrice, realized, currency, name
 }
 
 app.post('/api/holding', async (req, res) => {
-  const { person, ticker, name, shares, cost, price, currency } = req.body;
+  const { person, ticker, name, shares, cost, price, currency, purchaseDate } = req.body;
   if (!['mine', 'hers'].includes(person)) return res.status(400).json({ error: 'person は mine または hers のみ' });
   if (!ticker || !String(ticker).trim()) return res.status(400).json({ error: '銘柄コードが必要です' });
   const id = await addHolding(req.body);
-  // 購入を今日の日記に自動追記（frontendは cost フィールドで送信）
+  // 購入を日記に自動追記（purchaseDateが指定されればその日、なければ今日）
   const buyPrice = cost || price;
   if (buyPrice && parseFloat(buyPrice) > 0 && shares) {
     try {
-      const jstDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date());
+      const diaryDate = purchaseDate && /^\d{4}-\d{2}-\d{2}$/.test(purchaseDate)
+        ? purchaseDate
+        : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date());
       const cur = currency || inferCurrency(ticker);
       const sym = cur === 'JPY' ? '¥' : '$';
       const note = `${name||ticker}を${shares}株購入 @${sym}${Number(buyPrice).toLocaleString()}`;
-      const ex = getDiary(jstDate) || {};
+      const ex = getDiary(diaryDate) || {};
       const pd = ex[person] || {};
-      await setDiary(jstDate, { ...ex, [person]: { ...pd, raw: pd.raw ? pd.raw+'\n'+note : note, savedAt: Date.now() } });
+      await setDiary(diaryDate, { ...ex, [person]: { ...pd, raw: pd.raw ? pd.raw+'\n'+note : note, savedAt: Date.now() } });
     } catch {}
   }
   res.json({ success: true, id });

@@ -1035,6 +1035,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
               <input id="fh-cost" class="ev-in" type="number" inputmode="decimal" placeholder="取得単価">
               <button class="ev-add-btn" onclick="addHoldingFromUI()">追加</button>
             </div>
+            <input id="fh-date" class="ev-in" type="date" style="margin-top:6px" title="購入日">
             <input id="fh-reason" class="ev-in" placeholder="買う理由（任意・例：好決算で押し目買い）" maxlength="200" style="margin-top:6px">
           </div>
         </details>
@@ -1915,12 +1916,13 @@ async function addHoldingFromUI() {
   const shares = parseFloat(document.getElementById('fh-shares').value);
   const cost = parseFloat(document.getElementById('fh-cost').value);
   const reason = document.getElementById('fh-reason').value.trim();
+  const purchaseDate = document.getElementById('fh-date').value || null;
   if (!ticker) { showToast('銘柄コードを入力してください', true); return; }
   if (!(shares>0)) { showToast('株数を入力してください', true); return; }
   try {
-    const r = await fetch('/api/holding', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person:folioPerson, ticker, name, shares, cost:cost||0, reason}) });
+    const r = await fetch('/api/holding', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person:folioPerson, ticker, name, shares, cost:cost||0, reason, purchaseDate}) });
     if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error||'エラー'); }
-    document.getElementById('fh-ticker').value=''; document.getElementById('fh-name').value=''; document.getElementById('fh-shares').value=''; document.getElementById('fh-cost').value=''; document.getElementById('fh-reason').value='';
+    document.getElementById('fh-ticker').value=''; document.getElementById('fh-name').value=''; document.getElementById('fh-shares').value=''; document.getElementById('fh-cost').value=''; document.getElementById('fh-reason').value=''; document.getElementById('fh-date').value='';
     await Promise.all([loadHoldings(), loadDiaries(), loadTrades()]);
     showToast('銘柄を追加しました');
   } catch (e) { showToast('追加失敗: '+e.message, true); }

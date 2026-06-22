@@ -410,13 +410,14 @@ export async function addHolding(h) {
   // 価格付きの買いは取引履歴に記録（チャートに買いマーカーを出すため）
   if (addShares > 0 && addCost > 0) {
     if (!cache.buys) cache.buys = [];
+    const buyTs = h.purchaseDate ? new Date(h.purchaseDate + 'T12:00:00+09:00').getTime() : Date.now();
     cache.buys.push({
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       person, ticker, name: String(h.name || '').slice(0, 40),
       shares: addShares, price: addCost,
       currency: ticker.endsWith('.T') ? 'JPY' : 'USD',
       reason: String(h.reason || '').slice(0, 200) || null,
-      ts: Date.now(),
+      ts: buyTs,
     });
   }
   // 同じperson×tickerが既にあれば加算し、加重平均で取得単価を更新（2つに分かれて並ばないように）
