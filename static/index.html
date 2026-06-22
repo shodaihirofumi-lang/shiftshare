@@ -1678,7 +1678,8 @@ async function addHoldingFromUI() {
     const r = await fetch('/api/holding', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person:folioPerson, ticker, name, shares, cost:cost||0, reason}) });
     if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error||'エラー'); }
     document.getElementById('fh-ticker').value=''; document.getElementById('fh-name').value=''; document.getElementById('fh-shares').value=''; document.getElementById('fh-cost').value=''; document.getElementById('fh-reason').value='';
-    await loadHoldings(); showToast('銘柄を追加しました');
+    await Promise.all([loadHoldings(), loadDiaries(), loadTrades()]);
+    showToast('銘柄を追加しました');
   } catch (e) { showToast('追加失敗: '+e.message, true); }
 }
 async function delHolding(id, name) {
