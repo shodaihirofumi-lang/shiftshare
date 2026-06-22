@@ -783,6 +783,35 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .both-off.wx-snow { border-color:#cdd9e3; background:linear-gradient(120deg,#f6f9fc,#e5edf4,#f6f9fc); box-shadow:0 0 24px rgba(140,175,210,.6); }
 .both-off.wx-snow .both-off-badge { color:#5a7da0; }
 .both-off.wx-thunder { border-color:#cdaf7a; background:linear-gradient(120deg,#f3ecdf,#e6d3b3,#f3ecdf); box-shadow:0 0 22px rgba(180,140,90,.5); }
+
+/* ── GRID CALENDAR ── */
+.gcal2-wrap { padding:0 0 80px; }
+.gcal2-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px 6px; }
+.gcal2-title { font-size:16px; font-weight:700; color:var(--text); }
+.gcal2-nav { background:none; border:none; font-size:24px; padding:4px 12px; cursor:pointer; color:var(--text); }
+.gcal2-dow { display:grid; grid-template-columns:repeat(7,1fr); padding:0 4px 4px; }
+.gcal2-dow-cell { text-align:center; font-size:10px; font-weight:700; padding:3px 0; color:var(--text-soft); }
+.gcal2-dow-su { color:#a36a64; }
+.gcal2-dow-sa { color:#6a7384; }
+.gcal2-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; padding:0 4px 8px; }
+.gcal2-cell { background:var(--card); border-radius:5px; padding:3px 2px 4px; min-height:60px; cursor:pointer; }
+.gcal2-cell.dim { background:transparent; opacity:0.35; pointer-events:none; }
+.gcal2-cell.today-c { outline:1.5px solid var(--mine); }
+.gcal2-cell.both-off-c { background:var(--gold-bg); }
+.gcal2-dn { font-size:11px; font-weight:700; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; margin:0 auto 3px; }
+.gcal2-dn.today-num { background:var(--mine); color:#fff; }
+.gcal2-dn.su-num { color:#a36a64; }
+.gcal2-dn.sa-num { color:#6a7384; }
+.gcal2-tag { font-size:8px; font-weight:600; border-radius:3px; padding:1px 2px; margin:1px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; text-align:center; line-height:1.4; }
+.gcal2-tag.mine-w { background:var(--mine-bg); color:var(--mine); }
+.gcal2-tag.hers-w { background:var(--hers-bg); color:var(--hers); }
+.gcal2-tag.mine-off { background:#eceae3; color:#74695b; }
+.gcal2-tag.hers-off { background:#eceae3; color:#74695b; }
+.gcal2-tag.both-off-tag { background:var(--gold-bg); color:var(--gold); font-size:7px; }
+.gcal2-ev-dots { text-align:center; margin-top:2px; line-height:1; }
+.gcal2-ev-dot { display:inline-block; width:4px; height:4px; border-radius:50%; background:var(--mine); margin:0 1px; }
+.gcal2-ev-dot.hers-dot { background:var(--hers); }
+.gcal2-ev-dot.ev-dot { background:var(--text-soft); }
 </style>
 </head>
 <body>
@@ -893,6 +922,30 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <div class="gcal-row"><span class="gcal-lbl hers">ちか</span><span class="gt-status" id="gt-status-hers"></span></div>
         </div>
       </details>
+    </div>
+
+    <!-- GRID CALENDAR -->
+    <div id="tab-gridcal" class="screen">
+      <div class="page-top">
+        <div><div class="page-title">月表示</div></div>
+      </div>
+      <div class="gcal2-wrap">
+        <div class="gcal2-header">
+          <button class="gcal2-nav" onclick="changeGridMonth(-1)">‹</button>
+          <div class="gcal2-title" id="gcal2-label">— 年 — 月</div>
+          <button class="gcal2-nav" onclick="changeGridMonth(1)">›</button>
+        </div>
+        <div class="gcal2-dow">
+          <div class="gcal2-dow-cell gcal2-dow-su">日</div>
+          <div class="gcal2-dow-cell">月</div>
+          <div class="gcal2-dow-cell">火</div>
+          <div class="gcal2-dow-cell">水</div>
+          <div class="gcal2-dow-cell">木</div>
+          <div class="gcal2-dow-cell">金</div>
+          <div class="gcal2-dow-cell gcal2-dow-sa">土</div>
+        </div>
+        <div class="gcal2-grid" id="gcal2-grid"></div>
+      </div>
     </div>
 
     <!-- 掲示板 -->
@@ -1101,6 +1154,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       カレンダー
     </button>
+    <button class="nav-btn" id="nav-gridcal" onclick="showTab('gridcal')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+      月表示
+    </button>
     <button class="nav-btn" id="nav-pnl" onclick="showTab('pnl')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
       損益
@@ -1283,6 +1340,7 @@ let folioPerson = 'mine';
 let weather = { mine: {}, hers: {} };
 let lastStatus = {};
 let viewYM = null;
+let gridViewYM = null;
 let editorDate = null;
 let evPerson = 'mine';
 let expPerson = 'mine';
@@ -2231,11 +2289,12 @@ enterApp();
 
 // ── TABS ──
 function showTab(name) {
-  ['calendar','board','pnl','trades','memo','diary','upload'].forEach(t => {
+  ['calendar','gridcal','board','pnl','trades','memo','diary','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
   if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
+  if (name === 'gridcal') { renderGridCalendar(); window.scrollTo(0,0); return; }
   if (name === 'trades') { window.scrollTo(0,0); return; }
   if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
@@ -2438,6 +2497,74 @@ function changeMonth(delta) {
   viewYM = { year, month };
   renderCalendar();
 }
+function changeGridMonth(d) {
+  let { year, month } = gridViewYM || { year: new Date().getFullYear(), month: new Date().getMonth()+1 };
+  month += d;
+  if (month < 1) { month = 12; year--; } else if (month > 12) { month = 1; year++; }
+  gridViewYM = { year, month };
+  renderGridCalendar();
+}
+function renderGridCalendar() {
+  if (!gridViewYM) {
+    const now = new Date();
+    gridViewYM = { year: now.getFullYear(), month: now.getMonth()+1 };
+  }
+  const { year, month } = gridViewYM;
+  const lbl = document.getElementById('gcal2-label');
+  if (lbl) lbl.textContent = `${year}年 ${month}月`;
+  const grid = document.getElementById('gcal2-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const firstDow = new Date(year, month-1, 1).getDay();
+  const lastDay = new Date(year, month, 0).getDate();
+  const prevLastDay = new Date(year, month-1, 0).getDate();
+  const cells = [];
+  for (let i=0; i<firstDow; i++) {
+    const d = prevLastDay - firstDow + 1 + i;
+    const m = month===1 ? 12 : month-1;
+    const y = month===1 ? year-1 : year;
+    cells.push({ day:d, month:m, year:y, dim:true });
+  }
+  for (let d=1; d<=lastDay; d++) cells.push({ day:d, month, year, dim:false });
+  const rem = cells.length % 7;
+  if (rem) for (let i=1; i<=7-rem; i++) cells.push({ day:i, month:month===12?1:month+1, year:month===12?year+1:year, dim:true });
+  for (const c of cells) {
+    const key = `${c.year}-${String(c.month).padStart(2,'0')}-${String(c.day).padStart(2,'0')}`;
+    const dow = new Date(c.year, c.month-1, c.day).getDay();
+    const sd = shiftsByDate[key] || {};
+    const mine = sd.mine, hers = sd.hers;
+    const evs = eventsByDate[key] || [];
+    const gevs = gcalByDate[key] || [];
+    const bothOff = mine && hers && mine.shift_type==='off' && hers.shift_type==='off';
+    const isToday = key === todayKey;
+    let cellClass = 'gcal2-cell' + (c.dim?' dim':'') + (isToday?' today-c':'') + (bothOff&&!c.dim?' both-off-c':'');
+    let numClass = 'gcal2-dn' + (isToday?' today-num':dow===0?' su-num':dow===6?' sa-num':'');
+    let tags = '';
+    if (!c.dim) {
+      if (bothOff) {
+        tags = `<span class="gcal2-tag both-off-tag">ふたり休み</span>`;
+      } else {
+        if (mine) tags += mine.shift_type==='work'
+          ? `<span class="gcal2-tag mine-w">ひ ${mine.start_time||'仕事'}</span>`
+          : `<span class="gcal2-tag mine-off">ひ ${mine.label||'休'}</span>`;
+        if (hers) tags += hers.shift_type==='work'
+          ? `<span class="gcal2-tag hers-w">ち ${hers.start_time||'仕事'}</span>`
+          : `<span class="gcal2-tag hers-off">ち ${hers.label||'休'}</span>`;
+      }
+    }
+    let evDots = '';
+    if (!c.dim && (evs.length || gevs.length)) {
+      evDots = `<div class="gcal2-ev-dots">${[...evs,...gevs].slice(0,3).map(e=>`<span class="gcal2-ev-dot${e.person==='hers'?' hers-dot':' ev-dot'}"></span>`).join('')}</div>`;
+    }
+    const cellEl = document.createElement('div');
+    cellEl.className = cellClass;
+    cellEl.innerHTML = `<div class="${numClass}">${c.day}</div>${tags}${evDots}`;
+    if (!c.dim) cellEl.addEventListener('click', () => openDayEditor(key));
+    grid.appendChild(cellEl);
+  }
+}
 function renderCalendar() {
   const status = lastStatus || {};
   const both = status.mine && status.hers, any = status.mine || status.hers;
@@ -2501,6 +2628,7 @@ function renderCalendar() {
     }
     grid.appendChild(block);
   }
+  renderGridCalendar();
 }
 function eventChip(e) {
   const pc = e.person==='mine' ? 'mine' : e.person==='hers' ? 'hers' : '';
