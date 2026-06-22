@@ -2956,7 +2956,7 @@ function calcPersonPnl(p) {
 function renderPnlTotalTop() {
   function fmt(v) { return `${v >= 0 ? '+' : '−'}¥${Math.abs(v).toLocaleString()}`; }
   function cls(v) { return v >= 0 ? 'up' : 'down'; }
-  const rows = ['mine', 'hers'].map(p => {
+  const rows = ['hers', 'mine'].map(p => {
     const { unrealized, realized, total } = calcPersonPnl(p);
     return `<div class="pnl-top-person">
       <div class="pnl-top-who ${p}">${NAMES[p]}</div>
