@@ -1939,13 +1939,18 @@ function renderAssetChart() {
   const persons = ['mine', 'hers'].filter(p => data.some(d => d[p] > 0));
   // サマリー（期首→期末の変化）
   const lines = persons.map(p => {
-    const first = data[0][p] || 0;
     const last = data[data.length - 1][p] || 0;
-    const chg = last - first;
-    const pct = first ? (chg / first) * 100 : 0;
-    const up = chg >= 0;
     // 内訳: 保有銘柄別の円換算評価額
     const myH = (holdings || []).filter(h => (h.person === 'hers' ? 'hers' : 'mine') === p);
+    // 取得単価ベースのコスト合計（含み損益の基準）
+    const costBasis = Math.round(myH.reduce((s, h) => {
+      const cur = quotes[h.ticker]?.currency || (h.ticker.endsWith('.T') ? 'JPY' : 'USD');
+      const fx = cur === 'USD' ? pnlUsdjpy : 1;
+      return s + (h.cost || 0) * h.shares * fx;
+    }, 0));
+    const chg = Math.round(last - costBasis);
+    const pct = costBasis > 0 ? (chg / costBasis) * 100 : 0;
+    const up = chg >= 0;
     const bkRows = myH.map(h => {
       const q = quotes[h.ticker]; const price = q?.price || h.cost || 0;
       const cur = q?.currency || 'JPY'; const fx = cur === 'USD' ? pnlUsdjpy : 1;
