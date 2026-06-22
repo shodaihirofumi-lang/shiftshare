@@ -2698,18 +2698,23 @@ function setGoalPerson(p) {
   const btn = document.getElementById('goal-add-btn');
   if (btn) btn.className = 'goal-add-btn' + (p === 'hers' ? ' hers' : '');
 }
-function realizedJpyFor(person) {
-  return Math.max(0, Math.round(
-    (allRealized || [])
-      .filter(r => r.person === person && (r.currency || 'JPY') === 'JPY')
-      .reduce((s, r) => s + (r.realized || 0), 0)
-  ));
+function unrealizedJpyFor(person) {
+  const last = pnlHist[pnlHist.length - 1];
+  if (!last) return 0;
+  const currentVal = last[person] || 0;
+  const myH = (holdings || []).filter(h => (h.person === 'hers' ? 'hers' : 'mine') === person);
+  const costBasis = myH.reduce((s, h) => {
+    const cur = quotes[h.ticker]?.currency || (h.ticker.endsWith('.T') ? 'JPY' : 'USD');
+    const fx = cur === 'USD' ? pnlUsdjpy : 1;
+    return s + (h.cost || 0) * h.shares * fx;
+  }, 0);
+  return Math.max(0, Math.round(currentVal - costBasis));
 }
 function renderGoals() {
   const el = document.getElementById('goals-list');
   if (!el) return;
-  const currentMine = realizedJpyFor('mine');
-  const currentHers = realizedJpyFor('hers');
+  const currentMine = unrealizedJpyFor('mine');
+  const currentHers = unrealizedJpyFor('hers');
   const now = new Date();
   function goalCard(g, earnedJpy) {
     const pct = g.amount > 0 ? Math.min(Math.round(earnedJpy / g.amount * 100), 999) : 0;
@@ -2732,7 +2737,7 @@ function renderGoals() {
       <div class="goal-target">目標 ¥${g.amount.toLocaleString()}</div>
       <div class="goal-bar-wrap"><div class="${barCls}" style="width:${Math.min(pct,100)}%"></div></div>
       <div class="goal-stats">
-        <span class="goal-now">実現益 ¥${earnedJpy.toLocaleString()}</span>
+        <span class="goal-now">評価益 ¥${earnedJpy.toLocaleString()}</span>
         <span class="goal-pct">${pct}%</span>
         ${done ? '<span class="goal-rem" style="color:var(--gold)">達成済み</span>' : `<span class="goal-rem">あと ¥${rem.toLocaleString()}</span>`}
       </div>
@@ -2747,11 +2752,11 @@ function renderGoals() {
   }
   let html = '';
   if (mineGoals.length) {
-    html += `<div class="goal-section-head mine">ひろ <span class="goal-section-val">実現益 ¥${currentMine.toLocaleString()}</span></div>`;
+    html += `<div class="goal-section-head mine">ひろ <span class="goal-section-val">評価益 ¥${currentMine.toLocaleString()}</span></div>`;
     html += mineGoals.map(g => goalCard(g, currentMine)).join('');
   }
   if (hersGoals.length) {
-    html += `<div class="goal-section-head hers">ちか <span class="goal-section-val">実現益 ¥${currentHers.toLocaleString()}</span></div>`;
+    html += `<div class="goal-section-head hers">ちか <span class="goal-section-val">評価益 ¥${currentHers.toLocaleString()}</span></div>`;
     html += hersGoals.map(g => goalCard(g, currentHers)).join('');
   }
   el.innerHTML = html;
