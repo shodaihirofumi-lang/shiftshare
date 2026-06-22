@@ -732,6 +732,47 @@ app.post('/api/target-prices/delete', async (req, res) => {
   res.json({ success: true });
 });
 
+// ── 今月の損益まとめ AI生成 ──
+app.post('/api/monthly-summary', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
+  const { ym, hiroPnl, chikaPnl, trades, topGains, topLosses } = req.body;
+  const lines = (trades || []).map(t => {
+    const who = t.person === 'hers' ? 'ちか' : 'ひろ';
+    const d = new Date(t.ts || 0);
+    const ds = `${d.getMonth()+1}/${d.getDate()}`;
+    if (t.type === 'buy') return `${ds} ${who} 買 ${t.name||t.ticker} ${t.shares}株 @${t.price}`;
+    return `${ds} ${who} 売 ${t.name||t.ticker} 実現${t.realized >= 0 ? '+' : ''}¥${Math.round(t.realized||0).toLocaleString()}`;
+  }).join('\n');
+  const topG = (topGains||[]).map(h => `${h.name||h.ticker} +${h.pct}%`).join('、');
+  const topL = (topLosses||[]).map(h => `${h.name||h.ticker} ${h.pct}%`).join('、');
+  const prompt = `あなたはカップルの株投資日記ライターです。以下のデータを元に、今月（${ym}）の投資まとめを日記風に150〜200字で書いてください。
+ひろの損益合計: ${hiroPnl >= 0 ? '+' : ''}¥${Math.round(hiroPnl||0).toLocaleString()}
+ちかの損益合計: ${chikaPnl >= 0 ? '+' : ''}¥${Math.round(chikaPnl||0).toLocaleString()}
+今月の売買:
+${lines || 'なし'}
+${topG ? `含み益トップ: ${topG}` : ''}
+${topL ? `含み損トップ: ${topL}` : ''}
+
+・2人を名前で呼んで、親しみやすく
+・数字は具体的に
+・良かった点・反省点を1つずつ
+・最後にひと言励ましで締める
+・絵文字OK`;
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 600, messages: [{ role: 'user', content: prompt }] }),
+    });
+    if (!response.ok) { const e = await response.json().catch(()=>({})); throw new Error(e.error?.message || `API ${response.status}`); }
+    const data = await response.json();
+    res.json({ text: data.content?.[0]?.text?.trim() || '' });
+  } catch (e) {
+    console.error('[monthly-summary]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── MEMOS（ひろ/ちかそれぞれの個人メモ）──
 app.get('/api/memos', (_req, res) => res.json(getMemos()));
 app.post('/api/memo', async (req, res) => {

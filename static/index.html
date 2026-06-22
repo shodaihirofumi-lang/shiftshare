@@ -906,6 +906,49 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .pnl-top-total { font-size:20px; font-weight:900; letter-spacing:-0.5px; }
 .pnl-top-total.up { color:#c0392b; }
 .pnl-top-total.down { color:#2e6da4; }
+/* ── LOSS RANKING ── */
+.loss-rank-list { display:flex; flex-direction:column; gap:6px; }
+.loss-rank-item { background:var(--bg); border-radius:10px; padding:11px 13px; display:flex; align-items:center; gap:10px; }
+.loss-rank-no { font-size:18px; font-weight:900; color:var(--text-soft); width:24px; text-align:center; flex-shrink:0; }
+.loss-rank-info { flex:1; min-width:0; }
+.loss-rank-ticker { font-size:14px; font-weight:800; color:var(--text); }
+.loss-rank-name { font-size:11px; color:var(--text-soft); }
+.loss-rank-val { text-align:right; flex-shrink:0; }
+.loss-rank-jpy { font-size:15px; font-weight:900; }
+.loss-rank-jpy.neg { color:#2e6da4; }
+.loss-rank-jpy.pos { color:#c0392b; }
+.loss-rank-pct { font-size:11px; font-weight:700; }
+.loss-rank-pct.neg { color:#2e6da4; }
+.loss-rank-pct.pos { color:#c0392b; }
+.loss-rank-tag { font-size:10px; font-weight:800; padding:2px 6px; border-radius:99px; margin-left:4px; }
+.loss-rank-tag.mine { background:var(--mine-bg); color:var(--mine); }
+.loss-rank-tag.hers { background:var(--hers-bg); color:var(--hers); }
+.loss-rank-toggle { display:flex; gap:6px; margin-bottom:10px; }
+.loss-rank-btn { flex:1; padding:7px; border-radius:8px; border:1.5px solid var(--line); background:var(--bg); color:var(--text-soft); font-size:12px; font-weight:700; cursor:pointer; }
+.loss-rank-btn.active { background:var(--mine-bg); border-color:var(--mine-border); color:var(--mine); }
+.loss-rank-btn.hers-active { background:var(--hers-bg); border-color:var(--hers-border); color:var(--hers); }
+/* ── COST AVG SIMULATOR ── */
+.cavg-form { display:flex; flex-direction:column; gap:8px; }
+.cavg-row { display:flex; gap:8px; align-items:center; }
+.cavg-in { flex:1; padding:9px 11px; border-radius:9px; border:1.5px solid var(--line); background:var(--bg); color:var(--text); font-size:13px; font-family:inherit; }
+.cavg-in:focus { outline:none; border-color:var(--mine); }
+.cavg-select { width:100%; padding:9px 11px; border-radius:9px; border:1.5px solid var(--line); background:var(--bg); color:var(--text); font-size:13px; font-family:inherit; -webkit-appearance:none; }
+.cavg-select:focus { outline:none; border-color:var(--mine); }
+.cavg-btn { width:100%; padding:10px; border-radius:9px; border:none; background:var(--mine); color:#fff; font-size:13px; font-weight:700; cursor:pointer; }
+.cavg-result { background:var(--bg); border-radius:10px; padding:13px 14px; margin-top:4px; display:none; }
+.cavg-result.show { display:block; }
+.cavg-res-row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px; font-size:13px; }
+.cavg-res-lbl { color:var(--text-soft); }
+.cavg-res-val { font-weight:700; color:var(--text); }
+.cavg-res-val.up { color:#c0392b; }
+.cavg-res-val.down { color:#2e6da4; }
+.cavg-divider { height:1px; background:var(--line); margin:7px 0 5px; }
+.cavg-res-big { font-size:18px; font-weight:900; }
+/* ── MONTHLY SUMMARY ── */
+.msumm-btn { width:100%; padding:10px; border-radius:9px; border:none; background:var(--grad); color:#fff; font-size:13px; font-weight:700; cursor:pointer; letter-spacing:1px; }
+.msumm-btn:disabled { opacity:.6; cursor:default; }
+.msumm-text { background:var(--bg); border-radius:10px; padding:14px 14px; margin-top:10px; font-size:13px; line-height:1.8; color:var(--text); white-space:pre-wrap; display:none; }
+.msumm-text.show { display:block; }
 /* ── TARGET PRICE ── */
 .tp-list { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
 .tp-item { background:var(--bg); border-radius:10px; padding:11px 13px; position:relative; }
@@ -1123,6 +1166,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="folio-note">※ 評価額の推移（過去1年・現在の保有株ベース、JPY換算）。</div>
       </div>
       <div class="folio-card">
+        <div class="income-head">含み損ランキング</div>
+        <div class="loss-rank-toggle">
+          <button class="loss-rank-btn active" data-lp="all" onclick="setLossRankPerson('all')">全員</button>
+          <button class="loss-rank-btn" data-lp="mine" onclick="setLossRankPerson('mine')">ひろ</button>
+          <button class="loss-rank-btn" data-lp="hers" onclick="setLossRankPerson('hers')">ちか</button>
+        </div>
+        <div id="loss-rank-list" class="loss-rank-list"></div>
+        <div class="folio-note">※ 含み損の大きい順。損切り候補の目安に。</div>
+      </div>
+      <div class="folio-card">
         <div class="income-head">日別バトル</div>
         <div id="vs-card"></div>
         <div id="pnl-total"></div>
@@ -1132,6 +1185,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div class="folio-card">
         <div class="income-head">月別バトル</div>
         <div id="month-battles"></div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">今月の損益まとめ</div>
+        <button class="msumm-btn" id="msumm-btn" onclick="loadMonthlySummary()">✍️ まとめを生成する</button>
+        <div id="msumm-text" class="msumm-text"></div>
       </div>
       <div class="folio-card">
         <div class="income-head">年間成績表</div>
@@ -1228,6 +1286,20 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <input id="tp-note-in" class="tp-in" placeholder="メモ（任意）" maxlength="100" style="width:100%;margin-bottom:7px">
           <button class="tp-add-btn" onclick="addTargetPriceFromUI()">追加する</button>
         </div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">買いコスト平均化シミュレーター</div>
+        <div class="cavg-form">
+          <select id="cavg-ticker" class="cavg-select" onchange="cavgOnTickerChange()">
+            <option value="">― 銘柄を選ぶ ―</option>
+          </select>
+          <div class="cavg-row">
+            <input id="cavg-add-shares" class="cavg-in" type="number" inputmode="decimal" placeholder="買い増す株数">
+            <input id="cavg-add-price" class="cavg-in" type="number" inputmode="decimal" placeholder="購入単価">
+          </div>
+          <button class="cavg-btn" onclick="calcCostAvg()">計算する</button>
+        </div>
+        <div id="cavg-result" class="cavg-result"></div>
       </div>
       <div class="folio-card">
         <div class="trades-filter" id="trades-filter"></div>
@@ -2033,6 +2105,7 @@ async function loadPortfolioHistory() {
   renderGoalLineChart();
   renderGoalPnlChart();
   renderAnnualBattle();
+  renderLossRanking();
 }
 function setAssetRange(r) {
   assetRange = r;
@@ -2509,9 +2582,9 @@ function showTab(name) {
     if (selectedGridDate !== todayKey) showGridDiary(todayKey);
     window.scrollTo(0,0); return;
   }
-  if (name === 'trades') { if (!window._tpLoaded) { window._tpLoaded = true; loadTargetPrices(); } else { renderTargetPrices(); } window.scrollTo(0,0); return; }
+  if (name === 'trades') { if (!window._tpLoaded) { window._tpLoaded = true; loadTargetPrices(); } else { renderTargetPrices(); } cavgPopulateTickers(); window.scrollTo(0,0); return; }
   if (name === 'goals') { if (!window._goalsLoaded) { window._goalsLoaded = true; loadGoals(); } else { renderGoals(); } renderGoalLineChart(); renderGoalPnlChart(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
-  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); renderAnnualBattle(); window.scrollTo(0,0); return; }
+  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); renderAnnualBattle(); renderLossRanking(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
@@ -4663,6 +4736,155 @@ async function deleteTargetPriceItem(id) {
   await fetch('/api/target-prices/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) });
   targetPrices = targetPrices.filter(t => t.id !== id);
   renderTargetPrices();
+}
+
+// ── LOSS RANKING ────────────────────────────────────────────────────────────
+let lossRankPerson = 'all';
+function setLossRankPerson(p) {
+  lossRankPerson = p;
+  document.querySelectorAll('.loss-rank-btn').forEach(b => {
+    const isActive = b.dataset.lp === p;
+    b.classList.toggle('active', isActive && p !== 'hers');
+    b.classList.toggle('hers-active', isActive && p === 'hers');
+  });
+  renderLossRanking();
+}
+function renderLossRanking() {
+  const el = document.getElementById('loss-rank-list');
+  if (!el) return;
+  const items = (holdings || []).map(h => {
+    const p = h.person === 'hers' ? 'hers' : 'mine';
+    const q = quotes[h.ticker];
+    if (!q) return null;
+    const fx = (q.currency || 'JPY') === 'USD' ? pnlUsdjpy : 1;
+    const curJpy = q.price * h.shares * fx;
+    const costJpy = (h.cost || 0) * h.shares * fx;
+    const pnl = Math.round(curJpy - costJpy);
+    const pct = costJpy > 0 ? ((curJpy - costJpy) / costJpy * 100) : 0;
+    return { ...h, p, pnl, pct: Math.round(pct * 10) / 10 };
+  }).filter(Boolean);
+  const filtered = lossRankPerson === 'all' ? items : items.filter(x => x.p === lossRankPerson);
+  const sorted = [...filtered].sort((a, b) => a.pnl - b.pnl);
+  if (!sorted.length) { el.innerHTML = '<div class="ev-empty">保有銘柄がありません</div>'; return; }
+  el.innerHTML = sorted.map((h, i) => {
+    const neg = h.pnl < 0;
+    const cls = neg ? 'neg' : 'pos';
+    const sign = neg ? '−' : '+';
+    return `<div class="loss-rank-item">
+      <div class="loss-rank-no">${i + 1}</div>
+      <div class="loss-rank-info">
+        <div class="loss-rank-ticker">${escapeHtml(h.ticker)}<span class="loss-rank-tag ${h.p}">${NAMES[h.p]}</span></div>
+        ${h.name ? `<div class="loss-rank-name">${escapeHtml(h.name)}</div>` : ''}
+      </div>
+      <div class="loss-rank-val">
+        <div class="loss-rank-jpy ${cls}">${sign}¥${Math.abs(h.pnl).toLocaleString()}</div>
+        <div class="loss-rank-pct ${cls}">${h.pct > 0 ? '+' : ''}${h.pct}%</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── COST AVERAGING SIMULATOR ─────────────────────────────────────────────────
+function cavgPopulateTickers() {
+  const sel = document.getElementById('cavg-ticker');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">― 銘柄を選ぶ ―</option>';
+  const sorted = [...(holdings || [])].sort((a, b) => (a.name || a.ticker).localeCompare(b.name || b.ticker, 'ja'));
+  sorted.forEach(h => {
+    const p = h.person === 'hers' ? 'hers' : 'mine';
+    const opt = document.createElement('option');
+    opt.value = h.id;
+    opt.textContent = `${h.name || h.ticker} (${NAMES[p]}) — ${h.shares}株 @¥${h.cost}`;
+    if (h.id === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+function cavgOnTickerChange() {
+  const el = document.getElementById('cavg-result');
+  if (el) { el.classList.remove('show'); el.innerHTML = ''; }
+  const sel = document.getElementById('cavg-ticker');
+  const h = (holdings || []).find(x => x.id === sel.value);
+  if (!h) return;
+  const q = quotes[h.ticker];
+  const priceIn = document.getElementById('cavg-add-price');
+  if (q && !priceIn.value) priceIn.value = Math.round(q.price);
+}
+function calcCostAvg() {
+  const sel = document.getElementById('cavg-ticker');
+  const h = (holdings || []).find(x => x.id === sel.value);
+  if (!h) { showToast('銘柄を選んでください'); return; }
+  const addShares = parseFloat(document.getElementById('cavg-add-shares').value);
+  const addPrice = parseFloat(document.getElementById('cavg-add-price').value);
+  if (!(addShares > 0)) { showToast('買い増す株数を入力してください'); return; }
+  if (!(addPrice > 0)) { showToast('購入単価を入力してください'); return; }
+  const q = quotes[h.ticker];
+  const fx = (q?.currency || 'JPY') === 'USD' ? pnlUsdjpy : 1;
+  const curShares = h.shares;
+  const curCost = h.cost || 0;
+  const newShares = curShares + addShares;
+  const newAvg = Math.round(((curCost * curShares) + (addPrice * addShares)) / newShares);
+  const curPrice = q ? Math.round(q.price) : null;
+  const curPnl = curPrice !== null ? Math.round((curPrice - curCost) * curShares * fx) : null;
+  const newPnl = curPrice !== null ? Math.round((curPrice - newAvg) * newShares * fx) : null;
+  const breakEvenPct = curPrice ? Math.round((newAvg - curPrice) / curPrice * 100 * 10) / 10 : null;
+  const el = document.getElementById('cavg-result');
+  const fmt = v => `¥${Math.abs(v).toLocaleString()}`;
+  el.innerHTML = `
+    <div class="cavg-res-row"><span class="cavg-res-lbl">現在の平均取得単価</span><span class="cavg-res-val">¥${curCost.toLocaleString()}</span></div>
+    <div class="cavg-res-row"><span class="cavg-res-lbl">買い増し後の平均単価</span><span class="cavg-res-val cavg-res-big">${fmt(newAvg)}</span></div>
+    <div class="cavg-res-row"><span class="cavg-res-lbl">買い増し後の保有株数</span><span class="cavg-res-val">${newShares}株</span></div>
+    <div class="cavg-res-row"><span class="cavg-res-lbl">追加投資額</span><span class="cavg-res-val">${fmt(Math.round(addPrice * addShares * fx))}</span></div>
+    <div class="cavg-divider"></div>
+    ${curPrice !== null ? `
+    <div class="cavg-res-row"><span class="cavg-res-lbl">現在の含み損益</span><span class="cavg-res-val ${curPnl >= 0 ? 'up' : 'down'}">${curPnl >= 0 ? '+' : '−'}${fmt(curPnl)}</span></div>
+    <div class="cavg-res-row"><span class="cavg-res-lbl">買い増し後の含み損益</span><span class="cavg-res-val ${newPnl >= 0 ? 'up' : 'down'}">${newPnl >= 0 ? '+' : '−'}${fmt(newPnl)}</span></div>
+    <div class="cavg-res-row"><span class="cavg-res-lbl">損益分岐まで</span><span class="cavg-res-val ${breakEvenPct > 0 ? 'down' : 'up'}">${breakEvenPct > 0 ? `+${breakEvenPct}%上昇で回収` : breakEvenPct < 0 ? `すでに${Math.abs(breakEvenPct)}%上回り` : '現在価格が損益分岐点'}</span></div>
+    ` : ''}`;
+  el.classList.add('show');
+}
+
+// ── MONTHLY SUMMARY ──────────────────────────────────────────────────────────
+async function loadMonthlySummary() {
+  const btn = document.getElementById('msumm-btn');
+  const textEl = document.getElementById('msumm-text');
+  btn.disabled = true;
+  btn.textContent = '生成中…';
+  const now = new Date();
+  const ym = `${now.getFullYear()}年${now.getMonth() + 1}月`;
+  const ymKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const monthTrades = (allTrades || []).filter(t => {
+    if (!t.ts) return false;
+    const d = new Date(t.ts);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+  const hiroPnl = calcPersonPnl('mine').total;
+  const chikaPnl = calcPersonPnl('hers').total;
+  const ranked = (holdings || []).map(h => {
+    const q = quotes[h.ticker];
+    if (!q) return null;
+    const fx = (q.currency || 'JPY') === 'USD' ? pnlUsdjpy : 1;
+    const pnl = (q.price - (h.cost || 0)) * h.shares * fx;
+    const pct = h.cost > 0 ? Math.round((q.price - h.cost) / h.cost * 100 * 10) / 10 : 0;
+    return { ticker: h.ticker, name: h.name || h.ticker, pnl, pct };
+  }).filter(Boolean);
+  const topGains = [...ranked].sort((a,b) => b.pct - a.pct).slice(0, 2);
+  const topLosses = [...ranked].sort((a,b) => a.pct - b.pct).slice(0, 2).filter(x => x.pct < 0);
+  try {
+    const res = await fetch('/api/monthly-summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ym, hiroPnl, chikaPnl, trades: monthTrades, topGains, topLosses }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    textEl.textContent = data.text;
+    textEl.classList.add('show');
+  } catch (e) {
+    showToast('生成に失敗しました: ' + e.message, true);
+  }
+  btn.disabled = false;
+  btn.textContent = '✍️ 再生成する';
 }
 
 </script>
