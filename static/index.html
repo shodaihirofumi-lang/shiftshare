@@ -129,6 +129,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .sc-ava { width:16px; height:16px; border-radius:50%; object-fit:cover; flex-shrink:0; }
 .sc-time { font-size:14px; font-weight:700; }
 .sc-end { font-size:13px; font-weight:700; }
+.sc-realized { font-size:11px; font-weight:700; display:block; margin-top:3px; }
+.sc-realized.up { color:#c0392b; }
+.sc-realized.down { color:#2e6da4; }
 .sc-mine { background:var(--mine-bg); border:1.5px solid var(--mine-border); color:var(--mine); }
 .sc-hers { background:var(--hers-bg); border:1.5px solid var(--hers-border); color:var(--hers); }
 .sc-off { background:#f3efe7; border:1.5px solid var(--line); color:#a89e90; }
@@ -2424,6 +2427,15 @@ function renderCalendar() {
 
   const grid = document.getElementById('cal-grid');
   grid.innerHTML = '';
+  const realDateCal = {};
+  for (const rv of (allRealized || [])) {
+    const d = new Date(rv.ts);
+    const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const cur = rv.currency || 'JPY';
+    if (!realDateCal[dk]) realDateCal[dk] = {};
+    if (!realDateCal[dk][rv.person]) realDateCal[dk][rv.person] = {};
+    realDateCal[dk][rv.person][cur] = (realDateCal[dk][rv.person][cur] || 0) + rv.realized;
+  }
   const dayNames = ['日','月','火','水','木','金','土'];
   const now = new Date();
   const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
@@ -2450,7 +2462,7 @@ function renderCalendar() {
     block.addEventListener('click', () => openDayEditor(key));
 
     const row = document.createElement('div'); row.className = 'cal-row';
-    row.innerHTML = `<div class="cal-date ${bothOff?'gold':dc} ${isToday?'today':''}"><span class="dn">${day}</span><span class="dw">${dayNames[dow]}</span>${isToday?'<span class="today-tag">今日</span>':''}</div>${shiftCell(mine,'mine',bothOff,weather.mine?.[key])}${shiftCell(hers,'hers',bothOff,weather.hers?.[key])}`;
+    row.innerHTML = `<div class="cal-date ${bothOff?'gold':dc} ${isToday?'today':''}"><span class="dn">${day}</span><span class="dw">${dayNames[dow]}</span>${isToday?'<span class="today-tag">今日</span>':''}</div>${shiftCell(mine,'mine',bothOff,weather.mine?.[key],realDateCal[key]?.mine)}${shiftCell(hers,'hers',bothOff,weather.hers?.[key],realDateCal[key]?.hers)}`;
     block.appendChild(row);
 
     if (evs.length || gevs.length || tasks.length) {
@@ -3050,13 +3062,20 @@ function wxLine(wx) {
   const pop = (wx.precip != null) ? `<span class="wx-pop">${drop}${wx.precip}%</span>` : '';
   return `<span class="wx">${weatherIcon(wx.code, wx.precip)}<span class="wx-temp">${wx.tmax}°</span>${pop}</span>`;
 }
-function shiftCell(s, person, bothOff, wx) {
-  if (!s) return `<div class="shift-cell sc-empty"><div class="sc-head"><span></span>${wxLine(wx)}</div></div>`;
+function shiftCell(s, person, bothOff, wx, real) {
+  const realHtml = (() => {
+    if (!real) return '';
+    return Object.entries(real).filter(([,v]) => Math.abs(v) >= 1).map(([cur, v]) => {
+      const sym = cur === 'USD' ? '$' : '¥';
+      return `<span class="sc-realized ${v>=0?'up':'down'}">${v>=0?'+':'−'}${sym}${Math.abs(Math.round(v)).toLocaleString()}</span>`;
+    }).join('');
+  })();
+  if (!s) return `<div class="shift-cell sc-empty"><div class="sc-head"><span></span>${wxLine(wx)}</div>${realHtml}</div>`;
   if (s.shift_type === 'off') {
-    return `<div class="shift-cell ${bothOff?'sc-gold':'sc-off'}"><div class="sc-head"><span></span>${wxLine(wx)}</div><span class="off-badge">${s.label||'公休'}</span></div>`;
+    return `<div class="shift-cell ${bothOff?'sc-gold':'sc-off'}"><div class="sc-head"><span></span>${wxLine(wx)}</div><span class="off-badge">${s.label||'公休'}</span>${realHtml}</div>`;
   }
   const ava = avatars[person] ? `<img class="sc-ava" src="${avatars[person]}">` : '';
-  return `<div class="shift-cell ${person==='mine'?'sc-mine':'sc-hers'}"><div class="sc-head"><span class="sc-lbl">${ava}${NAMES[person]}</span>${wxLine(wx)}</div><span class="sc-time">${s.start_time||''}</span><span class="sc-end">〜 ${s.end_time||''}</span></div>`;
+  return `<div class="shift-cell ${person==='mine'?'sc-mine':'sc-hers'}"><div class="sc-head"><span class="sc-lbl">${ava}${NAMES[person]}</span>${wxLine(wx)}</div><span class="sc-time">${s.start_time||''}</span><span class="sc-end">〜 ${s.end_time||''}</span>${realHtml}</div>`;
 }
 function parseKey(k) { const [year,month,day]=k.split('-').map(Number); return {year,month,day}; }
 
