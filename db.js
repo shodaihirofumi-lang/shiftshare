@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [], targetPrices: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [], targetPrices: [], pushSettings: { weeklyReport: false, monthlyReport: false } });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -807,5 +807,13 @@ export async function addTargetPrice({ ticker, targetPrice, note, person }) {
 
 export async function deleteTargetPrice(id) {
   cache.targetPrices = (cache.targetPrices || []).filter(t => t.id !== id);
+  await persist();
+}
+
+export function getPushSettings() {
+  return cache.pushSettings || { weeklyReport: false, monthlyReport: false };
+}
+export async function savePushSettings(settings) {
+  cache.pushSettings = { ...getPushSettings(), ...settings };
   await persist();
 }

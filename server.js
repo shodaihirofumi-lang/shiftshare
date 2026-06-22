@@ -25,6 +25,7 @@ import {
   getNotifiedOff, markNotifiedOff,
   getGoals, addGoal, deleteGoal,
   getTargetPrices, addTargetPrice, deleteTargetPrice,
+  getPushSettings, savePushSettings,
 } from './db.js';
 
 const app = express();
@@ -1375,6 +1376,155 @@ async function runScreening(date) {
   screening.date = date;
   console.log(`[screening] ${date} 完了: ${candidates.length}銘柄ヒット → 上位${screening.results.length}銘柄`);
 }
+
+// ── 投資スタイル診断 ──
+app.get('/api/style-diagnosis', async (_req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが未設定です' });
+  const buys = getBuys();
+  const sells = getRealized();
+  if (buys.length + sells.length < 3) return res.status(400).json({ error: '売買記録が少なすぎます（3件以上必要）' });
+  const lines = (p) => {
+    const all = [
+      ...buys.filter(b => b.person === p).map(b => ({ ...b, type: 'buy' })),
+      ...sells.filter(s => s.person === p).map(s => ({ ...s, type: 'sell' })),
+    ].sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    return all.map(t => {
+      const d = new Date(t.ts || 0);
+      const ds = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+      const sym = (t.currency || 'JPY') === 'JPY' ? '¥' : '$';
+      if (t.type === 'buy') return `${ds} 買 ${t.name||t.ticker} ${t.shares}株 @${sym}${t.price}${t.reason ? ` 理由:${t.reason}` : ''}`;
+      return `${ds} 売 ${t.name||t.ticker} 実現${t.realized >= 0 ? '+' : ''}${sym}${Math.round(t.realized||0)}${t.reason ? ` 理由:${t.reason}` : ''}`;
+    }).join('\n') || 'なし';
+  };
+  const prompt = `あなたは個人投資家の行動分析の専門家です。以下の2人の売買記録を分析して、それぞれの投資スタイルを診断してください。
+
+【ひろの売買記録】
+${lines('mine')}
+
+【ちかの売買記録】
+${lines('hers')}
+
+各人について以下の形式で回答してください：
+・スタイル名（例：「順張り・短期トレード型」「バリュー・長期保有型」など、15字以内のキャッチーな名前）
+・特徴を2〜3行で説明
+・得意なこと1つ、注意点1つ
+・一言アドバイス
+専門用語は避け、親しみやすい口調で。データにないことは推測しすぎないこと。`;
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] }),
+    });
+    if (!response.ok) { const e = await response.json().catch(()=>({})); throw new Error(e.error?.message || `API ${response.status}`); }
+    const data = await response.json();
+    res.json({ text: data.content?.[0]?.text?.trim() || '' });
+  } catch (e) {
+    console.error('[style-diagnosis]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── ベンチマーク比較 ──
+app.get('/api/benchmark', async (_req, res) => {
+  const hold = getHoldings();
+  if (!hold.length) return res.json({ error: '保有銘柄がありません' });
+  let usdjpy = 157;
+  try {
+    const fx = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDJPY=X?interval=1d&range=5d', { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+    const c = fx.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
+    const v = c.filter(Boolean).slice(-1)[0]; if (v) usdjpy = v;
+  } catch {}
+  const fetchBenchmark = async (sym, range) => {
+    try {
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=${range}`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+      const r0 = j.chart?.result?.[0];
+      if (!r0) return null;
+      const closes = r0.indicators?.quote?.[0]?.close || [];
+      const first = closes.find(Boolean);
+      const last = [...closes].reverse().find(Boolean);
+      if (!first || !last) return null;
+      return Math.round((last - first) / first * 1000) / 10;
+    } catch { return null; }
+  };
+  const [nk1m, nk6m, nk1y, sp1m, sp6m, sp1y] = await Promise.all([
+    fetchBenchmark('^N225', '1mo'), fetchBenchmark('^N225', '6mo'), fetchBenchmark('^N225', '1y'),
+    fetchBenchmark('^GSPC', '1mo'), fetchBenchmark('^GSPC', '6mo'), fetchBenchmark('^GSPC', '1y'),
+  ]);
+  // ポートフォリオリターン（全体）
+  const portfolioReturn = async (range) => {
+    try {
+      const tickers = [...new Set(hold.map(h => h.ticker))];
+      let startVal = 0, endVal = 0;
+      for (const t of tickers) {
+        const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=1d&range=${range}`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+        const r0 = j.chart?.result?.[0];
+        if (!r0) continue;
+        const closes = r0.indicators?.quote?.[0]?.close || [];
+        const fx = r0.meta?.currency === 'USD' ? usdjpy : 1;
+        const hs = hold.filter(h => h.ticker === t);
+        const first = closes.find(Boolean), last = [...closes].reverse().find(Boolean);
+        if (!first || !last) continue;
+        const sh = hs.reduce((s, h) => s + h.shares, 0);
+        startVal += first * sh * fx; endVal += last * sh * fx;
+      }
+      if (!startVal) return null;
+      return Math.round((endVal - startVal) / startVal * 1000) / 10;
+    } catch { return null; }
+  };
+  const [p1m, p6m, p1y] = await Promise.all([portfolioReturn('1mo'), portfolioReturn('6mo'), portfolioReturn('1y')]);
+  res.json({ portfolio: { '1mo': p1m, '6mo': p6m, '1y': p1y }, nikkei: { '1mo': nk1m, '6mo': nk6m, '1y': nk1y }, sp500: { '1mo': sp1m, '6mo': sp6m, '1y': sp1y } });
+});
+
+// ── プッシュ通知設定 ──
+app.get('/api/push-settings', (_req, res) => res.json(getPushSettings()));
+app.post('/api/push-settings', async (req, res) => {
+  await savePushSettings(req.body);
+  res.json(getPushSettings());
+});
+
+// ── 週次・月次レポート自動送信 ──
+async function sendPushReport(title, body) {
+  const subs = getPushSubscriptions();
+  if (!subs.length) return;
+  const payload = JSON.stringify({ title, body });
+  for (const sub of subs) webpush.sendNotification(sub, payload).catch(() => {});
+}
+async function buildReportBody() {
+  const holds = getHoldings();
+  const realized = getRealized();
+  const now = new Date();
+  const realized7d = realized.filter(r => r.ts && now - r.ts < 7 * 86400000);
+  const totalRealized7d = realized7d.reduce((s, r) => {
+    const jpy = (r.currency === 'USD') ? (r.realized || 0) * 157 : (r.realized || 0);
+    return s + jpy;
+  }, 0);
+  const lines = [];
+  if (totalRealized7d !== 0) lines.push(`実現損益: ${totalRealized7d >= 0 ? '+' : ''}¥${Math.round(totalRealized7d).toLocaleString()}`);
+  lines.push(`保有銘柄: ${holds.length}銘柄`);
+  return lines.join(' / ');
+}
+let lastWeeklyDay = -1, lastMonthlyDay = -1;
+setInterval(async () => {
+  if (!VAPID_PUBLIC || !VAPID_PRIVATE) return;
+  const settings = getPushSettings();
+  const now = new Date(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo', hour: 'numeric', minute: 'numeric', second: 'numeric', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()).replace(',', ''));
+  const jstNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+  const hour = jstNow.getHours(), weekday = jstNow.getDay(), date = jstNow.getDate();
+  if (hour !== 8) return;
+  if (settings.weeklyReport && weekday === 1 && lastWeeklyDay !== jstNow.toDateString()) {
+    lastWeeklyDay = jstNow.toDateString();
+    const body = await buildReportBody();
+    await sendPushReport('📊 週次レポート', body);
+    console.log('[weekly-report] 送信完了');
+  }
+  if (settings.monthlyReport && date === 1 && lastMonthlyDay !== jstNow.toDateString()) {
+    lastMonthlyDay = jstNow.toDateString();
+    const body = await buildReportBody();
+    await sendPushReport('📈 月次レポート', body);
+    console.log('[monthly-report] 送信完了');
+  }
+}, 30 * 60 * 1000);
 
 const PORT = process.env.PORT || 8000;
 await initDb();

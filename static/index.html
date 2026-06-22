@@ -906,6 +906,31 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .pnl-top-total { font-size:20px; font-weight:900; letter-spacing:-0.5px; }
 .pnl-top-total.up { color:#c0392b; }
 .pnl-top-total.down { color:#2e6da4; }
+/* ── STYLE DIAGNOSIS ── */
+.style-diag-result { background:var(--bg); border-radius:12px; padding:14px; margin-top:10px; font-size:13px; line-height:1.8; white-space:pre-wrap; display:none; }
+.style-diag-result.show { display:block; }
+/* ── BENCHMARK ── */
+.bm-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:4px; }
+.bm-table th { font-size:11px; color:var(--text-soft); font-weight:600; padding:4px 6px; text-align:center; }
+.bm-table td { padding:6px 6px; text-align:center; border-top:1px solid var(--line-soft); }
+.bm-name { text-align:left !important; font-weight:700; }
+.bm-val { font-weight:700; }
+.bm-val.up { color:#c0392b; }
+.bm-val.down { color:#2e6da4; }
+.bm-val.nc { color:var(--text-soft); font-weight:400; }
+.bm-row-portfolio { background:var(--mine-bg); }
+.bm-loading { font-size:12px; color:var(--text-soft); padding:8px 0; text-align:center; }
+/* ── PUSH REPORT SETTINGS ── */
+.push-rep-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line-soft); }
+.push-rep-row:last-child { border-bottom:none; }
+.push-rep-lbl { font-size:13px; color:var(--text); }
+.push-rep-sub { font-size:11px; color:var(--text-soft); margin-top:2px; }
+.push-toggle { position:relative; width:44px; height:24px; flex-shrink:0; }
+.push-toggle input { opacity:0; width:0; height:0; }
+.push-toggle-slider { position:absolute; inset:0; background:var(--line); border-radius:99px; cursor:pointer; transition:.2s; }
+.push-toggle input:checked + .push-toggle-slider { background:var(--mine); }
+.push-toggle-slider::after { content:''; position:absolute; left:3px; top:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition:.2s; }
+.push-toggle input:checked + .push-toggle-slider::after { transform:translateX(20px); }
 /* ── LOSS RANKING ── */
 .loss-rank-list { display:flex; flex-direction:column; gap:6px; }
 .loss-rank-item { background:var(--bg); border-radius:10px; padding:11px 13px; display:flex; align-items:center; gap:10px; }
@@ -1160,6 +1185,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div id="pnl-total-top"></div>
       </div>
       <div class="folio-card">
+        <div class="income-head">ベンチマーク比較</div>
+        <div id="benchmark-content"><div class="bm-loading">損益タブを開くと読み込みます</div></div>
+        <div class="folio-note">※ 同期間のポートフォリオ・日経平均・S&P500のリターンを比較。</div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">レポート通知設定</div>
+        <div id="push-report-settings"><div class="bm-loading">読み込み中…</div></div>
+      </div>
+      <div class="folio-card">
         <div class="income-head">資産推移</div>
         <div id="asset-summary"></div>
         <div class="chart-range" id="asset-range"></div>
@@ -1271,6 +1305,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         </div>
         <div id="review-content"><div class="screening-progress">「診断する」を押すと、売買の傾向をAIが分析します</div></div>
         <div class="folio-note">※ 買う/売る理由メモと実現損益から、良い点・改善点をやさしくコメントします。</div>
+      </div>
+      <div class="folio-card">
+        <div class="screening-head">
+          <div class="income-head" style="margin:0">🔮 投資スタイル診断</div>
+          <button class="screening-refresh-btn" id="style-diag-btn" onclick="loadStyleDiagnosis()">診断する</button>
+        </div>
+        <div id="style-diag-result" class="style-diag-result"></div>
+        <div class="folio-note">※ 売買記録からひろ・ちかそれぞれの投資スタイルをAIが分析します。</div>
       </div>
       <div class="folio-card">
         <div class="income-head">目標株価メモ</div>
@@ -2586,7 +2628,7 @@ function showTab(name) {
   }
   if (name === 'trades') { if (!window._tpLoaded) { window._tpLoaded = true; loadTargetPrices(); } else { renderTargetPrices(); } cavgPopulateTickers(); window.scrollTo(0,0); return; }
   if (name === 'goals') { if (!window._goalsLoaded) { window._goalsLoaded = true; loadGoals(); } else { renderGoals(); } renderGoalLineChart(); renderGoalPnlChart(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
-  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); renderAnnualBattle(); renderLossRanking(); window.scrollTo(0,0); return; }
+  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); loadBenchmark(); loadPushSettings(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); renderAnnualBattle(); renderLossRanking(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
@@ -4887,6 +4929,90 @@ async function loadMonthlySummary() {
   }
   btn.disabled = false;
   btn.textContent = '✍️ 再生成する';
+}
+
+// ── STYLE DIAGNOSIS ──────────────────────────────────────────────────────────
+async function loadStyleDiagnosis() {
+  const btn = document.getElementById('style-diag-btn');
+  const el = document.getElementById('style-diag-result');
+  btn.disabled = true; btn.textContent = '分析中…';
+  try {
+    const data = await fetch('/api/style-diagnosis').then(r => r.json());
+    if (data.error) throw new Error(data.error);
+    el.textContent = data.text;
+    el.classList.add('show');
+  } catch (e) { showToast('診断に失敗しました: ' + e.message, true); }
+  btn.disabled = false; btn.textContent = '再診断';
+}
+
+// ── BENCHMARK ────────────────────────────────────────────────────────────────
+async function loadBenchmark() {
+  const el = document.getElementById('benchmark-content');
+  if (!el) return;
+  el.innerHTML = '<div class="bm-loading">取得中…（30秒ほどかかります）</div>';
+  try {
+    const d = await fetch('/api/benchmark').then(r => r.json());
+    if (d.error) { el.innerHTML = `<div class="bm-loading">${escapeHtml(d.error)}</div>`; return; }
+    const periods = [['1mo','1ヶ月'],['6mo','6ヶ月'],['1y','1年']];
+    const fmtPct = v => {
+      if (v === null || v === undefined) return '<td class="bm-val nc">−</td>';
+      const cls = v > 0 ? 'up' : v < 0 ? 'down' : '';
+      return `<td class="bm-val ${cls}">${v > 0 ? '+' : ''}${v}%</td>`;
+    };
+    el.innerHTML = `<table class="bm-table">
+      <thead><tr><th></th>${periods.map(([,l])=>`<th>${l}</th>`).join('')}</tr></thead>
+      <tbody>
+        <tr class="bm-row-portfolio"><td class="bm-name">自分たち</td>${periods.map(([k])=>fmtPct(d.portfolio?.[k])).join('')}</tr>
+        <tr><td class="bm-name">日経平均</td>${periods.map(([k])=>fmtPct(d.nikkei?.[k])).join('')}</tr>
+        <tr><td class="bm-name">S&P500</td>${periods.map(([k])=>fmtPct(d.sp500?.[k])).join('')}</tr>
+      </tbody>
+    </table>`;
+  } catch (e) { el.innerHTML = `<div class="bm-loading">取得失敗: ${escapeHtml(e.message)}</div>`; }
+}
+
+// ── PUSH REPORT SETTINGS ─────────────────────────────────────────────────────
+async function loadPushSettings() {
+  const el = document.getElementById('push-report-settings');
+  if (!el) return;
+  try {
+    const s = await fetch('/api/push-settings').then(r => r.json());
+    renderPushSettings(s);
+  } catch { el.innerHTML = '<div class="bm-loading">設定の読み込みに失敗しました</div>'; }
+}
+function renderPushSettings(s) {
+  const el = document.getElementById('push-report-settings');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="push-rep-row">
+      <div>
+        <div class="push-rep-lbl">週次レポート</div>
+        <div class="push-rep-sub">毎週月曜 朝8時にプッシュ通知</div>
+      </div>
+      <label class="push-toggle">
+        <input type="checkbox" ${s.weeklyReport ? 'checked' : ''} onchange="savePushSetting('weeklyReport', this.checked)">
+        <span class="push-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="push-rep-row">
+      <div>
+        <div class="push-rep-lbl">月次レポート</div>
+        <div class="push-rep-sub">毎月1日 朝8時にプッシュ通知</div>
+      </div>
+      <label class="push-toggle">
+        <input type="checkbox" ${s.monthlyReport ? 'checked' : ''} onchange="savePushSetting('monthlyReport', this.checked)">
+        <span class="push-toggle-slider"></span>
+      </label>
+    </div>`;
+}
+async function savePushSetting(key, value) {
+  try {
+    const s = await fetch('/api/push-settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [key]: value }),
+    }).then(r => r.json());
+    renderPushSettings(s);
+    showToast(value ? '通知をONにしました' : '通知をOFFにしました');
+  } catch { showToast('設定の保存に失敗しました', true); }
 }
 
 </script>
