@@ -834,7 +834,17 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .goal-in-row .goal-in { margin-bottom:0; }
 .goal-add-btn { width:100%; padding:10px; border-radius:9px; border:none; background:var(--mine); color:#fff; font-size:13px; font-weight:700; cursor:pointer; letter-spacing:1px; }
 .goal-add-btn:active { opacity:.88; }
+.goal-add-btn.hers { background:var(--hers); }
 .goal-empty { font-size:12px; color:var(--text-soft); padding:4px 0 6px; }
+.goal-section-head { font-size:11px; font-weight:800; letter-spacing:1.5px; padding:8px 0 3px; display:flex; align-items:baseline; gap:8px; }
+.goal-section-head.mine { color:var(--mine); }
+.goal-section-head.hers { color:var(--hers); }
+.goal-section-val { font-size:12px; font-weight:700; color:var(--text); letter-spacing:0; }
+.goal-bar.hers-bar { background:var(--hers); }
+.goal-person-toggle { display:flex; gap:6px; margin-bottom:8px; }
+.goal-person-btn { flex:1; padding:8px; border-radius:8px; border:1.5px solid var(--line); background:var(--bg); color:var(--text-soft); font-size:13px; font-weight:700; cursor:pointer; }
+.goal-person-btn.mine.active { background:var(--mine-bg); border-color:var(--mine-border); color:var(--mine); }
+.goal-person-btn.hers.active { background:var(--hers-bg); border-color:var(--hers-border); color:var(--hers); }
 .gcal2-cell.selected-c { outline:2px solid var(--gold); outline-offset:-1px; }
 /* ── GRID DIARY PANEL ── */
 .gcal2-diary-panel { background:var(--card); border-radius:14px; margin:10px 4px 0; padding:15px 14px 12px; box-shadow:var(--shadow-sm); }
@@ -1040,12 +1050,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="income-head">目標トラッカー</div>
         <div id="goals-list"></div>
         <div class="goal-add-form">
+          <div class="goal-person-toggle">
+            <button class="goal-person-btn mine active" data-p="mine" onclick="setGoalPerson('mine')">ひろ</button>
+            <button class="goal-person-btn hers" data-p="hers" onclick="setGoalPerson('hers')">ちか</button>
+          </div>
           <input id="goal-title-in" class="goal-in" placeholder="目標名（例：沖縄旅行、マイホーム頭金）" maxlength="60">
           <div class="goal-in-row">
             <input id="goal-amount-in" class="goal-in" type="number" inputmode="decimal" placeholder="目標金額（¥）">
             <input id="goal-deadline-in" class="goal-in" type="month" style="max-width:140px" title="期限（任意）">
           </div>
-          <button class="goal-add-btn" onclick="addGoalFromUI()">追加する</button>
+          <button class="goal-add-btn" id="goal-add-btn" onclick="addGoalFromUI()">追加する</button>
         </div>
       </div>
       <div class="folio-card">
@@ -2668,24 +2682,29 @@ function showGridDiary(key) {
   panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 let allGoals = [];
+let goalPerson = 'mine';
 async function loadGoals() {
   try { allGoals = await fetch('/api/goals').then(r => r.json()); } catch { allGoals = []; }
   renderGoals();
+}
+function setGoalPerson(p) {
+  goalPerson = p;
+  document.querySelectorAll('.goal-person-btn').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+  const btn = document.getElementById('goal-add-btn');
+  if (btn) btn.className = 'goal-add-btn' + (p === 'hers' ? ' hers' : '');
 }
 function renderGoals() {
   const el = document.getElementById('goals-list');
   if (!el) return;
   const last = pnlHist[pnlHist.length - 1];
-  const currentJpy = last ? Math.round(last.mine + last.hers) : 0;
-  if (!allGoals.length) {
-    el.innerHTML = '<div class="goal-empty">目標を追加すると達成度が確認できます</div>';
-    return;
-  }
+  const currentMine = last ? Math.round(last.mine) : 0;
+  const currentHers = last ? Math.round(last.hers) : 0;
   const now = new Date();
-  el.innerHTML = allGoals.map(g => {
+  function goalCard(g, currentJpy) {
     const pct = g.amount > 0 ? Math.min(Math.round(currentJpy / g.amount * 100), 999) : 0;
     const rem = Math.max(0, g.amount - currentJpy);
     const done = currentJpy >= g.amount;
+    const barCls = 'goal-bar' + (g.person === 'hers' ? ' hers-bar' : '') + (done ? ' done' : '');
     let deadlineHtml = '';
     if (g.deadline) {
       const [y, m] = g.deadline.split('-').map(Number);
@@ -2700,17 +2719,31 @@ function renderGoals() {
         ${done ? '<span class="goal-done-badge">達成！</span>' : ''}
       </div>
       <div class="goal-target">目標 ¥${g.amount.toLocaleString()}</div>
-      <div class="goal-bar-wrap"><div class="goal-bar${done?' done':''}" style="width:${Math.min(pct,100)}%"></div></div>
+      <div class="goal-bar-wrap"><div class="${barCls}" style="width:${Math.min(pct,100)}%"></div></div>
       <div class="goal-stats">
         <span class="goal-now">¥${currentJpy.toLocaleString()}</span>
         <span class="goal-pct">${pct}%</span>
-        ${done
-          ? '<span class="goal-rem" style="color:var(--gold)">達成済み</span>'
-          : `<span class="goal-rem">あと ¥${rem.toLocaleString()}</span>`}
+        ${done ? '<span class="goal-rem" style="color:var(--gold)">達成済み</span>' : `<span class="goal-rem">あと ¥${rem.toLocaleString()}</span>`}
       </div>
       ${deadlineHtml}
     </div>`;
-  }).join('');
+  }
+  const mineGoals = allGoals.filter(g => !g.person || g.person === 'mine');
+  const hersGoals = allGoals.filter(g => g.person === 'hers');
+  if (!mineGoals.length && !hersGoals.length) {
+    el.innerHTML = '<div class="goal-empty">目標を追加すると達成度が確認できます</div>';
+    return;
+  }
+  let html = '';
+  if (mineGoals.length) {
+    html += `<div class="goal-section-head mine">ひろ <span class="goal-section-val">現在 ¥${currentMine.toLocaleString()}</span></div>`;
+    html += mineGoals.map(g => goalCard(g, currentMine)).join('');
+  }
+  if (hersGoals.length) {
+    html += `<div class="goal-section-head hers">ちか <span class="goal-section-val">現在 ¥${currentHers.toLocaleString()}</span></div>`;
+    html += hersGoals.map(g => goalCard(g, currentHers)).join('');
+  }
+  el.innerHTML = html;
 }
 async function addGoalFromUI() {
   const title = document.getElementById('goal-title-in').value.trim();
@@ -2719,7 +2752,7 @@ async function addGoalFromUI() {
   if (!title) { showToast('目標名を入力してください', true); return; }
   if (!(amount > 0)) { showToast('目標金額を入力してください', true); return; }
   try {
-    const r = await fetch('/api/goals', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ title, amount, deadline }) });
+    const r = await fetch('/api/goals', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ title, amount, deadline, person: goalPerson }) });
     if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || 'エラー');
     document.getElementById('goal-title-in').value = '';
     document.getElementById('goal-amount-in').value = '';

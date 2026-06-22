@@ -765,13 +765,14 @@ export function getGoals() {
   return cache.goals || [];
 }
 
-export async function addGoal({ title, amount, deadline }) {
+export async function addGoal({ title, amount, deadline, person }) {
   if (!cache.goals) cache.goals = [];
   const goal = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
     title: String(title || '').slice(0, 60),
     amount: Math.round(Number(amount) || 0),
     deadline: deadline || null,
+    person: person === 'hers' ? 'hers' : 'mine',
     createdAt: Date.now(),
   };
   cache.goals.push(goal);

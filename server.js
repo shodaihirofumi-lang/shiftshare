@@ -706,10 +706,10 @@ app.post('/api/note/toggle', async (req, res) => {
 // ── 目標トラッカー ──
 app.get('/api/goals', (_req, res) => res.json(getGoals()));
 app.post('/api/goals', async (req, res) => {
-  const { title, amount, deadline } = req.body;
+  const { title, amount, deadline, person } = req.body;
   if (!title || !String(title).trim()) return res.status(400).json({ error: '目標名が必要です' });
   if (!(Number(amount) > 0)) return res.status(400).json({ error: '金額が必要です' });
-  const goal = await addGoal({ title: String(title).trim(), amount, deadline });
+  const goal = await addGoal({ title: String(title).trim(), amount, deadline, person });
   res.json(goal);
 });
 app.post('/api/goals/delete', async (req, res) => {
