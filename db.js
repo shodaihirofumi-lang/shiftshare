@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {} });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [] });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -758,5 +758,28 @@ export async function markMoveAlert(key, todayKey) {
     if (todayKey && !k.startsWith(todayKey + ':')) delete cache.moveAlerts[k];
   }
   cache.moveAlerts[key] = Date.now();
+  await persist();
+}
+
+export function getGoals() {
+  return cache.goals || [];
+}
+
+export async function addGoal({ title, amount, deadline }) {
+  if (!cache.goals) cache.goals = [];
+  const goal = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    title: String(title || '').slice(0, 60),
+    amount: Math.round(Number(amount) || 0),
+    deadline: deadline || null,
+    createdAt: Date.now(),
+  };
+  cache.goals.push(goal);
+  await persist();
+  return goal;
+}
+
+export async function deleteGoal(id) {
+  cache.goals = (cache.goals || []).filter(g => g.id !== id);
   await persist();
 }

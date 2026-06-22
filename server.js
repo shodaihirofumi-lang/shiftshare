@@ -23,6 +23,7 @@ import {
   getPhotos, addPhoto, deletePhoto, reloadPhotoCache,
   getDiaries, getDiary, setDiary, getMonthlyDiaries, setMonthlyDiary,
   getNotifiedOff, markNotifiedOff,
+  getGoals, addGoal, deleteGoal,
 } from './db.js';
 
 const app = express();
@@ -699,6 +700,20 @@ app.post('/api/note/delete', async (req, res) => {
 });
 app.post('/api/note/toggle', async (req, res) => {
   await toggleNote(req.body.id);
+  res.json({ success: true });
+});
+
+// ── 目標トラッカー ──
+app.get('/api/goals', (_req, res) => res.json(getGoals()));
+app.post('/api/goals', async (req, res) => {
+  const { title, amount, deadline } = req.body;
+  if (!title || !String(title).trim()) return res.status(400).json({ error: '目標名が必要です' });
+  if (!(Number(amount) > 0)) return res.status(400).json({ error: '金額が必要です' });
+  const goal = await addGoal({ title: String(title).trim(), amount, deadline });
+  res.json(goal);
+});
+app.post('/api/goals/delete', async (req, res) => {
+  await deleteGoal(req.body.id);
   res.json({ success: true });
 });
 

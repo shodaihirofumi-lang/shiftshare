@@ -812,6 +812,29 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .gcal2-ev-dot { display:inline-block; width:4px; height:4px; border-radius:50%; background:var(--mine); margin:0 1px; }
 .gcal2-ev-dot.hers-dot { background:var(--hers); }
 .gcal2-ev-dot.ev-dot { background:var(--text-soft); }
+/* ── GOALS ── */
+.goal-card { background:var(--bg); border-radius:10px; padding:12px 13px; margin-bottom:8px; position:relative; }
+.goal-title-row { display:flex; align-items:center; gap:6px; margin-bottom:2px; }
+.goal-title { font-size:14px; font-weight:700; color:var(--text); }
+.goal-done-badge { font-size:10px; font-weight:700; background:var(--gold-bg); color:var(--gold); border-radius:5px; padding:1px 7px; }
+.goal-target { font-size:11px; color:var(--text-soft); margin-bottom:7px; }
+.goal-bar-wrap { background:var(--line-soft); border-radius:6px; height:9px; overflow:hidden; margin-bottom:5px; }
+.goal-bar { height:100%; border-radius:6px; background:var(--mine); transition:width .4s; }
+.goal-bar.done { background:var(--gold); }
+.goal-stats { display:flex; align-items:baseline; justify-content:space-between; font-size:11px; }
+.goal-now { font-weight:700; color:var(--mine); }
+.goal-pct { font-weight:700; color:var(--text); font-size:13px; }
+.goal-rem { color:var(--text-soft); }
+.goal-deadline { font-size:10px; color:var(--text-soft); margin-top:4px; }
+.goal-del { position:absolute; top:9px; right:9px; background:none; border:none; cursor:pointer; color:var(--text-soft); font-size:13px; padding:3px 6px; line-height:1; }
+.goal-add-form { border-top:1px solid var(--line-soft); margin-top:10px; padding-top:10px; }
+.goal-in { width:100%; padding:9px 11px; border-radius:9px; border:1.5px solid var(--line); background:var(--bg); color:var(--text); font-size:13px; font-family:inherit; margin-bottom:7px; }
+.goal-in:focus { outline:none; border-color:var(--mine); }
+.goal-in-row { display:flex; gap:7px; margin-bottom:7px; }
+.goal-in-row .goal-in { margin-bottom:0; }
+.goal-add-btn { width:100%; padding:10px; border-radius:9px; border:none; background:var(--mine); color:#fff; font-size:13px; font-weight:700; cursor:pointer; letter-spacing:1px; }
+.goal-add-btn:active { opacity:.88; }
+.goal-empty { font-size:12px; color:var(--text-soft); padding:4px 0 6px; }
 .gcal2-cell.selected-c { outline:2px solid var(--gold); outline-offset:-1px; }
 /* ── GRID DIARY PANEL ── */
 .gcal2-diary-panel { background:var(--card); border-radius:14px; margin:10px 4px 0; padding:15px 14px 12px; box-shadow:var(--shadow-sm); }
@@ -1012,6 +1035,18 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="chart-range" id="asset-range"></div>
         <div id="asset-chart-body"></div>
         <div class="folio-note">※ 評価額の推移（過去1年・現在の保有株ベース、JPY換算）。</div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">目標トラッカー</div>
+        <div id="goals-list"></div>
+        <div class="goal-add-form">
+          <input id="goal-title-in" class="goal-in" placeholder="目標名（例：沖縄旅行、マイホーム頭金）" maxlength="60">
+          <div class="goal-in-row">
+            <input id="goal-amount-in" class="goal-in" type="number" inputmode="decimal" placeholder="目標金額（¥）">
+            <input id="goal-deadline-in" class="goal-in" type="month" style="max-width:140px" title="期限（任意）">
+          </div>
+          <button class="goal-add-btn" onclick="addGoalFromUI()">追加する</button>
+        </div>
       </div>
       <div class="folio-card">
         <div class="income-head">日別バトル</div>
@@ -1858,6 +1893,7 @@ async function loadPortfolioHistory() {
   if (d.usdjpy) pnlUsdjpy = d.usdjpy;
   renderPnlHistory();
   renderAssetChart();
+  renderGoals();
 }
 function setAssetRange(r) {
   assetRange = r;
@@ -2324,7 +2360,7 @@ function showTab(name) {
   if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
   if (name === 'gridcal') { renderGridCalendar(); window.scrollTo(0,0); return; }
   if (name === 'trades') { window.scrollTo(0,0); return; }
-  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderRealizedTop(); window.scrollTo(0,0); return; }
+  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); loadGoals(); } loadEarnings(); loadPortfolioHistory(); renderRealizedTop(); renderGoals(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
@@ -2630,6 +2666,75 @@ function showGridDiary(key) {
   html += `<button class="gcal2-edit-btn" onclick="openDayEditor('${key}')">この日を編集する</button>`;
   panel.innerHTML = html;
   panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+let allGoals = [];
+async function loadGoals() {
+  try { allGoals = await fetch('/api/goals').then(r => r.json()); } catch { allGoals = []; }
+  renderGoals();
+}
+function renderGoals() {
+  const el = document.getElementById('goals-list');
+  if (!el) return;
+  const last = pnlHist[pnlHist.length - 1];
+  const currentJpy = last ? Math.round(last.mine + last.hers) : 0;
+  if (!allGoals.length) {
+    el.innerHTML = '<div class="goal-empty">目標を追加すると達成度が確認できます</div>';
+    return;
+  }
+  const now = new Date();
+  el.innerHTML = allGoals.map(g => {
+    const pct = g.amount > 0 ? Math.min(Math.round(currentJpy / g.amount * 100), 999) : 0;
+    const rem = Math.max(0, g.amount - currentJpy);
+    const done = currentJpy >= g.amount;
+    let deadlineHtml = '';
+    if (g.deadline) {
+      const [y, m] = g.deadline.split('-').map(Number);
+      const months = (y - now.getFullYear()) * 12 + (m - now.getMonth() - 1);
+      const label = months > 0 ? `あと${months}ヶ月` : months === 0 ? '今月！' : '期限超過';
+      deadlineHtml = `<div class="goal-deadline">期限: ${y}年${m}月（${label}）</div>`;
+    }
+    return `<div class="goal-card">
+      <button class="goal-del" onclick="deleteGoalFromUI('${g.id}')">✕</button>
+      <div class="goal-title-row">
+        <span class="goal-title">${escapeHtml(g.title)}</span>
+        ${done ? '<span class="goal-done-badge">達成！</span>' : ''}
+      </div>
+      <div class="goal-target">目標 ¥${g.amount.toLocaleString()}</div>
+      <div class="goal-bar-wrap"><div class="goal-bar${done?' done':''}" style="width:${Math.min(pct,100)}%"></div></div>
+      <div class="goal-stats">
+        <span class="goal-now">¥${currentJpy.toLocaleString()}</span>
+        <span class="goal-pct">${pct}%</span>
+        ${done
+          ? '<span class="goal-rem" style="color:var(--gold)">達成済み</span>'
+          : `<span class="goal-rem">あと ¥${rem.toLocaleString()}</span>`}
+      </div>
+      ${deadlineHtml}
+    </div>`;
+  }).join('');
+}
+async function addGoalFromUI() {
+  const title = document.getElementById('goal-title-in').value.trim();
+  const amount = parseFloat(document.getElementById('goal-amount-in').value);
+  const deadline = document.getElementById('goal-deadline-in').value || null;
+  if (!title) { showToast('目標名を入力してください', true); return; }
+  if (!(amount > 0)) { showToast('目標金額を入力してください', true); return; }
+  try {
+    const r = await fetch('/api/goals', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ title, amount, deadline }) });
+    if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || 'エラー');
+    document.getElementById('goal-title-in').value = '';
+    document.getElementById('goal-amount-in').value = '';
+    document.getElementById('goal-deadline-in').value = '';
+    await loadGoals();
+    showToast('目標を追加しました');
+  } catch (e) { showToast('追加に失敗: ' + e.message, true); }
+}
+async function deleteGoalFromUI(id) {
+  if (!confirm('この目標を削除しますか？')) return;
+  try {
+    await fetch('/api/goals/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id }) });
+    allGoals = allGoals.filter(g => g.id !== id);
+    renderGoals();
+  } catch { showToast('削除に失敗しました', true); }
 }
 function renderRealizedTop() {
   const el = document.getElementById('pnl-realized-top');
