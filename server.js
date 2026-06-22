@@ -306,6 +306,25 @@ app.get('/api/earnings', (_req, res) => {
   res.json(list);
 });
 
+// 決算日の自動取得 (Yahoo Finance calendarEvents)
+app.get('/api/earnings-date', async (req, res) => {
+  const { ticker } = req.query;
+  if (!ticker) return res.status(400).json({ error: 'ticker必要' });
+  try {
+    const j = await fetch(
+      `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=calendarEvents`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' } }
+    ).then(r => r.json());
+    const dates = j.quoteSummary?.result?.[0]?.calendarEvents?.earnings?.earningsDate;
+    if (!dates?.length) return res.status(404).json({ error: '決算日データが見つかりませんでした' });
+    const nowSec = Date.now() / 1000;
+    const next = dates.find(d => d.raw > nowSec) || dates[dates.length - 1];
+    res.json({ earningsDate: next.fmt });
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
 // 保有銘柄のAI分析: チャートの形を判定し、利確/損切の目安価格を提案
 app.get('/api/stock-analysis', async (req, res) => {
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
