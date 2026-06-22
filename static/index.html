@@ -1940,12 +1940,13 @@ function renderPnlHistory() {
   const persons = ['mine','hers'].filter(p => hist.some(d => d[p] > 0));
   if (!persons.length) return clear('履歴がありません');
   // 全期間の日次変化（前日比 ¥ + 率）を計算
+  // 前日が 0 の場合は銘柄が初めて現れた日 → 変化 0 として扱い評価額が月合計に混入しないようにする
   const changes = [];
   for (let i = 1; i < hist.length; i++) {
     const [y,mo,da] = hist[i].date.split('-').map(Number);
     const c = { y, mo, da };
     for (const p of persons) {
-      c[p] = hist[i][p] - hist[i-1][p];
+      c[p] = hist[i-1][p] > 0 ? hist[i][p] - hist[i-1][p] : 0;
       c[p+'Rate'] = hist[i-1][p] > 0 ? c[p] / hist[i-1][p] * 100 : 0;
     }
     changes.push(c);
