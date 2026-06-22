@@ -4620,7 +4620,7 @@ function renderDividends(d) {
       html += `<div class="div-empty-person">配当実績なし</div>`;
     } else {
       html += list.map(h => {
-        const nm = (h.name && h.name.trim()) ? h.name.trim() : h.ticker;
+        const nm = stockName(h);
         return `<div class="div-row">
           <div class="div-row-l"><span class="div-name">${escapeHtml(nm)}</span></div>
           <div class="div-row-r"><span class="div-yield">利回り ${h.yield.toFixed(2)}%</span><span class="div-amt">年 ${yen(h.annualJpy)}</span></div>
@@ -4847,11 +4847,12 @@ function renderLossRanking() {
     const neg = h.pnl < 0;
     const cls = neg ? 'neg' : 'pos';
     const sign = neg ? '−' : '+';
+    const nm = stockName(h);
     return `<div class="loss-rank-item">
       <div class="loss-rank-no">${i + 1}</div>
       <div class="loss-rank-info">
-        <div class="loss-rank-ticker">${escapeHtml(h.ticker)}<span class="loss-rank-tag ${h.p}">${NAMES[h.p]}</span></div>
-        ${stockName(h) !== h.ticker ? `<div class="loss-rank-name">${escapeHtml(stockName(h))}</div>` : ''}
+        <div class="loss-rank-name">${escapeHtml(nm)}<span class="loss-rank-tag ${h.p}">${NAMES[h.p]}</span></div>
+        ${nm !== h.ticker ? `<div class="loss-rank-ticker">${escapeHtml(h.ticker)}</div>` : ''}
       </div>
       <div class="loss-rank-val">
         <div class="loss-rank-jpy ${cls}">${sign}¥${Math.abs(h.pnl).toLocaleString()}</div>
