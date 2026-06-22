@@ -803,15 +803,35 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .gcal2-dn.su-num { color:#a36a64; }
 .gcal2-dn.sa-num { color:#6a7384; }
 .gcal2-tag { font-size:8px; font-weight:600; border-radius:3px; padding:1px 2px; margin:1px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; text-align:center; line-height:1.4; }
-.gcal2-tag.mine-w { background:var(--mine-bg); color:var(--mine); }
-.gcal2-tag.hers-w { background:var(--hers-bg); color:var(--hers); }
-.gcal2-tag.mine-off { background:#eceae3; color:#74695b; }
-.gcal2-tag.hers-off { background:#eceae3; color:#74695b; }
+.gcal2-tag.mine-w { background:var(--mine); color:#fff; }
+.gcal2-tag.hers-w { background:var(--hers); color:#fff; }
+.gcal2-tag.mine-off { background:var(--card); color:var(--mine); border:1.5px solid var(--mine); }
+.gcal2-tag.hers-off { background:var(--card); color:var(--hers); border:1.5px solid var(--hers); }
 .gcal2-tag.both-off-tag { background:var(--gold-bg); color:var(--gold); font-size:7px; }
 .gcal2-ev-dots { text-align:center; margin-top:2px; line-height:1; }
 .gcal2-ev-dot { display:inline-block; width:4px; height:4px; border-radius:50%; background:var(--mine); margin:0 1px; }
 .gcal2-ev-dot.hers-dot { background:var(--hers); }
 .gcal2-ev-dot.ev-dot { background:var(--text-soft); }
+.gcal2-cell.selected-c { outline:2px solid var(--gold); outline-offset:-1px; }
+/* ── GRID DIARY PANEL ── */
+.gcal2-diary-panel { background:var(--card); border-radius:14px; margin:10px 4px 0; padding:15px 14px 12px; box-shadow:var(--shadow-sm); }
+.gcal2-diary-date { font-size:18px; font-weight:800; color:var(--text); margin-bottom:9px; }
+.gcal2-diary-section { margin-top:10px; }
+.gcal2-diary-who { font-size:10px; font-weight:800; letter-spacing:1.5px; display:block; margin-bottom:3px; }
+.gcal2-diary-who.mine { color:var(--mine); }
+.gcal2-diary-who.hers { color:var(--hers); }
+.gcal2-diary-text { font-size:13px; line-height:1.75; white-space:pre-wrap; color:var(--text); }
+.gcal2-edit-btn { display:block; width:100%; margin-top:13px; padding:9px; border-radius:10px; border:1.5px solid var(--line); background:var(--bg); font-size:12px; font-weight:700; color:var(--text-soft); cursor:pointer; text-align:center; letter-spacing:1px; }
+.gcal2-empty-note { font-size:12px; color:var(--text-soft); padding:6px 0; }
+/* ── REALIZED TOP SUMMARY ── */
+.realized-top-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line-soft); }
+.realized-top-row:last-child { border-bottom:none; }
+.realized-top-who { font-size:13px; font-weight:700; }
+.realized-top-who.mine { color:var(--mine); }
+.realized-top-who.hers { color:var(--hers); }
+.realized-top-val { font-size:15px; font-weight:700; }
+.realized-top-val .up { color:#c0392b; }
+.realized-top-val .down { color:#2e6da4; }
 </style>
 </head>
 <body>
@@ -945,6 +965,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <div class="gcal2-dow-cell gcal2-dow-sa">土</div>
         </div>
         <div class="gcal2-grid" id="gcal2-grid"></div>
+        <div id="gcal2-diary-panel" class="gcal2-diary-panel"></div>
       </div>
     </div>
 
@@ -980,6 +1001,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <button class="mn-btn" id="pnl-prev" onclick="changePnlMonth(-1)">‹</button>
         <div id="pnl-month-label">—</div>
         <button class="mn-btn" id="pnl-next" onclick="changePnlMonth(1)">›</button>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">実現損益（累計）</div>
+        <div id="pnl-realized-top"></div>
       </div>
       <div class="folio-card">
         <div class="income-head">資産推移</div>
@@ -1341,6 +1366,7 @@ let weather = { mine: {}, hers: {} };
 let lastStatus = {};
 let viewYM = null;
 let gridViewYM = null;
+let selectedGridDate = null;
 let editorDate = null;
 let evPerson = 'mine';
 let expPerson = 'mine';
@@ -1455,6 +1481,7 @@ async function loadRealized() {
   try { allRealized = await fetch('/api/realized').then(r=>r.json()); } catch { allRealized = []; }
   renderPortfolio();
   renderCalendar();
+  renderRealizedTop();
 }
 
 // ── ⑥ ヒートマップ（当日変動率を色とサイズで表示）──
@@ -2296,7 +2323,7 @@ function showTab(name) {
   if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
   if (name === 'gridcal') { renderGridCalendar(); window.scrollTo(0,0); return; }
   if (name === 'trades') { window.scrollTo(0,0); return; }
-  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); window.scrollTo(0,0); return; }
+  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderRealizedTop(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
@@ -2560,10 +2587,64 @@ function renderGridCalendar() {
     }
     const cellEl = document.createElement('div');
     cellEl.className = cellClass;
+    cellEl.dataset.key = key;
     cellEl.innerHTML = `<div class="${numClass}">${c.day}</div>${tags}${evDots}`;
-    if (!c.dim) cellEl.addEventListener('click', () => openDayEditor(key));
+    if (!c.dim) cellEl.addEventListener('click', () => showGridDiary(key));
     grid.appendChild(cellEl);
   }
+  // Restore selection highlight if it's still in the current month
+  if (selectedGridDate) {
+    const sel = grid.querySelector(`[data-key="${selectedGridDate}"]`);
+    if (sel) sel.classList.add('selected-c');
+  }
+}
+function showGridDiary(key) {
+  const panel = document.getElementById('gcal2-diary-panel');
+  if (!panel) return;
+  document.querySelectorAll('#gcal2-grid .gcal2-cell').forEach(el => el.classList.remove('selected-c'));
+  if (selectedGridDate === key) {
+    selectedGridDate = null;
+    panel.innerHTML = '';
+    return;
+  }
+  selectedGridDate = key;
+  const sel = document.querySelector(`#gcal2-grid [data-key="${key}"]`);
+  if (sel) sel.classList.add('selected-c');
+  const { year, month, day } = parseKey(key);
+  const DOWS = ['日','月','火','水','木','金','土'];
+  const dow = DOWS[new Date(year, month-1, day).getDay()];
+  const tmpl = buildDiaryTemplate(key);
+  const diary = allDiaries[key];
+  let html = `<div class="gcal2-diary-date">${month}月${day}日（${dow}）</div>`;
+  if (tmpl) html += `<div class="diary-lines" style="margin-bottom:6px">${tmpl}</div>`;
+  for (const p of ['mine','hers']) {
+    const d = diary?.[p];
+    const text = d?.raw || d?.text || '';
+    if (!text) continue;
+    html += `<div class="gcal2-diary-section"><span class="gcal2-diary-who ${p}">${NAMES[p]}</span><div class="gcal2-diary-text">${escapeHtml(text)}</div></div>`;
+  }
+  if (!tmpl && !diary?.mine?.raw && !diary?.mine?.text && !diary?.hers?.raw && !diary?.hers?.text) {
+    html += `<div class="gcal2-empty-note">この日の記録はまだありません</div>`;
+  }
+  html += `<button class="gcal2-edit-btn" onclick="openDayEditor('${key}')">この日を編集する</button>`;
+  panel.innerHTML = html;
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+function renderRealizedTop() {
+  const el = document.getElementById('pnl-realized-top');
+  if (!el) return;
+  const rv = allRealized || [];
+  if (!rv.length) { el.innerHTML = '<div class="folio-note" style="padding:6px 0">実現損益はまだありません</div>'; return; }
+  const persons = ['mine','hers'].filter(p => rv.some(r => r.person === p));
+  el.innerHTML = persons.map(p => {
+    const byCur = {};
+    for (const r of rv.filter(x => x.person === p)) { const cur = r.currency||'JPY'; byCur[cur] = (byCur[cur]||0) + r.realized; }
+    const valHtml = Object.entries(byCur).filter(([,v]) => Math.abs(v)>=1).map(([cur, v]) => {
+      const sym = cur==='USD' ? '$' : '¥';
+      return `<span class="${v>=0?'up':'down'}">${v>=0?'+':'−'}${sym}${Math.abs(Math.round(v)).toLocaleString()}</span>`;
+    }).join('<span style="color:var(--text-soft);margin:0 3px">·</span>');
+    return `<div class="realized-top-row"><span class="realized-top-who ${p}">${NAMES[p]}</span><span class="realized-top-val">${valHtml}</span></div>`;
+  }).join('');
 }
 function renderCalendar() {
   const status = lastStatus || {};
