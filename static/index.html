@@ -1197,10 +1197,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="folio-note">※ 同期間のポートフォリオ・日経平均・S&P500のリターンを比較。</div>
       </div>
       <div class="folio-card">
-        <div class="income-head">レポート通知設定</div>
-        <div id="push-report-settings"><div class="bm-loading">読み込み中…</div></div>
-      </div>
-      <div class="folio-card">
         <div class="income-head">資産推移</div>
         <div id="asset-summary"></div>
         <div class="chart-range" id="asset-range"></div>
@@ -1256,6 +1252,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="income-head">保有株ヒートマップ（当日の変動）</div>
         <div id="heatmap-list"></div>
         <div class="folio-note">※ 当日の終値変動率を色とサイズで表示。タップで個別チャート。</div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">レポート通知設定</div>
+        <div id="push-report-settings"><div class="bm-loading">読み込み中…</div></div>
       </div>
     </div>
 
@@ -4974,7 +4974,8 @@ async function loadBenchmark() {
     el.innerHTML = `<table class="bm-table">
       <thead><tr><th></th>${periods.map(([,l])=>`<th>${l}</th>`).join('')}</tr></thead>
       <tbody>
-        <tr class="bm-row-portfolio"><td class="bm-name">自分たち</td>${periods.map(([k])=>fmtPct(d.portfolio?.[k])).join('')}</tr>
+        <tr style="background:var(--hers-bg)"><td class="bm-name" style="color:var(--hers)">ちか</td>${periods.map(([k])=>fmtPct(d.chika?.[k])).join('')}</tr>
+        <tr style="background:var(--mine-bg)"><td class="bm-name" style="color:var(--mine)">ひろ</td>${periods.map(([k])=>fmtPct(d.hiro?.[k])).join('')}</tr>
         <tr><td class="bm-name">日経平均</td>${periods.map(([k])=>fmtPct(d.nikkei?.[k])).join('')}</tr>
         <tr><td class="bm-name">S&P500</td>${periods.map(([k])=>fmtPct(d.sp500?.[k])).join('')}</tr>
       </tbody>

@@ -1451,10 +1451,12 @@ app.get('/api/benchmark', async (_req, res) => {
     fetchBenchmark('^N225', '1mo'), fetchBenchmark('^N225', '6mo'), fetchBenchmark('^N225', '1y'),
     fetchBenchmark('^GSPC', '1mo'), fetchBenchmark('^GSPC', '6mo'), fetchBenchmark('^GSPC', '1y'),
   ]);
-  // ポートフォリオリターン（全体）
-  const portfolioReturn = async (range) => {
+  // ポートフォリオリターン（person別）
+  const portfolioReturn = async (person, range) => {
     try {
-      const tickers = [...new Set(hold.map(h => h.ticker))];
+      const ph = hold.filter(h => (h.person === 'hers' ? 'hers' : 'mine') === person);
+      if (!ph.length) return null;
+      const tickers = [...new Set(ph.map(h => h.ticker))];
       let startVal = 0, endVal = 0;
       for (const t of tickers) {
         const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=1d&range=${range}`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
@@ -1462,7 +1464,7 @@ app.get('/api/benchmark', async (_req, res) => {
         if (!r0) continue;
         const closes = r0.indicators?.quote?.[0]?.close || [];
         const fx = r0.meta?.currency === 'USD' ? usdjpy : 1;
-        const hs = hold.filter(h => h.ticker === t);
+        const hs = ph.filter(h => h.ticker === t);
         const first = closes.find(Boolean), last = [...closes].reverse().find(Boolean);
         if (!first || !last) continue;
         const sh = hs.reduce((s, h) => s + h.shares, 0);
@@ -1472,8 +1474,16 @@ app.get('/api/benchmark', async (_req, res) => {
       return Math.round((endVal - startVal) / startVal * 1000) / 10;
     } catch { return null; }
   };
-  const [p1m, p6m, p1y] = await Promise.all([portfolioReturn('1mo'), portfolioReturn('6mo'), portfolioReturn('1y')]);
-  res.json({ portfolio: { '1mo': p1m, '6mo': p6m, '1y': p1y }, nikkei: { '1mo': nk1m, '6mo': nk6m, '1y': nk1y }, sp500: { '1mo': sp1m, '6mo': sp6m, '1y': sp1y } });
+  const [hiro1m, hiro6m, hiro1y, chika1m, chika6m, chika1y] = await Promise.all([
+    portfolioReturn('mine','1mo'), portfolioReturn('mine','6mo'), portfolioReturn('mine','1y'),
+    portfolioReturn('hers','1mo'), portfolioReturn('hers','6mo'), portfolioReturn('hers','1y'),
+  ]);
+  res.json({
+    hiro:   { '1mo': hiro1m,  '6mo': hiro6m,  '1y': hiro1y  },
+    chika:  { '1mo': chika1m, '6mo': chika6m, '1y': chika1y },
+    nikkei: { '1mo': nk1m,   '6mo': nk6m,    '1y': nk1y    },
+    sp500:  { '1mo': sp1m,   '6mo': sp6m,    '1y': sp1y    },
+  });
 });
 
 // ── プッシュ通知設定 ──
