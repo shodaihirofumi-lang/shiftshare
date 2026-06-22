@@ -24,6 +24,7 @@ import {
   getDiaries, getDiary, setDiary, getMonthlyDiaries, setMonthlyDiary,
   getNotifiedOff, markNotifiedOff,
   getGoals, addGoal, deleteGoal,
+  getTargetPrices, addTargetPrice, deleteTargetPrice,
 } from './db.js';
 
 const app = express();
@@ -714,6 +715,20 @@ app.post('/api/goals', async (req, res) => {
 });
 app.post('/api/goals/delete', async (req, res) => {
   await deleteGoal(req.body.id);
+  res.json({ success: true });
+});
+
+// ── TARGET PRICES（目標株価メモ）──
+app.get('/api/target-prices', (_req, res) => res.json(getTargetPrices()));
+app.post('/api/target-prices', async (req, res) => {
+  const { ticker, targetPrice, note, person } = req.body;
+  if (!ticker || !String(ticker).trim()) return res.status(400).json({ error: 'ティッカーが必要です' });
+  if (!(Number(targetPrice) > 0)) return res.status(400).json({ error: '目標株価が必要です' });
+  const tp = await addTargetPrice({ ticker, targetPrice, note, person });
+  res.json(tp);
+});
+app.post('/api/target-prices/delete', async (req, res) => {
+  await deleteTargetPrice(req.body.id);
   res.json({ success: true });
 });
 

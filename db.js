@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [] });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [], targetPrices: [] });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -782,5 +782,29 @@ export async function addGoal({ title, amount, deadline, person }) {
 
 export async function deleteGoal(id) {
   cache.goals = (cache.goals || []).filter(g => g.id !== id);
+  await persist();
+}
+
+export function getTargetPrices() {
+  return cache.targetPrices || [];
+}
+
+export async function addTargetPrice({ ticker, targetPrice, note, person }) {
+  if (!cache.targetPrices) cache.targetPrices = [];
+  const tp = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    ticker: String(ticker || '').toUpperCase().trim(),
+    targetPrice: Number(targetPrice) || 0,
+    note: String(note || '').slice(0, 100),
+    person: person === 'hers' ? 'hers' : 'mine',
+    createdAt: Date.now(),
+  };
+  cache.targetPrices.push(tp);
+  await persist();
+  return tp;
+}
+
+export async function deleteTargetPrice(id) {
+  cache.targetPrices = (cache.targetPrices || []).filter(t => t.id !== id);
   await persist();
 }

@@ -906,6 +906,57 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .pnl-top-total { font-size:20px; font-weight:900; letter-spacing:-0.5px; }
 .pnl-top-total.up { color:#c0392b; }
 .pnl-top-total.down { color:#2e6da4; }
+/* ── TAX SIMULATOR ── */
+.tax-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.tax-person { background:var(--bg); border-radius:10px; padding:12px 13px; }
+.tax-who { font-size:11px; font-weight:800; letter-spacing:1px; margin-bottom:8px; }
+.tax-who.mine { color:var(--mine); }
+.tax-who.hers { color:var(--hers); }
+.tax-row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; font-size:12px; }
+.tax-lbl { color:var(--text-soft); }
+.tax-val { font-weight:700; color:var(--text); }
+.tax-val.red { color:#c0392b; }
+.tax-val.soft { color:var(--text-soft); font-weight:400; }
+.tax-divider { height:1px; background:var(--line); margin:6px 0 4px; }
+.tax-total-row { display:flex; justify-content:space-between; align-items:baseline; }
+.tax-total-lbl { font-size:12px; color:var(--text-soft); }
+.tax-total-val { font-size:18px; font-weight:900; color:#c0392b; }
+.tax-note { font-size:10px; color:var(--text-soft); margin-top:10px; }
+/* ── TARGET PRICE ── */
+.tp-list { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+.tp-item { background:var(--bg); border-radius:10px; padding:11px 13px; position:relative; }
+.tp-head { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
+.tp-ticker { font-size:14px; font-weight:800; color:var(--text); }
+.tp-person-tag { font-size:10px; font-weight:800; padding:2px 7px; border-radius:99px; }
+.tp-person-tag.mine { background:var(--mine-bg); color:var(--mine); }
+.tp-person-tag.hers { background:var(--hers-bg); color:var(--hers); }
+.tp-prices { display:flex; gap:12px; align-items:baseline; margin-bottom:4px; }
+.tp-cur { font-size:12px; color:var(--text-soft); }
+.tp-cur span { font-size:14px; font-weight:700; color:var(--text); }
+.tp-target { font-size:12px; color:var(--text-soft); }
+.tp-target span { font-size:14px; font-weight:700; }
+.tp-target span.up { color:#c0392b; }
+.tp-target span.down { color:#2e6da4; }
+.tp-diff { font-size:11px; font-weight:700; padding:2px 7px; border-radius:5px; margin-left:auto; }
+.tp-diff.up { background:#fdecea; color:#c0392b; }
+.tp-diff.down { background:#e8f0fa; color:#2e6da4; }
+.tp-diff.flat { background:var(--line-soft); color:var(--text-soft); }
+.tp-note { font-size:12px; color:var(--text-soft); margin-top:3px; }
+.tp-del { position:absolute; top:9px; right:9px; background:none; border:none; cursor:pointer; color:var(--text-soft); font-size:13px; padding:3px 6px; }
+.tp-add-form { border-top:1px solid var(--line-soft); padding-top:10px; margin-top:4px; }
+.tp-add-row { display:flex; gap:7px; margin-bottom:7px; }
+.tp-in { flex:1; padding:9px 11px; border-radius:9px; border:1.5px solid var(--line); background:var(--bg); color:var(--text); font-size:13px; font-family:inherit; }
+.tp-in:focus { outline:none; border-color:var(--mine); }
+.tp-add-btn { width:100%; padding:10px; border-radius:9px; border:none; background:var(--mine); color:#fff; font-size:13px; font-weight:700; cursor:pointer; }
+/* ── ANNUAL BATTLE ── */
+.annual-legend { display:flex; gap:12px; margin-bottom:8px; }
+.annual-leg-dot { width:10px; height:10px; border-radius:3px; display:inline-block; margin-right:4px; vertical-align:middle; }
+.annual-leg-lbl { font-size:12px; color:var(--text-soft); vertical-align:middle; }
+.annual-svg { width:100%; overflow:visible; }
+.annual-bar-hers { fill:var(--hers); opacity:.85; }
+.annual-bar-mine { fill:var(--mine); opacity:.85; }
+.annual-bar-neg { opacity:.5; }
+.annual-axis { font-size:9px; fill:var(--text-soft); }
 </style>
 </head>
 <body>
@@ -1081,6 +1132,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div id="pnl-total-top"></div>
       </div>
       <div class="folio-card">
+        <div class="income-head">税金シミュレーター</div>
+        <div id="tax-sim"></div>
+        <div class="folio-note">※ 実現損益がプラスの場合のみ課税。20.315%（所得税15.315%＋住民税5%）で計算。NISA口座は非課税。</div>
+      </div>
+      <div class="folio-card">
         <div class="income-head">資産推移</div>
         <div id="asset-summary"></div>
         <div class="chart-range" id="asset-range"></div>
@@ -1097,6 +1153,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div class="folio-card">
         <div class="income-head">月別バトル</div>
         <div id="month-battles"></div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">年間成績表</div>
+        <div class="annual-legend">
+          <span><span class="annual-leg-dot" style="background:var(--hers)"></span><span class="annual-leg-lbl">ちか</span></span>
+          <span><span class="annual-leg-dot" style="background:var(--mine)"></span><span class="annual-leg-lbl">ひろ</span></span>
+        </div>
+        <div id="annual-battle"></div>
+        <div class="folio-note">※ 月ごとの評価損益＋実現損益の合計。当月は現在値。</div>
       </div>
       <div class="folio-card">
         <div class="income-head">配当（インカム）</div>
@@ -1168,6 +1233,22 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         </div>
         <div id="review-content"><div class="screening-progress">「診断する」を押すと、売買の傾向をAIが分析します</div></div>
         <div class="folio-note">※ 買う/売る理由メモと実現損益から、良い点・改善点をやさしくコメントします。</div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">目標株価メモ</div>
+        <div id="tp-list" class="tp-list"></div>
+        <div class="tp-add-form">
+          <div class="goal-person-toggle">
+            <button class="goal-person-btn mine active" data-p="mine" onclick="setTpPerson('mine')">ひろ</button>
+            <button class="goal-person-btn hers" data-p="hers" onclick="setTpPerson('hers')">ちか</button>
+          </div>
+          <div class="tp-add-row">
+            <input id="tp-ticker-in" class="tp-in" placeholder="ティッカー（例: 7203.T）" style="max-width:150px">
+            <input id="tp-price-in" class="tp-in" type="number" inputmode="decimal" placeholder="目標株価">
+          </div>
+          <input id="tp-note-in" class="tp-in" placeholder="メモ（任意）" maxlength="100" style="width:100%;margin-bottom:7px">
+          <button class="tp-add-btn" onclick="addTargetPriceFromUI()">追加する</button>
+        </div>
       </div>
       <div class="folio-card">
         <div class="trades-filter" id="trades-filter"></div>
@@ -1972,6 +2053,8 @@ async function loadPortfolioHistory() {
   renderGoals();
   renderGoalLineChart();
   renderGoalPnlChart();
+  renderTaxSim();
+  renderAnnualBattle();
 }
 function setAssetRange(r) {
   assetRange = r;
@@ -2448,9 +2531,9 @@ function showTab(name) {
     if (selectedGridDate !== todayKey) showGridDiary(todayKey);
     window.scrollTo(0,0); return;
   }
-  if (name === 'trades') { window.scrollTo(0,0); return; }
+  if (name === 'trades') { if (!window._tpLoaded) { window._tpLoaded = true; loadTargetPrices(); } else { renderTargetPrices(); } window.scrollTo(0,0); return; }
   if (name === 'goals') { if (!window._goalsLoaded) { window._goalsLoaded = true; loadGoals(); } else { renderGoals(); } renderGoalLineChart(); renderGoalPnlChart(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
-  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
+  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); renderTaxSim(); renderAnnualBattle(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
@@ -4451,6 +4534,190 @@ async function loadEarnings() {
       <div class="earn-r"><span class="earn-date">${mo}/${da}</span><span class="earn-when">${when}</span></div>
     </div>`;
   }).join('');
+}
+
+// ── TAX SIMULATOR ──────────────────────────────────────────────────────────
+function renderTaxSim() {
+  const el = document.getElementById('tax-sim');
+  if (!el) return;
+  function fmt(v) { return `¥${Math.abs(v).toLocaleString()}`; }
+  const persons = ['hers', 'mine'];
+  const cols = persons.map(p => {
+    const realized = Math.round((allRealized || [])
+      .filter(r => r.person === p && (r.currency || 'JPY') === 'JPY')
+      .reduce((s, r) => s + (r.realized || 0), 0));
+    const taxable = Math.max(0, realized);
+    const tax = Math.round(taxable * 0.20315);
+    const afterTax = realized - tax;
+    return { p, realized, tax, afterTax };
+  });
+  const totalRealized = cols.reduce((s, c) => s + c.realized, 0);
+  const totalTax = cols.reduce((s, c) => s + c.tax, 0);
+  const rows = cols.map(({ p, realized, tax, afterTax }) => `
+    <div class="tax-person">
+      <div class="tax-who ${p}">${NAMES[p]}</div>
+      <div class="tax-row"><span class="tax-lbl">実現損益</span><span class="tax-val ${realized >= 0 ? '' : 'soft'}">${realized >= 0 ? '+' : '−'}${fmt(realized)}</span></div>
+      <div class="tax-row"><span class="tax-lbl">課税対象</span><span class="tax-val ${realized <= 0 ? 'soft' : ''}">${realized <= 0 ? '−' : fmt(Math.max(0, realized))}</span></div>
+      <div class="tax-divider"></div>
+      <div class="tax-row"><span class="tax-lbl">概算税額</span><span class="tax-val red">${tax > 0 ? fmt(tax) : '−'}</span></div>
+      <div class="tax-row"><span class="tax-lbl">手取り</span><span class="tax-val">${realized > 0 ? fmt(afterTax) : '−'}</span></div>
+    </div>`).join('');
+  el.innerHTML = `<div class="tax-grid">${rows}</div>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:baseline">
+      <span style="font-size:12px;color:var(--text-soft)">2人合計 概算税額</span>
+      <span style="font-size:22px;font-weight:900;color:#c0392b">${totalTax > 0 ? fmt(totalTax) : '課税なし'}</span>
+    </div>`;
+}
+
+// ── ANNUAL BATTLE ───────────────────────────────────────────────────────────
+function renderAnnualBattle() {
+  const el = document.getElementById('annual-battle');
+  if (!el) return;
+  if (!pnlHist || pnlHist.length < 2) {
+    el.innerHTML = '<div class="ev-empty">履歴データがありません</div>'; return;
+  }
+  const year = new Date().getFullYear();
+  const months = Array.from({length:12}, (_,i) => i+1);
+  // pnlHist entries: {date, mine, hers}
+  // For each month: find last entry of that month to get portfolio value
+  // Monthly gain = last_of_month_value - last_of_prev_month_value + realized in month
+  const byMonth = {};
+  for (const h of pnlHist) {
+    const d = new Date(h.date);
+    if (d.getFullYear() !== year) continue;
+    const m = d.getMonth() + 1;
+    if (!byMonth[m] || new Date(h.date) > new Date(byMonth[m].date)) byMonth[m] = h;
+  }
+  // Get realized per month per person
+  const realizedByMonth = { mine:{}, hers:{} };
+  for (const r of (allRealized || [])) {
+    if (!r.ts) continue;
+    const d = new Date(r.ts);
+    if (d.getFullYear() !== year) continue;
+    const m = d.getMonth() + 1;
+    const p = r.person === 'hers' ? 'hers' : 'mine';
+    const jpy = (r.currency === 'USD') ? Math.round((r.realized||0) * pnlUsdjpy) : (r.realized||0);
+    realizedByMonth[p][m] = (realizedByMonth[p][m] || 0) + jpy;
+  }
+  // Cost basis per person (fixed)
+  const calcCost = p => (holdings||[]).filter(h=>(h.person==='hers'?'hers':'mine')===p)
+    .reduce((s,h)=>{ const fx=(quotes[h.ticker]?.currency||'JPY')==='USD'?pnlUsdjpy:1; return s+(h.cost||0)*h.shares*fx; },0);
+  const costMine = calcCost('mine'), costHers = calcCost('hers');
+  const data = months.map(m => {
+    const entry = byMonth[m];
+    const unrealMine = entry ? Math.round((entry.mine||0) - costMine) : null;
+    const unrealHers = entry ? Math.round((entry.hers||0) - costHers) : null;
+    const realMine = realizedByMonth.mine[m] || 0;
+    const realHers = realizedByMonth.hers[m] || 0;
+    return {
+      m,
+      mine: entry ? unrealMine + realMine : null,
+      hers: entry ? unrealHers + realHers : null,
+    };
+  }).filter(d => d.mine !== null || d.hers !== null);
+  if (!data.length) { el.innerHTML = '<div class="ev-empty">今年のデータがありません</div>'; return; }
+  const allVals = data.flatMap(d=>[d.mine||0, d.hers||0]);
+  const maxV = Math.max(...allVals.map(Math.abs), 1);
+  const W = 340, H = 140, pad = 28, barW = Math.max(4, Math.floor((W - pad*2) / (data.length * 2 + data.length + 1)));
+  const scaleY = (v) => H/2 - (v / maxV) * (H/2 - 8);
+  const fmtK = v => Math.abs(v) >= 10000 ? `${(v/10000).toFixed(0)}万` : `${(v/1000).toFixed(0)}k`;
+  let bars = '';
+  data.forEach((d, i) => {
+    const x0 = pad + i * (barW * 2 + 3);
+    const mid = H / 2;
+    const drawBar = (val, x, cls) => {
+      if (val === null) return '';
+      const y0 = Math.min(scaleY(val), mid);
+      const h = Math.abs(scaleY(val) - mid);
+      const neg = val < 0 ? ' annual-bar-neg' : '';
+      return `<rect class="${cls}${neg}" x="${x}" y="${y0}" width="${barW}" height="${Math.max(h,1)}" rx="1"/>`;
+    };
+    bars += drawBar(d.hers, x0, 'annual-bar-hers');
+    bars += drawBar(d.mine, x0 + barW + 1, 'annual-bar-mine');
+    bars += `<text class="annual-axis" x="${x0 + barW}" y="${H + 10}" text-anchor="middle">${d.m}月</text>`;
+  });
+  el.innerHTML = `<svg class="annual-svg" viewBox="0 0 ${W} ${H+16}" xmlns="http://www.w3.org/2000/svg">
+    <line x1="${pad}" y1="${H/2}" x2="${W-pad}" y2="${H/2}" stroke="var(--line)" stroke-width="1"/>
+    <text class="annual-axis" x="${pad-2}" y="${H/2+3}" text-anchor="end">0</text>
+    <text class="annual-axis" x="${pad-2}" y="12" text-anchor="end">${fmtK(maxV)}</text>
+    <text class="annual-axis" x="${pad-2}" y="${H-2}" text-anchor="end">−${fmtK(maxV)}</text>
+    ${bars}
+  </svg>`;
+}
+
+// ── TARGET PRICES ───────────────────────────────────────────────────────────
+let targetPrices = [];
+let tpPerson = 'mine';
+function setTpPerson(p) {
+  tpPerson = p;
+  document.querySelectorAll('.tp-add-form .goal-person-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.p === p);
+  });
+}
+async function loadTargetPrices() {
+  try { targetPrices = await fetch('/api/target-prices').then(r=>r.json()); } catch { targetPrices = []; }
+  renderTargetPrices();
+}
+function renderTargetPrices() {
+  const el = document.getElementById('tp-list');
+  if (!el) return;
+  if (!targetPrices.length) { el.innerHTML = '<div class="ev-empty">目標株価を登録してください</div>'; return; }
+  el.innerHTML = targetPrices.map(tp => {
+    const q = quotes[tp.ticker];
+    const cur = q ? (q.currency || 'JPY') : 'JPY';
+    const curPrice = q ? q.price : null;
+    const fx = cur === 'USD' ? pnlUsdjpy : 1;
+    const curJpy = curPrice !== null ? Math.round(curPrice * fx) : null;
+    const tgtJpy = Math.round(tp.targetPrice * (cur === 'USD' ? pnlUsdjpy : 1));
+    const diff = curJpy !== null ? Math.round((tp.targetPrice - curPrice) / curPrice * 100) : null;
+    const diffCls = diff === null ? 'flat' : diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat';
+    const diffLabel = diff === null ? '価格取得中' : `${diff > 0 ? '+' : ''}${diff}%`;
+    const priceStr = cur === 'USD'
+      ? (curPrice !== null ? `$${curPrice.toFixed(2)}` : '−')
+      : (curPrice !== null ? `¥${Math.round(curPrice).toLocaleString()}` : '−');
+    const tgtStr = cur === 'USD'
+      ? `$${tp.targetPrice.toLocaleString()}`
+      : `¥${tp.targetPrice.toLocaleString()}`;
+    const tgtCls = diff === null ? '' : diff > 0 ? 'up' : 'down';
+    return `<div class="tp-item">
+      <div class="tp-head">
+        <span class="tp-ticker">${escapeHtml(tp.ticker)}</span>
+        <span class="tp-person-tag ${tp.person||'mine'}">${NAMES[tp.person||'mine']}</span>
+        <span class="tp-diff ${diffCls}">${diffLabel}</span>
+      </div>
+      <div class="tp-prices">
+        <div class="tp-cur">現在 <span>${priceStr}</span></div>
+        <div class="tp-target">目標 <span class="${tgtCls}">${tgtStr}</span></div>
+      </div>
+      ${tp.note ? `<div class="tp-note">${escapeHtml(tp.note)}</div>` : ''}
+      <button class="tp-del" onclick="deleteTargetPriceItem('${tp.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+async function addTargetPriceFromUI() {
+  const ticker = document.getElementById('tp-ticker-in').value.trim().toUpperCase();
+  const price = parseFloat(document.getElementById('tp-price-in').value);
+  const note = document.getElementById('tp-note-in').value.trim();
+  if (!ticker) { showToast('ティッカーを入力してください'); return; }
+  if (!(price > 0)) { showToast('目標株価を入力してください'); return; }
+  const btn = document.querySelector('.tp-add-btn');
+  btn.disabled = true;
+  try {
+    const tp = await fetch('/api/target-prices', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ ticker, targetPrice: price, note, person: tpPerson }) }).then(r=>r.json());
+    targetPrices.push(tp);
+    renderTargetPrices();
+    document.getElementById('tp-ticker-in').value = '';
+    document.getElementById('tp-price-in').value = '';
+    document.getElementById('tp-note-in').value = '';
+    showToast('目標株価を登録しました');
+  } catch { showToast('登録に失敗しました'); }
+  btn.disabled = false;
+}
+async function deleteTargetPriceItem(id) {
+  await fetch('/api/target-prices/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) });
+  targetPrices = targetPrices.filter(t => t.id !== id);
+  renderTargetPrices();
 }
 
 </script>
