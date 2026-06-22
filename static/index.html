@@ -1389,6 +1389,7 @@ let allRealized = [];
 async function loadRealized() {
   try { allRealized = await fetch('/api/realized').then(r=>r.json()); } catch { allRealized = []; }
   renderPortfolio();
+  renderCalendar();
 }
 
 // ── ⑥ ヒートマップ（当日変動率を色とサイズで表示）──
