@@ -2746,21 +2746,24 @@ function renderGoalPnlChart() {
     bodyEl.innerHTML = '<div class="ev-empty">履歴がありません（損益タブで資産推移を記録すると表示されます）</div>';
     return;
   }
-  const costBasis = {};
+  const costBasis = {}, realizedJpy = {};
   for (const p of ['mine','hers']) {
     const myH = (holdings || []).filter(h => (h.person === 'hers' ? 'hers' : 'mine') === p);
     costBasis[p] = myH.reduce((s, h) => {
       const cur = quotes[h.ticker]?.currency || (h.ticker.endsWith('.T') ? 'JPY' : 'USD');
       return s + (h.cost || 0) * h.shares * (cur === 'USD' ? pnlUsdjpy : 1);
     }, 0);
+    realizedJpy[p] = (allRealized || [])
+      .filter(r => r.person === p && (r.currency || 'JPY') === 'JPY')
+      .reduce((s, r) => s + (r.realized || 0), 0);
   }
   const n = ASSET_RNG_DAYS[goalChartRange] || pnlHist.length;
   const raw = pnlHist.slice(-n);
   if (raw.length < 2) { bodyEl.innerHTML = '<div class="ev-empty">この期間のデータが不足しています</div>'; return; }
   const pnlData = raw.map(d => ({
     date: d.date,
-    mine: d.mine != null ? Math.round(d.mine - costBasis.mine) : null,
-    hers: d.hers != null ? Math.round(d.hers - costBasis.hers) : null,
+    mine: d.mine != null ? Math.round((d.mine - costBasis.mine) + realizedJpy.mine) : null,
+    hers: d.hers != null ? Math.round((d.hers - costBasis.hers) + realizedJpy.hers) : null,
   }));
   const persons = ['mine','hers'].filter(p => pnlData.some(d => d[p] != null));
   bodyEl.innerHTML = goalPnlChartSvg(pnlData, persons);
