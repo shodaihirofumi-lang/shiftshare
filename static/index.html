@@ -1119,6 +1119,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div><div class="page-title">目標</div><div class="page-sub">2人の貯蓄・旅行目標</div></div>
       </div>
       <div class="folio-card">
+        <div class="income-head">損益サマリー（評価＋実現）</div>
+        <div id="pnl-total-top-goals"></div>
+      </div>
+      <div class="folio-card">
         <div class="income-head">目標進捗（損益計ベース）</div>
         <div id="goal-pnl-chart"></div>
       </div>
@@ -2424,9 +2428,15 @@ function showTab(name) {
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
   if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
-  if (name === 'gridcal') { renderGridCalendar(); window.scrollTo(0,0); return; }
+  if (name === 'gridcal') {
+    renderGridCalendar();
+    const td = new Date();
+    const todayKey = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}-${String(td.getDate()).padStart(2,'0')}`;
+    if (selectedGridDate !== todayKey) showGridDiary(todayKey);
+    window.scrollTo(0,0); return;
+  }
   if (name === 'trades') { window.scrollTo(0,0); return; }
-  if (name === 'goals') { if (!window._goalsLoaded) { window._goalsLoaded = true; loadGoals(); } else { renderGoals(); } renderGoalPnlChart(); window.scrollTo(0,0); return; }
+  if (name === 'goals') { if (!window._goalsLoaded) { window._goalsLoaded = true; loadGoals(); } else { renderGoals(); } renderGoalPnlChart(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
   if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
@@ -2886,8 +2896,6 @@ function calcPersonPnl(p) {
   return { unrealized, realized, total: unrealized + realized };
 }
 function renderPnlTotalTop() {
-  const el = document.getElementById('pnl-total-top');
-  if (!el) return;
   function fmt(v) { return `${v >= 0 ? '+' : '−'}¥${Math.abs(v).toLocaleString()}`; }
   function cls(v) { return v >= 0 ? 'up' : 'down'; }
   const rows = ['mine', 'hers'].map(p => {
@@ -2900,7 +2908,11 @@ function renderPnlTotalTop() {
       <div class="pnl-top-row"><span class="pnl-top-lbl">合 計</span><span class="pnl-top-total ${cls(total)}">${fmt(total)}</span></div>
     </div>`;
   });
-  el.innerHTML = `<div class="pnl-top-grid">${rows.join('')}</div>`;
+  const html = `<div class="pnl-top-grid">${rows.join('')}</div>`;
+  ['pnl-total-top', 'pnl-total-top-goals'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  });
 }
 function renderCalendar() {
   const status = lastStatus || {};
