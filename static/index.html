@@ -1771,8 +1771,8 @@ const CUR_SYM = { JPY:'¥', USD:'$', EUR:'€', GBP:'£' };
 function curSym(c){ return CUR_SYM[c] || (c ? c+' ' : '¥'); }
 const STOCK_JA = {
   '7203.T':'トヨタ自動車','6758.T':'ソニーグループ','9984.T':'ソフトバンクG','6861.T':'キーエンス','8306.T':'三菱UFJ','9432.T':'NTT','6098.T':'リクルート','7974.T':'任天堂','8035.T':'東京エレクトロン','4063.T':'信越化学','6501.T':'日立製作所','7267.T':'ホンダ','6902.T':'デンソー','9433.T':'KDDI','8316.T':'三井住友FG','4502.T':'武田薬品','6594.T':'ニデック','7741.T':'HOYA','9983.T':'ファーストリテイリング','8058.T':'三菱商事','8001.T':'伊藤忠商事','6367.T':'ダイキン工業','6981.T':'村田製作所','4901.T':'富士フイルム','6752.T':'パナソニック','7751.T':'キヤノン','8411.T':'みずほFG','9020.T':'JR東日本','2914.T':'JT','4661.T':'オリエンタルランド','8766.T':'東京海上','9434.T':'ソフトバンク','7182.T':'ゆうちょ銀行','8031.T':'三井物産',
-  '7453.T':'良品計画','5016.T':'JX金属','9509.T':'北海道電力','9501.T':'東京電力HD','9502.T':'中部電力','9503.T':'関西電力','9531.T':'東京ガス','9532.T':'大阪ガス','8053.T':'住友商事','8002.T':'丸紅','7011.T':'三菱重工','7012.T':'川崎重工','6503.T':'三菱電機','6702.T':'富士通','6701.T':'NEC','4568.T':'第一三共','4503.T':'アステラス製薬','8801.T':'三井不動産','8802.T':'三菱地所','9101.T':'日本郵船','9104.T':'商船三井','5401.T':'日本製鉄','5411.T':'JFE','3382.T':'セブン&アイ','9843.T':'ニトリ','2802.T':'味の素','2502.T':'アサヒ','2503.T':'キリンHD','4452.T':'花王','4911.T':'資生堂','6178.T':'日本郵政','7011.T':'三菱重工','8604.T':'野村HD',
-  'AAPL':'アップル','MSFT':'マイクロソフト','GOOGL':'アルファベット','GOOG':'アルファベット','AMZN':'アマゾン','TSLA':'テスラ','NVDA':'エヌビディア','META':'メタ','NFLX':'ネットフリックス','AMD':'AMD','INTC':'インテル','KO':'コカ・コーラ','DIS':'ディズニー','V':'ビザ','JPM':'JPモルガン','BRK-B':'バークシャー'
+  '7453.T':'良品計画','5016.T':'JX金属','9509.T':'北海道電力','9501.T':'東京電力HD','9502.T':'中部電力','9503.T':'関西電力','9531.T':'東京ガス','9532.T':'大阪ガス','8053.T':'住友商事','8002.T':'丸紅','7011.T':'三菱重工','7012.T':'川崎重工','6503.T':'三菱電機','6702.T':'富士通','6701.T':'NEC','4568.T':'第一三共','4503.T':'アステラス製薬','8801.T':'三井不動産','8802.T':'三菱地所','9101.T':'日本郵船','9104.T':'商船三井','5401.T':'日本製鉄','5411.T':'JFE','3382.T':'セブン&アイ','9843.T':'ニトリ','2802.T':'味の素','2502.T':'アサヒ','2503.T':'キリンHD','4452.T':'花王','4911.T':'資生堂','6178.T':'日本郵政','7011.T':'三菱重工','8604.T':'野村HD','8613.T':'丸三証券','8593.T':'三菱HCキャピタル','5262.T':'日本ヒューム','5076.T':'インフロニアHD','5020.T':'ENEOS','5803.T':'フジクラ','8306.T':'三菱UFJ',
+  'AAPL':'アップル','MSFT':'マイクロソフト','GOOGL':'アルファベット','GOOG':'アルファベット','AMZN':'アマゾン','TSLA':'テスラ','NVDA':'エヌビディア','META':'メタ','NFLX':'ネットフリックス','AMD':'AMD','INTC':'インテル','KO':'コカ・コーラ','DIS':'ディズニー','V':'ビザ','JPM':'JPモルガン','BRK-B':'バークシャー','PLTR':'パランティア','IAU':'iシェアーズ ゴールド','PG':'P&G'
 };
 const SIG = { buy:['買い','sig-buy'], sell:['売り','sig-sell'], hold:['様子見','sig-hold'] };
 function stockName(h) { const q = quotes[h.ticker]; return (h.name && h.name.trim()) || STOCK_JA[h.ticker] || (q && q.name) || h.ticker; }
@@ -2229,7 +2229,7 @@ function renderAssetChart() {
       const calcStr = cur === 'USD'
         ? `$${Number(price.toFixed(2)).toLocaleString()} × ${h.shares}株 × ¥${Math.round(pnlUsdjpy)}`
         : `¥${Math.round(price).toLocaleString()} × ${h.shares}株`;
-      return `<div class="asset-bk-row"><span class="asset-bk-name">${h.name||h.ticker}</span><span class="asset-bk-calc">${calcStr}</span><span class="asset-bk-val">¥${valJpy.toLocaleString()}</span></div>`;
+      return `<div class="asset-bk-row"><span class="asset-bk-name">${escapeHtml(stockName(h))}</span><span class="asset-bk-calc">${calcStr}</span><span class="asset-bk-val">¥${valJpy.toLocaleString()}</span></div>`;
     }).join('');
     const bkSum = myH.reduce((s, h) => { const q=quotes[h.ticker]; const pr=q?.price||h.cost||0; const fx=(q?.currency||'JPY')==='USD'?pnlUsdjpy:1; return s+pr*h.shares*fx; }, 0);
     const breakdown = bkRows ? `<details class="asset-breakdown"><summary>内訳を見る（銘柄別円換算）</summary><div class="asset-bk-list">${bkRows}<div class="asset-bk-row" style="font-weight:700"><span class="asset-bk-name">合計</span><span class="asset-bk-calc"></span><span class="asset-bk-val">¥${Math.round(bkSum).toLocaleString()}</span></div></div></details>` : '';
@@ -4851,7 +4851,7 @@ function renderLossRanking() {
       <div class="loss-rank-no">${i + 1}</div>
       <div class="loss-rank-info">
         <div class="loss-rank-ticker">${escapeHtml(h.ticker)}<span class="loss-rank-tag ${h.p}">${NAMES[h.p]}</span></div>
-        ${h.name ? `<div class="loss-rank-name">${escapeHtml(h.name)}</div>` : ''}
+        ${stockName(h) !== h.ticker ? `<div class="loss-rank-name">${escapeHtml(stockName(h))}</div>` : ''}
       </div>
       <div class="loss-rank-val">
         <div class="loss-rank-jpy ${cls}">${sign}¥${Math.abs(h.pnl).toLocaleString()}</div>
@@ -4867,12 +4867,12 @@ function cavgPopulateTickers() {
   if (!sel) return;
   const cur = sel.value;
   sel.innerHTML = '<option value="">― 銘柄を選ぶ ―</option>';
-  const sorted = [...(holdings || [])].sort((a, b) => (a.name || a.ticker).localeCompare(b.name || b.ticker, 'ja'));
+  const sorted = [...(holdings || [])].sort((a, b) => stockName(a).localeCompare(stockName(b), 'ja'));
   sorted.forEach(h => {
     const p = h.person === 'hers' ? 'hers' : 'mine';
     const opt = document.createElement('option');
     opt.value = h.id;
-    opt.textContent = `${h.name || h.ticker} (${NAMES[p]}) — ${h.shares}株 @¥${h.cost}`;
+    opt.textContent = `${stockName(h)} (${NAMES[p]}) — ${h.shares}株 @¥${h.cost}`;
     if (h.id === cur) opt.selected = true;
     sel.appendChild(opt);
   });
@@ -4943,7 +4943,7 @@ async function loadMonthlySummary() {
     const fx = (q.currency || 'JPY') === 'USD' ? pnlUsdjpy : 1;
     const pnl = (q.price - (h.cost || 0)) * h.shares * fx;
     const pct = h.cost > 0 ? Math.round((q.price - h.cost) / h.cost * 100 * 10) / 10 : 0;
-    return { ticker: h.ticker, name: h.name || h.ticker, pnl, pct };
+    return { ticker: h.ticker, name: stockName(h), pnl, pct };
   }).filter(Boolean);
   const topGains = [...ranked].sort((a,b) => b.pct - a.pct).slice(0, 2);
   const topLosses = [...ranked].sort((a,b) => a.pct - b.pct).slice(0, 2).filter(x => x.pct < 0);
