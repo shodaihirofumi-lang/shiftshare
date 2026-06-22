@@ -1034,38 +1034,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="leg"><span class="leg-ava hers" id="leg-ava-hers"></span><span id="leg-name-hers">ちか</span></div>
         <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div>ふたり休み</div>
       </div>
-      <div class="nikkei-card">
-        <div class="nk-head">日経平均株価</div>
-        <div class="nk-main">
-          <span class="nk-price" id="nk-price">—</span>
-          <span class="nk-change" id="nk-change"></span>
-        </div>
-        <div class="nk-chart" id="nk-chart"></div>
-        <div class="nk-date" id="nk-date"></div>
-      </div>
-      <div class="folio-card">
-        <div class="income-head">保有株（名前をタップで明細・銘柄をタップでチャート）</div>
-        <div id="folio-summary"></div>
-        <details class="folio-manage">
-          <summary>＋ 銘柄を追加</summary>
-          <div class="gcal-body">
-            <div class="ev-person-toggle">
-              <button class="fh-btn active" data-p="mine" onclick="setFolioPerson('mine')">ひろ</button>
-              <button class="fh-btn" data-p="hers" onclick="setFolioPerson('hers')">ちか</button>
-            </div>
-            <input id="fh-ticker" class="ev-in" placeholder="銘柄コード（日本株は4桁 例7203 / 米国株 AAPL）">
-            <input id="fh-name" class="ev-in" placeholder="表示名（任意・日本語で 例 トヨタ自動車）">
-            <div class="ev-add-row">
-              <input id="fh-shares" class="ev-in" type="number" inputmode="decimal" placeholder="株数">
-              <input id="fh-cost" class="ev-in" type="number" inputmode="decimal" placeholder="取得単価">
-              <button class="ev-add-btn" onclick="addHoldingFromUI()">追加</button>
-            </div>
-            <input id="fh-date" class="ev-in" type="date" style="margin-top:6px" title="購入日">
-            <input id="fh-reason" class="ev-in" placeholder="買う理由（任意・例：好決算で押し目買い）" maxlength="200" style="margin-top:6px">
-          </div>
-        </details>
-        <div class="folio-note">※「買い/売り/様子見」は週足の移動平均線(13週・26週)とRSI(14週)による機械的な目安です。投資判断はご自身の責任で。</div>
-      </div>
       <div id="cal-grid" class="cal-grid"></div>
 
       <div class="income-card">
@@ -1144,6 +1112,45 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         </div>
         <div class="gcal2-grid" id="gcal2-grid"></div>
         <div id="gcal2-diary-panel" class="gcal2-diary-panel"></div>
+      </div>
+    </div>
+
+    <!-- 保有株 -->
+    <div id="tab-holdings" class="screen">
+      <div class="page-top">
+        <div><div class="page-title">保有株</div><div class="page-sub">日経平均・ポートフォリオ</div></div>
+      </div>
+      <div class="nikkei-card">
+        <div class="nk-head">日経平均株価</div>
+        <div class="nk-main">
+          <span class="nk-price" id="nk-price">—</span>
+          <span class="nk-change" id="nk-change"></span>
+        </div>
+        <div class="nk-chart" id="nk-chart"></div>
+        <div class="nk-date" id="nk-date"></div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">保有株（名前をタップで明細・銘柄をタップでチャート）</div>
+        <div id="folio-summary"></div>
+        <details class="folio-manage">
+          <summary>＋ 銘柄を追加</summary>
+          <div class="gcal-body">
+            <div class="ev-person-toggle">
+              <button class="fh-btn active" data-p="mine" onclick="setFolioPerson('mine')">ひろ</button>
+              <button class="fh-btn" data-p="hers" onclick="setFolioPerson('hers')">ちか</button>
+            </div>
+            <input id="fh-ticker" class="ev-in" placeholder="銘柄コード（日本株は4桁 例7203 / 米国株 AAPL）">
+            <input id="fh-name" class="ev-in" placeholder="表示名（任意・日本語で 例 トヨタ自動車）">
+            <div class="ev-add-row">
+              <input id="fh-shares" class="ev-in" type="number" inputmode="decimal" placeholder="株数">
+              <input id="fh-cost" class="ev-in" type="number" inputmode="decimal" placeholder="取得単価">
+              <button class="ev-add-btn" onclick="addHoldingFromUI()">追加</button>
+            </div>
+            <input id="fh-date" class="ev-in" type="date" style="margin-top:6px" title="購入日">
+            <input id="fh-reason" class="ev-in" placeholder="買う理由（任意・例：好決算で押し目買い）" maxlength="200" style="margin-top:6px">
+          </div>
+        </details>
+        <div class="folio-note">※「買い/売り/様子見」は週足の移動平均線(13週・26週)とRSI(14週)による機械的な目安です。投資判断はご自身の責任で。</div>
       </div>
     </div>
 
@@ -1464,6 +1471,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <button class="nav-btn" id="nav-gridcal" onclick="showTab('gridcal')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
       月表示
+    </button>
+    <button class="nav-btn" id="nav-holdings" onclick="showTab('holdings')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      保有株
     </button>
     <button class="nav-btn" id="nav-pnl" onclick="showTab('pnl')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
@@ -2614,11 +2625,12 @@ enterApp();
 
 // ── TABS ──
 function showTab(name) {
-  ['calendar','gridcal','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
+  ['calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
   if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
+  if (name === 'holdings') { loadNikkei(); loadHoldings(); window.scrollTo(0,0); return; }
   if (name === 'gridcal') {
     renderGridCalendar();
     const td = new Date();
