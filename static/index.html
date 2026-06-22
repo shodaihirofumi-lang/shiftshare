@@ -2215,7 +2215,7 @@ function showTab(name) {
   });
   if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
   if (name === 'trades') { window.scrollTo(0,0); return; }
-  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); window.scrollTo(0,0); return; }
+  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
