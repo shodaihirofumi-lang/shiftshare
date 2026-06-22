@@ -1123,6 +1123,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div id="pnl-total-top-goals"></div>
       </div>
       <div class="folio-card">
+        <div class="income-head">損益推移（評価＋実現）</div>
+        <div class="chart-range" id="goal-line-range"></div>
+        <div id="goal-line-chart"></div>
+      </div>
+      <div class="folio-card">
         <div class="income-head">目標進捗（損益計ベース）</div>
         <div id="goal-pnl-chart"></div>
       </div>
@@ -1958,6 +1963,7 @@ async function loadPortfolioHistory() {
   renderPnlHistory();
   renderAssetChart();
   renderGoals();
+  renderGoalLineChart();
   renderGoalPnlChart();
 }
 function setAssetRange(r) {
@@ -2436,7 +2442,7 @@ function showTab(name) {
     window.scrollTo(0,0); return;
   }
   if (name === 'trades') { window.scrollTo(0,0); return; }
-  if (name === 'goals') { if (!window._goalsLoaded) { window._goalsLoaded = true; loadGoals(); } else { renderGoals(); } renderGoalPnlChart(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
+  if (name === 'goals') { if (!window._goalsLoaded) { window._goalsLoaded = true; loadGoals(); } else { renderGoals(); } renderGoalLineChart(); renderGoalPnlChart(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
   if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
@@ -2755,6 +2761,58 @@ function setGoalPerson(p) {
   document.querySelectorAll('.goal-person-btn').forEach(b => b.classList.toggle('active', b.dataset.p === p));
   const btn = document.getElementById('goal-add-btn');
   if (btn) btn.className = 'goal-add-btn' + (p === 'hers' ? ' hers' : '');
+}
+let goalLineRange = '6mo';
+function setGoalLineRange(r) { goalLineRange = r; renderGoalLineChart(); }
+function renderGoalLineChart() {
+  const rngEl = document.getElementById('goal-line-range');
+  const bodyEl = document.getElementById('goal-line-chart');
+  if (!rngEl || !bodyEl) return;
+  rngEl.innerHTML = ['1mo','6mo','1y'].map(r =>
+    `<button class="rng-btn ${r===goalLineRange?'active':''}" onclick="setGoalLineRange('${r}')">${ASSET_RNG_LBL[r]}</button>`
+  ).join('');
+  if (!pnlHist || pnlHist.length < 2) {
+    bodyEl.innerHTML = '<div class="ev-empty">履歴がありません</div>'; return;
+  }
+  const costBasis = {}, realizedJpy = {};
+  for (const p of ['mine','hers']) {
+    const myH = (holdings || []).filter(h => (h.person === 'hers' ? 'hers' : 'mine') === p);
+    costBasis[p] = myH.reduce((s, h) => {
+      const cur = quotes[h.ticker]?.currency || (h.ticker.endsWith('.T') ? 'JPY' : 'USD');
+      return s + (h.cost || 0) * h.shares * (cur === 'USD' ? pnlUsdjpy : 1);
+    }, 0);
+    realizedJpy[p] = (allRealized || [])
+      .filter(r => r.person === p && (r.currency || 'JPY') === 'JPY')
+      .reduce((s, r) => s + (r.realized || 0), 0);
+  }
+  const n = ASSET_RNG_DAYS[goalLineRange] || pnlHist.length;
+  const raw = pnlHist.slice(-n);
+  if (raw.length < 2) { bodyEl.innerHTML = '<div class="ev-empty">この期間のデータが不足しています</div>'; return; }
+  const pnlData = raw.map(d => ({
+    date: d.date,
+    mine: d.mine != null ? Math.round((d.mine - costBasis.mine) + realizedJpy.mine) : null,
+    hers: d.hers != null ? Math.round((d.hers - costBasis.hers) + realizedJpy.hers) : null,
+  }));
+  const persons = ['mine','hers'].filter(p => pnlData.some(d => d[p] != null));
+  const w = 320, h = 160, padL = 4, padR = 4, padT = 14, padB = 4;
+  const allVals = [0];
+  for (const d of pnlData) for (const p of persons) if (d[p] != null) allVals.push(d[p]);
+  const min = Math.min(...allVals), max = Math.max(...allVals), range = (max - min) || 1;
+  const X = i => padL + (i / (pnlData.length - 1)) * (w - padL - padR);
+  const Y = v => padT + (1 - (v - min) / range) * (h - padT - padB);
+  const colors = { mine: '#7da6a2', hers: '#a76b80' };
+  const zeroY = Y(0).toFixed(1);
+  let svg = `<line x1="${padL}" y1="${zeroY}" x2="${w-padR}" y2="${zeroY}" stroke="var(--line)" stroke-width="1" stroke-dasharray="4,3"/>`;
+  for (const p of persons) {
+    const pts = pnlData.map((d, i) => `${X(i).toFixed(1)},${Y(d[p] ?? 0).toFixed(1)}`).join(' ');
+    svg += `<polyline points="${pts}" fill="none" stroke="${colors[p]}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  const fmt = (v, p) => `<span style="color:${colors[p]};font-weight:700">${NAMES[p]} ${v>=0?'+':'−'}¥${Math.abs(v).toLocaleString()}</span>`;
+  const fmtD = s => s.slice(5).replace('-','/');
+  const lastLine = persons.map(p => fmt(pnlData[pnlData.length-1][p] ?? 0, p)).join('　');
+  bodyEl.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:160px">${svg}</svg>
+    <div class="chart-axis"><span>${fmtD(raw[0].date)}</span><span></span><span>${fmtD(raw[raw.length-1].date)}</span></div>
+    <div style="font-size:12px;text-align:center;margin-top:4px">${lastLine}</div>`;
 }
 function renderGoalPnlChart() {
   const bodyEl = document.getElementById('goal-pnl-chart');
