@@ -868,8 +868,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .gcal2-cell.selected-c { outline:2px solid var(--gold); outline-offset:-1px; }
 .gcal2-trade-row { display:flex; gap:2px; flex-wrap:wrap; margin-top:2px; }
 .gcal2-trade-tag { font-size:8px; font-weight:900; padding:1px 4px; border-radius:3px; line-height:1.5; letter-spacing:0.3px; }
-.gcal2-trade-buy { background:#27ae60; color:#fff; }
-.gcal2-trade-sell { background:#e74c3c; color:#fff; }
+.gcal2-trade-mine-buy  { background:var(--mine); color:#fff; }
+.gcal2-trade-hers-buy  { background:var(--hers); color:#fff; }
+.gcal2-trade-mine-sell { background:#c0392b; color:#fff; border:1.5px solid var(--mine); }
+.gcal2-trade-hers-sell { background:#c0392b; color:#fff; border:1.5px solid var(--hers); }
 .gcal2-cell.has-trade { box-shadow:0 0 0 1.5px rgba(255,180,0,0.5); }
 /* ── GRID DIARY PANEL ── */
 .gcal2-diary-panel { background:var(--card); border-radius:14px; margin:10px 4px 0; padding:15px 14px 12px; box-shadow:var(--shadow-sm); }
@@ -2722,10 +2724,16 @@ function renderGridCalendar() {
     let tradeBadges = '';
     if (!c.dim && tradesByDate[key]) {
       const dayTrades = tradesByDate[key];
-      const buys = dayTrades.filter(t => t.type === 'buy');
-      const sells = dayTrades.filter(t => t.type === 'sell');
-      if (buys.length) tradeBadges += `<span class="gcal2-trade-tag gcal2-trade-buy">買${buys.length > 1 ? buys.length : ''}</span>`;
-      if (sells.length) tradeBadges += `<span class="gcal2-trade-tag gcal2-trade-sell">売${sells.length > 1 ? sells.length : ''}</span>`;
+      const combos = [
+        { p:'mine',  type:'buy',  label:'ひ買', cls:'gcal2-trade-mine-buy'  },
+        { p:'hers',  type:'buy',  label:'ち買', cls:'gcal2-trade-hers-buy'  },
+        { p:'mine',  type:'sell', label:'ひ売', cls:'gcal2-trade-mine-sell' },
+        { p:'hers',  type:'sell', label:'ち売', cls:'gcal2-trade-hers-sell' },
+      ];
+      for (const { p, type, label, cls } of combos) {
+        const n = dayTrades.filter(t => t.type === type && t.person === p).length;
+        if (n) tradeBadges += `<span class="gcal2-trade-tag ${cls}">${label}${n > 1 ? n : ''}</span>`;
+      }
       cellClass += ' has-trade';
     }
     const tradeRow = tradeBadges ? `<div class="gcal2-trade-row">${tradeBadges}</div>` : '';
