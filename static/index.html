@@ -2766,19 +2766,30 @@ function renderGoalPnlChart() {
     hers: d.hers != null ? Math.round((d.hers - costBasis.hers) + realizedJpy.hers) : null,
   }));
   const persons = ['mine','hers'].filter(p => pnlData.some(d => d[p] != null));
-  bodyEl.innerHTML = goalPnlChartSvg(pnlData, persons);
+  bodyEl.innerHTML = goalPnlChartSvg(pnlData, persons, allGoals || []);
 }
-function goalPnlChartSvg(data, persons) {
-  const w = 320, h = 160, padL = 4, padR = 4, padT = 14, padB = 4;
+function goalPnlChartSvg(data, persons, goals) {
+  const w = 320, h = 170, padL = 4, padR = 4, padT = 14, padB = 4;
   const allVals = [0];
   for (const d of data) for (const p of persons) if (d[p] != null) allVals.push(d[p]);
+  for (const g of (goals || [])) allVals.push(g.amount);
   const min = Math.min(...allVals), max = Math.max(...allVals);
   const range = (max - min) || 1;
   const X = i => padL + (i / (data.length - 1)) * (w - padL - padR);
   const Y = v => padT + (1 - (v - min) / range) * (h - padT - padB);
   const colors = { mine: '#7da6a2', hers: '#a76b80' };
+  const svgEsc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const zeroY = Y(0).toFixed(1);
   let svg = `<line x1="${padL}" y1="${zeroY}" x2="${w-padR}" y2="${zeroY}" stroke="var(--line)" stroke-width="1" stroke-dasharray="4,3"/>`;
+  // 目標ライン
+  for (const g of (goals || [])) {
+    const gy = Y(g.amount).toFixed(1);
+    const c = colors[g.person || 'mine'];
+    const lbl = g.title.length > 8 ? g.title.slice(0,7) + '…' : g.title;
+    svg += `<line x1="${padL}" y1="${gy}" x2="${w-padR}" y2="${gy}" stroke="${c}" stroke-width="1.2" stroke-dasharray="5,3" opacity="0.75"/>`;
+    svg += `<text x="${w-padR-3}" y="${(+gy - 2).toFixed(1)}" font-size="8.5" fill="${c}" text-anchor="end" opacity="0.9">${svgEsc(lbl)}</text>`;
+  }
+  // 損益ライン
   for (const p of persons) {
     const pts = data.map((d, i) => `${X(i).toFixed(1)},${Y(d[p] ?? 0).toFixed(1)}`).join(' ');
     svg += `<polyline points="${pts}" fill="none" stroke="${colors[p]}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
@@ -2789,7 +2800,7 @@ function goalPnlChartSvg(data, persons) {
   };
   const lastLine = persons.map(p => fmt(data[data.length-1][p] ?? 0, p)).join('　');
   const fmtD = s => s.slice(5).replace('-','/');
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:160px">${svg}</svg>
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:170px">${svg}</svg>
     <div class="chart-axis"><span>${fmtD(data[0].date)}</span><span></span><span>${fmtD(data[data.length-1].date)}</span></div>
     <div style="font-size:12px;text-align:center;margin-top:4px">${lastLine}</div>`;
 }
