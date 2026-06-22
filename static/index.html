@@ -1061,22 +1061,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="folio-note">※ 評価額の推移（過去1年・現在の保有株ベース、JPY換算）。</div>
       </div>
       <div class="folio-card">
-        <div class="income-head">目標トラッカー</div>
-        <div id="goals-list"></div>
-        <div class="goal-add-form">
-          <div class="goal-person-toggle">
-            <button class="goal-person-btn mine active" data-p="mine" onclick="setGoalPerson('mine')">ひろ</button>
-            <button class="goal-person-btn hers" data-p="hers" onclick="setGoalPerson('hers')">ちか</button>
-          </div>
-          <input id="goal-title-in" class="goal-in" placeholder="目標名（例：沖縄旅行、マイホーム頭金）" maxlength="60">
-          <div class="goal-in-row">
-            <input id="goal-amount-in" class="goal-in" type="number" inputmode="decimal" placeholder="目標金額（¥）">
-            <input id="goal-deadline-in" class="goal-in" type="month" style="max-width:140px" title="期限（任意）">
-          </div>
-          <button class="goal-add-btn" id="goal-add-btn" onclick="addGoalFromUI()">追加する</button>
-        </div>
-      </div>
-      <div class="folio-card">
         <div class="income-head">日別バトル</div>
         <div id="vs-card"></div>
         <div id="pnl-total"></div>
@@ -1110,6 +1094,26 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     </div>
 
     <!-- 取引（売買記録） -->
+    <div id="tab-goals" class="screen">
+      <div class="page-top">
+        <div><div class="page-title">目標</div><div class="page-sub">2人の貯蓄・旅行目標</div></div>
+      </div>
+      <div class="folio-card">
+        <div id="goals-list"></div>
+        <div class="goal-add-form">
+          <div class="goal-person-toggle">
+            <button class="goal-person-btn mine active" data-p="mine" onclick="setGoalPerson('mine')">ひろ</button>
+            <button class="goal-person-btn hers" data-p="hers" onclick="setGoalPerson('hers')">ちか</button>
+          </div>
+          <input id="goal-title-in" class="goal-in" placeholder="目標名（例：沖縄旅行、マイホーム頭金）" maxlength="60">
+          <div class="goal-in-row">
+            <input id="goal-amount-in" class="goal-in" type="number" inputmode="decimal" placeholder="目標金額（¥）">
+            <input id="goal-deadline-in" class="goal-in" type="month" style="max-width:140px" title="期限（任意）">
+          </div>
+          <button class="goal-add-btn" id="goal-add-btn" onclick="addGoalFromUI()">追加する</button>
+        </div>
+      </div>
+    </div>
     <div id="tab-trades" class="screen">
       <div class="page-top">
         <div><div class="page-title">取引</div><div class="page-sub">売買の記録</div></div>
@@ -1249,6 +1253,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <button class="nav-btn" id="nav-pnl" onclick="showTab('pnl')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
       損益
+    </button>
+    <button class="nav-btn" id="nav-goals" onclick="showTab('goals')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      目標
     </button>
     <button class="nav-btn" id="nav-trades" onclick="showTab('trades')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
@@ -2386,14 +2394,15 @@ enterApp();
 
 // ── TABS ──
 function showTab(name) {
-  ['calendar','gridcal','board','pnl','trades','memo','diary','upload'].forEach(t => {
+  ['calendar','gridcal','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
   if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
   if (name === 'gridcal') { renderGridCalendar(); window.scrollTo(0,0); return; }
   if (name === 'trades') { window.scrollTo(0,0); return; }
-  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); loadGoals(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); renderGoals(); window.scrollTo(0,0); return; }
+  if (name === 'goals') { if (!window._goalsLoaded) { window._goalsLoaded = true; loadGoals(); } else { renderGoals(); } window.scrollTo(0,0); return; }
+  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
