@@ -814,6 +814,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .gcal2-ev-dot.ev-dot { background:var(--text-soft); }
 /* ── GOALS ── */
 .goal-card { background:var(--bg); border-radius:10px; padding:12px 13px; margin-bottom:8px; position:relative; }
+.goal-person-tag { display:inline-block; font-size:10px; font-weight:800; padding:2px 8px; border-radius:99px; margin-right:5px; vertical-align:middle; letter-spacing:0.5px; }
+.goal-person-tag.mine { background:var(--mine-bg); color:var(--mine); }
+.goal-person-tag.hers { background:var(--hers-bg); color:var(--hers); }
 .goal-title-row { display:flex; align-items:center; gap:6px; margin-bottom:2px; }
 .goal-title { font-size:14px; font-weight:700; color:var(--text); }
 .goal-done-badge { font-size:10px; font-weight:700; background:var(--gold-bg); color:var(--gold); border-radius:5px; padding:1px 7px; }
@@ -1097,6 +1100,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <div id="tab-goals" class="screen">
       <div class="page-top">
         <div><div class="page-title">目標</div><div class="page-sub">2人の貯蓄・旅行目標</div></div>
+      </div>
+      <div class="folio-card">
+        <div class="income-head">損益推移（評価＋実現）</div>
+        <div class="chart-range" id="goal-pnl-range"></div>
+        <div id="goal-pnl-chart"></div>
       </div>
       <div class="folio-card">
         <div id="goals-list"></div>
@@ -1930,6 +1938,7 @@ async function loadPortfolioHistory() {
   renderPnlHistory();
   renderAssetChart();
   renderGoals();
+  renderGoalPnlChart();
 }
 function setAssetRange(r) {
   assetRange = r;
@@ -2401,7 +2410,7 @@ function showTab(name) {
   if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
   if (name === 'gridcal') { renderGridCalendar(); window.scrollTo(0,0); return; }
   if (name === 'trades') { window.scrollTo(0,0); return; }
-  if (name === 'goals') { if (!window._goalsLoaded) { window._goalsLoaded = true; loadGoals(); } else { renderGoals(); } window.scrollTo(0,0); return; }
+  if (name === 'goals') { if (!window._goalsLoaded) { window._goalsLoaded = true; loadGoals(); } else { renderGoals(); } renderGoalPnlChart(); window.scrollTo(0,0); return; }
   if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
@@ -2721,6 +2730,66 @@ function setGoalPerson(p) {
   const btn = document.getElementById('goal-add-btn');
   if (btn) btn.className = 'goal-add-btn' + (p === 'hers' ? ' hers' : '');
 }
+let goalChartRange = '6mo';
+function setGoalChartRange(r) {
+  goalChartRange = r;
+  renderGoalPnlChart();
+}
+function renderGoalPnlChart() {
+  const rngEl = document.getElementById('goal-pnl-range');
+  const bodyEl = document.getElementById('goal-pnl-chart');
+  if (!rngEl || !bodyEl) return;
+  rngEl.innerHTML = ['1mo','6mo','1y'].map(r =>
+    `<button class="rng-btn ${r===goalChartRange?'active':''}" onclick="setGoalChartRange('${r}')">${ASSET_RNG_LBL[r]}</button>`
+  ).join('');
+  if (!pnlHist || pnlHist.length < 2) {
+    bodyEl.innerHTML = '<div class="ev-empty">履歴がありません（損益タブで資産推移を記録すると表示されます）</div>';
+    return;
+  }
+  const costBasis = {};
+  for (const p of ['mine','hers']) {
+    const myH = (holdings || []).filter(h => (h.person === 'hers' ? 'hers' : 'mine') === p);
+    costBasis[p] = myH.reduce((s, h) => {
+      const cur = quotes[h.ticker]?.currency || (h.ticker.endsWith('.T') ? 'JPY' : 'USD');
+      return s + (h.cost || 0) * h.shares * (cur === 'USD' ? pnlUsdjpy : 1);
+    }, 0);
+  }
+  const n = ASSET_RNG_DAYS[goalChartRange] || pnlHist.length;
+  const raw = pnlHist.slice(-n);
+  if (raw.length < 2) { bodyEl.innerHTML = '<div class="ev-empty">この期間のデータが不足しています</div>'; return; }
+  const pnlData = raw.map(d => ({
+    date: d.date,
+    mine: d.mine != null ? Math.round(d.mine - costBasis.mine) : null,
+    hers: d.hers != null ? Math.round(d.hers - costBasis.hers) : null,
+  }));
+  const persons = ['mine','hers'].filter(p => pnlData.some(d => d[p] != null));
+  bodyEl.innerHTML = goalPnlChartSvg(pnlData, persons);
+}
+function goalPnlChartSvg(data, persons) {
+  const w = 320, h = 160, padL = 4, padR = 4, padT = 14, padB = 4;
+  const allVals = [0];
+  for (const d of data) for (const p of persons) if (d[p] != null) allVals.push(d[p]);
+  const min = Math.min(...allVals), max = Math.max(...allVals);
+  const range = (max - min) || 1;
+  const X = i => padL + (i / (data.length - 1)) * (w - padL - padR);
+  const Y = v => padT + (1 - (v - min) / range) * (h - padT - padB);
+  const colors = { mine: '#7da6a2', hers: '#a76b80' };
+  const zeroY = Y(0).toFixed(1);
+  let svg = `<line x1="${padL}" y1="${zeroY}" x2="${w-padR}" y2="${zeroY}" stroke="var(--line)" stroke-width="1" stroke-dasharray="4,3"/>`;
+  for (const p of persons) {
+    const pts = data.map((d, i) => `${X(i).toFixed(1)},${Y(d[p] ?? 0).toFixed(1)}`).join(' ');
+    svg += `<polyline points="${pts}" fill="none" stroke="${colors[p]}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  const fmt = (v, p) => {
+    const sign = v >= 0 ? '+' : '−';
+    return `<span style="color:${colors[p]};font-weight:700">${NAMES[p]} ${sign}¥${Math.abs(v).toLocaleString()}</span>`;
+  };
+  const lastLine = persons.map(p => fmt(data[data.length-1][p] ?? 0, p)).join('　');
+  const fmtD = s => s.slice(5).replace('-','/');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:160px">${svg}</svg>
+    <div class="chart-axis"><span>${fmtD(data[0].date)}</span><span></span><span>${fmtD(data[data.length-1].date)}</span></div>
+    <div style="font-size:12px;text-align:center;margin-top:4px">${lastLine}</div>`;
+}
 function unrealizedJpyFor(person) {
   const last = pnlHist[pnlHist.length - 1];
   if (!last) return 0;
@@ -2757,7 +2826,7 @@ function renderGoals() {
         <span class="goal-title">${escapeHtml(g.title)}</span>
         ${done ? '<span class="goal-done-badge">達成！</span>' : ''}
       </div>
-      <div class="goal-target">目標 ¥${g.amount.toLocaleString()}</div>
+      <div class="goal-target"><span class="goal-person-tag ${g.person||'mine'}">${(g.person||'mine')==='mine'?'ひろ':'ちか'}</span>目標 ¥${g.amount.toLocaleString()}</div>
       <div class="goal-bar-wrap"><div class="${barCls}" style="width:${Math.min(pct,100)}%"></div></div>
       <div class="goal-stats">
         <span class="goal-now">損益計 ¥${earnedJpy.toLocaleString()}</span>
