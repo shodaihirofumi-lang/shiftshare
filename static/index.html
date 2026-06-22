@@ -409,7 +409,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-item:active { background:var(--line-soft); }
 .folio-item-main { font-size:13px; line-height:1.55; }
 .folio-chart-ic { color:var(--text-soft); vertical-align:middle; margin:0 1px; }
-.folio-sub { font-size:11px; color:var(--text-soft); }
+.folio-sub { font-size:13px; color:var(--text); font-weight:500; }
 .folio-item-val { font-size:15px; font-weight:700; }
 .folio-fail { font-size:12px; color:#b5544f; }
 .folio-name { font-size:13px; font-weight:700; width:36px; flex-shrink:0; padding-top:1px; }
@@ -417,7 +417,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-lines { display:flex; flex-direction:column; gap:3px; flex:1; }
 .folio-line { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
 .folio-val { font-size:16px; font-weight:700; color:var(--text); }
-.folio-gain { font-size:12px; font-weight:700; }
+.folio-gain { font-size:14px; font-weight:700; }
 .folio-gain.up { color:#c0392b; } .folio-gain.down { color:#2e6da4; }
 .folio-empty { font-size:12px; color:var(--text-soft); }
 .folio-manage { margin-top:8px; border-top:1px solid var(--line); }
@@ -432,7 +432,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-sell { flex-shrink:0; padding:6px 13px; border-radius:9px; border:1.5px solid var(--mine); background:var(--mine-bg); color:var(--mine); font-size:11px; font-weight:700; cursor:pointer; }
 .folio-sell:active { opacity:.85; }
 .folio-actions { display:flex; flex-direction:column; gap:5px; flex-shrink:0; }
-.folio-avg { font-size:11px; color:var(--text-soft); margin-left:6px; }
+.folio-avg { font-size:12px; color:var(--text); margin-left:6px; font-weight:500; }
 .folio-realized { margin-top:2px; font-size:11px; }
 .folio-realized .folio-realized-lbl { color:var(--text-soft); font-weight:600; letter-spacing:.5px; margin-right:6px; }
 .sell-lbl { display:block; font-size:11px; color:var(--text-soft); letter-spacing:1px; font-weight:600; margin:14px 0 6px; }
@@ -447,10 +447,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-tgt:active { background:var(--bg); }
 .folio-tgt.has { color:var(--gold); border-color:var(--gold); }
 .folio-targets { display:flex; flex-wrap:wrap; gap:5px 10px; margin-top:3px; }
-.tgt-chip { display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:600; padding:1px 7px; border-radius:6px; }
-.tgt-chip.tp { background:rgba(192,57,43,.10); color:#c0392b; }
-.tgt-chip.sl { background:rgba(46,109,164,.10); color:#2e6da4; }
-.tgt-chip-dist { color:var(--text-soft); font-weight:500; margin-left:3px; font-size:10px; }
+.tgt-chip { display:inline-flex; align-items:center; gap:3px; font-size:12px; font-weight:700; padding:2px 8px; border-radius:6px; }
+.tgt-chip.tp { background:rgba(192,57,43,.13); color:#c0392b; }
+.tgt-chip.sl { background:rgba(46,109,164,.13); color:#2e6da4; }
+.tgt-chip-dist { font-weight:600; margin-left:3px; font-size:12px; }
 .tgt-chip.hit { background:#c0392b; color:#fff; }
 .tgt-chip.sl.hit { background:#2e6da4; color:#fff; }
 /* AI株式分析 */
