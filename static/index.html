@@ -906,22 +906,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .pnl-top-total { font-size:20px; font-weight:900; letter-spacing:-0.5px; }
 .pnl-top-total.up { color:#c0392b; }
 .pnl-top-total.down { color:#2e6da4; }
-/* ── TAX SIMULATOR ── */
-.tax-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.tax-person { background:var(--bg); border-radius:10px; padding:12px 13px; }
-.tax-who { font-size:11px; font-weight:800; letter-spacing:1px; margin-bottom:8px; }
-.tax-who.mine { color:var(--mine); }
-.tax-who.hers { color:var(--hers); }
-.tax-row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; font-size:12px; }
-.tax-lbl { color:var(--text-soft); }
-.tax-val { font-weight:700; color:var(--text); }
-.tax-val.red { color:#c0392b; }
-.tax-val.soft { color:var(--text-soft); font-weight:400; }
-.tax-divider { height:1px; background:var(--line); margin:6px 0 4px; }
-.tax-total-row { display:flex; justify-content:space-between; align-items:baseline; }
-.tax-total-lbl { font-size:12px; color:var(--text-soft); }
-.tax-total-val { font-size:18px; font-weight:900; color:#c0392b; }
-.tax-note { font-size:10px; color:var(--text-soft); margin-top:10px; }
 /* ── TARGET PRICE ── */
 .tp-list { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
 .tp-item { background:var(--bg); border-radius:10px; padding:11px 13px; position:relative; }
@@ -1130,11 +1114,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div class="folio-card">
         <div class="income-head">損益サマリー（評価＋実現）</div>
         <div id="pnl-total-top"></div>
-      </div>
-      <div class="folio-card">
-        <div class="income-head">税金シミュレーター</div>
-        <div id="tax-sim"></div>
-        <div class="folio-note">※ 実現損益がプラスの場合のみ課税。20.315%（所得税15.315%＋住民税5%）で計算。NISA口座は非課税。</div>
       </div>
       <div class="folio-card">
         <div class="income-head">資産推移</div>
@@ -2053,7 +2032,6 @@ async function loadPortfolioHistory() {
   renderGoals();
   renderGoalLineChart();
   renderGoalPnlChart();
-  renderTaxSim();
   renderAnnualBattle();
 }
 function setAssetRange(r) {
@@ -2533,7 +2511,7 @@ function showTab(name) {
   }
   if (name === 'trades') { if (!window._tpLoaded) { window._tpLoaded = true; loadTargetPrices(); } else { renderTargetPrices(); } window.scrollTo(0,0); return; }
   if (name === 'goals') { if (!window._goalsLoaded) { window._goalsLoaded = true; loadGoals(); } else { renderGoals(); } renderGoalLineChart(); renderGoalPnlChart(); renderPnlTotalTop(); window.scrollTo(0,0); return; }
-  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); renderTaxSim(); renderAnnualBattle(); window.scrollTo(0,0); return; }
+  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); renderAnnualBattle(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
@@ -4534,39 +4512,6 @@ async function loadEarnings() {
       <div class="earn-r"><span class="earn-date">${mo}/${da}</span><span class="earn-when">${when}</span></div>
     </div>`;
   }).join('');
-}
-
-// ── TAX SIMULATOR ──────────────────────────────────────────────────────────
-function renderTaxSim() {
-  const el = document.getElementById('tax-sim');
-  if (!el) return;
-  function fmt(v) { return `¥${Math.abs(v).toLocaleString()}`; }
-  const persons = ['hers', 'mine'];
-  const cols = persons.map(p => {
-    const realized = Math.round((allRealized || [])
-      .filter(r => r.person === p && (r.currency || 'JPY') === 'JPY')
-      .reduce((s, r) => s + (r.realized || 0), 0));
-    const taxable = Math.max(0, realized);
-    const tax = Math.round(taxable * 0.20315);
-    const afterTax = realized - tax;
-    return { p, realized, tax, afterTax };
-  });
-  const totalRealized = cols.reduce((s, c) => s + c.realized, 0);
-  const totalTax = cols.reduce((s, c) => s + c.tax, 0);
-  const rows = cols.map(({ p, realized, tax, afterTax }) => `
-    <div class="tax-person">
-      <div class="tax-who ${p}">${NAMES[p]}</div>
-      <div class="tax-row"><span class="tax-lbl">実現損益</span><span class="tax-val ${realized >= 0 ? '' : 'soft'}">${realized >= 0 ? '+' : '−'}${fmt(realized)}</span></div>
-      <div class="tax-row"><span class="tax-lbl">課税対象</span><span class="tax-val ${realized <= 0 ? 'soft' : ''}">${realized <= 0 ? '−' : fmt(Math.max(0, realized))}</span></div>
-      <div class="tax-divider"></div>
-      <div class="tax-row"><span class="tax-lbl">概算税額</span><span class="tax-val red">${tax > 0 ? fmt(tax) : '−'}</span></div>
-      <div class="tax-row"><span class="tax-lbl">手取り</span><span class="tax-val">${realized > 0 ? fmt(afterTax) : '−'}</span></div>
-    </div>`).join('');
-  el.innerHTML = `<div class="tax-grid">${rows}</div>
-    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:baseline">
-      <span style="font-size:12px;color:var(--text-soft)">2人合計 概算税額</span>
-      <span style="font-size:22px;font-weight:900;color:#c0392b">${totalTax > 0 ? fmt(totalTax) : '課税なし'}</span>
-    </div>`;
 }
 
 // ── ANNUAL BATTLE ───────────────────────────────────────────────────────────
