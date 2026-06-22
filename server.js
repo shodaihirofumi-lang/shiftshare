@@ -575,16 +575,20 @@ app.get('/api/portfolio-history', async (_req, res) => {
       if (Object.keys(m).length) perHolding.push({ person, m });
     } catch { /* skip */ }
   }
-  // 日付の和集合を作り、各銘柄は直近値を前方補完（取引日が違う銘柄でも誤差なく合算）
+  // 日付の和集合を作り、各銘柄は前方補完（取引日が違う銘柄でも誤差なく合算）
+  // last は各銘柄の「最初に取得できた値」で初期化（後方補完）することで、
+  // 銘柄ごとのデータ開始日のズレによる ¥0→評価額 の巨大ジャンプを防ぐ
   const dates = [...allDates].sort();
-  const last = perHolding.map(() => 0);
-  const seen = perHolding.map(() => false);
+  const last = perHolding.map((ph) => {
+    const firstKey = Object.keys(ph.m).sort()[0];
+    return firstKey ? ph.m[firstKey] : 0;
+  });
   const history = [];
   for (const date of dates) {
     let mine = 0, hers = 0;
     perHolding.forEach((ph, idx) => {
-      if (ph.m[date] != null) { last[idx] = ph.m[date]; seen[idx] = true; }
-      if (seen[idx]) { if (ph.person === 'hers') hers += last[idx]; else mine += last[idx]; }
+      if (ph.m[date] != null) last[idx] = ph.m[date];
+      if (ph.person === 'hers') hers += last[idx]; else mine += last[idx];
     });
     history.push({ date, mine: Math.round(mine), hers: Math.round(hers) });
   }
