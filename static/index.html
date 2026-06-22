@@ -438,6 +438,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-avg { font-size:12px; color:var(--text); margin-left:6px; font-weight:500; }
 .folio-realized { margin-top:2px; font-size:11px; }
 .folio-realized .folio-realized-lbl { color:var(--text-soft); font-weight:600; letter-spacing:.5px; margin-right:6px; }
+.folio-combined { margin-top:5px; padding-top:5px; border-top:1px dashed var(--line); font-size:12px; }
+.folio-combined .folio-combined-lbl { color:var(--text-soft); font-weight:700; letter-spacing:.5px; margin-right:6px; }
+.folio-combined .folio-gain { font-size:13px; }
 .sell-lbl { display:block; font-size:11px; color:var(--text-soft); letter-spacing:1px; font-weight:600; margin:14px 0 6px; }
 .sell-presets { display:flex; gap:6px; margin-bottom:8px; }
 .sell-preset-btn { flex:1; padding:8px 0; border-radius:8px; border:1.5px solid var(--line); background:var(--card); font-size:12px; font-weight:700; color:var(--text); cursor:pointer; font-family:inherit; }
@@ -1881,8 +1884,12 @@ function fmtNum(n, cur) {
 async function loadHoldings() {
   try { holdings = await fetch('/api/holdings').then(r=>r.json()); } catch { holdings = []; }
   const syms = [...new Set(holdings.map(h=>h.ticker).filter(Boolean))];
-  if (syms.length) { try { quotes = await fetch('/api/quotes?symbols='+encodeURIComponent(syms.join(','))).then(r=>r.json()); } catch { quotes={}; } }
+  // 米国株があれば USD/JPY も一緒に取得し、損益タブと同じレートで円換算する
+  const hasUsd = holdings.some(h => h.ticker && !h.ticker.endsWith('.T'));
+  const fetchSyms = hasUsd ? [...syms, 'USDJPY=X'] : syms;
+  if (fetchSyms.length) { try { quotes = await fetch('/api/quotes?symbols='+encodeURIComponent(fetchSyms.join(','))).then(r=>r.json()); } catch { quotes={}; } }
   else quotes = {};
+  if (quotes['USDJPY=X']?.price) pnlUsdjpy = quotes['USDJPY=X'].price;
   await loadRealized(); // 実現損益も合わせて反映
   renderHeatmap();
   loadHoldReplay(); // 売却した銘柄の現在価格を取って未売却シナリオと比較
@@ -1914,12 +1921,23 @@ function renderPortfolio() {
       }
       return html;
     }).join('') : '<span class="folio-empty">未登録</span>';
+    // USD と JPY が混在する人は、損益タブと同じ円換算合計も併記（タブ間で数字が食い違って見えるのを防ぐ）
+    let combined = '';
+    if (curs.length > 1) {
+      const { unrealized, realized } = calcPersonPnl(p);
+      const uUp = unrealized >= 0;
+      combined = `<div class="folio-line folio-combined"><span class="folio-combined-lbl">円換算 評価損益</span><span class="folio-gain ${uUp?'up':'down'}">${uUp?'▲':'▼'}${uUp?'+':'−'}¥${Math.abs(unrealized).toLocaleString()}</span></div>`;
+      if (realized !== 0) {
+        const rUp = realized >= 0;
+        combined += `<div class="folio-line folio-combined"><span class="folio-combined-lbl">円換算 実現累計</span><span class="folio-gain ${rUp?'up':'down'}">${rUp?'▲':'▼'}${rUp?'+':'−'}¥${Math.abs(realized).toLocaleString()}</span></div>`;
+      }
+    }
     const detail = ph.length ? ph.map(holdingLine).join('') : '<div class="ev-empty">保有銘柄なし（売却済みは実現損益のみ表示）</div>';
     return `<div class="folio-person">
       <div class="folio-row" onclick="toggleFolio('${p}')">
         <span class="folio-tg" id="folio-tg-${p}">▶</span>
         <span class="folio-name ${p}">${NAMES[p]}</span>
-        <div class="folio-lines">${totals}</div>
+        <div class="folio-lines">${totals}${combined}</div>
       </div>
       <div class="folio-detail" id="folio-detail-${p}" style="display:none">${detail}</div>
     </div>`;
@@ -3161,18 +3179,21 @@ async function deleteGoalFromUI(id) {
   } catch { showToast('削除に失敗しました', true); }
 }
 function calcPersonPnl(p) {
-  const last = pnlHist[pnlHist.length - 1];
-  const currentVal = last ? (last[p] || 0) : 0;
   const myH = (holdings || []).filter(h => (h.person === 'hers' ? 'hers' : 'mine') === p);
-  const costBasis = myH.reduce((s, h) => {
-    const cur = quotes[h.ticker]?.currency || (h.ticker.endsWith('.T') ? 'JPY' : 'USD');
-    const fx = cur === 'USD' ? pnlUsdjpy : 1;
-    return s + (h.cost || 0) * h.shares * fx;
-  }, 0);
-  const unrealized = Math.round(currentVal - costBasis);
+  const fxOf = (t) => ((quotes[t]?.currency || (t.endsWith('.T') ? 'JPY' : 'USD')) === 'USD' ? pnlUsdjpy : 1);
+  // 評価損益：保有株タブと同じ「現在値 × 株数」ベース（USDは円換算して合算）
+  const unrealized = Math.round(myH.reduce((s, h) => {
+    const price = quotes[h.ticker]?.price ?? h.cost ?? 0; // 価格取得失敗時はコスト＝損益0扱い
+    return s + (price - (h.cost || 0)) * h.shares * fxOf(h.ticker);
+  }, 0));
+  // 実現損益：USDも円換算して含める（JPYのみ集計だと米国株の利確が消えてしまう）
   const realized = Math.round((allRealized || [])
-    .filter(r => r.person === p && (r.currency || 'JPY') === 'JPY')
-    .reduce((s, r) => s + (r.realized || 0), 0));
+    .filter(r => r.person === p)
+    .reduce((s, r) => {
+      const cur = r.currency || (r.ticker?.endsWith('.T') ? 'JPY' : 'USD');
+      const fx = cur === 'USD' ? pnlUsdjpy : 1;
+      return s + (r.realized || 0) * fx;
+    }, 0));
   return { unrealized, realized, total: unrealized + realized };
 }
 function renderPnlTotalTop() {
