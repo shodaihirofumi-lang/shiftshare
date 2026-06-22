@@ -865,6 +865,20 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .realized-top-val { font-size:15px; font-weight:700; }
 .realized-top-val .up { color:#c0392b; }
 .realized-top-val .down { color:#2e6da4; }
+.pnl-top-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.pnl-top-person { display:flex; flex-direction:column; gap:3px; }
+.pnl-top-who { font-size:12px; font-weight:800; letter-spacing:1.5px; margin-bottom:4px; }
+.pnl-top-who.mine { color:var(--mine); }
+.pnl-top-who.hers { color:var(--hers); }
+.pnl-top-row { display:flex; justify-content:space-between; align-items:baseline; }
+.pnl-top-lbl { font-size:11px; color:var(--text-soft); }
+.pnl-top-val { font-size:13px; font-weight:700; }
+.pnl-top-val.up { color:#c0392b; }
+.pnl-top-val.down { color:#2e6da4; }
+.pnl-top-divider { height:1px; background:var(--line); margin:6px 0 4px; }
+.pnl-top-total { font-size:20px; font-weight:900; letter-spacing:-0.5px; }
+.pnl-top-total.up { color:#c0392b; }
+.pnl-top-total.down { color:#2e6da4; }
 </style>
 </head>
 <body>
@@ -1036,8 +1050,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <button class="mn-btn" id="pnl-next" onclick="changePnlMonth(1)">›</button>
       </div>
       <div class="folio-card">
-        <div class="income-head">実現損益（累計）</div>
-        <div id="pnl-realized-top"></div>
+        <div class="income-head">損益サマリー（評価＋実現）</div>
+        <div id="pnl-total-top"></div>
       </div>
       <div class="folio-card">
         <div class="income-head">資産推移</div>
@@ -1530,7 +1544,7 @@ async function loadRealized() {
   try { allRealized = await fetch('/api/realized').then(r=>r.json()); } catch { allRealized = []; }
   renderPortfolio();
   renderCalendar();
-  renderRealizedTop();
+  renderPnlTotalTop();
 }
 
 // ── ⑥ ヒートマップ（当日変動率を色とサイズで表示）──
@@ -2379,7 +2393,7 @@ function showTab(name) {
   if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
   if (name === 'gridcal') { renderGridCalendar(); window.scrollTo(0,0); return; }
   if (name === 'trades') { window.scrollTo(0,0); return; }
-  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); loadGoals(); } loadEarnings(); loadPortfolioHistory(); renderRealizedTop(); renderGoals(); window.scrollTo(0,0); return; }
+  if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); loadGoals(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); renderGoals(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
     const now = new Date();
@@ -2713,8 +2727,8 @@ function unrealizedJpyFor(person) {
 function renderGoals() {
   const el = document.getElementById('goals-list');
   if (!el) return;
-  const currentMine = unrealizedJpyFor('mine');
-  const currentHers = unrealizedJpyFor('hers');
+  const currentMine = Math.max(0, calcPersonPnl('mine').total);
+  const currentHers = Math.max(0, calcPersonPnl('hers').total);
   const now = new Date();
   function goalCard(g, earnedJpy) {
     const pct = g.amount > 0 ? Math.min(Math.round(earnedJpy / g.amount * 100), 999) : 0;
@@ -2737,7 +2751,7 @@ function renderGoals() {
       <div class="goal-target">目標 ¥${g.amount.toLocaleString()}</div>
       <div class="goal-bar-wrap"><div class="${barCls}" style="width:${Math.min(pct,100)}%"></div></div>
       <div class="goal-stats">
-        <span class="goal-now">評価益 ¥${earnedJpy.toLocaleString()}</span>
+        <span class="goal-now">損益計 ¥${earnedJpy.toLocaleString()}</span>
         <span class="goal-pct">${pct}%</span>
         ${done ? '<span class="goal-rem" style="color:var(--gold)">達成済み</span>' : `<span class="goal-rem">あと ¥${rem.toLocaleString()}</span>`}
       </div>
@@ -2752,11 +2766,11 @@ function renderGoals() {
   }
   let html = '';
   if (mineGoals.length) {
-    html += `<div class="goal-section-head mine">ひろ <span class="goal-section-val">評価益 ¥${currentMine.toLocaleString()}</span></div>`;
+    html += `<div class="goal-section-head mine">ひろ <span class="goal-section-val">損益計 ¥${currentMine.toLocaleString()}</span></div>`;
     html += mineGoals.map(g => goalCard(g, currentMine)).join('');
   }
   if (hersGoals.length) {
-    html += `<div class="goal-section-head hers">ちか <span class="goal-section-val">評価益 ¥${currentHers.toLocaleString()}</span></div>`;
+    html += `<div class="goal-section-head hers">ちか <span class="goal-section-val">損益計 ¥${currentHers.toLocaleString()}</span></div>`;
     html += hersGoals.map(g => goalCard(g, currentHers)).join('');
   }
   el.innerHTML = html;
@@ -2785,21 +2799,37 @@ async function deleteGoalFromUI(id) {
     renderGoals();
   } catch { showToast('削除に失敗しました', true); }
 }
-function renderRealizedTop() {
-  const el = document.getElementById('pnl-realized-top');
+function calcPersonPnl(p) {
+  const last = pnlHist[pnlHist.length - 1];
+  const currentVal = last ? (last[p] || 0) : 0;
+  const myH = (holdings || []).filter(h => (h.person === 'hers' ? 'hers' : 'mine') === p);
+  const costBasis = myH.reduce((s, h) => {
+    const cur = quotes[h.ticker]?.currency || (h.ticker.endsWith('.T') ? 'JPY' : 'USD');
+    const fx = cur === 'USD' ? pnlUsdjpy : 1;
+    return s + (h.cost || 0) * h.shares * fx;
+  }, 0);
+  const unrealized = Math.round(currentVal - costBasis);
+  const realized = Math.round((allRealized || [])
+    .filter(r => r.person === p && (r.currency || 'JPY') === 'JPY')
+    .reduce((s, r) => s + (r.realized || 0), 0));
+  return { unrealized, realized, total: unrealized + realized };
+}
+function renderPnlTotalTop() {
+  const el = document.getElementById('pnl-total-top');
   if (!el) return;
-  const rv = allRealized || [];
-  if (!rv.length) { el.innerHTML = '<div class="folio-note" style="padding:6px 0">実現損益はまだありません</div>'; return; }
-  const persons = ['mine','hers'].filter(p => rv.some(r => r.person === p));
-  el.innerHTML = persons.map(p => {
-    const byCur = {};
-    for (const r of rv.filter(x => x.person === p)) { const cur = r.currency||'JPY'; byCur[cur] = (byCur[cur]||0) + r.realized; }
-    const valHtml = Object.entries(byCur).filter(([,v]) => Math.abs(v)>=1).map(([cur, v]) => {
-      const sym = cur==='USD' ? '$' : '¥';
-      return `<span class="${v>=0?'up':'down'}">${v>=0?'+':'−'}${sym}${Math.abs(Math.round(v)).toLocaleString()}</span>`;
-    }).join('<span style="color:var(--text-soft);margin:0 3px">·</span>');
-    return `<div class="realized-top-row"><span class="realized-top-who ${p}">${NAMES[p]}</span><span class="realized-top-val">${valHtml}</span></div>`;
-  }).join('');
+  function fmt(v) { return `${v >= 0 ? '+' : '−'}¥${Math.abs(v).toLocaleString()}`; }
+  function cls(v) { return v >= 0 ? 'up' : 'down'; }
+  const rows = ['mine', 'hers'].map(p => {
+    const { unrealized, realized, total } = calcPersonPnl(p);
+    return `<div class="pnl-top-person">
+      <div class="pnl-top-who ${p}">${NAMES[p]}</div>
+      <div class="pnl-top-row"><span class="pnl-top-lbl">評価損益</span><span class="pnl-top-val ${cls(unrealized)}">${fmt(unrealized)}</span></div>
+      <div class="pnl-top-row"><span class="pnl-top-lbl">実現損益</span><span class="pnl-top-val ${cls(realized)}">${fmt(realized)}</span></div>
+      <div class="pnl-top-divider"></div>
+      <div class="pnl-top-row"><span class="pnl-top-lbl">合 計</span><span class="pnl-top-total ${cls(total)}">${fmt(total)}</span></div>
+    </div>`;
+  });
+  el.innerHTML = `<div class="pnl-top-grid">${rows.join('')}</div>`;
 }
 function renderCalendar() {
   const status = lastStatus || {};
