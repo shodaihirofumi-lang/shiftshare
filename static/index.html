@@ -866,6 +866,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .goal-person-btn.mine.active { background:var(--mine-bg); border-color:var(--mine-border); color:var(--mine); }
 .goal-person-btn.hers.active { background:var(--hers-bg); border-color:var(--hers-border); color:var(--hers); }
 .gcal2-cell.selected-c { outline:2px solid var(--gold); outline-offset:-1px; }
+.gcal2-trade-row { display:flex; gap:2px; flex-wrap:wrap; margin-top:2px; }
+.gcal2-trade-tag { font-size:8px; font-weight:900; padding:1px 4px; border-radius:3px; line-height:1.5; letter-spacing:0.3px; }
+.gcal2-trade-buy { background:#27ae60; color:#fff; }
+.gcal2-trade-sell { background:#e74c3c; color:#fff; }
+.gcal2-cell.has-trade { box-shadow:0 0 0 1.5px rgba(255,180,0,0.5); }
 /* ── GRID DIARY PANEL ── */
 .gcal2-diary-panel { background:var(--card); border-radius:14px; margin:10px 4px 0; padding:15px 14px 12px; box-shadow:var(--shadow-sm); }
 .gcal2-diary-date { font-size:18px; font-weight:800; color:var(--text); margin-bottom:9px; }
@@ -2677,6 +2682,15 @@ function renderGridCalendar() {
   for (let d=1; d<=lastDay; d++) cells.push({ day:d, month, year, dim:false });
   const rem = cells.length % 7;
   if (rem) for (let i=1; i<=7-rem; i++) cells.push({ day:i, month:month===12?1:month+1, year:month===12?year+1:year, dim:true });
+  // 取引日ごとにまとめる
+  const tradesByDate = {};
+  for (const t of (allTrades || [])) {
+    if (!t.ts) continue;
+    const d = new Date(t.ts);
+    const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (!tradesByDate[dk]) tradesByDate[dk] = [];
+    tradesByDate[dk].push(t);
+  }
   for (const c of cells) {
     const key = `${c.year}-${String(c.month).padStart(2,'0')}-${String(c.day).padStart(2,'0')}`;
     const dow = new Date(c.year, c.month-1, c.day).getDay();
@@ -2705,10 +2719,20 @@ function renderGridCalendar() {
     if (!c.dim && (evs.length || gevs.length)) {
       evDots = `<div class="gcal2-ev-dots">${[...evs,...gevs].slice(0,3).map(e=>`<span class="gcal2-ev-dot${e.person==='hers'?' hers-dot':' ev-dot'}"></span>`).join('')}</div>`;
     }
+    let tradeBadges = '';
+    if (!c.dim && tradesByDate[key]) {
+      const dayTrades = tradesByDate[key];
+      const buys = dayTrades.filter(t => t.type === 'buy');
+      const sells = dayTrades.filter(t => t.type === 'sell');
+      if (buys.length) tradeBadges += `<span class="gcal2-trade-tag gcal2-trade-buy">買${buys.length > 1 ? buys.length : ''}</span>`;
+      if (sells.length) tradeBadges += `<span class="gcal2-trade-tag gcal2-trade-sell">売${sells.length > 1 ? sells.length : ''}</span>`;
+      cellClass += ' has-trade';
+    }
+    const tradeRow = tradeBadges ? `<div class="gcal2-trade-row">${tradeBadges}</div>` : '';
     const cellEl = document.createElement('div');
     cellEl.className = cellClass;
     cellEl.dataset.key = key;
-    cellEl.innerHTML = `<div class="${numClass}">${c.day}</div>${tags}${evDots}`;
+    cellEl.innerHTML = `<div class="${numClass}">${c.day}</div>${tags}${evDots}${tradeRow}`;
     if (!c.dim) cellEl.addEventListener('click', () => showGridDiary(key));
     grid.appendChild(cellEl);
   }
