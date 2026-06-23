@@ -26,6 +26,7 @@ import {
   getGoals, addGoal, deleteGoal,
   getTargetPrices, addTargetPrice, deleteTargetPrice,
   getPushSettings, savePushSettings,
+  exportAll, importAll,
 } from './db.js';
 
 const app = express();
@@ -1491,6 +1492,29 @@ app.get('/api/push-settings', (_req, res) => res.json(getPushSettings()));
 app.post('/api/push-settings', async (req, res) => {
   await savePushSettings(req.body);
   res.json(getPushSettings());
+});
+
+// ── 全データのバックアップ／復元（写真込み） ──
+// 復元アップロードは写真込みで大きくなるため専用multer（express.jsonの上限を回避）
+const backupUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
+app.get('/api/backup', (_req, res) => {
+  const dump = exportAll();
+  const stamp = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }); // YYYY-MM-DD
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="shiftshare-backup-${stamp}.json"`);
+  res.send(JSON.stringify(dump));
+});
+app.post('/api/restore', backupUpload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'ファイルがありません' });
+    let payload;
+    try { payload = JSON.parse(req.file.buffer.toString('utf8')); }
+    catch { return res.status(400).json({ error: 'JSONとして読み込めませんでした' }); }
+    const r = await importAll(payload);
+    res.json(r);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
 });
 
 // ── 週次・月次レポート自動送信 ──

@@ -817,3 +817,40 @@ export async function savePushSettings(settings) {
   cache.pushSettings = { ...getPushSettings(), ...settings };
   await persist();
 }
+
+// ── 全データのバックアップ／復元（写真込みの完全版）──
+// 文字データ(cache)と写真データ(photoCache)を1つにまとめて返す
+export function exportAll() {
+  return {
+    app: 'shiftshare',
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    data: cache,
+    photos: photoCache,
+  };
+}
+
+// バックアップで丸ごと上書き（＝そのスナップショットに完全復元）
+export async function importAll(payload) {
+  if (!payload || typeof payload !== 'object' || !payload.data || typeof payload.data !== 'object') {
+    throw new Error('バックアップファイルの形式が正しくありません');
+  }
+  // 文字データを丸ごと置き換え（欠損キーは初期値で補完）
+  cache = { ...empty(), ...payload.data };
+  // 写真データを丸ごと置き換え
+  photoCache = (payload.photos && typeof payload.photos === 'object') ? { ...payload.photos } : {};
+
+  if (useRedis) {
+    await redis.set(REDIS_KEY, cache);
+    // 写真ハッシュを一旦全削除してから入れ直す（バックアップに無い写真も消えて完全一致に）
+    try { await redis.del(PHOTOS_KEY); } catch (e) { console.error('[db] 復元: 写真ハッシュ削除失敗', e.message); }
+    for (const [field, value] of Object.entries(photoCache)) {
+      try { await redis.hset(PHOTOS_KEY, { [field]: value }); }
+      catch (e) { console.error('[db] 復元: 写真書き込み失敗', field, e.message); }
+    }
+  } else {
+    fs.writeFileSync(DB_FILE, JSON.stringify(cache, null, 2));
+    fs.writeFileSync(PHOTOS_FILE, JSON.stringify(photoCache), 'utf8');
+  }
+  return { ok: true, photoCount: Object.keys(photoCache).length };
+}

@@ -197,6 +197,18 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 }
 .btn-analyze:disabled { opacity:.45; cursor:not-allowed; }
 
+/* ── BACKUP ── */
+.backup-card { margin-top:26px; padding:16px; background:var(--card); border:1px solid var(--line); border-radius:16px; }
+.backup-title { font-size:14px; font-weight:800; color:var(--text); margin-bottom:6px; }
+.backup-note { font-size:12px; color:var(--text-soft); line-height:1.7; margin-bottom:14px; }
+.backup-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:13px; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; border:1.5px solid var(--line); box-sizing:border-box; }
+.backup-btn + .backup-btn { margin-top:9px; }
+.backup-btn.dl { background:var(--mine); color:#fbf9f5; border-color:var(--mine); }
+.backup-btn.up { background:var(--card); color:var(--mine); }
+.backup-btn:active { opacity:.85; }
+.backup-btn:disabled { opacity:.5; cursor:not-allowed; }
+.backup-warn { font-size:11px; color:#b5544f; margin-top:11px; line-height:1.6; }
+
 /* ── OVERLAY ── */
 .overlay { position:fixed; inset:0; background:rgba(232,227,218,.93); backdrop-filter:blur(6px); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:200; gap:20px; }
 .overlay.active { display:flex; }
@@ -1462,6 +1474,21 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbf9f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         AIでシフトを読み取る
       </button>
+
+      <div class="backup-card">
+        <div class="backup-title">データのバックアップ</div>
+        <div class="backup-note">日記・シフト・メモ・保有株・取引・写真など、すべてのデータを1つのファイルに保存します。万一に備えて、ときどき保存しておくと安心です。写真も含めた完全バックアップです。</div>
+        <button class="backup-btn dl" onclick="downloadBackup(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          バックアップをダウンロード
+        </button>
+        <label class="backup-btn up">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          バックアップから復元
+          <input type="file" accept="application/json,.json" style="display:none" onchange="onRestoreFile(this)">
+        </label>
+        <div class="backup-warn">※「復元」すると現在のデータはすべて上書きされます。新しいファイルほど安全です（古いファイルを復元すると最近の変更が消えます）。</div>
+      </div>
     </div>
 
   </div>
@@ -3926,6 +3953,49 @@ function showToast(msg, isErr=false) {
   t.textContent = msg; t.style.borderLeftColor = isErr ? '#b5544f' : 'var(--mine)';
   t.classList.add('show'); clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+// ── BACKUP（全データのダウンロード／復元）──
+async function downloadBackup(btn) {
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.textContent = '準備中…'; }
+  try {
+    const res = await fetch('/api/backup');
+    if (!res.ok) throw new Error('取得に失敗しました');
+    const blob = await res.blob();
+    let fname = 'shiftshare-backup.json';
+    const cd = res.headers.get('Content-Disposition');
+    const m = cd && cd.match(/filename="?([^"]+)"?/);
+    if (m) fname = m[1];
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    showToast('バックアップを保存しました');
+  } catch (e) {
+    showToast('バックアップに失敗しました', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+  }
+}
+async function onRestoreFile(input) {
+  const file = input.files && input.files[0];
+  input.value = ''; // 同じファイルを再選択できるようにリセット
+  if (!file) return;
+  if (!confirm('このバックアップから復元します。\n\n⚠ 現在のデータ（日記・シフト・メモ・保有株・写真など）はすべて上書きされます。\nよろしいですか？')) return;
+  showToast('復元中…しばらくお待ちください');
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch('/api/restore', { method: 'POST', body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || '復元に失敗しました');
+    alert('復元が完了しました。画面を更新します。');
+    location.reload();
+  } catch (e) {
+    showToast('復元失敗: ' + e.message, true);
+  }
 }
 
 // ── PUSH ──
