@@ -602,10 +602,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-inline-photo { margin:8px 0; }
 .diary-inline-photo img { max-width:100%; border-radius:10px; display:block; }
 .diary-blocks { display:flex; flex-direction:column; }
-.dblock-photo { position:relative; touch-action:pan-y; user-select:none; -webkit-user-select:none; }
-.dblock-photo.dragging { opacity:.35; }
-.dblock-grip { display:inline-block; margin:2px 0 6px; font-size:10px; color:var(--text-soft); background:var(--card); border:1px solid var(--line); border-radius:7px; padding:2px 8px; }
-.diary-drop-indicator { height:3px; background:var(--mine); border-radius:3px; margin:6px 2px; box-shadow:0 0 0 2px rgba(123,166,162,.25); }
+.dblock-photo { position:relative; }
+.dblock-move { display:flex; gap:8px; margin:4px 0 8px; }
+.dblock-move-btn { font-size:11px; font-weight:700; color:var(--mine); background:var(--mine-bg); border:1px solid var(--mine); border-radius:8px; padding:5px 12px; cursor:pointer; }
+.dblock-move-btn:active { opacity:.65; }
 .diary-ai-footer { font-size:10px; color:var(--text-soft); margin-top:4px; }
 .diary-actions { display:flex; gap:8px; margin-top:12px; }
 .diary-btn-ai { flex:1; padding:9px 0; border-radius:9px; border:none; background:var(--gold); color:#fff; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .15s; }
@@ -4244,7 +4244,6 @@ function renderDiary() {
     </div>`;
   }
   el.innerHTML = html || '<div class="diary-empty">記録がありません</div>';
-  initDiaryDrag();
 }
 
 function copyDiarySection(btn) {
@@ -4298,7 +4297,10 @@ function renderDiaryText(text, photos = []) {
         if (photos[i]) {
           return `<div class="dblock dblock-photo" data-line="${idx}" data-pi="${i}">
             <div class="diary-inline-photo"><img src="${photos[i].img}" alt="写真${i+1}" onclick="openLightbox(this.src)"></div>
-            <span class="dblock-grip">⠿ 長押しで移動</span>
+            <div class="dblock-move">
+              <button class="dblock-move-btn" onclick="moveDiaryPhoto(this,-1)">▲ 上へ</button>
+              <button class="dblock-move-btn" onclick="moveDiaryPhoto(this,1)">▼ 下へ</button>
+            </div>
           </div>`;
         }
         return wrap(''); // 対応写真が無いマーカーは空（行自体は残して順序を保つ）
@@ -4313,88 +4315,45 @@ function renderDiaryText(text, photos = []) {
   return `<div class="diary-blocks">${blocks.join('')}</div>`;
 }
 
-// ── まとめ内の写真を長押しドラッグで移動 ──
-let diaryDrag = null;
-function initDiaryDrag() {
-  const root = document.getElementById('diary-list');
-  if (!root || root._dragInit) return;
-  root._dragInit = true;
-  root.addEventListener('pointerdown', diaryPointerDown);
+// ── まとめ内の写真を「▲上へ / ▼下へ」ボタンで移動 ──
+// （モバイルでは長押しドラッグがスクロール・タップと干渉して扱いにくいためボタン方式）
+function moveDiaryPhoto(btn, dir) {
+  const photo = btn.closest('.dblock-photo');
+  const container = btn.closest('.diary-ai-text');
+  if (!photo || !container) return;
+  const blocks = photo.parentElement; // .diary-blocks
+  const isBlank = (el) => el && el.classList.contains('dblock') && !el.classList.contains('dblock-photo') && el.textContent.trim() === '';
+  if (dir < 0) {
+    let prev = photo.previousElementSibling;
+    while (isBlank(prev)) prev = prev.previousElementSibling; // 空行はまたいで段落単位で動かす
+    if (!prev) { showToast('一番上です'); return; }
+    blocks.insertBefore(photo, prev);
+  } else {
+    let next = photo.nextElementSibling;
+    while (isBlank(next)) next = next.nextElementSibling;
+    if (!next) { showToast('一番下です'); return; }
+    blocks.insertBefore(photo, next.nextElementSibling);
+  }
+  saveDiaryOrder(container);
 }
-function diaryPointerDown(e) {
-  if (diaryDrag) return;
-  const photo = e.target.closest('.dblock-photo');
-  if (!photo) return;
-  const blocks = photo.closest('.diary-blocks');
-  const container = photo.closest('.diary-ai-text');
-  if (!blocks || !container) return;
-  const pid = e.pointerId, sx = e.clientX, sy = e.clientY;
-  let active = false;
-  const timer = setTimeout(() => {
-    active = true;
-    photo.classList.add('dragging');
-    const ind = document.createElement('div');
-    ind.className = 'diary-drop-indicator';
-    photo.after(ind);
-    diaryDrag = { photo, blocks, container, ind };
-    if (navigator.vibrate) navigator.vibrate(15);
-  }, 350);
-  const move = (ev) => {
-    if (ev.pointerId !== pid) return;
-    if (!active) {
-      if (Math.abs(ev.clientX - sx) > 10 || Math.abs(ev.clientY - sy) > 10) finish(false);
-      return;
-    }
-    ev.preventDefault();
-    const el = document.elementFromPoint(ev.clientX, ev.clientY);
-    const tb = el && el.closest('.dblock');
-    if (tb && tb !== diaryDrag.photo && diaryDrag.blocks.contains(tb)) {
-      const r = tb.getBoundingClientRect();
-      if (ev.clientY < r.top + r.height / 2) diaryDrag.blocks.insertBefore(diaryDrag.ind, tb);
-      else diaryDrag.blocks.insertBefore(diaryDrag.ind, tb.nextSibling);
-    }
-  };
-  const finish = (commit) => {
-    clearTimeout(timer);
-    document.removeEventListener('pointermove', move);
-    document.removeEventListener('pointerup', up);
-    document.removeEventListener('pointercancel', cancel);
-    if (active && diaryDrag) {
-      const { photo, ind, blocks, container } = diaryDrag;
-      if (commit) blocks.insertBefore(photo, ind);
-      ind.remove();
-      photo.classList.remove('dragging');
-      diaryDrag = null;
-      // ドラッグ直後の click（ライトボックス）を1回だけ無効化
-      const sup = (ce) => { ce.stopPropagation(); ce.preventDefault(); document.removeEventListener('click', sup, true); };
-      document.addEventListener('click', sup, true);
-      setTimeout(() => document.removeEventListener('click', sup, true), 400);
-      if (commit) commitDiaryReorder(container);
-    }
-    diaryDrag = null;
-  };
-  const up = (ev) => { if (ev.pointerId === pid) finish(true); };
-  const cancel = (ev) => { if (ev.pointerId === pid) finish(false); };
-  document.addEventListener('pointermove', move, { passive: false });
-  document.addEventListener('pointerup', up);
-  document.addEventListener('pointercancel', cancel);
-}
-function commitDiaryReorder(container) {
+// data-line（元テキストの行番号）は据え置き、DOMの並び順から新テキストを再構築。
+// 再描画しないのでボタンは動かず連打しやすい。保存はまとめてデバウンス。
+let diarySaveTimer = null;
+function saveDiaryOrder(container) {
   const dateKey = container.dataset.date, person = container.dataset.person;
   if (!dateKey || !person) return;
   const lines = decodeURIComponent(container.dataset.raw || '').split('\n');
   const order = [...container.querySelectorAll('.dblock')].map(b => +b.dataset.line);
   const newText = order.map(i => lines[i] ?? '').join('\n');
-  container.dataset.raw = encodeURIComponent(newText);
   if (!allDiaries[dateKey]) allDiaries[dateKey] = {};
   allDiaries[dateKey][person] = { ...(allDiaries[dateKey][person] || {}), text: newText };
-  // data-line を振り直すため再描画
-  const photos = (dayPhotos[dateKey] || []).filter(p => p.person === person);
-  container.innerHTML = renderDiaryText(newText, photos);
-  fetch('/api/diary/save', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date: dateKey, person, text: newText }),
-  }).then(() => showToast('写真の位置を保存しました')).catch(() => showToast('保存に失敗しました', true));
+  clearTimeout(diarySaveTimer);
+  diarySaveTimer = setTimeout(() => {
+    fetch('/api/diary/save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: dateKey, person, text: newText }),
+    }).then(() => showToast('写真の位置を保存しました')).catch(() => showToast('保存に失敗しました', true));
+  }, 700);
 }
 
 async function generatePersonDiary(dateKey, person) {
