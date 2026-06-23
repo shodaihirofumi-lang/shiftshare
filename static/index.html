@@ -599,15 +599,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-toc-start { font-size:11px; font-weight:700; color:var(--text-soft); margin:8px 0 2px; letter-spacing:.5px; }
 .diary-toc-item { font-size:11px; color:var(--text-soft); padding:1px 0 1px 10px; }
 .diary-subheading { font-size:13px; font-weight:700; color:var(--text); margin:8px 0 3px; padding-left:6px; }
-/* まとめ内の写真：クリーム地のマット＋柔らかい影でプリント写真風に */
-.diary-inline-photo { margin:16px auto 6px; padding:7px 7px 9px; background:var(--card); border-radius:16px; box-shadow:0 10px 26px rgba(60,55,50,.16), 0 2px 5px rgba(60,55,50,.10); max-width:94%; }
-.diary-inline-photo img { width:100%; max-height:460px; object-fit:cover; object-position:center; border-radius:11px; display:block; cursor:zoom-in; transition:filter .2s, transform .2s; }
+.diary-inline-photo { margin:14px auto 4px; max-width:96%; }
+.diary-inline-photo img { width:100%; max-height:460px; object-fit:cover; object-position:center; border-radius:10px; display:block; cursor:zoom-in; transition:filter .2s, transform .2s; }
 .diary-inline-photo img:active { filter:brightness(.94); transform:scale(.992); }
 .diary-blocks { display:flex; flex-direction:column; }
 .dblock-photo { position:relative; }
-.dblock-move { display:flex; gap:8px; margin:2px 0 14px; justify-content:center; }
-.dblock-move-btn { font-size:11px; font-weight:700; color:var(--text); background:var(--card); border:1px solid var(--line); border-radius:999px; padding:5px 14px; cursor:pointer; box-shadow:0 1px 2px rgba(60,55,50,.08); }
-.dblock-move-btn:active { background:var(--bg); }
+.dblock-move { display:flex; gap:6px; margin:3px 0 10px; justify-content:center; }
+.dblock-move-btn { font-size:10px; font-weight:400; color:var(--text-soft); background:transparent; border:none; border-radius:999px; padding:3px 10px; cursor:pointer; opacity:.55; }
+.dblock-move-btn:active { opacity:1; }
 .diary-ai-footer { font-size:10px; color:var(--text-soft); margin-top:4px; }
 .diary-actions { display:flex; gap:8px; margin-top:12px; }
 .diary-btn-ai { flex:1; padding:9px 0; border-radius:9px; border:none; background:var(--gold); color:#fff; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .15s; }
