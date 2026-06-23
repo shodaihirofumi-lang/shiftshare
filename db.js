@@ -835,10 +835,30 @@ export async function importAll(payload) {
   if (!payload || typeof payload !== 'object' || !payload.data || typeof payload.data !== 'object') {
     throw new Error('バックアップファイルの形式が正しくありません');
   }
-  // 文字データを丸ごと置き換え（欠損キーは初期値で補完）
+  // 文字データを丸ごと置き換え。欠損キーは初期値で補完するので、
+  // 新機能で後から増えたフィールドも空の初期値が入り、古いバックアップでも壊れない。
   cache = { ...empty(), ...payload.data };
   // 写真データを丸ごと置き換え
   photoCache = (payload.photos && typeof payload.photos === 'object') ? { ...payload.photos } : {};
+
+  // 起動時と同じマイグレーションを実行し、古い形式のバックアップも現行構造へ整える
+  // （将来データ構造が変わっても、復元したデータを今のコードが扱える状態にする）
+  await migratePhotosToSeparateStore();
+  await migratePhotoSingleToMulti();
+  await mergeDuplicateHoldings();
+
+  // 写真インデックスを現在の写真キーから作り直す（次回起動時の読み込み整合性のため）
+  cache.photoIndex = Object.keys(photoCache)
+    .filter(f => f.startsWith('photo:') || f.startsWith('memo-img:'))
+    .map(field => {
+      let date = null;
+      if (field.startsWith('photo:')) {
+        const rest = field.slice(6);
+        const sep = rest.indexOf(':');
+        if (sep >= 0) date = rest.slice(0, sep);
+      }
+      return { field, person: null, date };
+    });
 
   if (useRedis) {
     await redis.set(REDIS_KEY, cache);
