@@ -858,12 +858,16 @@ app.post('/api/diary/delete', async (req, res) => {
   await setDiary(date, null);
   res.json({ success: true });
 });
-// 日記テキスト保存（person 別）
+// 日記テキスト保存（person 別）。raw=原文、text=まとめ済み（写真位置の編集を保存する用）
 app.post('/api/diary/save', async (req, res) => {
-  const { date, person, raw } = req.body;
+  const { date, person, raw, text } = req.body;
   if (!date || !['mine','hers'].includes(person)) return res.status(400).json({ error: 'date と person が必要です' });
   const existing = getDiary(date) || {};
-  await setDiary(date, { ...existing, [person]: { ...(existing[person]||{}), raw: raw||'', savedAt: Date.now() } });
+  const pExisting = existing[person] || {};
+  const updated = { ...pExisting };
+  if (raw !== undefined) { updated.raw = raw || ''; updated.savedAt = Date.now(); }
+  if (text !== undefined) { updated.text = text; updated.generatedAt = pExisting.generatedAt || Date.now(); }
+  await setDiary(date, { ...existing, [person]: updated });
   res.json({ success: true });
 });
 
@@ -877,17 +881,24 @@ app.post('/api/diary/generate', async (req, res) => {
     const personName = person === 'mine' ? 'ひろ' : 'ちか';
     const [, mo, da] = date.split('-');
     const photoHint = Number(photoCount) > 0
-      ? `\n写真が${photoCount}枚あります。文章の自然な流れに合わせて「【写真①】」「【写真②】」…を独立した行に入れて写真の位置を示してください（実際の枚数のみ）。`
+      ? `\n・写真が${photoCount}枚ある。文章の自然な区切りに「【写真①】」「【写真②】」…を独立した行で入れて位置を示す（実際の枚数だけ。あとで本人が動かせるので、まずは流れに合う所でよい）。`
       : '';
-    const prompt = `以下は${personName}が書いた${mo}月${da}日の日記です。
-note.comに投稿できる読み物として、以下の形式でまとめてください：
-・最初に「# （キャッチーなタイトル）」
-・各セクションは「## 見出し名」で区切る
-・段落は2〜3行を目安に改行する
-・箇条書きは使わず自然な文章で
-・${personName}の言葉のくせや個性はそのまま活かす
-${photoHint}
-${personName}の日記:
+    const prompt = `${personName}が書いた${mo}月${da}日の日記の原文です。${personName}本人が後から読み返して心に残る日記に整えてください。
+
+【最優先：口調】
+・原文の口調をそのまま受け継ぐ。原文がタメ口（常体）ならタメ口、丁寧語（です・ます）なら丁寧語で。勝手に「です・ます」調へ直さない。
+・本人が書いたように自然に。AIっぽい言い回しや決まり文句（「〜な一日でした」「素敵な時間を過ごしました」「いかがでしたか」など）や総括・説明口調は使わない。
+・原文に無い出来事や感情を足さない。誇張しない。
+
+【まとめ方】
+・誤字や前後した内容を整え、読みやすい自然な流れにする。
+・時間（朝・昼・夜や「9時」など）が書かれていれば、その時系列に沿って並べる。
+・短くてよい。冗長にしない。本人の言葉や印象的なひとことは残す。
+・1行目に「# 」で短いタイトル（その日を象徴する一言。大げさにしない）。
+・場面が分かれる長い日だけ「## 見出し」で区切る。短い日は見出しなしでよい。
+・箇条書きは使わず地の文で。${photoHint}
+
+原文:
 ${raw}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -937,13 +948,20 @@ app.post('/api/diary/monthly', async (req, res) => {
   entries.sort((a, b) => a.date.localeCompare(b.date));
   const [y, m] = yearMonth.split('-');
   const personName = person === 'mine' ? 'ひろ' : 'ちか';
-  const prompt = `以下は${y}年${m}月の${personName}の日記です。
-note.comに投稿できる月間ブログ記事として、以下の形式でまとめてください：
-・最初に「# （キャッチーなタイトル）」
-・各セクションは「## 見出し名」で区切る（テーマや週単位などで）
-・段落は2〜3行を目安に改行する
-・箇条書きは使わず自然な文章で
-・${personName}の言葉のくせや個性をそのまま活かし、1ヶ月を振り返る読んで楽しいブログ記事風に
+  const prompt = `以下は${y}年${m}月の${personName}の日記（日付ごと）です。これを1ヶ月の振り返りとして、コンパクトに、心に残るようにまとめてください。
+
+【最優先】
+・日ごとの寄せ集めにしない。日付を並べて要約するのではなく、1ヶ月を通したひと続きの文章にする。
+・印象的だった出来事・気持ちの変化・繰り返し出てくるテーマを拾って要点を絞る。細かい日常は思い切って省いてよい。
+・${personName}の口調をそのまま受け継ぐ（タメ口ならタメ口、丁寧語なら丁寧語）。勝手に「です・ます」調にしない。
+・AIっぽい決まり文句や総括・説明口調は使わない。本人が1ヶ月を思い返して書いたように。
+・原文に無いことは足さない。
+
+【構成】
+・1行目に「# 」で短いタイトル（その月を象徴する一言）。
+・月の前半→後半の時系列、または出来事・気持ちのテーマで「## 見出し」を2〜4個。
+・各セクションは2〜4行程度。全体で長くなりすぎないように、ぎゅっと。
+・箇条書きは使わず地の文で。
 
 ${entries.map(e => `【${e.date}】\n${e.text}`).join('\n\n')}`;
   try {
