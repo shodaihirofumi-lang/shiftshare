@@ -4330,9 +4330,10 @@ function renderDiaryText(text, photos = []) {
         return wrap(''); // 対応写真が無いマーカーは空（行自体は残して順序を保つ）
       }
     }
-    if (line.startsWith('# ')) return wrap(`<div class="diary-title">${escapeHtml(line.slice(2))}</div>`);
-    if (line.startsWith('### ')) return wrap(`<div class="diary-subheading">${escapeHtml(line.slice(4))}</div>`);
-    if (line.startsWith('## ')) return wrap(`<div class="diary-heading">${escapeHtml(line.slice(3))}</div>`);
+    if (/^# /.test(line)) return wrap(`<div class="diary-title">${escapeHtml(line.replace(/^# /,''))}</div>`);
+    if (/^### ?/.test(line)) return wrap(`<div class="diary-subheading">${escapeHtml(line.replace(/^###\s*/,''))}</div>`);
+    if (/^## ?/.test(line)) return wrap(`<div class="diary-heading">${escapeHtml(line.replace(/^##\s*/,''))}</div>`);
+    if (/^#[^#]/.test(line)) return wrap(`<div class="diary-title">${escapeHtml(line.replace(/^#\s*/,''))}</div>`);
     if (line === '') return wrap('<br>');
     return wrap(escapeHtml(line));
   });
