@@ -1888,7 +1888,7 @@ function renderHoldReplay() {
     const date = new Date(r.ts || Date.now());
     const dStr = `${date.getMonth()+1}/${date.getDate()}`;
     const personName = NAMES[r.person] || r.person;
-    const display = (r.name && r.name.trim()) ? r.name.trim() : r.ticker;
+    const display = stockName(r);
     if (r.currentPrice == null) {
       return `<div class="replay-item">
         <div class="replay-head">
@@ -4080,7 +4080,7 @@ function buildDiaryContext(dateKey) {
   });
   if (trades.length) {
     const trLines = trades.map(t => {
-      const name = (t.name||t.ticker||'').trim();
+      const name = stockName(t);
       const isBuy = t.type==='buy';
       const sym = curSym(t.currency||'JPY');
       const price = isBuy ? t.price : t.sellPrice;
@@ -4133,7 +4133,7 @@ function buildDiaryTemplate(dateKey) {
     return d.getFullYear()===year && d.getMonth()+1===month && d.getDate()===day;
   });
   for (const t of trades) {
-    const name = (t.name||t.ticker||'').trim();
+    const name = stockName(t);
     const isBuy = t.type==='buy';
     const sym = curSym(t.currency||'JPY');
     const price = isBuy ? t.price : t.sellPrice;
@@ -4729,7 +4729,7 @@ function renderTrades() {
     const price = isBuy ? t.price : t.sellPrice;
     const date = new Date(t.ts || Date.now());
     const dStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-    const nameDisp = (t.name && t.name.trim()) ? t.name.trim() : t.ticker;
+    const nameDisp = stockName(t);
     const realizedHtml = !isBuy && t.realized != null
       ? `<span class="trade-realized ${t.realized >= 0 ? 'up' : 'down'}">${t.realized >= 0 ? '+' : '−'}${sym}${fmtNum(Math.abs(t.realized), cur)}</span>`
       : '';
@@ -4825,7 +4825,7 @@ async function loadEarnings() {
   let list; try { list = await fetch('/api/earnings').then(r => r.json()); } catch { return; }
   if (!list.length) { el.innerHTML = '<div class="screening-progress">決算日が登録された銘柄はありません</div>'; return; }
   el.innerHTML = list.map(e => {
-    const nm = (e.name && e.name.trim()) ? e.name.trim() : e.ticker;
+    const nm = stockName(e);
     const past = e.daysUntil < 0;
     const soon = e.daysUntil >= 0 && e.daysUntil <= 3;
     const when = past ? '終了' : e.daysUntil === 0 ? '今日' : e.daysUntil === 1 ? '明日' : `あと${e.daysUntil}日`;
@@ -4949,7 +4949,7 @@ function renderTargetPrices() {
     const tgtCls = diff === null ? '' : diff > 0 ? 'up' : 'down';
     return `<div class="tp-item">
       <div class="tp-head">
-        <span class="tp-ticker">${escapeHtml(tp.ticker)}</span>
+        <span class="tp-ticker">${escapeHtml(stockName(tp))}</span>
         <span class="tp-person-tag ${tp.person||'mine'}">${NAMES[tp.person||'mine']}</span>
         <span class="tp-diff ${diffCls}">${diffLabel}</span>
       </div>
