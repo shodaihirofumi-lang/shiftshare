@@ -3867,9 +3867,9 @@ const CARD_THEMES = [
   { id:'sunset', label:'夕焼け',   swatch:'#5a2510', bg:['#2d1505','#5a2510'], text:'#fff5e8', accent:'#f0c060', sub:'rgba(240,192,96,0.45)' },
 ];
 const CARD_FONTS = [
-  { id:'gothic', label:'ゴシック',   css:”'Hiragino Sans','Yu Gothic',sans-serif” },
-  { id:'mincho', label:'明朝体',     css:”'Hiragino Mincho ProN','Yu Mincho',Georgia,serif” },
-  { id:'maru',   label:'丸ゴシック', css:”'Hiragino Maru Gothic ProN','Meiryo',Arial,sans-serif” },
+  { id:'gothic', label:'ゴシック',   css:"'Hiragino Sans','Yu Gothic',sans-serif" },
+  { id:'mincho', label:'明朝体',     css:"'Hiragino Mincho ProN','Yu Mincho',Georgia,serif" },
+  { id:'maru',   label:'丸ゴシック', css:"'Hiragino Maru Gothic ProN','Meiryo',Arial,sans-serif" },
 ];
 const CARD_ILLUSTS = [
   { id:'none',   label:'なし',   emoji:'✕' },
@@ -3903,13 +3903,13 @@ function _buildCardOptionRows() {
   const fr = document.getElementById('memo-card-font-row');
   const ir = document.getElementById('memo-card-illust-row');
   if (tr) tr.innerHTML = CARD_THEMES.map(t =>
-    `<div class=”memo-card-theme-dot${t.id===_memoCardTheme?' sel':''}” style=”background:${t.swatch}” title=”${t.label}” onclick=”setCardTheme('${t.id}')”></div>`
+    `<div class="memo-card-theme-dot${t.id===_memoCardTheme?' sel':''}" style="background:${t.swatch}" title="${t.label}" onclick="setCardTheme('${t.id}')"></div>`
   ).join('');
   if (fr) fr.innerHTML = CARD_FONTS.map(f =>
-    `<button class=”memo-card-font-chip${f.id===_memoCardFont?' sel':''}” onclick=”setCardFont('${f.id}')” style=”font-family:${f.css}”>${f.label}</button>`
+    `<button class="memo-card-font-chip${f.id===_memoCardFont?' sel':''}" onclick="setCardFont('${f.id}')" style="font-family:${f.css}">${f.label}</button>`
   ).join('');
   if (ir) ir.innerHTML = CARD_ILLUSTS.map(i =>
-    `<button class=”memo-card-illust-chip${i.id===_memoCardIllust?' sel':''}” onclick=”setCardIllust('${i.id}')”>${i.emoji} ${i.label}</button>`
+    `<button class="memo-card-illust-chip${i.id===_memoCardIllust?' sel':''}" onclick="setCardIllust('${i.id}')">${i.emoji} ${i.label}</button>`
   ).join('');
 }
 function setCardTheme(id)  { _memoCardTheme=id;  _buildCardOptionRows(); setTimeout(()=>_refreshCardPreview(),30); }
@@ -3949,7 +3949,7 @@ function generateMemoCardCanvas(text) {
   ctx.font = `bold 260px ${fontDef.css}`;
   ctx.fillStyle = `rgba(${_hexToRgb(theme.accent)},0.1)`;
   ctx.textBaseline = 'top';
-  ctx.fillText('“', 50, 60);
+  ctx.fillText('"', 50, 60);
   // テキスト
   const maxW = S - 220;
   const testSize = 54;
