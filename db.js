@@ -641,6 +641,15 @@ export async function editMemo(id, text) {
   return true;
 }
 
+export async function pinMemo(id, pinned) {
+  if (!cache.memos) return false;
+  const m = cache.memos.find(x => x.id === id);
+  if (!m) return false;
+  m.pinned = !!pinned;
+  await persist();
+  return true;
+}
+
 // 起動時マイグレーション：photo:{date}（旧・1枚）→ photo:{date}:{id}（新・複数枚）
 async function migratePhotoSingleToMulti() {
   const toMigrate = [];

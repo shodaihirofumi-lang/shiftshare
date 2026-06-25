@@ -363,6 +363,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .memo-del { flex-shrink:0; width:24px; height:24px; border-radius:50%; border:none; background:rgba(60,55,50,.1); color:var(--text); font-size:16px; line-height:1; cursor:pointer; }
 .memo-edit-btn { flex-shrink:0; width:24px; height:24px; border-radius:50%; border:none; background:rgba(60,55,50,.07); color:var(--text-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
 .memo-edit-btn:hover { color:var(--text); }
+.memo-pin-btn { flex-shrink:0; width:24px; height:24px; border-radius:50%; border:none; background:transparent; font-size:13px; line-height:1; cursor:pointer; opacity:.35; transition:opacity .15s; padding:0; display:flex; align-items:center; justify-content:center; }
+.memo-pin-btn.pinned { opacity:1; }
+.memo-item.pinned-item { border-left:3px solid var(--gold); padding-left:9px; }
 .memo-edited { font-size:10px; color:var(--text-soft); margin-left:8px; font-style:italic; }
 .memo-edit-textarea { width:100%; padding:9px 11px; border-radius:8px; border:1.5px solid var(--mine); font-size:14px; line-height:1.55; resize:vertical; min-height:62px; background:var(--card); color:var(--text); font-family:inherit; }
 .memo-edit-actions { display:flex; gap:6px; justify-content:flex-end; margin-top:6px; }
@@ -3757,7 +3760,7 @@ function renderMemos() {
   const qLower = q.toLowerCase();
   let items = allMemos.filter(m => m.person === memoPerson);
   if (q) items = items.filter(m => (m.text || '').toLowerCase().includes(qLower));
-  items.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+  items.sort((a,b) => { if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1; return (b.createdAt||0) - (a.createdAt||0); });
   if (!items.length) {
     el.innerHTML = q
       ? `<div class="memo-empty">「${escapeHtml(q)}」に一致するメモはありません</div>`
@@ -3781,12 +3784,13 @@ function renderMemos() {
     }
     const imgHtml = m.img ? `<img class="memo-item-img" src="${m.img}" onclick="openLightbox('${m.img}')" alt="添付画像">` : '';
     return `
-      <div class="memo-item">
+      <div class="memo-item${m.pinned ? ' pinned-item' : ''}">
         <div class="memo-item-main">
           ${m.text ? `<div class="memo-item-text">${highlightHit(m.text, q)}</div>` : ''}
           ${imgHtml}
           <div class="memo-item-date">${memoDate(m.createdAt)}${edited}</div>
         </div>
+        <button class="memo-pin-btn${m.pinned ? ' pinned' : ''}" onclick="toggleMemoPin('${m.id}',${!m.pinned})" title="${m.pinned ? 'ピン解除' : 'ピン留め'}">📌</button>
         <button class="memo-edit-btn" onclick="startMemoEdit('${m.id}')" title="編集">${editIcon}</button>
         <button class="memo-del" onclick="delMemo('${m.id}')">×</button>
       </div>`;
@@ -3804,6 +3808,16 @@ function startMemoEdit(id) {
 function cancelMemoEdit() {
   editingMemoId = null;
   renderMemos();
+}
+async function toggleMemoPin(id, pinned) {
+  try {
+    const r = await fetch('/api/memo/pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, pinned}) });
+    if (!r.ok) throw new Error();
+    const m = allMemos.find(x => x.id === id);
+    if (m) m.pinned = pinned;
+    renderMemos();
+    showToast(pinned ? 'ピン留めしました' : 'ピン解除しました');
+  } catch { showToast('操作に失敗しました', true); }
 }
 async function saveMemoEdit(id) {
   const ta = document.getElementById('memo-edit-text-' + id);

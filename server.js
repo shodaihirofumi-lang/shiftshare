@@ -19,7 +19,7 @@ import {
   setHoldingTargets, markHoldingTargetFired, markHoldingEarningsNotified, getBuys,
   hasMoveAlert, markMoveAlert,
   getNotes, addNote, deleteNote, toggleNote,
-  getMemos, addMemo, deleteMemo, editMemo, setMemoImage,
+  getMemos, addMemo, deleteMemo, editMemo, pinMemo, setMemoImage,
   getPhotos, addPhoto, deletePhoto, reloadPhotoCache,
   getDiaries, getDiary, setDiary, getMonthlyDiaries, setMonthlyDiary,
   getNotifiedOff, markNotifiedOff,
@@ -812,6 +812,13 @@ app.post('/api/memo/edit', async (req, res) => {
     return res.status(400).json({ error: '内容が必要です' });
   }
   const ok = await editMemo(id, text);
+  if (!ok) return res.status(404).json({ error: 'メモが見つかりません' });
+  res.json({ success: true });
+});
+app.post('/api/memo/pin', async (req, res) => {
+  const { id, pinned } = req.body;
+  if (!id) return res.status(400).json({ error: 'id が必要です' });
+  const ok = await pinMemo(id, pinned);
   if (!ok) return res.status(404).json({ error: 'メモが見つかりません' });
   res.json({ success: true });
 });
