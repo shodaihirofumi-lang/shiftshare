@@ -3890,8 +3890,10 @@ function openMemoCardModal(encodedText) {
   if (!text.trim()) { showToast('テキストがありません', true); return; }
   _memoCardText = text;
   _buildCardOptionRows();
-  _refreshCardPreview();
   document.getElementById('memo-card-modal').style.display = 'flex';
+  const img = document.getElementById('memo-card-img');
+  if (img) { img.src = ''; img.alt = '生成中…'; }
+  setTimeout(() => _refreshCardPreview(), 80);
 }
 function closeMemoCardModal() {
   document.getElementById('memo-card-modal').style.display = 'none';
@@ -3910,18 +3912,20 @@ function _buildCardOptionRows() {
     `<button class=”memo-card-illust-chip${i.id===_memoCardIllust?' sel':''}” onclick=”setCardIllust('${i.id}')”>${i.emoji} ${i.label}</button>`
   ).join('');
 }
-function setCardTheme(id)  { _memoCardTheme=id;  _buildCardOptionRows(); _refreshCardPreview(); }
-function setCardFont(id)   { _memoCardFont=id;   _buildCardOptionRows(); _refreshCardPreview(); }
-function setCardIllust(id) { _memoCardIllust=id; _buildCardOptionRows(); _refreshCardPreview(); }
+function setCardTheme(id)  { _memoCardTheme=id;  _buildCardOptionRows(); setTimeout(()=>_refreshCardPreview(),30); }
+function setCardFont(id)   { _memoCardFont=id;   _buildCardOptionRows(); setTimeout(()=>_refreshCardPreview(),30); }
+function setCardIllust(id) { _memoCardIllust=id; _buildCardOptionRows(); setTimeout(()=>_refreshCardPreview(),30); }
 function _refreshCardPreview() {
-  const url = generateMemoCardCanvas(_memoCardText);
-  _memoCardDataUrl = url;
-  const img = document.getElementById('memo-card-img');
-  if (img) img.src = url;
+  try {
+    const url = generateMemoCardCanvas(_memoCardText);
+    _memoCardDataUrl = url;
+    const img = document.getElementById('memo-card-img');
+    if (img) { img.src = url; img.alt = 'カードプレビュー'; }
+  } catch(e) { showToast('カード生成に失敗しました', true); console.error(e); }
 }
 
 function generateMemoCardCanvas(text) {
-  const S = 1080;
+  const S = 720;
   const canvas = document.createElement('canvas');
   canvas.width = S; canvas.height = S;
   const ctx = canvas.getContext('2d');
@@ -3996,8 +4000,9 @@ function _drawIllust(ctx, type, S, theme) {
       for (let i=0;i<5;i++) {
         const ang = (i/5)*Math.PI*2+a;
         const px = x+Math.cos(ang)*r*0.55, py = y+Math.sin(ang)*r*0.55;
-        ctx.beginPath(); ctx.ellipse(px,py,r*0.44,r*0.27,ang,0,Math.PI*2);
-        ctx.fillStyle='rgba(255,182,200,0.62)'; ctx.fill();
+        ctx.save(); ctx.translate(px,py); ctx.rotate(ang); ctx.scale(r*0.44,r*0.27);
+        ctx.beginPath(); ctx.arc(0,0,1,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,182,200,0.62)'; ctx.fill(); ctx.restore();
       }
       ctx.beginPath(); ctx.arc(x,y,r*0.14,0,Math.PI*2);
       ctx.fillStyle='rgba(255,230,240,0.9)'; ctx.fill();
