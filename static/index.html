@@ -616,9 +616,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-person-photo-area { margin-bottom:8px; }
 .diary-btn-del { padding:9px 12px; border-radius:9px; border:1.5px solid var(--line-soft); background:var(--card); font-size:11px; color:var(--text-soft); cursor:pointer; }
 .diary-empty { text-align:center; padding:40px 0; font-size:13px; color:var(--text-soft); }
-.monthly-btn { padding:8px 14px; border-radius:10px; border:none; background:var(--gold); color:#fff; font-size:12px; font-weight:700; cursor:pointer; }
-.monthly-modal-box { max-width:500px; width:calc(100% - 32px); max-height:80vh; display:flex; flex-direction:column; }
-.monthly-modal-content { flex:1; overflow-y:auto; padding:12px 0; font-size:13px; line-height:1.8; color:var(--text); }
+.monthly-inline-wrap { margin:20px 0 8px; padding:16px; background:var(--card); border-radius:14px; }
+.monthly-inline-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+.monthly-inline-title { font-size:14px; font-weight:700; color:var(--text); }
 .monthly-person-section { margin-bottom:16px; }
 .monthly-person-header { font-size:12px; font-weight:700; padding:4px 10px; border-radius:7px; display:inline-block; margin-bottom:8px; }
 .monthly-person-header.mph-mine { background:var(--mine-bg); color:var(--mine); }
@@ -1138,6 +1138,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         </div>
         <div class="gcal2-grid" id="gcal2-grid"></div>
         <div id="gcal2-diary-panel" class="gcal2-diary-panel"></div>
+        <div class="monthly-inline-wrap">
+          <div class="monthly-inline-head">
+            <span class="monthly-inline-title" id="monthly-inline-title">月間まとめ</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="diary-btn-person diary-btn-person-mine" id="monthly-gen-mine-btn" onclick="generateMonthlyDiary('mine')">✨ ひろ生成</button>
+              <button class="diary-btn-person diary-btn-person-hers" id="monthly-gen-hers-btn" onclick="generateMonthlyDiary('hers')">✨ ちか生成</button>
+            </div>
+          </div>
+          <div id="monthly-inline-content"></div>
+        </div>
       </div>
     </div>
 
@@ -1431,24 +1441,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <div id="tab-diary" class="screen">
       <div class="page-top">
         <div><div class="page-title">日記</div><div class="page-sub">ふたりの記録をまとめて</div></div>
-        <button class="monthly-btn" onclick="openMonthlyDiary()">📅 月間まとめ</button>
       </div>
       <div id="diary-list"></div>
-    </div>
-
-    <!-- 月間まとめモーダル -->
-    <div id="monthly-modal" class="modal-overlay" onclick="if(event.target===this)closeMonthlyModal()" style="display:none">
-      <div class="ev-modal monthly-modal-box">
-        <div class="modal-top">
-          <span id="monthly-modal-title">月間まとめ</span>
-          <button class="modal-close" onclick="closeMonthlyModal()">×</button>
-        </div>
-        <div id="monthly-modal-content" class="monthly-modal-content"></div>
-        <div style="margin-top:12px;display:flex;gap:8px">
-          <button class="diary-btn-person diary-btn-person-mine" id="monthly-gen-mine-btn" onclick="generateMonthlyDiary('mine')">✨ ひろ生成</button>
-          <button class="diary-btn-person diary-btn-person-hers" id="monthly-gen-hers-btn" onclick="generateMonthlyDiary('hers')">✨ ちか生成</button>
-        </div>
-      </div>
     </div>
 
     <!-- UPLOAD -->
@@ -1737,7 +1731,7 @@ async function enterApp() {
   loadTrades();
   loadDayPhotos();
   loadDiaries();
-  loadMonthlyDiaries();
+  loadMonthlyDiaries().then(() => renderMonthlyInline());
   setupPush();
   // ふたり休みが近づいていたら通知（未通知の日だけ送る）
   fetch('/api/check-both-off-notify').catch(() => {});
@@ -3019,6 +3013,9 @@ function renderGridCalendar() {
     const sel = grid.querySelector(`[data-key="${selectedGridDate}"]`);
     if (sel) sel.classList.add('selected-c');
   }
+  // Sync monthly summary to current grid month
+  currentDiaryYM = `${year}-${String(month).padStart(2,'0')}`;
+  renderMonthlyInline();
 }
 function showGridDiary(key) {
   const panel = document.getElementById('gcal2-diary-panel');
@@ -4507,17 +4504,15 @@ function renderMonthlyContent() {
   return mkSection('mine','ひろ','mph-mine') + mkSection('hers','ちか','mph-hers');
 }
 
-function openMonthlyDiary() {
-  const now = new Date();
-  currentDiaryYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const [y, m] = currentDiaryYM.split('-');
-  document.getElementById('monthly-modal-title').textContent = `${y}年${m}月の記録`;
-  document.getElementById('monthly-modal-content').innerHTML = renderMonthlyContent();
-  document.getElementById('monthly-modal').style.display = 'flex';
-}
-
-function closeMonthlyModal() {
-  document.getElementById('monthly-modal').style.display = 'none';
+function renderMonthlyInline() {
+  const el = document.getElementById('monthly-inline-content');
+  const titleEl = document.getElementById('monthly-inline-title');
+  if (!el) return;
+  if (currentDiaryYM && titleEl) {
+    const [y, m] = currentDiaryYM.split('-');
+    titleEl.textContent = `${y}年${m}月のまとめ`;
+  }
+  el.innerHTML = renderMonthlyContent();
 }
 
 async function generateMonthlyDiary(person) {
@@ -4534,7 +4529,7 @@ async function generateMonthlyDiary(person) {
     if (!r.ok) throw new Error(data.error || '生成に失敗しました');
     if (!allMonthlyDiaries[currentDiaryYM]) allMonthlyDiaries[currentDiaryYM] = {};
     allMonthlyDiaries[currentDiaryYM][person] = { text: data.text, generatedAt: Date.now() };
-    document.getElementById('monthly-modal-content').innerHTML = renderMonthlyContent();
+    renderMonthlyInline();
     const label = person === 'mine' ? 'ひろ' : 'ちか';
     if (btn) { btn.disabled = false; btn.textContent = `✨ ${label}生成し直す`; }
     showToast('月間まとめを生成しました ✨');
