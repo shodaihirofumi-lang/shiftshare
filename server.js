@@ -230,7 +230,8 @@ app.get('/api/trade-review', async (req, res) => {
     const r = t.realized || 0;
     return `${ds} ${who} 売 ${nm} ${t.shares}株 @${sym}${t.sellPrice} 実現${r >= 0 ? '+' : ''}${sym}${Math.round(r)}${t.reason ? `（理由:${t.reason}）` : ''}`;
   }).join('\n');
-  const prompt = `あなたは個人投資家のやさしい売買コーチです。以下の売買記録から、良かった点と改善点を具体的に指摘してください。
+  const personName = person === 'mine' ? 'ひろ' : person === 'hers' ? 'ちか' : null;
+  const prompt = `あなたは個人投資家のやさしい売買コーチです。${personName ? `${personName}の` : ''}以下の売買記録から、良かった点と改善点を具体的に指摘してください。
 形式：
 ・最初に1〜2文の総評
 ・「👍 良い点」を2〜3個（箇条書き）

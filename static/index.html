@@ -707,7 +707,12 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .review-p { margin:4px 0; }
 .review-li { padding-left:14px; position:relative; margin:2px 0; }
 .review-li::before { content:'•'; position:absolute; left:2px; color:var(--text); }
-.review-meta { font-size:12px; color:var(--text); margin-top:8px; text-align:right; }
+.review-meta { font-size:12px; color:var(--text-soft); margin-top:8px; text-align:right; }
+.review-person-block { margin-bottom:18px; }
+.review-person-block:last-child { margin-bottom:0; }
+.review-person-label { font-size:11px; font-weight:700; padding:3px 10px; border-radius:7px; display:inline-block; margin-bottom:8px; }
+.review-person-label.mine { background:var(--mine-bg); color:var(--mine); }
+.review-person-label.hers { background:var(--hers-bg); color:var(--hers); }
 /* 配当 */
 .div-person-block { margin-bottom:14px; }
 .div-person-header { display:flex; align-items:center; justify-content:space-between; padding:6px 4px 8px; border-bottom:2px solid var(--line); margin-bottom:4px; }
@@ -1331,7 +1336,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <div class="income-head" style="margin:0">🧠 AIで売買を振り返る</div>
           <button class="screening-refresh-btn" onclick="loadTradeReview()">診断する</button>
         </div>
-        <div id="review-content"><div class="screening-progress">「診断する」を押すと、売買の傾向をAIが分析します</div></div>
+        <div id="review-content">
+          <div class="review-person-block">
+            <span class="review-person-label mine">ひろ</span>
+            <div id="review-mine"><div class="screening-progress">「診断する」を押すと表示されます</div></div>
+          </div>
+          <div class="review-person-block">
+            <span class="review-person-label hers">ちか</span>
+            <div id="review-hers"><div class="screening-progress">「診断する」を押すと表示されます</div></div>
+          </div>
+        </div>
         <div class="folio-note">※ 買う/売る理由メモと実現損益から、良い点・改善点をやさしくコメントします。</div>
       </div>
       <div class="folio-card">
@@ -4764,17 +4778,18 @@ function renderTrades() {
 
 // ── AI売買振り返り ──
 async function loadTradeReview() {
-  const el = document.getElementById('review-content');
-  if (!el) return;
-  el.innerHTML = '<div class="screening-progress">AIが分析中…（10秒ほど）</div>';
-  try {
-    const r = await fetch('/api/trade-review');
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error || '分析に失敗しました');
-    el.innerHTML = `<div class="review-text">${formatReview(d.text)}</div><div class="review-meta">${d.count}件の売買から分析</div>`;
-  } catch (e) {
-    el.innerHTML = `<div class="screening-progress">${escapeHtml(e.message)}</div>`;
-  }
+  const mineEl = document.getElementById('review-mine');
+  const hersEl = document.getElementById('review-hers');
+  if (!mineEl || !hersEl) return;
+  const loading = '<div class="screening-progress">AIが分析中…（10秒ほど）</div>';
+  mineEl.innerHTML = hersEl.innerHTML = loading;
+  const fetch1 = (p) => fetch(`/api/trade-review?person=${p}`).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || '分析に失敗しました'); return d; });
+  const [mr, hr] = await Promise.allSettled([fetch1('mine'), fetch1('hers')]);
+  const render = (res) => res.status === 'fulfilled'
+    ? `<div class="review-text">${formatReview(res.value.text)}</div><div class="review-meta">${res.value.count}件の売買から分析</div>`
+    : `<div class="screening-progress">${escapeHtml(res.reason.message)}</div>`;
+  mineEl.innerHTML = render(mr);
+  hersEl.innerHTML = render(hr);
 }
 function formatReview(text) {
   if (!text) return '';
