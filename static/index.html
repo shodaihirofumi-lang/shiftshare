@@ -368,14 +368,24 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .memo-item.pinned-item { border-left:3px solid var(--gold); padding-left:9px; }
 .memo-card-btn { flex-shrink:0; width:24px; height:24px; border-radius:50%; border:none; background:transparent; font-size:12px; line-height:1; cursor:pointer; opacity:.4; transition:opacity .15s; padding:0; display:flex; align-items:center; justify-content:center; }
 .memo-card-btn:hover { opacity:1; }
-.memo-card-modal { position:fixed; inset:0; background:rgba(0,0,0,.75); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; padding:20px; }
-.memo-card-preview { width:100%; max-width:340px; border-radius:12px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,.5); }
-.memo-card-preview img { width:100%; display:block; }
-.memo-card-actions { margin-top:16px; display:flex; gap:10px; }
-.memo-card-action-btn { padding:10px 22px; border-radius:10px; border:none; font-size:14px; font-weight:700; cursor:pointer; }
+.memo-card-modal { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; flex-direction:column; align-items:center; justify-content:flex-end; z-index:9999; }
+.memo-card-editor { background:var(--bg); border-radius:20px 20px 0 0; width:100%; max-width:480px; padding:18px 16px 32px; max-height:90vh; overflow-y:auto; }
+.memo-card-editor-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.memo-card-editor-title { font-size:15px; font-weight:700; color:var(--text); }
+.memo-card-editor-close { width:28px; height:28px; border-radius:50%; border:none; background:rgba(100,90,80,.12); color:var(--text); font-size:18px; line-height:1; cursor:pointer; }
+.memo-card-preview-wrap { width:100%; aspect-ratio:1/1; border-radius:14px; overflow:hidden; margin-bottom:18px; box-shadow:0 4px 24px rgba(0,0,0,.35); background:#111; }
+.memo-card-preview-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
+.memo-card-opt-section { margin-bottom:14px; }
+.memo-card-opt-label { font-size:10px; font-weight:700; color:var(--text-soft); letter-spacing:.9px; margin-bottom:8px; }
+.memo-card-opt-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.memo-card-theme-dot { width:30px; height:30px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:border-color .15s, transform .15s; flex-shrink:0; }
+.memo-card-theme-dot.sel { border-color:var(--text); transform:scale(1.18); }
+.memo-card-font-chip,.memo-card-illust-chip { padding:5px 13px; border-radius:20px; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:12px; cursor:pointer; transition:background .15s, border-color .15s; white-space:nowrap; }
+.memo-card-font-chip.sel,.memo-card-illust-chip.sel { background:var(--text); color:var(--bg); border-color:var(--text); }
+.memo-card-actions { display:flex; gap:10px; margin-top:18px; }
+.memo-card-action-btn { flex:1; padding:13px; border-radius:12px; border:none; font-size:14px; font-weight:700; cursor:pointer; }
 .memo-card-action-share { background:var(--gold); color:#fff; }
-.memo-card-action-dl { background:rgba(255,255,255,.15); color:#fff; }
-.memo-card-close { margin-top:12px; background:transparent; border:none; color:rgba(255,255,255,.5); font-size:13px; cursor:pointer; padding:6px 12px; }
+.memo-card-action-dl { background:var(--card); color:var(--text); }
 .memo-edited { font-size:10px; color:var(--text-soft); margin-left:8px; font-style:italic; }
 .memo-edit-textarea { width:100%; padding:9px 11px; border-radius:8px; border:1.5px solid var(--mine); font-size:14px; line-height:1.55; resize:vertical; min-height:62px; background:var(--card); color:var(--text); font-family:inherit; }
 .memo-edit-actions { display:flex; gap:6px; justify-content:flex-end; margin-top:6px; }
@@ -1450,14 +1460,33 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       </div>
     </div>
 
-    <!-- 格言カードモーダル -->
+    <!-- 格言カードエディター -->
     <div id="memo-card-modal" class="memo-card-modal" style="display:none" onclick="if(event.target===this)closeMemoCardModal()">
-      <div class="memo-card-preview"><img id="memo-card-img" src="" alt="格言カード"></div>
-      <div class="memo-card-actions">
-        <button class="memo-card-action-btn memo-card-action-share" onclick="shareMemoCard()">シェア</button>
-        <button class="memo-card-action-btn memo-card-action-dl" onclick="downloadMemoCard()">保存</button>
+      <div class="memo-card-editor">
+        <div class="memo-card-editor-head">
+          <span class="memo-card-editor-title">格言カードを作る</span>
+          <button class="memo-card-editor-close" onclick="closeMemoCardModal()">×</button>
+        </div>
+        <div class="memo-card-preview-wrap">
+          <img id="memo-card-img" src="" alt="カードプレビュー">
+        </div>
+        <div class="memo-card-opt-section">
+          <div class="memo-card-opt-label">テーマ</div>
+          <div class="memo-card-opt-row" id="memo-card-theme-row"></div>
+        </div>
+        <div class="memo-card-opt-section">
+          <div class="memo-card-opt-label">フォント</div>
+          <div class="memo-card-opt-row" id="memo-card-font-row"></div>
+        </div>
+        <div class="memo-card-opt-section">
+          <div class="memo-card-opt-label">イラスト</div>
+          <div class="memo-card-opt-row" id="memo-card-illust-row"></div>
+        </div>
+        <div class="memo-card-actions">
+          <button class="memo-card-action-btn memo-card-action-share" onclick="shareMemoCard()">シェア</button>
+          <button class="memo-card-action-btn memo-card-action-dl" onclick="downloadMemoCard()">保存</button>
+        </div>
       </div>
-      <button class="memo-card-close" onclick="closeMemoCardModal()">閉じる</button>
     </div>
 
     <!-- 日記 -->
@@ -3830,102 +3859,252 @@ function cancelMemoEdit() {
   editingMemoId = null;
   renderMemos();
 }
+const CARD_THEMES = [
+  { id:'navy',   label:'夜空',     swatch:'#1a2035', bg:['#0d1117','#1a2035'], text:'#f0ece4', accent:'#c9a84c', sub:'rgba(201,168,76,0.45)' },
+  { id:'parch',  label:'羊皮紙',   swatch:'#e0cea0', bg:['#f5ead4','#e0cea0'], text:'#3a2a14', accent:'#8b6914', sub:'rgba(139,105,20,0.4)' },
+  { id:'rose',   label:'ローズ',   swatch:'#4a2535', bg:['#2d1520','#4a2535'], text:'#fae8f0', accent:'#e8a0c0', sub:'rgba(232,160,192,0.5)' },
+  { id:'forest', label:'深緑',     swatch:'#1a3328', bg:['#0d1f15','#1a3328'], text:'#e8f5e8', accent:'#8db87a', sub:'rgba(141,184,122,0.45)' },
+  { id:'sunset', label:'夕焼け',   swatch:'#5a2510', bg:['#2d1505','#5a2510'], text:'#fff5e8', accent:'#f0c060', sub:'rgba(240,192,96,0.45)' },
+];
+const CARD_FONTS = [
+  { id:'gothic', label:'ゴシック',   css:”'Hiragino Sans','Yu Gothic',sans-serif” },
+  { id:'mincho', label:'明朝体',     css:”'Hiragino Mincho ProN','Yu Mincho',Georgia,serif” },
+  { id:'maru',   label:'丸ゴシック', css:”'Hiragino Maru Gothic ProN','Meiryo',Arial,sans-serif” },
+];
+const CARD_ILLUSTS = [
+  { id:'none',   label:'なし',   emoji:'✕' },
+  { id:'sakura', label:'桜',     emoji:'🌸' },
+  { id:'star',   label:'星',     emoji:'⭐' },
+  { id:'coin',   label:'コイン', emoji:'💰' },
+  { id:'cat',    label:'ネコ',   emoji:'🐱' },
+  { id:'leaf',   label:'葉っぱ', emoji:'🌿' },
+];
+let _memoCardText = '';
+let _memoCardTheme = 'navy';
+let _memoCardFont = 'gothic';
+let _memoCardIllust = 'none';
 let _memoCardDataUrl = null;
+
 function openMemoCardModal(encodedText) {
   const text = decodeURIComponent(encodedText);
   if (!text.trim()) { showToast('テキストがありません', true); return; }
-  const dataUrl = generateMemoCardCanvas(text);
-  _memoCardDataUrl = dataUrl;
-  document.getElementById('memo-card-img').src = dataUrl;
+  _memoCardText = text;
+  _buildCardOptionRows();
+  _refreshCardPreview();
   document.getElementById('memo-card-modal').style.display = 'flex';
 }
 function closeMemoCardModal() {
   document.getElementById('memo-card-modal').style.display = 'none';
-  _memoCardDataUrl = null;
 }
+function _buildCardOptionRows() {
+  const tr = document.getElementById('memo-card-theme-row');
+  const fr = document.getElementById('memo-card-font-row');
+  const ir = document.getElementById('memo-card-illust-row');
+  if (tr) tr.innerHTML = CARD_THEMES.map(t =>
+    `<div class=”memo-card-theme-dot${t.id===_memoCardTheme?' sel':''}” style=”background:${t.swatch}” title=”${t.label}” onclick=”setCardTheme('${t.id}')”></div>`
+  ).join('');
+  if (fr) fr.innerHTML = CARD_FONTS.map(f =>
+    `<button class=”memo-card-font-chip${f.id===_memoCardFont?' sel':''}” onclick=”setCardFont('${f.id}')” style=”font-family:${f.css}”>${f.label}</button>`
+  ).join('');
+  if (ir) ir.innerHTML = CARD_ILLUSTS.map(i =>
+    `<button class=”memo-card-illust-chip${i.id===_memoCardIllust?' sel':''}” onclick=”setCardIllust('${i.id}')”>${i.emoji} ${i.label}</button>`
+  ).join('');
+}
+function setCardTheme(id)  { _memoCardTheme=id;  _buildCardOptionRows(); _refreshCardPreview(); }
+function setCardFont(id)   { _memoCardFont=id;   _buildCardOptionRows(); _refreshCardPreview(); }
+function setCardIllust(id) { _memoCardIllust=id; _buildCardOptionRows(); _refreshCardPreview(); }
+function _refreshCardPreview() {
+  const url = generateMemoCardCanvas(_memoCardText);
+  _memoCardDataUrl = url;
+  const img = document.getElementById('memo-card-img');
+  if (img) img.src = url;
+}
+
 function generateMemoCardCanvas(text) {
-  const SIZE = 1080;
+  const S = 1080;
   const canvas = document.createElement('canvas');
-  canvas.width = SIZE; canvas.height = SIZE;
+  canvas.width = S; canvas.height = S;
   const ctx = canvas.getContext('2d');
-  // 背景グラデーション
-  const grad = ctx.createLinearGradient(0, 0, SIZE, SIZE);
-  grad.addColorStop(0, '#0d1117');
-  grad.addColorStop(1, '#1a2035');
+  const theme = CARD_THEMES.find(t=>t.id===_memoCardTheme) || CARD_THEMES[0];
+  const fontDef = CARD_FONTS.find(f=>f.id===_memoCardFont) || CARD_FONTS[0];
+  // 背景
+  const grad = ctx.createLinearGradient(0,0,S,S);
+  grad.addColorStop(0, theme.bg[0]);
+  grad.addColorStop(1, theme.bg[1]);
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, SIZE, SIZE);
-  // 上部ゴールドライン
-  ctx.fillStyle = '#c9a84c';
-  ctx.fillRect(80, 80, SIZE - 160, 4);
-  // 下部ゴールドライン
-  ctx.fillRect(80, SIZE - 84, SIZE - 160, 4);
-  // 引用符（装飾）
-  ctx.font = 'bold 220px serif';
-  ctx.fillStyle = 'rgba(201,168,76,0.12)';
-  ctx.fillText('“', 60, 320);
-  // テキスト描画
-  const maxW = SIZE - 200;
-  const lines = wrapCanvasText(ctx, text, maxW);
-  const totalLines = lines.length;
-  const fontSize = totalLines <= 3 ? 62 : totalLines <= 5 ? 50 : totalLines <= 8 ? 40 : 32;
-  const lineH = fontSize * 1.65;
-  const totalH = totalLines * lineH;
-  let startY = (SIZE - totalH) / 2 + fontSize * 0.4;
-  ctx.font = `${fontSize}px 'Hiragino Sans', 'Yu Gothic', sans-serif`;
-  ctx.fillStyle = '#f0ece4';
+  ctx.fillRect(0,0,S,S);
+  // イラスト（テキストの後ろ）
+  _drawIllust(ctx, _memoCardIllust, S, theme);
+  // 上下ラインとコーナー装飾
+  ctx.fillStyle = theme.accent;
+  ctx.fillRect(80,80,S-160,3);
+  ctx.fillRect(80,S-83,S-160,3);
+  ctx.fillRect(80,80,3,60); ctx.fillRect(S-83,80,3,60);
+  ctx.fillRect(80,S-140,3,60); ctx.fillRect(S-83,S-140,3,60);
+  // 引用符（大きな装飾）
+  ctx.font = `bold 260px ${fontDef.css}`;
+  ctx.fillStyle = `rgba(${_hexToRgb(theme.accent)},0.1)`;
+  ctx.textBaseline = 'top';
+  ctx.fillText('“', 50, 60);
+  // テキスト
+  const maxW = S - 220;
+  const testSize = 54;
+  ctx.font = `${testSize}px ${fontDef.css}`;
+  const testLines = _wrapText(ctx, text, maxW, testSize, fontDef.css);
+  const n = testLines.length;
+  const fontSize = n<=2?68 : n<=4?56 : n<=6?46 : n<=9?38 : 30;
+  const lineH = fontSize * 1.72;
+  ctx.font = `${fontSize}px ${fontDef.css}`;
+  const lines = _wrapText(ctx, text, maxW, fontSize, fontDef.css);
+  const totalH = lines.length * lineH;
+  let startY = (S - totalH) / 2;
+  ctx.fillStyle = theme.text;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  // フォントサイズ確定後に再ラップ
-  const finalLines = wrapCanvasText(ctx, text, maxW, fontSize);
-  const finalH = finalLines.length * lineH;
-  startY = (SIZE - finalH) / 2 + fontSize * 0.2;
-  finalLines.forEach((line, i) => {
-    ctx.fillText(line, SIZE / 2, startY + i * lineH);
-  });
+  lines.forEach((line, i) => ctx.fillText(line, S/2, startY + i*lineH));
   // ブランド
-  ctx.font = '24px sans-serif';
-  ctx.fillStyle = 'rgba(201,168,76,0.5)';
+  ctx.font = `22px ${fontDef.css}`;
+  ctx.fillStyle = theme.sub;
   ctx.textAlign = 'center';
-  ctx.fillText('ShiftShare', SIZE / 2, SIZE - 68);
+  ctx.fillText('ShiftShare', S/2, S-62);
   return canvas.toDataURL('image/png');
 }
-function wrapCanvasText(ctx, text, maxWidth, fontSize) {
-  if (fontSize) ctx.font = `${fontSize}px 'Hiragino Sans', 'Yu Gothic', sans-serif`;
-  else ctx.font = `50px 'Hiragino Sans', 'Yu Gothic', sans-serif`;
+function _wrapText(ctx, text, maxW, fontSize, fontCss) {
+  ctx.font = `${fontSize}px ${fontCss}`;
   const result = [];
-  for (const paragraph of text.split('\n')) {
-    if (!paragraph.trim()) { result.push(''); continue; }
+  for (const para of text.split('\n')) {
+    if (!para.trim()) { result.push(''); continue; }
     let line = '';
-    for (const char of paragraph) {
-      const test = line + char;
-      if (ctx.measureText(test).width > maxWidth && line) {
-        result.push(line);
-        line = char;
-      } else { line = test; }
+    for (const ch of para) {
+      const test = line + ch;
+      if (ctx.measureText(test).width > maxW && line) { result.push(line); line = ch; }
+      else line = test;
     }
     if (line) result.push(line);
   }
   return result;
+}
+function _hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+function _drawIllust(ctx, type, S, theme) {
+  if (type === 'none') return;
+  if (type === 'sakura') {
+    const flowers = [{x:110,y:140,r:60,a:0.3},{x:S-100,y:170,r:44,a:1.1},{x:85,y:S-150,r:50,a:0.7},{x:S-130,y:S-140,r:55,a:2.0},{x:210,y:230,r:32,a:0.5}];
+    flowers.forEach(({x,y,r,a}) => {
+      for (let i=0;i<5;i++) {
+        const ang = (i/5)*Math.PI*2+a;
+        const px = x+Math.cos(ang)*r*0.55, py = y+Math.sin(ang)*r*0.55;
+        ctx.beginPath(); ctx.ellipse(px,py,r*0.44,r*0.27,ang,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,182,200,0.62)'; ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(x,y,r*0.14,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,230,240,0.9)'; ctx.fill();
+      // 花びら輪郭
+      ctx.beginPath(); ctx.arc(x,y,r*0.14,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,150,170,0.5)'; ctx.lineWidth=2; ctx.stroke();
+    });
+  }
+  if (type === 'star') {
+    [[110,110,38,0],[S-110,130,30,0.5],[140,S-110,25,0.3],[S-120,S-120,42,0.2],[S/2+80,95,18,0.7],[S-190,S/2-40,16,1.0],[75,S/2+60,22,0.4]].forEach(([x,y,r,rot])=>{
+      ctx.beginPath();
+      for (let i=0;i<10;i++) {
+        const ang=(i/10)*Math.PI*2-Math.PI/2+rot, ri=i%2===0?r:r*0.42;
+        const px=x+Math.cos(ang)*ri, py=y+Math.sin(ang)*ri;
+        i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+      }
+      ctx.closePath(); ctx.fillStyle='rgba(255,220,80,0.68)'; ctx.fill();
+      ctx.strokeStyle='rgba(255,200,40,0.5)'; ctx.lineWidth=2; ctx.stroke();
+    });
+  }
+  if (type === 'coin') {
+    [[S-135,S-140,58],[S-210,S-170,42],[S-115,S-220,36]].forEach(([x,y,r])=>{
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+      const cg=ctx.createRadialGradient(x-r*0.2,y-r*0.2,r*0.1,x,y,r);
+      cg.addColorStop(0,'rgba(255,230,100,0.8)'); cg.addColorStop(1,'rgba(180,130,20,0.7)');
+      ctx.fillStyle=cg; ctx.fill();
+      ctx.strokeStyle='rgba(255,210,60,0.7)'; ctx.lineWidth=3; ctx.stroke();
+      ctx.fillStyle='rgba(255,248,200,0.95)'; ctx.font=`bold ${r*0.9}px serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('¥',x,y);
+    });
+    ctx.beginPath(); ctx.strokeStyle='rgba(100,220,120,0.65)'; ctx.lineWidth=6;
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    [[90,S-100],[135,S-145],[180,S-120],[225,S-175],[270,S-205]].forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(270,S-205,10,0,Math.PI*2);
+    ctx.fillStyle='rgba(100,220,120,0.7)'; ctx.fill();
+  }
+  if (type === 'cat') {
+    const cx=S-160,cy=S-165,r=82;
+    const fur='rgba(220,205,185,0.62)';
+    // 耳
+    [[cx-r*0.52,cy-r*0.62,cx-r*0.88,cy-r*1.12,cx-r*0.16,cy-r*0.86],[cx+r*0.52,cy-r*0.62,cx+r*0.88,cy-r*1.12,cx+r*0.16,cy-r*0.86]].forEach(pts=>{
+      ctx.beginPath(); ctx.moveTo(pts[0],pts[1]); ctx.lineTo(pts[2],pts[3]); ctx.lineTo(pts[4],pts[5]); ctx.closePath();
+      ctx.fillStyle=fur; ctx.fill();
+    });
+    // 内耳
+    [[cx-r*0.55,cy-r*0.68,cx-r*0.78,cy-r*1.0,cx-r*0.22,cy-r*0.84],[cx+r*0.55,cy-r*0.68,cx+r*0.78,cy-r*1.0,cx+r*0.22,cy-r*0.84]].forEach(pts=>{
+      ctx.beginPath(); ctx.moveTo(pts[0],pts[1]); ctx.lineTo(pts[2],pts[3]); ctx.lineTo(pts[4],pts[5]); ctx.closePath();
+      ctx.fillStyle='rgba(255,180,200,0.5)'; ctx.fill();
+    });
+    // 頭
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    // 目
+    [[cx-r*0.3,cy-r*0.08],[cx+r*0.3,cy-r*0.08]].forEach(([ex,ey])=>{
+      ctx.beginPath(); ctx.ellipse(ex,ey,r*0.12,r*0.14,0,0,Math.PI*2);
+      ctx.fillStyle='rgba(50,35,15,0.75)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(ex-r*0.03,ey-r*0.04,r*0.04,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.fill();
+    });
+    // 鼻
+    ctx.beginPath(); ctx.moveTo(cx,cy+r*0.1); ctx.lineTo(cx-r*0.07,cy+r*0.04); ctx.lineTo(cx+r*0.07,cy+r*0.04); ctx.closePath();
+    ctx.fillStyle='rgba(220,120,145,0.85)'; ctx.fill();
+    // 口
+    ctx.strokeStyle='rgba(60,40,20,0.45)'; ctx.lineWidth=3; ctx.lineCap='round';
+    [[cx,cy+r*0.1,cx-r*0.16,cy+r*0.28,cx-r*0.27,cy+r*0.2],[cx,cy+r*0.1,cx+r*0.16,cy+r*0.28,cx+r*0.27,cy+r*0.2]].forEach(([sx,sy,cx2,cy2,ex,ey])=>{
+      ctx.beginPath(); ctx.moveTo(sx,sy); ctx.quadraticCurveTo(cx2,cy2,ex,ey); ctx.stroke();
+    });
+    // ひげ
+    ctx.strokeStyle='rgba(60,40,20,0.28)'; ctx.lineWidth=2;
+    [[-1,-0.05],[-1,0.14],[-1,0.32],[1,-0.05],[1,0.14],[1,0.32]].forEach(([s,yo])=>{
+      ctx.beginPath(); ctx.moveTo(cx+s*r*0.1,cy+r*yo); ctx.lineTo(cx+s*r*0.78,cy+r*(yo-0.06)); ctx.stroke();
+    });
+  }
+  if (type === 'leaf') {
+    [[80,130,0.5,72],[140,215,1.25,52],[S-78,105,-0.5,66],[S-125,200,-1.1,48],[88,S-110,0.8,62],[S-105,S-125,-0.85,58]].forEach(([x,y,ang,sz])=>{
+      ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+      ctx.beginPath(); ctx.moveTo(0,-sz/2);
+      ctx.bezierCurveTo(sz*0.44,-sz*0.28,sz*0.44,sz*0.28,0,sz/2);
+      ctx.bezierCurveTo(-sz*0.44,sz*0.28,-sz*0.44,-sz*0.28,0,-sz/2);
+      ctx.fillStyle='rgba(90,175,90,0.42)'; ctx.fill();
+      ctx.strokeStyle='rgba(60,140,60,0.3)'; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0,-sz/2); ctx.lineTo(0,sz/2);
+      ctx.strokeStyle='rgba(60,140,60,0.25)'; ctx.lineWidth=1.5; ctx.stroke();
+      for (let i=1;i<=4;i++) {
+        const t=i/5, lx=0, ly=-sz/2+sz*t;
+        const side=sz*0.35*(1-Math.abs(t-0.5)*1.5);
+        ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(lx+side,ly+sz*0.08);
+        ctx.strokeStyle='rgba(60,140,60,0.18)'; ctx.lineWidth=1.2; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(lx-side,ly+sz*0.08); ctx.stroke();
+      }
+      ctx.restore();
+    });
+  }
 }
 async function shareMemoCard() {
   if (!_memoCardDataUrl) return;
   try {
     const res = await fetch(_memoCardDataUrl);
     const blob = await res.blob();
-    const file = new File([blob], 'kakugen.png', { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file] });
-    } else {
-      downloadMemoCard();
-    }
-  } catch { downloadMemoCard(); }
+    const file = new File([blob],'kakugen.png',{type:'image/png'});
+    if (navigator.canShare && navigator.canShare({files:[file]})) { await navigator.share({files:[file]}); return; }
+  } catch {}
+  downloadMemoCard();
 }
 function downloadMemoCard() {
   if (!_memoCardDataUrl) return;
-  const a = document.createElement('a');
-  a.href = _memoCardDataUrl;
-  a.download = 'kakugen.png';
-  a.click();
+  const a = document.createElement('a'); a.href=_memoCardDataUrl; a.download='kakugen.png'; a.click();
 }
 async function toggleMemoPin(id, pinned) {
   try {
