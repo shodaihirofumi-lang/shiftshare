@@ -368,7 +368,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .memo-edit-actions { display:flex; gap:6px; justify-content:flex-end; margin-top:6px; }
 .memo-edit-cancel { padding:6px 13px; border-radius:7px; border:1.5px solid var(--line); background:var(--card); color:var(--text-soft); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; }
 .memo-edit-save { padding:6px 16px; border-radius:7px; border:none; background:var(--text); color:var(--card); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; }
-.memo-add { margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
+.memo-add { margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--line); }
 .memo-add .ev-add-row .ev-in { flex:1; margin-bottom:0; }
 .memo-hit { background:rgba(217,154,43,.25); border-radius:3px; padding:0 1px; }
 
@@ -1412,7 +1412,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <input id="memo-search" class="memo-search" placeholder="メモを検索…" oninput="setMemoSearch(this.value)">
           <button class="memo-search-clr" id="memo-search-clr" onclick="clearMemoSearch()" title="クリア">×</button>
         </div>
-        <div id="memo-list"></div>
         <div class="ev-add memo-add">
           <div id="memo-pending-img-wrap"></div>
           <div class="ev-add-row">
@@ -1424,6 +1423,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
             <button class="ev-add-btn" onclick="addMemoFromUI()">追加</button>
           </div>
         </div>
+        <div id="memo-list"></div>
       </div>
     </div>
 
