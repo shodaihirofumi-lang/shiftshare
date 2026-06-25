@@ -3867,17 +3867,26 @@ const CARD_THEMES = [
   { id:'sunset', label:'夕焼け',   swatch:'#5a2510', bg:['#2d1505','#5a2510'], text:'#fff5e8', accent:'#f0c060', sub:'rgba(240,192,96,0.45)' },
 ];
 const CARD_FONTS = [
-  { id:'gothic', label:'ゴシック',   css:"'Hiragino Sans','Yu Gothic',sans-serif" },
-  { id:'mincho', label:'明朝体',     css:"'Hiragino Mincho ProN','Yu Mincho',Georgia,serif" },
-  { id:'maru',   label:'丸ゴシック', css:"'Hiragino Maru Gothic ProN','Meiryo',Arial,sans-serif" },
+  { id:'gothic',  label:'ゴシック',   css:"'Hiragino Sans','Yu Gothic',sans-serif",                w:'400' },
+  { id:'gothicB', label:'太ゴシック', css:"'Hiragino Sans','Yu Gothic',sans-serif",                w:'800' },
+  { id:'gothicL', label:'細ゴシック', css:"'Hiragino Sans','Yu Gothic',sans-serif",                w:'200' },
+  { id:'mincho',  label:'明朝体',     css:"'Hiragino Mincho ProN','Yu Mincho',Georgia,serif",      w:'400' },
+  { id:'minchoB', label:'明朝太字',   css:"'Hiragino Mincho ProN','Yu Mincho',Georgia,serif",      w:'600' },
+  { id:'maru',    label:'丸ゴシック', css:"'Hiragino Maru Gothic ProN','Meiryo',Arial,sans-serif", w:'500' },
 ];
 const CARD_ILLUSTS = [
-  { id:'none',   label:'なし',   emoji:'✕' },
-  { id:'sakura', label:'桜',     emoji:'🌸' },
-  { id:'star',   label:'星',     emoji:'⭐' },
-  { id:'coin',   label:'コイン', emoji:'💰' },
-  { id:'cat',    label:'ネコ',   emoji:'🐱' },
-  { id:'leaf',   label:'葉っぱ', emoji:'🌿' },
+  { id:'none',    label:'なし',     emoji:'✕' },
+  { id:'sakura',  label:'桜',       emoji:'🌸' },
+  { id:'star',    label:'星',       emoji:'⭐' },
+  { id:'coin',    label:'コイン',   emoji:'💰' },
+  { id:'leaf',    label:'葉っぱ',   emoji:'🌿' },
+  { id:'cat',     label:'ネコ',     emoji:'🐱' },
+  { id:'rabbit',  label:'うさぎ',   emoji:'🐰' },
+  { id:'bear',    label:'くま',     emoji:'🐻' },
+  { id:'dog',     label:'いぬ',     emoji:'🐶' },
+  { id:'panda',   label:'パンダ',   emoji:'🐼' },
+  { id:'chick',   label:'ひよこ',   emoji:'🐤' },
+  { id:'penguin', label:'ペンギン', emoji:'🐧' },
 ];
 let _memoCardText = '';
 let _memoCardTheme = 'navy';
@@ -3906,7 +3915,7 @@ function _buildCardOptionRows() {
     `<div class="memo-card-theme-dot${t.id===_memoCardTheme?' sel':''}" style="background:${t.swatch}" title="${t.label}" onclick="setCardTheme('${t.id}')"></div>`
   ).join('');
   if (fr) fr.innerHTML = CARD_FONTS.map(f =>
-    `<button class="memo-card-font-chip${f.id===_memoCardFont?' sel':''}" onclick="setCardFont('${f.id}')" style="font-family:${f.css}">${f.label}</button>`
+    `<button class="memo-card-font-chip${f.id===_memoCardFont?' sel':''}" onclick="setCardFont('${f.id}')" style="font-family:${f.css};font-weight:${f.w||400}">${f.label}</button>`
   ).join('');
   if (ir) ir.innerHTML = CARD_ILLUSTS.map(i =>
     `<button class="memo-card-illust-chip${i.id===_memoCardIllust?' sel':''}" onclick="setCardIllust('${i.id}')">${i.emoji} ${i.label}</button>`
@@ -3953,13 +3962,13 @@ function generateMemoCardCanvas(text) {
   // テキスト
   const maxW = S - 220;
   const testSize = 54;
-  ctx.font = `${testSize}px ${fontDef.css}`;
-  const testLines = _wrapText(ctx, text, maxW, testSize, fontDef.css);
+  ctx.font = _cardFontStr(fontDef, testSize);
+  const testLines = _wrapText(ctx, text, maxW, testSize, fontDef);
   const n = testLines.length;
   const fontSize = n<=2?68 : n<=4?56 : n<=6?46 : n<=9?38 : 30;
   const lineH = fontSize * 1.72;
-  ctx.font = `${fontSize}px ${fontDef.css}`;
-  const lines = _wrapText(ctx, text, maxW, fontSize, fontDef.css);
+  ctx.font = _cardFontStr(fontDef, fontSize);
+  const lines = _wrapText(ctx, text, maxW, fontSize, fontDef);
   const totalH = lines.length * lineH;
   let startY = (S - totalH) / 2;
   ctx.fillStyle = theme.text;
@@ -3967,14 +3976,17 @@ function generateMemoCardCanvas(text) {
   ctx.textBaseline = 'top';
   lines.forEach((line, i) => ctx.fillText(line, S/2, startY + i*lineH));
   // ブランド
-  ctx.font = `22px ${fontDef.css}`;
+  ctx.font = _cardFontStr(fontDef, 22);
   ctx.fillStyle = theme.sub;
   ctx.textAlign = 'center';
   ctx.fillText('ShiftShare', S/2, S-62);
   return canvas.toDataURL('image/png');
 }
-function _wrapText(ctx, text, maxW, fontSize, fontCss) {
-  ctx.font = `${fontSize}px ${fontCss}`;
+function _cardFontStr(fd, size) {
+  return `${(fd&&fd.w)||''} ${size}px ${(fd&&fd.css)||"sans-serif"}`.trim();
+}
+function _wrapText(ctx, text, maxW, fontSize, fontDef) {
+  ctx.font = _cardFontStr(fontDef, fontSize);
   const result = [];
   for (const para of text.split('\n')) {
     if (!para.trim()) { result.push(''); continue; }
@@ -4096,6 +4108,129 @@ function _drawIllust(ctx, type, S, theme) {
       ctx.restore();
     });
   }
+  if (type === 'rabbit') {
+    const cx=S-150, cy=S-152, r=70, fur='rgba(248,244,240,0.8)';
+    // 耳
+    [[-0.42,0.12],[0.42,-0.12]].forEach(([ox,rot])=>{
+      ctx.save(); ctx.translate(cx+r*ox, cy-r*1.0); ctx.rotate(rot);
+      ctx.beginPath(); ctx.ellipse(0,0,r*0.22,r*0.62,0,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0,r*0.05,r*0.11,r*0.46,0,0,Math.PI*2); ctx.fillStyle='rgba(255,190,205,0.6)'; ctx.fill();
+      ctx.restore();
+    });
+    // 頭
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    // ほっぺ
+    [[-0.5,0.2],[0.5,0.2]].forEach(([bx,by])=>{ ctx.beginPath(); ctx.ellipse(cx+r*bx,cy+r*by,r*0.16,r*0.1,0,0,Math.PI*2); ctx.fillStyle='rgba(255,180,195,0.45)'; ctx.fill(); });
+    _cuteEyes(ctx, cx-r*0.32, cx+r*0.32, cy, r*0.12);
+    // 鼻
+    ctx.beginPath(); ctx.moveTo(cx,cy+r*0.2); ctx.lineTo(cx-r*0.06,cy+r*0.13); ctx.lineTo(cx+r*0.06,cy+r*0.13); ctx.closePath(); ctx.fillStyle='rgba(230,130,150,0.85)'; ctx.fill();
+    // 口
+    ctx.strokeStyle='rgba(120,90,80,0.4)'; ctx.lineWidth=2.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx,cy+r*0.2); ctx.quadraticCurveTo(cx-r*0.12,cy+r*0.34,cx-r*0.2,cy+r*0.26); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx,cy+r*0.2); ctx.quadraticCurveTo(cx+r*0.12,cy+r*0.34,cx+r*0.2,cy+r*0.26); ctx.stroke();
+  }
+  if (type === 'bear') {
+    const cx=S-150, cy=S-150, r=74, fur='rgba(190,150,110,0.62)';
+    // 耳
+    [[-0.7,-0.7],[0.7,-0.7]].forEach(([ox,oy])=>{
+      ctx.beginPath(); ctx.arc(cx+r*ox,cy+r*oy,r*0.32,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+r*ox,cy+r*oy,r*0.16,0,Math.PI*2); ctx.fillStyle='rgba(150,110,80,0.6)'; ctx.fill();
+    });
+    // 頭
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    // 口まわり
+    ctx.beginPath(); ctx.ellipse(cx,cy+r*0.28,r*0.42,r*0.32,0,0,Math.PI*2); ctx.fillStyle='rgba(235,215,185,0.7)'; ctx.fill();
+    _cuteEyes(ctx, cx-r*0.3, cx+r*0.3, cy-r*0.05, r*0.11);
+    // 鼻
+    ctx.beginPath(); ctx.ellipse(cx,cy+r*0.18,r*0.1,r*0.075,0,0,Math.PI*2); ctx.fillStyle='rgba(70,50,35,0.85)'; ctx.fill();
+    // 口
+    ctx.strokeStyle='rgba(70,50,35,0.5)'; ctx.lineWidth=2.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx,cy+r*0.24); ctx.lineTo(cx,cy+r*0.34); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx,cy+r*0.34); ctx.quadraticCurveTo(cx-r*0.1,cy+r*0.42,cx-r*0.16,cy+r*0.36); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx,cy+r*0.34); ctx.quadraticCurveTo(cx+r*0.1,cy+r*0.42,cx+r*0.16,cy+r*0.36); ctx.stroke();
+  }
+  if (type === 'dog') {
+    const cx=S-150, cy=S-150, r=72, fur='rgba(210,175,130,0.64)', earC='rgba(145,105,68,0.72)';
+    // 垂れ耳（頭の上側から左右に大きく垂れる）
+    [[-1,-0.32],[1,0.32]].forEach(([s,rot])=>{
+      ctx.save(); ctx.translate(cx+s*r*0.66,cy-r*0.46); ctx.rotate(rot);
+      ctx.beginPath(); ctx.ellipse(0,r*0.54,r*0.31,r*0.64,0,0,Math.PI*2); ctx.fillStyle=earC; ctx.fill();
+      ctx.restore();
+    });
+    // 頭
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    // 口まわり
+    ctx.beginPath(); ctx.ellipse(cx,cy+r*0.3,r*0.36,r*0.28,0,0,Math.PI*2); ctx.fillStyle='rgba(240,220,195,0.7)'; ctx.fill();
+    _cuteEyes(ctx, cx-r*0.3, cx+r*0.3, cy-r*0.08, r*0.11);
+    // 鼻
+    ctx.beginPath(); ctx.ellipse(cx,cy+r*0.16,r*0.11,r*0.085,0,0,Math.PI*2); ctx.fillStyle='rgba(60,45,35,0.85)'; ctx.fill();
+    // 舌
+    ctx.beginPath(); ctx.ellipse(cx,cy+r*0.44,r*0.1,r*0.16,0,0,Math.PI*2); ctx.fillStyle='rgba(255,150,160,0.8)'; ctx.fill();
+    ctx.strokeStyle='rgba(60,45,35,0.5)'; ctx.lineWidth=2.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx,cy+r*0.24); ctx.lineTo(cx,cy+r*0.3); ctx.stroke();
+  }
+  if (type === 'panda') {
+    const cx=S-150, cy=S-150, r=74, fur='rgba(248,248,248,0.85)', blk='rgba(45,45,50,0.78)';
+    // 耳
+    [[-0.62,-0.72],[0.62,-0.72]].forEach(([ox,oy])=>{ ctx.beginPath(); ctx.arc(cx+r*ox,cy+r*oy,r*0.3,0,Math.PI*2); ctx.fillStyle=blk; ctx.fill(); });
+    // 頭
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    // 目のまわり
+    [[-0.32,-0.4],[0.32,0.4]].forEach(([ox,rot])=>{
+      ctx.save(); ctx.translate(cx+r*ox,cy-r*0.04); ctx.rotate(rot);
+      ctx.beginPath(); ctx.ellipse(0,0,r*0.2,r*0.27,0,0,Math.PI*2); ctx.fillStyle=blk; ctx.fill(); ctx.restore();
+    });
+    // 目
+    [[-0.32,-0.02],[0.32,-0.02]].forEach(([ox,oy])=>{
+      ctx.beginPath(); ctx.arc(cx+r*ox,cy+r*oy,r*0.07,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+r*ox,cy+r*oy,r*0.035,0,Math.PI*2); ctx.fillStyle='rgba(40,40,45,0.95)'; ctx.fill();
+    });
+    // 鼻
+    ctx.beginPath(); ctx.moveTo(cx,cy+r*0.26); ctx.lineTo(cx-r*0.09,cy+r*0.16); ctx.lineTo(cx+r*0.09,cy+r*0.16); ctx.closePath(); ctx.fillStyle=blk; ctx.fill();
+    ctx.strokeStyle=blk; ctx.lineWidth=2.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx,cy+r*0.26); ctx.lineTo(cx,cy+r*0.34); ctx.stroke();
+  }
+  if (type === 'chick') {
+    const cx=S-150, cy=S-145, r=68, body='rgba(255,222,90,0.74)';
+    // 頭の毛
+    ctx.strokeStyle=body; ctx.lineWidth=6; ctx.lineCap='round';
+    [[-0.12,-1.05],[0,-1.15],[0.12,-1.05]].forEach(([ox,oy])=>{ ctx.beginPath(); ctx.moveTo(cx,cy-r*0.85); ctx.lineTo(cx+r*ox,cy+r*oy); ctx.stroke(); });
+    // 体
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=body; ctx.fill();
+    // 羽
+    ctx.save(); ctx.translate(cx-r*0.7,cy+r*0.1); ctx.rotate(0.3);
+    ctx.beginPath(); ctx.ellipse(0,0,r*0.22,r*0.4,0,0,Math.PI*2); ctx.fillStyle='rgba(250,205,70,0.85)'; ctx.fill(); ctx.restore();
+    _cuteEyes(ctx, cx-r*0.26, cx+r*0.26, cy-r*0.12, r*0.1);
+    // くちばし
+    ctx.beginPath(); ctx.moveTo(cx-r*0.1,cy+r*0.08); ctx.lineTo(cx+r*0.1,cy+r*0.08); ctx.lineTo(cx,cy+r*0.24); ctx.closePath(); ctx.fillStyle='rgba(245,150,40,0.9)'; ctx.fill();
+    // 足
+    ctx.strokeStyle='rgba(245,150,40,0.85)'; ctx.lineWidth=4; ctx.lineCap='round';
+    [-0.25,0.25].forEach(fx=>{ ctx.beginPath(); ctx.moveTo(cx+r*fx,cy+r*0.95); ctx.lineTo(cx+r*fx,cy+r*1.12); ctx.stroke(); });
+  }
+  if (type === 'penguin') {
+    const cx=S-150, cy=S-145, r=72, blk='rgba(55,60,75,0.76)';
+    // 体
+    ctx.beginPath(); ctx.ellipse(cx,cy,r*0.78,r,0,0,Math.PI*2); ctx.fillStyle=blk; ctx.fill();
+    // お腹
+    ctx.beginPath(); ctx.ellipse(cx,cy+r*0.12,r*0.5,r*0.72,0,0,Math.PI*2); ctx.fillStyle='rgba(250,250,250,0.88)'; ctx.fill();
+    // 翼
+    [[-1,0.5],[1,-0.5]].forEach(([s,rot])=>{
+      ctx.save(); ctx.translate(cx+s*r*0.7,cy+r*0.1); ctx.rotate(rot);
+      ctx.beginPath(); ctx.ellipse(0,0,r*0.16,r*0.45,0,0,Math.PI*2); ctx.fillStyle=blk; ctx.fill(); ctx.restore();
+    });
+    _cuteEyes(ctx, cx-r*0.22, cx+r*0.22, cy-r*0.3, r*0.1);
+    // くちばし
+    ctx.beginPath(); ctx.moveTo(cx-r*0.12,cy-r*0.12); ctx.lineTo(cx+r*0.12,cy-r*0.12); ctx.lineTo(cx,cy+r*0.02); ctx.closePath(); ctx.fillStyle='rgba(245,160,45,0.9)'; ctx.fill();
+    // 足
+    ctx.fillStyle='rgba(245,160,45,0.88)';
+    [-0.3,0.3].forEach(fx=>{ ctx.beginPath(); ctx.ellipse(cx+r*fx,cy+r*1.0,r*0.18,r*0.1,0,0,Math.PI*2); ctx.fill(); });
+  }
+}
+function _cuteEyes(ctx, lx, rx, y, er) {
+  [[lx,y],[rx,y]].forEach(([ex,ey])=>{
+    ctx.beginPath(); ctx.arc(ex,ey,er,0,Math.PI*2); ctx.fillStyle='rgba(45,32,20,0.82)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(ex-er*0.32,ey-er*0.34,er*0.34,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
+  });
 }
 async function shareMemoCard() {
   if (!_memoCardDataUrl) return;
