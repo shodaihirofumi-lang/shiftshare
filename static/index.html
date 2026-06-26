@@ -1486,8 +1486,12 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <div class="memo-card-opt-row" id="memo-card-font-row"></div>
         </div>
         <div class="memo-card-opt-section">
-          <div class="memo-card-opt-label">イラスト</div>
-          <div class="memo-card-opt-row" id="memo-card-illust-row"></div>
+          <div class="memo-card-opt-label">キャラクター</div>
+          <div class="memo-card-opt-row" id="memo-card-char-row"></div>
+        </div>
+        <div class="memo-card-opt-section">
+          <div class="memo-card-opt-label">飾り</div>
+          <div class="memo-card-opt-row" id="memo-card-deco-row"></div>
         </div>
         <div class="memo-card-opt-section" id="memo-card-pos-section">
           <div class="memo-card-opt-label">イラストの位置</div>
@@ -3889,26 +3893,35 @@ const CARD_FONTS = [
   { id:'minchoB', label:'明朝太字',   css:"'Hiragino Mincho ProN','Yu Mincho',Georgia,serif",      w:'600' },
   { id:'maru',    label:'丸ゴシック', css:"'Hiragino Maru Gothic ProN','Meiryo',Arial,sans-serif", w:'500' },
 ];
-const CARD_ILLUSTS = [
-  { id:'none',    label:'なし',     emoji:'✕' },
-  { id:'sakura',  label:'桜',       emoji:'🌸' },
-  { id:'star',    label:'星',       emoji:'⭐' },
-  { id:'coin',    label:'コイン',   emoji:'💰' },
-  { id:'leaf',    label:'葉っぱ',   emoji:'🌿' },
-  { id:'cat',     label:'ネコ',     emoji:'🐱' },
-  { id:'rabbit',  label:'うさぎ',   emoji:'🐰' },
-  { id:'bear',    label:'くま',     emoji:'🐻' },
-  { id:'dog',     label:'いぬ',     emoji:'🐶' },
-  { id:'panda',   label:'パンダ',   emoji:'🐼' },
-  { id:'chick',   label:'ひよこ',   emoji:'🐤' },
-  { id:'penguin', label:'ペンギン', emoji:'🐧' },
-  { id:'pig',     label:'ぶた',     emoji:'🐷' },
-  { id:'frog',    label:'かえる',   emoji:'🐸' },
-  { id:'fox',     label:'きつね',   emoji:'🦊' },
-  { id:'koala',   label:'コアラ',   emoji:'🐨' },
-  { id:'sheep',   label:'ひつじ',   emoji:'🐑' },
+const CARD_CHARLIST = [
+  { id:'none',      label:'なし',         emoji:'✕' },
+  { id:'cat',       label:'ネコ',         emoji:'🐱' },
+  { id:'rabbit',    label:'うさぎ',       emoji:'🐰' },
+  { id:'bear',      label:'くま',         emoji:'🐻' },
+  { id:'dog',       label:'いぬ',         emoji:'🐶' },
+  { id:'panda',     label:'パンダ',       emoji:'🐼' },
+  { id:'chick',     label:'ひよこ',       emoji:'🐤' },
+  { id:'penguin',   label:'ペンギン',     emoji:'🐧' },
+  { id:'pig',       label:'ぶた',         emoji:'🐷' },
+  { id:'frog',      label:'かえる',       emoji:'🐸' },
+  { id:'fox',       label:'きつね',       emoji:'🦊' },
+  { id:'koala',     label:'コアラ',       emoji:'🐨' },
+  { id:'sheep',     label:'ひつじ',       emoji:'🐑' },
+  { id:'catwave',   label:'まねきネコ',   emoji:'😺' },
+  { id:'rabbithop', label:'ジャンプうさぎ', emoji:'🐰' },
+  { id:'bearhi',    label:'バンザイくま', emoji:'🙌' },
 ];
-const CARD_CHARS = ['cat','rabbit','bear','dog','panda','chick','penguin','pig','frog','fox','koala','sheep'];
+const CARD_DECOS = [
+  { id:'none',   label:'なし',     emoji:'✕' },
+  { id:'sakura', label:'桜',       emoji:'🌸' },
+  { id:'star',   label:'星',       emoji:'⭐' },
+  { id:'leaf',   label:'葉っぱ',   emoji:'🌿' },
+  { id:'coin',   label:'コイン',   emoji:'💰' },
+  { id:'heart',  label:'ハート',   emoji:'💕' },
+  { id:'bubble', label:'しゃぼん', emoji:'🫧' },
+  { id:'music',  label:'音符',     emoji:'🎵' },
+];
+const CARD_CHAR_IDS = CARD_CHARLIST.filter(c=>c.id!=='none').map(c=>c.id);
 const CARD_POS = [
   { id:'br', label:'右下' },
   { id:'bl', label:'左下' },
@@ -3922,7 +3935,8 @@ const CARD_RATIOS = [
 let _memoCardText = '';
 let _memoCardTheme = 'navy';
 let _memoCardFont = 'gothic';
-let _memoCardIllust = 'none';
+let _memoCardChar = 'none';
+let _memoCardDeco = 'none';
 let _memoCardPos = 'br';
 let _memoCardRatio = 'square';
 let _memoCardDataUrl = null;
@@ -3943,7 +3957,8 @@ function closeMemoCardModal() {
 function _buildCardOptionRows() {
   const tr = document.getElementById('memo-card-theme-row');
   const fr = document.getElementById('memo-card-font-row');
-  const ir = document.getElementById('memo-card-illust-row');
+  const cr = document.getElementById('memo-card-char-row');
+  const dr = document.getElementById('memo-card-deco-row');
   const rr = document.getElementById('memo-card-ratio-row');
   const pr = document.getElementById('memo-card-pos-row');
   const ps = document.getElementById('memo-card-pos-section');
@@ -3956,25 +3971,31 @@ function _buildCardOptionRows() {
   if (fr) fr.innerHTML = CARD_FONTS.map(f =>
     `<button class="memo-card-font-chip${f.id===_memoCardFont?' sel':''}" onclick="setCardFont('${f.id}')" style="font-family:${f.css};font-weight:${f.w||400}">${f.label}</button>`
   ).join('');
-  if (ir) ir.innerHTML = CARD_ILLUSTS.map(i =>
-    `<button class="memo-card-illust-chip${i.id===_memoCardIllust?' sel':''}" onclick="setCardIllust('${i.id}')">${i.emoji} ${i.label}</button>`
+  if (cr) cr.innerHTML = CARD_CHARLIST.map(i =>
+    `<button class="memo-card-illust-chip${i.id===_memoCardChar?' sel':''}" onclick="setCardChar('${i.id}')">${i.emoji} ${i.label}</button>`
+  ).join('');
+  if (dr) dr.innerHTML = CARD_DECOS.map(i =>
+    `<button class="memo-card-illust-chip${i.id===_memoCardDeco?' sel':''}" onclick="setCardDeco('${i.id}')">${i.emoji} ${i.label}</button>`
   ).join('');
   if (pr) pr.innerHTML = CARD_POS.map(p =>
     `<button class="memo-card-font-chip${p.id===_memoCardPos?' sel':''}" onclick="setCardPos('${p.id}')">${p.label}</button>`
   ).join('');
-  if (ps) ps.style.display = CARD_CHARS.includes(_memoCardIllust) ? '' : 'none';
+  if (ps) ps.style.display = (_memoCardChar !== 'none') ? '' : 'none';
 }
 function setCardTheme(id)  { _memoCardTheme=id;  _buildCardOptionRows(); setTimeout(()=>_refreshCardPreview(),30); }
 function setCardFont(id)   { _memoCardFont=id;   _buildCardOptionRows(); setTimeout(()=>_refreshCardPreview(),30); }
-function setCardIllust(id) { _memoCardIllust=id; _buildCardOptionRows(); setTimeout(()=>_refreshCardPreview(),30); }
+function setCardChar(id)   { _memoCardChar=id;   _buildCardOptionRows(); setTimeout(()=>_refreshCardPreview(),30); }
+function setCardDeco(id)   { _memoCardDeco=id;   _buildCardOptionRows(); setTimeout(()=>_refreshCardPreview(),30); }
 function setCardRatio(id)  { _memoCardRatio=id;  _buildCardOptionRows(); setTimeout(()=>_refreshCardPreview(),30); }
 function setCardPos(id)    { _memoCardPos=id;    _buildCardOptionRows(); setTimeout(()=>_refreshCardPreview(),30); }
 function randomizeCard() {
   const pick = a => a[Math.floor(Math.random()*a.length)];
-  _memoCardTheme  = pick(CARD_THEMES).id;
-  _memoCardFont   = pick(CARD_FONTS).id;
-  _memoCardIllust = pick(CARD_ILLUSTS.filter(i=>i.id!=='none')).id;
-  _memoCardPos    = pick(CARD_POS).id;
+  _memoCardTheme = pick(CARD_THEMES).id;
+  _memoCardFont  = pick(CARD_FONTS).id;
+  _memoCardChar  = pick(CARD_CHARLIST.filter(i=>i.id!=='none')).id;
+  // 飾りは40%の確率で付ける（キャラとの組み合わせも生まれる）
+  _memoCardDeco  = Math.random() < 0.4 ? pick(CARD_DECOS.filter(i=>i.id!=='none')).id : 'none';
+  _memoCardPos   = pick(CARD_POS).id;
   _buildCardOptionRows();
   setTimeout(()=>_refreshCardPreview(),30);
 }
@@ -4005,8 +4026,10 @@ function generateMemoCardCanvas(text) {
   grad.addColorStop(1, theme.bg[1]);
   ctx.fillStyle = grad;
   ctx.fillRect(0,0,DW,DH);
-  // イラスト（テキストの後ろ）
-  _drawIllust(ctx, _memoCardIllust, DW, DH, theme, _memoCardPos);
+  // イラスト（テキストの後ろ）：飾り→キャラの順で重ねる。note横長ではキャラを大きく
+  const cs = (DW/DH > 1.25) ? 1.55 : 1.0;
+  _drawIllust(ctx, _memoCardDeco, DW, DH, theme, _memoCardPos, 1.0);
+  _drawIllust(ctx, _memoCardChar, DW, DH, theme, _memoCardPos, cs);
   // 上下ラインとコーナー装飾
   ctx.fillStyle = theme.accent;
   ctx.fillRect(80,80,DW-160,3);
@@ -4014,7 +4037,7 @@ function generateMemoCardCanvas(text) {
   ctx.fillRect(80,80,3,60); ctx.fillRect(DW-83,80,3,60);
   ctx.fillRect(80,DH-140,3,60); ctx.fillRect(DW-83,DH-140,3,60);
   // 引用符（大きな装飾・左上にキャラがいる時は出さない）
-  if (_memoCardPos !== 'tl' || !CARD_CHARS.includes(_memoCardIllust)) {
+  if (_memoCardPos !== 'tl' || _memoCardChar === 'none') {
     ctx.font = `bold 260px ${fontDef.css}`;
     ctx.fillStyle = `rgba(${_hexToRgb(theme.accent)},0.1)`;
     ctx.textBaseline = 'top';
@@ -4070,8 +4093,9 @@ function _charAnchor(pos, DW, DH) {
   const cy = (pos && pos[0] === 't') ? 172 : DH - 150;
   return { cx, cy };
 }
-function _drawIllust(ctx, type, S, H, theme, pos) {
+function _drawIllust(ctx, type, S, H, theme, pos, cs) {
   if (type === 'none') return;
+  cs = cs || 1;
   const DW = S, DH = H;
   const A = _charAnchor(pos, DW, DH);
   if (type === 'sakura') {
@@ -4121,7 +4145,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     ctx.fillStyle='rgba(100,220,120,0.7)'; ctx.fill();
   }
   if (type === 'cat') {
-    const cx=A.cx,cy=A.cy,r=80;
+    const cx=A.cx,cy=A.cy,r=80*cs;
     const fur='rgba(220,205,185,0.62)';
     // 耳
     [[cx-r*0.52,cy-r*0.62,cx-r*0.88,cy-r*1.12,cx-r*0.16,cy-r*0.86],[cx+r*0.52,cy-r*0.62,cx+r*0.88,cy-r*1.12,cx+r*0.16,cy-r*0.86]].forEach(pts=>{
@@ -4177,7 +4201,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     });
   }
   if (type === 'rabbit') {
-    const cx=A.cx, cy=A.cy, r=70, fur='rgba(248,244,240,0.8)';
+    const cx=A.cx, cy=A.cy, r=70*cs, fur='rgba(248,244,240,0.8)';
     // 耳
     [[-0.42,0.12],[0.42,-0.12]].forEach(([ox,rot])=>{
       ctx.save(); ctx.translate(cx+r*ox, cy-r*1.0); ctx.rotate(rot);
@@ -4198,7 +4222,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     ctx.beginPath(); ctx.moveTo(cx,cy+r*0.2); ctx.quadraticCurveTo(cx+r*0.12,cy+r*0.34,cx+r*0.2,cy+r*0.26); ctx.stroke();
   }
   if (type === 'bear') {
-    const cx=A.cx, cy=A.cy, r=74, fur='rgba(190,150,110,0.62)';
+    const cx=A.cx, cy=A.cy, r=74*cs, fur='rgba(190,150,110,0.62)';
     // 耳
     [[-0.7,-0.7],[0.7,-0.7]].forEach(([ox,oy])=>{
       ctx.beginPath(); ctx.arc(cx+r*ox,cy+r*oy,r*0.32,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
@@ -4218,7 +4242,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     ctx.beginPath(); ctx.moveTo(cx,cy+r*0.34); ctx.quadraticCurveTo(cx+r*0.1,cy+r*0.42,cx+r*0.16,cy+r*0.36); ctx.stroke();
   }
   if (type === 'dog') {
-    const cx=A.cx, cy=A.cy, r=72, fur='rgba(210,175,130,0.64)', earC='rgba(145,105,68,0.72)';
+    const cx=A.cx, cy=A.cy, r=72*cs, fur='rgba(210,175,130,0.64)', earC='rgba(145,105,68,0.72)';
     // 垂れ耳（頭の上側から左右に大きく垂れる）
     [[-1,-0.32],[1,0.32]].forEach(([s,rot])=>{
       ctx.save(); ctx.translate(cx+s*r*0.66,cy-r*0.46); ctx.rotate(rot);
@@ -4238,7 +4262,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     ctx.beginPath(); ctx.moveTo(cx,cy+r*0.24); ctx.lineTo(cx,cy+r*0.3); ctx.stroke();
   }
   if (type === 'panda') {
-    const cx=A.cx, cy=A.cy, r=74, fur='rgba(248,248,248,0.85)', blk='rgba(45,45,50,0.78)';
+    const cx=A.cx, cy=A.cy, r=74*cs, fur='rgba(248,248,248,0.85)', blk='rgba(45,45,50,0.78)';
     // 耳
     [[-0.62,-0.72],[0.62,-0.72]].forEach(([ox,oy])=>{ ctx.beginPath(); ctx.arc(cx+r*ox,cy+r*oy,r*0.3,0,Math.PI*2); ctx.fillStyle=blk; ctx.fill(); });
     // 頭
@@ -4259,7 +4283,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     ctx.beginPath(); ctx.moveTo(cx,cy+r*0.26); ctx.lineTo(cx,cy+r*0.34); ctx.stroke();
   }
   if (type === 'chick') {
-    const cx=A.cx, cy=A.cy, r=68, body='rgba(255,222,90,0.74)';
+    const cx=A.cx, cy=A.cy, r=68*cs, body='rgba(255,222,90,0.74)';
     // 頭の毛
     ctx.strokeStyle=body; ctx.lineWidth=6; ctx.lineCap='round';
     [[-0.12,-1.05],[0,-1.15],[0.12,-1.05]].forEach(([ox,oy])=>{ ctx.beginPath(); ctx.moveTo(cx,cy-r*0.85); ctx.lineTo(cx+r*ox,cy+r*oy); ctx.stroke(); });
@@ -4276,7 +4300,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     [-0.25,0.25].forEach(fx=>{ ctx.beginPath(); ctx.moveTo(cx+r*fx,cy+r*0.95); ctx.lineTo(cx+r*fx,cy+r*1.12); ctx.stroke(); });
   }
   if (type === 'penguin') {
-    const cx=A.cx, cy=A.cy, r=72, blk='rgba(55,60,75,0.76)';
+    const cx=A.cx, cy=A.cy, r=72*cs, blk='rgba(55,60,75,0.76)';
     // 体
     ctx.beginPath(); ctx.ellipse(cx,cy,r*0.78,r,0,0,Math.PI*2); ctx.fillStyle=blk; ctx.fill();
     // お腹
@@ -4294,7 +4318,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     [-0.3,0.3].forEach(fx=>{ ctx.beginPath(); ctx.ellipse(cx+r*fx,cy+r*1.0,r*0.18,r*0.1,0,0,Math.PI*2); ctx.fill(); });
   }
   if (type === 'pig') {
-    const cx=A.cx, cy=A.cy, r=74, fur='rgba(245,180,195,0.72)';
+    const cx=A.cx, cy=A.cy, r=74*cs, fur='rgba(245,180,195,0.72)';
     // 耳（三角）
     [[-0.62,-0.58,-0.95,-1.04,-0.18,-0.92],[0.62,-0.58,0.95,-1.04,0.18,-0.92]].forEach(p=>{
       ctx.beginPath(); ctx.moveTo(cx+r*p[0],cy+r*p[1]); ctx.lineTo(cx+r*p[2],cy+r*p[3]); ctx.lineTo(cx+r*p[4],cy+r*p[5]); ctx.closePath();
@@ -4310,7 +4334,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     [-0.1,0.1].forEach(nx=>{ ctx.beginPath(); ctx.ellipse(cx+r*nx,cy+r*0.24,r*0.045,r*0.075,0,0,Math.PI*2); ctx.fillStyle='rgba(150,85,100,0.8)'; ctx.fill(); });
   }
   if (type === 'frog') {
-    const cx=A.cx, cy=A.cy, r=72, body='rgba(130,200,110,0.72)';
+    const cx=A.cx, cy=A.cy, r=72*cs, body='rgba(130,200,110,0.72)';
     // 目の土台
     [[-0.5,-0.76],[0.5,-0.76]].forEach(([ox,oy])=>{ ctx.beginPath(); ctx.arc(cx+r*ox,cy+r*oy,r*0.34,0,Math.PI*2); ctx.fillStyle=body; ctx.fill(); });
     // 頭
@@ -4328,7 +4352,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     [-0.12,0.12].forEach(nx=>{ ctx.beginPath(); ctx.arc(cx+r*nx,cy-r*0.08,r*0.028,0,Math.PI*2); ctx.fillStyle='rgba(55,110,45,0.6)'; ctx.fill(); });
   }
   if (type === 'fox') {
-    const cx=A.cx, cy=A.cy, r=72, fur='rgba(235,140,70,0.74)', wht='rgba(250,245,238,0.92)';
+    const cx=A.cx, cy=A.cy, r=72*cs, fur='rgba(235,140,70,0.74)', wht='rgba(250,245,238,0.92)';
     // 耳（大きな三角＋内耳）
     [[-0.52,-0.5,-0.78,-1.2,-0.1,-0.92],[0.52,-0.5,0.78,-1.2,0.1,-0.92]].forEach(p=>{
       ctx.beginPath(); ctx.moveTo(cx+r*p[0],cy+r*p[1]); ctx.lineTo(cx+r*p[2],cy+r*p[3]); ctx.lineTo(cx+r*p[4],cy+r*p[5]); ctx.closePath();
@@ -4349,7 +4373,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     ctx.beginPath(); ctx.moveTo(cx,cy+r*0.42); ctx.lineTo(cx-r*0.09,cy+r*0.32); ctx.lineTo(cx+r*0.09,cy+r*0.32); ctx.closePath(); ctx.fillStyle='rgba(50,40,35,0.85)'; ctx.fill();
   }
   if (type === 'koala') {
-    const cx=A.cx, cy=A.cy, r=72, fur='rgba(172,172,180,0.74)';
+    const cx=A.cx, cy=A.cy, r=72*cs, fur='rgba(172,172,180,0.74)';
     // 大きなふわ耳
     [[-0.82,-0.5],[0.82,-0.5]].forEach(([ox,oy])=>{
       ctx.beginPath(); ctx.arc(cx+r*ox,cy+r*oy,r*0.44,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
@@ -4363,7 +4387,7 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     ctx.beginPath(); ctx.ellipse(cx-r*0.05,cy+r*0.17,r*0.05,r*0.07,0,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.fill();
   }
   if (type === 'sheep') {
-    const cx=A.cx, cy=A.cy, r=70, wool='rgba(248,246,242,0.88)', face='rgba(222,206,192,0.88)';
+    const cx=A.cx, cy=A.cy, r=70*cs, wool='rgba(248,246,242,0.88)', face='rgba(222,206,192,0.88)';
     // もこもこ
     const bumps=11;
     for(let i=0;i<bumps;i++){ const ang=(i/bumps)*Math.PI*2; ctx.beginPath(); ctx.arc(cx+Math.cos(ang)*r*0.82,cy+Math.sin(ang)*r*0.82,r*0.3,0,Math.PI*2); ctx.fillStyle=wool; ctx.fill(); }
@@ -4376,6 +4400,108 @@ function _drawIllust(ctx, type, S, H, theme, pos) {
     _cuteEyes(ctx, cx-r*0.26, cx+r*0.26, cy, r*0.1);
     // 鼻口
     ctx.beginPath(); ctx.ellipse(cx,cy+r*0.26,r*0.08,r*0.055,0,0,Math.PI*2); ctx.fillStyle='rgba(120,95,90,0.7)'; ctx.fill();
+  }
+  // ── 飾り（背景に散らす） ──
+  if (type === 'heart') {
+    [[110,150,30,0.1],[DW-120,180,22,-0.15],[90,DH-160,26,0.05],[DW-110,DH-150,32,-0.1],[DW/2,120,18,0],[180,DH-300,16,0.2]].forEach(([x,y,s,rot])=>{
+      ctx.save(); ctx.translate(x,y); ctx.rotate(rot);
+      const c=s*0.32;
+      ctx.fillStyle='rgba(240,130,165,0.5)';
+      ctx.beginPath(); ctx.arc(-c*0.85,-c*0.45,c,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(c*0.85,-c*0.45,c,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-c*1.78,-c*0.15); ctx.lineTo(c*1.78,-c*0.15); ctx.lineTo(0,s*0.72); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    });
+  }
+  if (type === 'bubble') {
+    [[120,160,34],[DW-130,140,26],[100,DH-150,30],[DW-120,DH-170,38],[DW/2+40,110,20],[200,DH-300,15],[DW-220,DH/2,22]].forEach(([x,y,s])=>{
+      ctx.beginPath(); ctx.arc(x,y,s,0,Math.PI*2); ctx.fillStyle='rgba(180,215,235,0.2)'; ctx.fill();
+      ctx.strokeStyle='rgba(210,235,250,0.5)'; ctx.lineWidth=2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x-s*0.32,y-s*0.32,s*0.18,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.fill();
+    });
+  }
+  if (type === 'music') {
+    const mc='rgba('+_hexToRgb(theme.accent)+',0.55)';
+    [[120,170,34,0],[DW-140,150,28,0.12],[110,DH-170,30,-0.1],[DW-130,DH-160,34,0.06],[DW/2,120,22,0]].forEach(([x,y,s,rot])=>{
+      ctx.save(); ctx.translate(x,y); ctx.rotate(rot); ctx.fillStyle=mc;
+      ctx.beginPath(); ctx.ellipse(-s*0.1,s*0.5,s*0.32,s*0.24,-0.3,0,Math.PI*2); ctx.fill();
+      ctx.fillRect(s*0.18,-s*0.62,s*0.1,s*1.16);
+      ctx.beginPath(); ctx.moveTo(s*0.28,-s*0.62); ctx.quadraticCurveTo(s*0.74,-s*0.42,s*0.5,s*0.0); ctx.quadraticCurveTo(s*0.62,-s*0.32,s*0.28,-s*0.3); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    });
+  }
+  // ── 動きのある全身キャラ ──
+  if (type === 'catwave') {
+    const u=82*cs, cx=A.cx, cy=A.cy-u*0.15, fur='rgba(245,242,236,0.92)';
+    // しっぽ
+    ctx.strokeStyle=fur; ctx.lineWidth=u*0.26; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx+u*0.45,cy+u*0.7); ctx.quadraticCurveTo(cx+u*1.15,cy+u*0.5,cx+u*0.95,cy-u*0.12); ctx.stroke();
+    // からだ
+    ctx.beginPath(); ctx.ellipse(cx,cy+u*0.55,u*0.6,u*0.68,0,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx,cy+u*0.6,u*0.34,u*0.46,0,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.fill();
+    // 下げた手
+    ctx.beginPath(); ctx.ellipse(cx-u*0.48,cy+u*0.68,u*0.17,u*0.24,0.3,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    // 上げた手（招き）
+    ctx.beginPath(); ctx.ellipse(cx+u*0.6,cy-u*0.5,u*0.19,u*0.26,-0.3,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    // 動きの弧
+    ctx.strokeStyle='rgba('+_hexToRgb(theme.accent)+',0.5)'; ctx.lineWidth=u*0.05; ctx.lineCap='round';
+    [0.4,0.62].forEach(rr=>{ ctx.beginPath(); ctx.arc(cx+u*0.6,cy-u*0.5,u*rr,-1.5,-0.3); ctx.stroke(); });
+    // あたま
+    ctx.beginPath(); ctx.arc(cx,cy-u*0.45,u*0.6,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    // 耳
+    [[-0.5,-0.95,-0.78,-1.5,-0.14,-1.2],[0.5,-0.95,0.78,-1.5,0.14,-1.2]].forEach(p=>{
+      ctx.beginPath(); ctx.moveTo(cx+u*p[0],cy+u*p[1]); ctx.lineTo(cx+u*p[2],cy+u*p[3]); ctx.lineTo(cx+u*p[4],cy+u*p[5]); ctx.closePath(); ctx.fillStyle=fur; ctx.fill();
+    });
+    _cuteEyes(ctx, cx-u*0.22, cx+u*0.22, cy-u*0.45, u*0.08);
+    ctx.beginPath(); ctx.moveTo(cx,cy-u*0.32); ctx.lineTo(cx-u*0.05,cy-u*0.37); ctx.lineTo(cx+u*0.05,cy-u*0.37); ctx.closePath(); ctx.fillStyle='rgba(220,120,145,0.85)'; ctx.fill();
+  }
+  if (type === 'rabbithop') {
+    const u=72*cs, cx=A.cx, cy=A.cy-u*0.2, fur='rgba(248,244,240,0.92)';
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(-0.22);
+    // 耳（後ろになびく）
+    [[-0.1,-0.95,0.3],[0.22,-0.9,0.55]].forEach(([ox,oy,rot])=>{
+      ctx.save(); ctx.translate(u*ox,u*oy); ctx.rotate(rot);
+      ctx.beginPath(); ctx.ellipse(0,0,u*0.16,u*0.5,0,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0,u*0.05,u*0.08,u*0.36,0,0,Math.PI*2); ctx.fillStyle='rgba(255,190,205,0.6)'; ctx.fill();
+      ctx.restore();
+    });
+    // からだ
+    ctx.beginPath(); ctx.ellipse(0,0,u*0.58,u*0.68,0.2,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    // 後ろ足（蹴り上げ）
+    ctx.beginPath(); ctx.ellipse(-u*0.5,u*0.45,u*0.28,u*0.15,0.7,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    // 前足
+    ctx.beginPath(); ctx.ellipse(u*0.4,u*0.32,u*0.13,u*0.22,0.4,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    _cuteEyes(ctx, u*0.12, u*0.42, -u*0.12, u*0.08);
+    ctx.beginPath(); ctx.moveTo(u*0.52,-u*0.02); ctx.lineTo(u*0.45,-u*0.07); ctx.lineTo(u*0.45,u*0.03); ctx.closePath(); ctx.fillStyle='rgba(230,130,150,0.85)'; ctx.fill();
+    ctx.restore();
+    // 動きの線
+    ctx.strokeStyle='rgba('+_hexToRgb(theme.accent)+',0.45)'; ctx.lineWidth=u*0.06; ctx.lineCap='round';
+    [[-0.5,0.95,0.45],[0.1,1.05,0.6],[0.8,0.95,0.4]].forEach(([ox,oy,len])=>{ ctx.beginPath(); ctx.moveTo(cx+u*ox,cy+u*oy); ctx.lineTo(cx+u*(ox+len),cy+u*oy); ctx.stroke(); });
+  }
+  if (type === 'bearhi') {
+    const u=72*cs, cx=A.cx, cy=A.cy-u*0.1, fur='rgba(190,150,110,0.72)';
+    // 腕（バンザイ）
+    [[-1,-0.45],[1,0.45]].forEach(([s,rot])=>{
+      ctx.save(); ctx.translate(cx+u*0.45*s,cy-u*0.05); ctx.rotate(rot);
+      ctx.beginPath(); ctx.ellipse(0,-u*0.42,u*0.17,u*0.4,0,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+      ctx.restore();
+    });
+    // からだ
+    ctx.beginPath(); ctx.ellipse(cx,cy+u*0.45,u*0.52,u*0.6,0,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx,cy+u*0.5,u*0.3,u*0.4,0,0,Math.PI*2); ctx.fillStyle='rgba(235,215,185,0.55)'; ctx.fill();
+    // 足
+    [-0.28,0.28].forEach(fx=>{ ctx.beginPath(); ctx.ellipse(cx+u*fx,cy+u*0.98,u*0.19,u*0.15,0,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill(); });
+    // あたま
+    ctx.beginPath(); ctx.arc(cx,cy-u*0.42,u*0.54,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill();
+    // 耳
+    [[-0.42,-0.74],[0.42,-0.74]].forEach(([ox,oy])=>{ ctx.beginPath(); ctx.arc(cx+u*ox,cy+u*oy,u*0.22,0,Math.PI*2); ctx.fillStyle=fur; ctx.fill(); ctx.beginPath(); ctx.arc(cx+u*ox,cy+u*oy,u*0.11,0,Math.PI*2); ctx.fillStyle='rgba(150,110,80,0.6)'; ctx.fill(); });
+    // 口元
+    ctx.beginPath(); ctx.ellipse(cx,cy-u*0.26,u*0.27,u*0.21,0,0,Math.PI*2); ctx.fillStyle='rgba(235,215,185,0.7)'; ctx.fill();
+    _cuteEyes(ctx, cx-u*0.22, cx+u*0.22, cy-u*0.48, u*0.08);
+    ctx.beginPath(); ctx.ellipse(cx,cy-u*0.32,u*0.07,u*0.055,0,0,Math.PI*2); ctx.fillStyle='rgba(70,50,35,0.85)'; ctx.fill();
+    // 動きの線（手の上）
+    ctx.strokeStyle='rgba('+_hexToRgb(theme.accent)+',0.5)'; ctx.lineWidth=u*0.05; ctx.lineCap='round';
+    [-0.7,0.7].forEach(ox=>{ [0,0.16].forEach(d=>{ ctx.beginPath(); ctx.moveTo(cx+u*(ox+d),cy-u*1.0); ctx.lineTo(cx+u*(ox+d+0.08),cy-u*1.18); ctx.stroke(); }); });
   }
 }
 function _cuteEyes(ctx, lx, rx, y, er) {
