@@ -42,6 +42,9 @@ app.use(express.static('static', {
   },
 }));
 
+// アクセス契機で定期レポートをチェック（常駐タイマーの代わり。中身は maybeSendScheduledReports）
+app.use((req, res, next) => { maybeSendScheduledReports().catch(() => {}); next(); });
+
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
 const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:admin@example.com';
@@ -1570,27 +1573,33 @@ async function buildReportBody() {
   lines.push(`保有銘柄: ${holds.length}銘柄`);
   return lines.join(' / ');
 }
-let lastWeeklyDay = -1, lastMonthlyDay = -1;
-setInterval(async () => {
+// ── 定期レポート（週次・月次）──
+// 旧実装は30分ごとのsetIntervalで常駐していたため、サーバーがスリープできず
+// Renderの無料枠（約750時間/月）を1サービスで使い切っていた。
+// アクセス契機でチェックする方式に変更し、無アクセス時はスリープできるようにする。
+// 「8時ちょうど」ではなく「その日まだ送っていなければ送る」方式（最後に送った日を永続化）。
+let _lastReportCheck = 0;
+async function maybeSendScheduledReports() {
   if (!VAPID_PUBLIC || !VAPID_PRIVATE) return;
+  const nowMs = Date.now();
+  if (nowMs - _lastReportCheck < 5 * 60 * 1000) return; // 負荷軽減：5分に1回までチェック
+  _lastReportCheck = nowMs;
   const settings = getPushSettings();
-  const now = new Date(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo', hour: 'numeric', minute: 'numeric', second: 'numeric', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()).replace(',', ''));
+  if (!settings.weeklyReport && !settings.monthlyReport) return;
   const jstNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
-  const hour = jstNow.getHours(), weekday = jstNow.getDay(), date = jstNow.getDate();
-  if (hour !== 8) return;
-  if (settings.weeklyReport && weekday === 1 && lastWeeklyDay !== jstNow.toDateString()) {
-    lastWeeklyDay = jstNow.toDateString();
-    const body = await buildReportBody();
-    await sendPushReport('📊 週次レポート', body);
+  if (jstNow.getHours() < 8) return; // 早朝は通知しない
+  const weekday = jstNow.getDay(), date = jstNow.getDate(), today = jstNow.toDateString();
+  if (settings.weeklyReport && weekday === 1 && settings.lastWeeklyReport !== today) {
+    await savePushSettings({ lastWeeklyReport: today });
+    await sendPushReport('📊 週次レポート', await buildReportBody());
     console.log('[weekly-report] 送信完了');
   }
-  if (settings.monthlyReport && date === 1 && lastMonthlyDay !== jstNow.toDateString()) {
-    lastMonthlyDay = jstNow.toDateString();
-    const body = await buildReportBody();
-    await sendPushReport('📈 月次レポート', body);
+  if (settings.monthlyReport && date === 1 && settings.lastMonthlyReport !== today) {
+    await savePushSettings({ lastMonthlyReport: today });
+    await sendPushReport('📈 月次レポート', await buildReportBody());
     console.log('[monthly-report] 送信完了');
   }
-}, 30 * 60 * 1000);
+}
 
 const PORT = process.env.PORT || 8000;
 await initDb();
