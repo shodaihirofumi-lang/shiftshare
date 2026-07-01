@@ -2048,16 +2048,22 @@ function renderPortfolio() {
     }).join('') : '<span class="folio-empty">未登録</span>';
     let combined = '';
     if (curs.length >= 1) {
+      const fxOf = t => ((quotes[t]?.currency || (t.endsWith('.T') ? 'JPY' : 'USD')) === 'USD' ? pnlUsdjpy : 1);
+      const jpH = ph.filter(h => h.ticker && h.ticker.endsWith('.T'));
+      const usH = ph.filter(h => h.ticker && !h.ticker.endsWith('.T'));
+      const calcGrp = (grp) => Math.round(grp.reduce((s,h) => { const pr = quotes[h.ticker]?.price ?? h.cost ?? 0; return s + (pr - (h.cost||0)) * h.shares * fxOf(h.ticker); }, 0));
+      const jpUnr = calcGrp(jpH), usUnr = calcGrp(usH);
       const { unrealized, realized } = calcPersonPnl(p);
       const total = unrealized + realized;
-      const uUp = unrealized >= 0, tUp = total >= 0;
+      const tUp = total >= 0;
+      const fmtLine = (lbl, v, bold) => { const up = v >= 0; return `<div class="folio-line folio-combined" style="padding-left:8px${bold?';font-weight:700':''}"><span class="folio-combined-lbl"${bold?' style="font-weight:700"':''}>${lbl}</span><span class="folio-gain ${up?'up':'down'}"${bold?' style="font-weight:700"':''}>${up?'▲':'▼'}${up?'+':'−'}¥${Math.abs(v).toLocaleString()}</span></div>`; };
       combined = `<div class="folio-line folio-combined" style="margin-top:4px;border-top:1px solid var(--border);padding-top:6px"><span class="folio-combined-lbl">合計（円換算）</span></div>`;
-      combined += `<div class="folio-line folio-combined" style="padding-left:8px"><span class="folio-combined-lbl">評価損益</span><span class="folio-gain ${uUp?'up':'down'}">${uUp?'▲':'▼'}${uUp?'+':'−'}¥${Math.abs(unrealized).toLocaleString()}</span></div>`;
-      if (realized !== 0) {
-        const rUp = realized >= 0;
-        combined += `<div class="folio-line folio-combined" style="padding-left:8px"><span class="folio-combined-lbl">実現累計</span><span class="folio-gain ${rUp?'up':'down'}">${rUp?'▲':'▼'}${rUp?'+':'−'}¥${Math.abs(realized).toLocaleString()}</span></div>`;
-      }
-      combined += `<div class="folio-line folio-combined" style="padding-left:8px"><span class="folio-combined-lbl" style="font-weight:700">損益計</span><span class="folio-gain ${tUp?'up':'down'}" style="font-weight:700">${tUp?'▲':'▼'}${tUp?'+':'−'}¥${Math.abs(total).toLocaleString()}</span></div>`;
+      combined += `<div class="folio-line folio-combined" style="padding-left:8px"><span class="folio-combined-lbl">評価損益</span></div>`;
+      if (jpH.length) combined += `<div class="folio-line folio-combined" style="padding-left:18px"><span class="folio-combined-lbl">🇯🇵 日本株</span><span class="folio-gain ${jpUnr>=0?'up':'down'}">${jpUnr>=0?'▲':'▼'}${jpUnr>=0?'+':'−'}¥${Math.abs(jpUnr).toLocaleString()}</span></div>`;
+      if (usH.length) combined += `<div class="folio-line folio-combined" style="padding-left:18px"><span class="folio-combined-lbl">🇺🇸 米国株</span><span class="folio-gain ${usUnr>=0?'up':'down'}">${usUnr>=0?'▲':'▼'}${usUnr>=0?'+':'−'}¥${Math.abs(usUnr).toLocaleString()}</span></div>`;
+      combined += fmtLine('評価損益 計', unrealized, false);
+      if (realized !== 0) combined += fmtLine('実現累計', realized, false);
+      combined += fmtLine('損益計', total, true);
     }
     const detail = ph.length ? ph.map(holdingLine).join('') : '<div class="ev-empty">保有銘柄なし（売却済みは実現損益のみ表示）</div>';
     return `<div class="folio-person">
