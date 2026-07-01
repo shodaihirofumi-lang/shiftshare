@@ -477,6 +477,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-realized .folio-realized-lbl { color:var(--text-soft); font-weight:600; letter-spacing:.5px; margin-right:6px; }
 .folio-combined { margin-top:5px; padding-top:5px; border-top:1px dashed var(--line); font-size:12px; }
 .folio-combined .folio-combined-lbl { color:var(--text-soft); font-weight:700; letter-spacing:.5px; margin-right:6px; }
+.folio-cur-lbl { font-size:11px; font-weight:700; color:var(--text-soft); letter-spacing:.5px; }
 .folio-combined .folio-gain { font-size:13px; }
 .sell-lbl { display:block; font-size:11px; color:var(--text-soft); letter-spacing:1px; font-weight:600; margin:14px 0 6px; }
 .sell-presets { display:flex; gap:6px; margin-bottom:8px; }
@@ -2029,38 +2030,41 @@ function renderPortfolio() {
       (byCur[cur] ||= {value:0, cost:0, realized:0});
       byCur[cur].value+=price*h.shares; byCur[cur].cost+=h.cost*h.shares;
     }
-    // 実現損益も合算（保有が0でも実現があれば通貨ブロックを作る）
     for (const r of allRealized.filter(x => x.person === p)) {
       const cur = r.currency || (r.ticker?.endsWith('.T') ? 'JPY' : 'USD');
       (byCur[cur] ||= {value:0, cost:0, realized:0}).realized += r.realized;
     }
     const curs = Object.keys(byCur);
-    const totals = curs.length ? curs.map(c=>{
+    const curLabel = c => c === 'JPY' ? '🇯🇵 日本株' : '🇺🇸 米国株';
+    const curBlocks = curs.length ? curs.map(c=>{
       const {value, cost, realized}=byCur[c]; const g=value-cost; const gpct=cost?Math.round(g/cost*1000)/10:0; const up=g>=0;
-      let html = `<div class="folio-line"><span class="folio-val">${curSym(c)}${Math.round(value).toLocaleString()}</span><span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(c)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span></div>`;
+      let html = `<div class="folio-line"><span class="folio-cur-lbl">${curLabel(c)}</span></div>`;
+      html += `<div class="folio-line" style="padding-left:8px"><span class="folio-val">${curSym(c)}${Math.round(value).toLocaleString()}</span><span class="folio-gain ${up?'up':'down'}">${up?'▲':'▼'}${up?'+':'−'}${curSym(c)}${Math.abs(Math.round(g)).toLocaleString()} (${up?'+':''}${gpct}%)</span></div>`;
       if (realized !== 0) {
         const rUp = realized >= 0;
-        html += `<div class="folio-line folio-realized"><span class="folio-realized-lbl">実現累計</span><span class="folio-gain ${rUp?'up':'down'}">${rUp?'▲':'▼'}${rUp?'+':'−'}${curSym(c)}${Math.abs(Math.round(realized)).toLocaleString()}</span></div>`;
+        html += `<div class="folio-line folio-realized" style="padding-left:8px"><span class="folio-realized-lbl">実現累計</span><span class="folio-gain ${rUp?'up':'down'}">${rUp?'▲':'▼'}${rUp?'+':'−'}${curSym(c)}${Math.abs(Math.round(realized)).toLocaleString()}</span></div>`;
       }
       return html;
     }).join('') : '<span class="folio-empty">未登録</span>';
-    // USD と JPY が混在する人は、損益タブと同じ円換算合計も併記（タブ間で数字が食い違って見えるのを防ぐ）
     let combined = '';
-    if (curs.length > 1) {
+    if (curs.length >= 1) {
       const { unrealized, realized } = calcPersonPnl(p);
-      const uUp = unrealized >= 0;
-      combined = `<div class="folio-line folio-combined"><span class="folio-combined-lbl">円換算 評価損益</span><span class="folio-gain ${uUp?'up':'down'}">${uUp?'▲':'▼'}${uUp?'+':'−'}¥${Math.abs(unrealized).toLocaleString()}</span></div>`;
+      const total = unrealized + realized;
+      const uUp = unrealized >= 0, tUp = total >= 0;
+      combined = `<div class="folio-line folio-combined" style="margin-top:4px;border-top:1px solid var(--border);padding-top:6px"><span class="folio-combined-lbl">合計（円換算）</span></div>`;
+      combined += `<div class="folio-line folio-combined" style="padding-left:8px"><span class="folio-combined-lbl">評価損益</span><span class="folio-gain ${uUp?'up':'down'}">${uUp?'▲':'▼'}${uUp?'+':'−'}¥${Math.abs(unrealized).toLocaleString()}</span></div>`;
       if (realized !== 0) {
         const rUp = realized >= 0;
-        combined += `<div class="folio-line folio-combined"><span class="folio-combined-lbl">円換算 実現累計</span><span class="folio-gain ${rUp?'up':'down'}">${rUp?'▲':'▼'}${rUp?'+':'−'}¥${Math.abs(realized).toLocaleString()}</span></div>`;
+        combined += `<div class="folio-line folio-combined" style="padding-left:8px"><span class="folio-combined-lbl">実現累計</span><span class="folio-gain ${rUp?'up':'down'}">${rUp?'▲':'▼'}${rUp?'+':'−'}¥${Math.abs(realized).toLocaleString()}</span></div>`;
       }
+      combined += `<div class="folio-line folio-combined" style="padding-left:8px"><span class="folio-combined-lbl" style="font-weight:700">損益計</span><span class="folio-gain ${tUp?'up':'down'}" style="font-weight:700">${tUp?'▲':'▼'}${tUp?'+':'−'}¥${Math.abs(total).toLocaleString()}</span></div>`;
     }
     const detail = ph.length ? ph.map(holdingLine).join('') : '<div class="ev-empty">保有銘柄なし（売却済みは実現損益のみ表示）</div>';
     return `<div class="folio-person">
       <div class="folio-row" onclick="toggleFolio('${p}')">
         <span class="folio-tg" id="folio-tg-${p}">▶</span>
         <span class="folio-name ${p}">${NAMES[p]}</span>
-        <div class="folio-lines">${totals}${combined}</div>
+        <div class="folio-lines">${curBlocks}${combined}</div>
       </div>
       <div class="folio-detail" id="folio-detail-${p}" style="display:none">${detail}</div>
     </div>`;
