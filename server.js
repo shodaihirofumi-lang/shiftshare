@@ -319,14 +319,37 @@ app.get('/api/earnings', (_req, res) => {
 });
 
 // 決算日の自動取得 (Yahoo Finance calendarEvents)
+// quoteSummary API は認証(cookie+crumb)必須になったため、先に取得してから叩く。
+// cookie/crumb は数時間有効なのでキャッシュし、Unauthorized なら取り直して1回だけ再試行。
+let _yhAuth = null; // { cookie, crumb, fetchedAt }
+async function getYahooAuth(force) {
+  if (!force && _yhAuth && Date.now() - _yhAuth.fetchedAt < 60 * 60 * 1000) return _yhAuth;
+  const r1 = await fetch('https://fc.yahoo.com/', { headers: { 'User-Agent': 'Mozilla/5.0' }, redirect: 'manual' });
+  const setCookie = r1.headers.get('set-cookie') || '';
+  const cookie = setCookie.split(';')[0];
+  if (!cookie) throw new Error('Yahoo cookie取得失敗');
+  const crumb = (await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
+    headers: { 'User-Agent': 'Mozilla/5.0', 'Cookie': cookie },
+  }).then(r => r.text())).trim();
+  if (!crumb || crumb.length > 30 || crumb.includes('<')) throw new Error('Yahoo crumb取得失敗');
+  _yhAuth = { cookie, crumb, fetchedAt: Date.now() };
+  return _yhAuth;
+}
+async function fetchCalendarEvents(ticker, force) {
+  const { cookie, crumb } = await getYahooAuth(force);
+  return fetch(
+    `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=calendarEvents&crumb=${encodeURIComponent(crumb)}`,
+    { headers: { 'User-Agent': 'Mozilla/5.0', 'Cookie': cookie } }
+  ).then(r => r.json());
+}
 app.get('/api/earnings-date', async (req, res) => {
   const { ticker } = req.query;
   if (!ticker) return res.status(400).json({ error: 'ticker必要' });
   try {
-    const j = await fetch(
-      `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=calendarEvents`,
-      { headers: { 'User-Agent': 'Mozilla/5.0' } }
-    ).then(r => r.json());
+    let j = await fetchCalendarEvents(ticker, false);
+    if (j.finance?.error?.code === 'Unauthorized' || j.quoteSummary?.error?.code === 'Unauthorized') {
+      j = await fetchCalendarEvents(ticker, true); // crumb失効 → 取り直して再試行
+    }
     const dates = j.quoteSummary?.result?.[0]?.calendarEvents?.earnings?.earningsDate;
     if (!dates?.length) return res.status(404).json({ error: '決算日データが見つかりませんでした' });
     const nowSec = Date.now() / 1000;
