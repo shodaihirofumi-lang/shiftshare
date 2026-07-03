@@ -2124,7 +2124,8 @@ async function addHoldingFromUI() {
   if (!ticker) { showToast('銘柄コードを入力してください', true); return; }
   if (!(shares>0)) { showToast('株数を入力してください', true); return; }
   try {
-    const r = await fetch('/api/holding', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person:folioPerson, ticker, name, shares, cost:cost||0, reason, purchaseDate}) });
+    const jaName = (name && name.trim()) || stockName({ ticker, name });
+    const r = await fetch('/api/holding', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person:folioPerson, ticker, name: jaName, shares, cost:cost||0, reason, purchaseDate}) });
     if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error||'エラー'); }
     document.getElementById('fh-ticker').value=''; document.getElementById('fh-name').value=''; document.getElementById('fh-shares').value=''; document.getElementById('fh-cost').value=''; document.getElementById('fh-reason').value=''; document.getElementById('fh-date').value='';
     await Promise.all([loadHoldings(), loadDiaries(), loadTrades()]);
@@ -2288,7 +2289,8 @@ async function doSell() {
   const cur = (quotes[sellingHolding.ticker]?.currency) || 'JPY';
   const reason = document.getElementById('sell-reason').value.trim();
   try {
-    const res = await fetch('/api/holding/sell', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person: sellingHolding.person, ticker: sellingHolding.ticker, shares, sellPrice, currency: cur, reason}) });
+    const jaName = stockName(sellingHolding);
+    const res = await fetch('/api/holding/sell', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person: sellingHolding.person, ticker: sellingHolding.ticker, name: jaName, shares, sellPrice, currency: cur, reason}) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '売却失敗');
     const up = data.realized >= 0;

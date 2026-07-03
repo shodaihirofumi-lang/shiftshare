@@ -159,7 +159,7 @@ app.post('/api/holding/sell', async (req, res) => {
       try {
         const jstDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date());
         const sym = (currency||'JPY')==='JPY' ? '¥' : '$';
-        const displayName = r.name || req.body.ticker || '';
+        const displayName = req.body.name || r.name || req.body.ticker || '';
         const realSign = (r.realized||0) >= 0 ? '+' : '';
         const realAmt = (currency||'JPY')==='JPY' ? Math.round(r.realized||0).toLocaleString() : (r.realized||0).toFixed(2);
         const note = `${displayName}を${shares}株売却 @${sym}${Number(sellPrice).toLocaleString()} (${realSign}${sym}${realAmt})`;
