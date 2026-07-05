@@ -5137,65 +5137,6 @@ function renderDiary() {
       el.scrollLeft = idx * window.innerWidth;
     }
   }, 0);
-  const photos = dayPhotos[dateKey] || [];
-  const tmpl = buildDiaryTemplate(dateKey);
-  const diary = allDiaries[dateKey];
-  const isToday = dateKey === todayKey;
-  const hasDiary = !!(diary?.mine?.raw || diary?.hers?.raw || diary?.text);
-
-  const ym = `${year}年${month}月`;
-  html += `<div class="diary-month">${ym}</div>`;
-
-  const dow = DOWS[new Date(year, month-1, day).getDay()];
-    const rawMine = escapeHtml(diary?.mine?.raw || '');
-    const rawHers = escapeHtml(diary?.hers?.raw || '');
-    const mkSum = (p, label, sl) => {
-      const d2 = diary?.[p];
-      if (!d2?.text) return '';
-      const personPhotos = photos.filter(ph => ph.person === p);
-      return `<div class="diary-section" style="margin-top:8px">
-        <div class="diary-section-label ${sl}">✨ ${label}のまとめ
-          <button class="diary-share-btn" onclick="copyDiarySection(this)">📋 コピー</button>
-          <button class="diary-share-btn" onclick="shareDiarySection(this,'${label}の日記まとめ（${month}月${day}日）')">↗ シェア</button>
-          <button class="diary-share-btn" onclick="shareToNote(this)">📝 Note</button>
-        </div>
-        <div class="diary-ai-text" data-date="${dateKey}" data-person="${p}" data-raw="${encodeURIComponent(d2.text)}">${renderDiaryText(d2.text, personPhotos)}</div>
-        <div class="diary-ai-footer">まとめ日 ${new Date(d2.generatedAt).toLocaleDateString('ja-JP')}</div>
-      </div>`;
-    };
-    const todayBadge = isToday ? '<span class="diary-today-badge">今日</span>' : '';
-    html += `<div class="diary-entry${isToday?' diary-today':''}" id="diary-${dateKey}">
-      <div class="diary-date">${month}月${day}日${todayBadge}</div>
-      <div class="diary-dow">${dow}曜日</div>
-      ${tmpl ? `<div class="diary-lines">${tmpl}</div>` : ''}
-      <div class="diary-section">
-        <div class="diary-section-label sl-hers">ちかの日記
-          <button class="diary-share-btn" onclick="shareRawDiary('${dateKey}','hers')">↗ 共有</button>
-        </div>
-        <div class="diary-person-photo-area" id="diary-photo-area-hers-${dateKey}">${diaryPhotoAreaHtml(dateKey, photos, 'hers')}</div>
-        <textarea class="diary-textarea ta-hers" id="diary-raw-hers-${dateKey}" placeholder="今日のことを書いてみよう...">${rawHers}</textarea>
-        <div class="diary-person-btns">
-          <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','hers')">保存</button>
-          <button class="diary-btn-person diary-btn-person-hers" id="diary-gen-hers-${dateKey}" onclick="generatePersonDiary('${dateKey}','hers')">✨ まとめる</button>
-        </div>
-        <div id="diary-sum-hers-${dateKey}">${mkSum('hers','ちか','sl-hers')}</div>
-      </div>
-      <div class="diary-section">
-        <div class="diary-section-label sl-mine">ひろの日記
-          <button class="diary-share-btn" onclick="shareRawDiary('${dateKey}','mine')">↗ 共有</button>
-        </div>
-        <div class="diary-person-photo-area" id="diary-photo-area-mine-${dateKey}">${diaryPhotoAreaHtml(dateKey, photos, 'mine')}</div>
-        <textarea class="diary-textarea ta-mine" id="diary-raw-mine-${dateKey}" placeholder="今日のことを書いてみよう...">${rawMine}</textarea>
-        <div class="diary-person-btns">
-          <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','mine')">保存</button>
-          <button class="diary-btn-person diary-btn-person-mine" id="diary-gen-mine-${dateKey}" onclick="generatePersonDiary('${dateKey}','mine')">✨ まとめる</button>
-        </div>
-        <div id="diary-sum-mine-${dateKey}">${mkSum('mine','ひろ','sl-mine')}</div>
-      </div>
-      ${hasDiary ? `<div class="diary-actions"><button class="diary-btn-del" id="diary-del-${dateKey}" onclick="deleteDiary('${dateKey}')">削除</button></div>` : ''}
-    </div>`;
-
-  el.innerHTML = html || '<div class="diary-empty">記録がありません</div>';
 }
 
 function addDiarySwipeEvents() {
