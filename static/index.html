@@ -583,9 +583,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .lightbox img { max-width:96vw; max-height:90vh; border-radius:8px; object-fit:contain; }
 /* ── 日記タブ ── */
 #diary-list { overflow-y:auto; width:100%; }
-#diary-book-list { display:none; overflow-x:auto; overflow-y:hidden; scroll-behavior:auto; width:100%; height:calc(100vh - 120px); gap:0; }
-#diary-book-list.active { display:flex; }
-.diary-book-page { flex:0 0 100vw; writing-mode:vertical-rl; text-orientation:upright; background:var(--bg); padding:24px; overflow-y:auto; position:relative; border-radius:0; margin-bottom:0; box-shadow:none; }
+#diary-book-list { display:none; position:relative; width:100%; height:calc(100vh - 120px); }
+#diary-book-list.active { display:block; }
+.diary-book-page { position:absolute; inset:0; writing-mode:vertical-rl; text-orientation:upright; background:var(--bg); padding:24px; overflow-y:auto; overflow-x:hidden; border-radius:0; margin-bottom:0; box-shadow:none; opacity:0; visibility:hidden; transition:opacity .35s ease; pointer-events:none; }
+.diary-book-page.book-active { opacity:1; visibility:visible; pointer-events:auto; }
 .diary-month { display:none; }
 .diary-entry { background:var(--card); border-radius:14px; padding:16px; margin-bottom:14px; box-shadow:0 2px 10px rgba(60,55,50,.06); }
 .diary-nav { display:none; }
@@ -2807,9 +2808,11 @@ function showTab(name) {
   if (name === 'pnl') { if (!window._divLoaded) { window._divLoaded = true; loadDividends(); loadBenchmark(); loadPushSettings(); } loadEarnings(); loadPortfolioHistory(); renderPnlTotalTop(); renderAnnualBattle(); renderLossRanking(); window.scrollTo(0,0); return; }
   if (name === 'diary') {
     renderDiary();
+    switchDiaryMode(currentDiaryMode || 'input');
     const now = new Date();
     const tk = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     setTimeout(() => {
+      if (currentDiaryMode === 'book') return;
       const el = document.getElementById('diary-' + tk);
       if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
     }, 0);
@@ -5174,7 +5177,7 @@ function renderDiaryBook() {
       </div>`;
     };
 
-    html += `<div class="diary-entry diary-book-page" id="diary-book-${dateKey}">
+    html += `<div class="diary-entry diary-book-page" id="diary-book-${dateKey}" data-date="${dateKey}">
       <div class="diary-date" style="writing-mode:vertical-rl; text-orientation:upright; font-size:28px; margin-bottom:20px;">${month}月${day}日 ${dow}曜日</div>
       ${buildPersonSection('hers', 'ちか', 'hers')}
       ${buildPersonSection('mine', 'ひろ', 'mine')}
@@ -5182,21 +5185,40 @@ function renderDiaryBook() {
   }
 
   el.innerHTML = html || '<div class="diary-empty">記録がありません</div>';
+
+  // 現在の日付を表示（フェード用）
+  bookDates = dates;
+  bookIndex = Math.max(0, dates.indexOf(currentDiaryDate));
+  showBookPage(bookIndex);
   addDiaryBookSwipeEvents();
+}
+
+let bookDates = [];
+let bookIndex = 0;
+
+function showBookPage(idx) {
+  const pages = document.querySelectorAll('.diary-book-page');
+  if (!pages.length) return;
+  bookIndex = Math.max(0, Math.min(idx, pages.length - 1));
+  pages.forEach((p, i) => {
+    p.classList.toggle('book-active', i === bookIndex);
+  });
+  currentDiaryDate = bookDates[bookIndex] || currentDiaryDate;
 }
 
 function addDiaryBookSwipeEvents() {
   const diaryBook = document.getElementById('diary-book-list');
-  if (!diaryBook) return;
+  if (!diaryBook || diaryBook.dataset.swipeBound) return;
+  diaryBook.dataset.swipeBound = '1';
   let touchStartX = 0;
   diaryBook.addEventListener('touchstart', (e) => {
     touchStartX = e.touches[0].clientX;
   }, { passive: true });
   diaryBook.addEventListener('touchend', (e) => {
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX - touchEndX;
+    const diff = touchStartX - e.changedTouches[0].clientX;
     if (Math.abs(diff) < 50) return;
-    diaryBook.scrollLeft += diff > 0 ? window.innerWidth : -window.innerWidth;
+    // 右→左スワイプ(diff>0)で次のページ(過去)、左→右で前のページ(未来)
+    showBookPage(bookIndex + (diff > 0 ? 1 : -1));
   }, { passive: true });
 }
 
