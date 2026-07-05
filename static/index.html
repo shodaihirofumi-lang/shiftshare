@@ -641,6 +641,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-raw-share-btn { font-size:16px; padding:3px 10px; border-radius:6px; border:1px solid var(--line-soft); background:var(--card); color:var(--text-soft); cursor:pointer; }
 .diary-person-photo-area { margin-bottom:8px; }
 .diary-btn-del { padding:9px 12px; border-radius:9px; border:1.5px solid var(--line-soft); background:var(--card); font-size:16px; color:var(--text-soft); cursor:pointer; }
+.v-char { display:inline-block; transform:rotate(90deg); }
 .diary-empty { text-align:center; padding:40px 0; font-size:18px; color:var(--text-soft); }
 .monthly-inline-wrap { margin:20px 0 8px; padding:16px; background:var(--card); border-radius:14px; }
 .monthly-inline-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
@@ -5094,12 +5095,6 @@ function renderDiary() {
     const buildPersonSection = (person, label, personColor) => {
       const rawText = person === 'hers' ? rawHers : rawMine;
       const personPhotos = photos.filter(ph => ph.person === person);
-      const d = diary?.[person];
-      const summary = d?.text ? `<div class="diary-section">
-        <div class="diary-section-label sl-${personColor === 'hers' ? 'hers' : 'mine'}">✨ ${label}のまとめ</div>
-        <div class="diary-ai-text">${renderDiaryText(d.text, personPhotos)}</div>
-        <div class="diary-ai-footer">まとめ日 ${new Date(d.generatedAt).toLocaleDateString('ja-JP')}</div>
-      </div>` : '';
 
       const photos_html = personPhotos.length ? `<div class="diary-photos-grid">${personPhotos.map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${escapeHtml(ph.url)}" onclick="showPhotoModal('${escapeHtml(ph.url)}')" /><span class="photo-person-badge ${person}">${label}</span><button class="diary-photo-del-btn" onclick="deleteDiaryPhoto('${dateKey}','${person}','${escapeHtml(ph.id)}')">✕</button></div>`).join('')}</div>` : '';
 
@@ -5111,7 +5106,6 @@ function renderDiary() {
           <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','${person}')">保存</button>
           <button class="diary-btn-person diary-btn-person-${personColor === 'hers' ? 'hers' : 'mine'}" onclick="generatePersonDiary('${dateKey}','${person}')">✨ まとめる</button>
         </div>
-        ${summary}
       </div>`;
     };
 
@@ -5263,6 +5257,11 @@ async function saveDiaryRaw(dateKey, person) {
   } catch { showToast('保存に失敗しました', true); }
 }
 
+// 数字と英語を回転させるヘルパー関数
+function rotateVerticalChars(text) {
+  return text.replace(/([0-9a-zA-Z])/g, '<span class="v-char">$1</span>');
+}
+
 function renderDiaryText(text, photos = []) {
   if (!text) return '';
   const markerNums = ['①','②','③','④','⑤'];
@@ -5284,12 +5283,12 @@ function renderDiaryText(text, photos = []) {
         return wrap(''); // 対応写真が無いマーカーは空（行自体は残して順序を保つ）
       }
     }
-    if (/^# /.test(line)) return wrap(`<div class="diary-title">${escapeHtml(line.replace(/^# /,''))}</div>`);
-    if (/^### ?/.test(line)) return wrap(`<div class="diary-subheading">${escapeHtml(line.replace(/^###\s*/,''))}</div>`);
-    if (/^## ?/.test(line)) return wrap(`<div class="diary-heading">${escapeHtml(line.replace(/^##\s*/,''))}</div>`);
-    if (/^#[^#]/.test(line)) return wrap(`<div class="diary-title">${escapeHtml(line.replace(/^#\s*/,''))}</div>`);
+    if (/^# /.test(line)) return wrap(`<div class="diary-title">${rotateVerticalChars(escapeHtml(line.replace(/^# /,'')))}</div>`);
+    if (/^### ?/.test(line)) return wrap(`<div class="diary-subheading">${rotateVerticalChars(escapeHtml(line.replace(/^###\s*/,'')))}</div>`);
+    if (/^## ?/.test(line)) return wrap(`<div class="diary-heading">${rotateVerticalChars(escapeHtml(line.replace(/^##\s*/,'')))}</div>`);
+    if (/^#[^#]/.test(line)) return wrap(`<div class="diary-title">${rotateVerticalChars(escapeHtml(line.replace(/^#\s*/,'')))}</div>`);
     if (line === '') return wrap('<br>');
-    return wrap(escapeHtml(line));
+    return wrap(rotateVerticalChars(escapeHtml(line)));
   });
   return `<div class="diary-blocks">${blocks.join('')}</div>`;
 }
