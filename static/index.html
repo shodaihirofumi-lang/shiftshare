@@ -582,14 +582,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .lightbox { position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:9999; display:flex; align-items:center; justify-content:center; cursor:zoom-out; }
 .lightbox img { max-width:96vw; max-height:90vh; border-radius:8px; object-fit:contain; }
 /* ── 日記タブ ── */
-#diary-list { display:flex; overflow-x:auto; overflow-y:hidden; scroll-behavior:smooth; gap:0; width:100%; height:calc(100vh - 120px); }
-#diary-list.swiping { scroll-behavior:auto; }
+#diary-list { overflow-y:auto; width:100%; }
+#diary-book-list { display:none; overflow-x:auto; overflow-y:hidden; scroll-behavior:smooth; width:100%; height:calc(100vh - 120px); gap:0; }
+#diary-book-list.active { display:flex; }
+.diary-book-page { flex:0 0 100vw; writing-mode:vertical-rl; text-orientation:upright; background:var(--bg); padding:24px; overflow-y:auto; position:relative; border-radius:0; margin-bottom:0; box-shadow:none; }
 .diary-month { display:none; }
-.diary-entry { flex:0 0 100vw; writing-mode:vertical-rl; text-orientation:upright; background:var(--bg); padding:24px; overflow-y:auto; position:relative; }
+.diary-entry { background:var(--card); border-radius:14px; padding:16px; margin-bottom:14px; box-shadow:0 2px 10px rgba(60,55,50,.06); }
 .diary-nav { display:none; }
-.diary-date { font-size:32px; font-weight:800; color:var(--text); writing-mode:vertical-rl; margin-bottom:20px; }
-.diary-today-badge { display:inline-block; font-size:16px; font-weight:700; background:var(--mine); color:#fff; border-radius:6px; padding:1px 7px; margin-left:8px; vertical-align:middle; writing-mode:horizontal-tb; }
-.diary-dow { font-size:20px; font-weight:700; color:var(--text-soft); margin-bottom:10px; writing-mode:vertical-rl; }
+.diary-date { font-size:26px; font-weight:800; color:var(--text); letter-spacing:-0.5px; line-height:1; }
+.diary-today-badge { display:inline-block; font-size:16px; font-weight:700; background:var(--mine); color:#fff; border-radius:6px; padding:1px 7px; margin-left:8px; vertical-align:middle; }
+.diary-dow { font-size:18px; font-weight:700; color:var(--text-soft); margin-bottom:10px; margin-top:2px; }
 .diary-photos-grid { display:flex; gap:6px; margin-bottom:8px; }
 .diary-photo-item { position:relative; height:120px; flex-shrink:0; }
 .diary-photo-item:only-child { height:140px; }
@@ -602,17 +604,17 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-line { display:flex; gap:6px; align-items:flex-start; writing-mode:vertical-rl; }
 .diary-line-icon { flex-shrink:0; width:16px; text-align:center; }
 .diary-section { margin-top:14px; }
-.diary-section-label { font-size:16px; font-weight:800; letter-spacing:1px; padding-bottom:5px; margin-bottom:8px; writing-mode:vertical-rl; border-right:1px solid var(--line-soft); padding-right:6px; }
+.diary-section-label { font-size:14px; font-weight:800; letter-spacing:1.5px; padding-bottom:5px; border-bottom:1.5px solid var(--line-soft); margin-bottom:8px; }
 .diary-section-label.sl-mine { color:var(--mine); border-color:var(--mine); }
 .diary-section-label.sl-hers { color:var(--hers); border-color:var(--hers); }
 .diary-section-label.sl-ai { color:var(--gold); border-color:var(--gold); }
 .diary-ai-text { font-size:20px; color:var(--text); line-height:1.8; padding:10px 12px; background:var(--gold-bg); border-radius:9px; white-space:pre-wrap; margin-top:6px; writing-mode:vertical-rl; }
 .diary-ai-footer { font-size:14px; color:var(--text-soft); margin-top:4px; writing-mode:vertical-rl; }
-.diary-textarea { height:280px; box-sizing:border-box; border:none; background:transparent; color:var(--text); font-size:20px; padding:12px 14px; resize:none; font-family:inherit; line-height:1.7; writing-mode:vertical-rl; overflow-x:auto; overflow-y:hidden; margin-bottom:8px; }
-.diary-textarea.ta-mine:focus { outline:none; box-shadow:inset 0 0 0 2px var(--mine); }
-.diary-textarea.ta-hers:focus { outline:none; box-shadow:inset 0 0 0 2px var(--hers); }
+.diary-textarea { width:100%; box-sizing:border-box; border-radius:9px; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:20px; padding:12px 14px; resize:vertical; min-height:240px; font-family:inherit; line-height:1.7; margin-bottom:8px; }
+.diary-textarea.ta-mine:focus { outline:none; border-color:var(--mine); box-shadow:0 0 0 3px var(--mine-bg); }
+.diary-textarea.ta-hers:focus { outline:none; border-color:var(--hers); box-shadow:0 0 0 3px var(--hers-bg); }
 .diary-person-row { display:flex; justify-content:flex-end; margin-top:5px; writing-mode:horizontal-tb; }
-.diary-save-btn { padding:4px 10px; border:none; background:transparent; font-size:12px; color:var(--text-soft); cursor:pointer; writing-mode:horizontal-tb; opacity:.7; }
+.diary-save-btn { padding:6px 14px; border-radius:8px; border:1.5px solid var(--line-soft); background:var(--card); font-size:16px; color:var(--text-soft); cursor:pointer; }
 .diary-actions { display:flex; gap:8px; margin-top:14px; writing-mode:horizontal-tb; }
 .diary-person-btns { display:flex; gap:6px; margin-top:5px; justify-content:flex-end; writing-mode:horizontal-tb; }
 .diary-btn-person { padding:7px 12px; border-radius:8px; border:none; font-size:16px; font-weight:700; cursor:pointer; transition:opacity .15s; writing-mode:horizontal-tb; }
@@ -1509,9 +1511,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <!-- 日記 -->
     <div id="tab-diary" class="screen">
       <div class="page-top">
-        <div><div class="page-title">日記</div><div class="page-sub">ふたりの記録をまとめて</div></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+          <div><div class="page-title">日記</div><div class="page-sub">ふたりの記録をまとめて</div></div>
+          <div style="display:flex; gap:8px;">
+            <button id="diary-input-btn" onclick="switchDiaryMode('input')" style="padding:8px 16px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); font-size:14px; cursor:pointer; font-weight:600;">入力</button>
+            <button id="diary-book-btn" onclick="switchDiaryMode('book')" style="padding:8px 16px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); font-size:14px; cursor:pointer; font-weight:600;">本</button>
+          </div>
+        </div>
       </div>
       <div id="diary-list"></div>
+      <div id="diary-book-list"></div>
     </div>
 
     <!-- UPLOAD -->
@@ -5044,6 +5053,7 @@ function buildDiaryTemplate(dateKey) {
   ).join('');
 }
 
+// 入力用：月表示で日記をリスト表示
 function renderDiary() {
   const el = document.getElementById('diary-list');
   if (!el) return;
@@ -5075,14 +5085,10 @@ function renderDiary() {
 
   const dates = [todayKey, ...[...dateSet].filter(k => k !== todayKey && k <= todayKey).sort((a,b) => b.localeCompare(a))];
 
-  if (!currentDiaryDate || !dates.includes(currentDiaryDate)) {
-    currentDiaryDate = todayKey;
-  }
-
   const DOWS = ['日','月','火','水','木','金','土'];
+  let lastYM = '';
   let html = '';
 
-  // 各日付に対してページを生成
   for (const dateKey of dates) {
     const { year, month, day } = parseKey(dateKey);
     const photos = dayPhotos[dateKey] || [];
@@ -5092,74 +5098,150 @@ function renderDiary() {
     const rawMine = escapeHtml(diary?.mine?.raw || '');
     const rawHers = escapeHtml(diary?.hers?.raw || '');
 
-    const buildPersonSection = (person, label, personColor) => {
-      const rawText = person === 'hers' ? rawHers : rawMine;
-      const personPhotos = photos.filter(ph => ph.person === person);
-
-      const photos_html = personPhotos.length ? `<div class="diary-photos-grid">${personPhotos.map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${escapeHtml(ph.url)}" onclick="showPhotoModal('${escapeHtml(ph.url)}')" /><span class="photo-person-badge ${person}">${label}</span><button class="diary-photo-del-btn" onclick="deleteDiaryPhoto('${dateKey}','${person}','${escapeHtml(ph.id)}')">✕</button></div>`).join('')}</div>` : '';
-
-      return `<div class="diary-section">
-        <div class="diary-section-label sl-${personColor === 'hers' ? 'hers' : 'mine'}">${label}の日記</div>
-        ${photos_html}
-        <textarea class="diary-textarea ta-${personColor === 'hers' ? 'hers' : 'mine'}" id="diary-raw-${person}-${dateKey}" placeholder="今日のことを書いてみよう...">${rawText}</textarea>
-        <div class="diary-person-btns">
-          <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','${person}')">保存</button>
-        </div>
-      </div>`;
-    };
+    const ym = `${year}年${month}月`;
+    if (ym !== lastYM) {
+      html += `<div class="diary-month">${ym}</div>`;
+      lastYM = ym;
+    }
 
     html += `<div class="diary-entry${isToday?' diary-today':''}" id="diary-${dateKey}">
-      <div class="diary-date">${month}月${day}日 ${dow}曜日</div>
-      ${buildPersonSection('hers', 'ちか', 'hers')}
-      ${buildPersonSection('mine', 'ひろ', 'mine')}
-      <div style="margin-top:14px; padding-top:14px; writing-mode:horizontal-tb;">
-        <button class="diary-btn-del" onclick="deleteDiary('${dateKey}')" style="padding:6px 12px; border:none; background:transparent; font-size:12px; cursor:pointer; color:var(--text-soft); opacity:.6;">削除</button>
+      <div class="diary-date">${month}月${day}日</div>
+      <div class="diary-dow">${dow}曜日</div>
+      <div class="diary-section">
+        <div class="diary-section-label sl-hers">ちかの日記</div>
+        <div class="diary-person-photo-area" id="diary-photo-area-hers-${dateKey}">${dayPhotos[dateKey]?.filter(ph => ph.person === 'hers').map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${escapeHtml(ph.url)}" /><button class="diary-photo-del-btn" onclick="deleteDiaryPhoto('${dateKey}','hers','${escapeHtml(ph.id)}')">✕</button></div>`).join('')}</div>
+        <textarea class="diary-textarea ta-hers" id="diary-raw-hers-${dateKey}" placeholder="今日のことを書いてみよう...">${rawHers}</textarea>
+        <div class="diary-person-btns">
+          <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','hers')">保存</button>
+        </div>
+      </div>
+      <div class="diary-section">
+        <div class="diary-section-label sl-mine">ひろの日記</div>
+        <div class="diary-person-photo-area" id="diary-photo-area-mine-${dateKey}">${dayPhotos[dateKey]?.filter(ph => ph.person === 'mine').map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${escapeHtml(ph.url)}" /><button class="diary-photo-del-btn" onclick="deleteDiaryPhoto('${dateKey}','mine','${escapeHtml(ph.id)}')">✕</button></div>`).join('')}</div>
+        <textarea class="diary-textarea ta-mine" id="diary-raw-mine-${dateKey}" placeholder="今日のことを書いてみよう...">${rawMine}</textarea>
+        <div class="diary-person-btns">
+          <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','mine')">保存</button>
+        </div>
       </div>
     </div>`;
   }
 
   el.innerHTML = html || '<div class="diary-empty">記録がありません</div>';
+}
 
-  // スワイプイベントを追加
-  addDiarySwipeEvents();
+// 本形式表示：縦書き本のようにスワイプで日付をめくる
+function renderDiaryBook() {
+  const el = document.getElementById('diary-book-list');
+  if (!el) return;
 
-  // currentDiaryDateが初期化されていない場合、スクロール
-  setTimeout(() => {
-    if (currentDiaryDate && currentDiaryDate !== todayKey) {
-      const idx = dates.indexOf(currentDiaryDate);
-      el.scrollLeft = idx * window.innerWidth;
-    }
-  }, 0);
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+  const dateSet = new Set([todayKey]);
+  Object.keys(allDiaries).forEach(k => {
+    const d = allDiaries[k];
+    if (d?.mine?.raw || d?.hers?.raw) dateSet.add(k);
+  });
+
+  const dates = [todayKey, ...[...dateSet].filter(k => k !== todayKey && k <= todayKey).sort((a,b) => b.localeCompare(a))];
+
+  if (!currentDiaryDate || !dates.includes(currentDiaryDate)) {
+    currentDiaryDate = todayKey;
+  }
+
+  const DOWS = ['日','月','火','水','木','金','土'];
+  let html = '';
+
+  for (const dateKey of dates) {
+    const { year, month, day } = parseKey(dateKey);
+    const photos = dayPhotos[dateKey] || [];
+    const diary = allDiaries[dateKey];
+    const dow = DOWS[new Date(year, month-1, day).getDay()];
+    const rawMine = escapeHtml(diary?.mine?.raw || '');
+    const rawHers = escapeHtml(diary?.hers?.raw || '');
+
+    const buildPersonSection = (person, label, personColor) => {
+      const rawText = person === 'hers' ? rawHers : rawMine;
+      const personPhotos = photos.filter(ph => ph.person === person);
+
+      const photos_html = personPhotos.length ? `<div class="diary-photos-grid">${personPhotos.map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${escapeHtml(ph.url)}" /></div>`).join('')}</div>` : '';
+
+      return `<div class="diary-section">
+        <div class="diary-section-label sl-${personColor === 'hers' ? 'hers' : 'mine'}">${label}</div>
+        ${photos_html}
+        <div class="diary-ai-text" style="writing-mode:vertical-rl; text-orientation:upright; white-space:pre-wrap; padding:16px; line-height:1.8;">${rotateVerticalChars(rawText)}</div>
+      </div>`;
+    };
+
+    html += `<div class="diary-entry diary-book-page" id="diary-book-${dateKey}">
+      <div class="diary-date" style="writing-mode:vertical-rl; text-orientation:upright; font-size:28px; margin-bottom:20px;">${month}月${day}日 ${dow}曜日</div>
+      ${buildPersonSection('hers', 'ちか', 'hers')}
+      ${buildPersonSection('mine', 'ひろ', 'mine')}
+    </div>`;
+  }
+
+  el.innerHTML = html || '<div class="diary-empty">記録がありません</div>';
+  addDiaryBookSwipeEvents();
+}
+
+function addDiaryBookSwipeEvents() {
+  const diaryBook = document.getElementById('diary-book-list');
+  if (!diaryBook) return;
+  let touchStartX = 0;
+  diaryBook.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  diaryBook.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) < 50) return;
+    diaryBook.scrollLeft += diff > 0 ? window.innerWidth : -window.innerWidth;
+  }, { passive: true });
 }
 
 function addDiarySwipeEvents() {
+  // 入力タブ用：不使用（垂直スクロール）
+}
+
+// タブ切り替え機能
+let currentDiaryMode = 'input';
+function switchDiaryMode(mode) {
+  currentDiaryMode = mode;
   const diaryList = document.getElementById('diary-list');
-  if (!diaryList) return;
-  let touchStartX = 0;
-  diaryList.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX;
-  }, { passive: true });
-  diaryList.addEventListener('touchend', (e) => {
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX - touchEndX;
-    if (Math.abs(diff) < 50) return; // 最小スワイプ距離を50pxに
-    // スムーズなスクロール（scroll-behavior: smoothを使用）
-    diaryList.scrollLeft += diff > 0 ? window.innerWidth : -window.innerWidth;
-  }, { passive: true });
+  const diaryBook = document.getElementById('diary-book-list');
+  const inputBtn = document.getElementById('diary-input-btn');
+  const bookBtn = document.getElementById('diary-book-btn');
+
+  if (mode === 'input') {
+    diaryList.style.display = 'block';
+    diaryBook.classList.remove('active');
+    inputBtn.style.background = 'var(--mine-bg)';
+    inputBtn.style.borderColor = 'var(--mine)';
+    inputBtn.style.color = 'var(--mine)';
+    bookBtn.style.background = 'var(--card)';
+    bookBtn.style.borderColor = 'var(--line)';
+    bookBtn.style.color = 'var(--text)';
+  } else {
+    diaryList.style.display = 'none';
+    diaryBook.classList.add('active');
+    bookBtn.style.background = 'var(--mine-bg)';
+    bookBtn.style.borderColor = 'var(--mine)';
+    bookBtn.style.color = 'var(--mine)';
+    inputBtn.style.background = 'var(--card)';
+    inputBtn.style.borderColor = 'var(--line)';
+    inputBtn.style.color = 'var(--text)';
+    renderDiaryBook();
+  }
 }
 
 // 日付ジャンプ機能（カレンダーから）
 function jumpToDiaryDate(dateStr) {
   currentDiaryDate = dateStr;
   renderDiary();
-  setTimeout(() => {
-    const diaryList = document.getElementById('diary-list');
-    const entry = document.getElementById(`diary-${dateStr}`);
-    if (entry && diaryList) {
-      const idx = [...diaryList.children].indexOf(entry);
-      diaryList.scrollLeft = idx * window.innerWidth;
-    }
-  }, 0);
+  const tab = document.querySelector('[data-tab="diary"]');
+  if (tab?.dataset.mode === 'book') {
+    renderDiaryBook();
+  }
 }
 
 function copyDiarySection(btn) {
