@@ -4916,8 +4916,14 @@ function urlB64(s) {
 
 // ── 日記 ──
 let allDiaries = {};
+let currentDiaryDate = null; // ページめくり用：現在表示中の日付
 async function loadDiaries() {
   try { allDiaries = await fetch('/api/diaries').then(r => r.json()); } catch { allDiaries = {}; }
+  // 初回ロード時は今日を設定
+  if (!currentDiaryDate) {
+    const now = new Date();
+    currentDiaryDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  }
 }
 
 // その日のデータを文章コンテキストとして組み立てる（AI送信用）
@@ -5045,6 +5051,7 @@ function renderDiary() {
   const now = new Date();
   const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
+  // 利用可能な日付一覧を構築
   const dateSet = new Set([todayKey]); // 今日は必ず表示
   Object.keys(shiftsByDate||{}).forEach(k => dateSet.add(k));
   Object.keys(eventsByDate||{}).forEach(k => dateSet.add(k));
@@ -5070,24 +5077,39 @@ function renderDiary() {
   // 今日を必ず先頭、以降は新しい順（未来日付は非表示）
   const dates = [todayKey, ...[...dateSet].filter(k => k !== todayKey && k <= todayKey).sort((a,b) => b.localeCompare(a))];
 
-  const DOWS = ['日','月','火','水','木','金','土'];
-  let lastYM = '';
-  let html = '';
-  for (const dateKey of dates) {
-    const { year, month, day } = parseKey(dateKey);
-    const photos = dayPhotos[dateKey] || [];
-    const tmpl = buildDiaryTemplate(dateKey);
-    const diary = allDiaries[dateKey];
-    const isToday = dateKey === todayKey;
-    const hasDiary = !!(diary?.mine?.raw || diary?.hers?.raw || diary?.text);
-    if (!isToday && !tmpl && !photos.length && !hasDiary) continue;
+  // currentDiaryDateが有効な日付か確認、なければ今日に設定
+  if (!currentDiaryDate || !dates.includes(currentDiaryDate)) {
+    currentDiaryDate = todayKey;
+  }
+  const dateKey = currentDiaryDate;
 
-    const ym = `${year}年${month}月`;
-    if (ym !== lastYM) {
-      html += `<div class="diary-month">${ym}</div>`;
-      lastYM = ym;
-    }
-    const dow = DOWS[new Date(year, month-1, day).getDay()];
+  const DOWS = ['日','月','火','水','木','金','土'];
+  let html = '';
+
+  // 現在の日付の日記を表示
+  const { year, month, day } = parseKey(dateKey);
+
+  // ページめくりナビゲーション
+  const prevIdx = dates.indexOf(dateKey) + 1;
+  const nextIdx = dates.indexOf(dateKey) - 1;
+  const prevDate = prevIdx < dates.length ? dates[prevIdx] : null;
+  const nextDate = nextIdx >= 0 ? dates[nextIdx] : null;
+
+  html += `<div class="diary-nav" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding:12px 0; border-bottom:1.5px solid var(--line);">
+    <button class="diary-nav-btn" onclick="changeDiaryDate('${prevDate}')" ${!prevDate ? 'disabled' : ''} style="padding:8px 16px; border:1.5px solid var(--line); border-radius:8px; background:var(--card); cursor:pointer; font-size:16px;">${!prevDate ? '◀ 過去' : '◀ ' + formatDiaryNavDate('${prevDate}')}</button>
+    <div style="font-size:18px; font-weight:700; text-align:center;">${month}月${day}日 (${DOWS[new Date(year, month-1, day).getDay()]})</div>
+    <button class="diary-nav-btn" onclick="changeDiaryDate('${nextDate}')" ${!nextDate ? 'disabled' : ''} style="padding:8px 16px; border:1.5px solid var(--line); border-radius:8px; background:var(--card); cursor:pointer; font-size:16px;">${!nextDate ? '未来 ▶' : formatDiaryNavDate('${nextDate}') + ' ▶'}</button>
+  </div>`;
+  const photos = dayPhotos[dateKey] || [];
+  const tmpl = buildDiaryTemplate(dateKey);
+  const diary = allDiaries[dateKey];
+  const isToday = dateKey === todayKey;
+  const hasDiary = !!(diary?.mine?.raw || diary?.hers?.raw || diary?.text);
+
+  const ym = `${year}年${month}月`;
+  html += `<div class="diary-month">${ym}</div>`;
+
+  const dow = DOWS[new Date(year, month-1, day).getDay()];
     const rawMine = escapeHtml(diary?.mine?.raw || '');
     const rawHers = escapeHtml(diary?.hers?.raw || '');
     const mkSum = (p, label, sl) => {
@@ -5135,8 +5157,19 @@ function renderDiary() {
       </div>
       ${hasDiary ? `<div class="diary-actions"><button class="diary-btn-del" id="diary-del-${dateKey}" onclick="deleteDiary('${dateKey}')">削除</button></div>` : ''}
     </div>`;
-  }
+
   el.innerHTML = html || '<div class="diary-empty">記録がありません</div>';
+}
+
+function changeDiaryDate(newDate) {
+  if (!newDate) return;
+  currentDiaryDate = newDate;
+  renderDiary();
+}
+
+function formatDiaryNavDate(dateStr) {
+  const { month, day } = parseKey(dateStr);
+  return `${month}/${day}`;
 }
 
 function copyDiarySection(btn) {
