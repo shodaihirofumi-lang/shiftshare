@@ -583,9 +583,66 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .lightbox img { max-width:96vw; max-height:90vh; border-radius:8px; object-fit:contain; }
 /* ── 日記タブ ── */
 #diary-list { overflow-y:auto; width:100%; }
-#diary-book-list { display:none; overflow-x:auto; overflow-y:hidden; width:100%; height:calc(100vh - 120px); gap:0; -webkit-overflow-scrolling:touch; }
+
+/* ── 本棚UI ── */
+#diary-shelf { display:none; padding:20px 8px 24px; }
+#diary-shelf.active { display:block; }
+.shelf-title { text-align:center; font-size:22px; font-weight:700; letter-spacing:6px; color:var(--text); margin:8px 0 22px; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; }
+.shelf-title::before, .shelf-title::after { content:'❦'; margin:0 14px; color:var(--gold); font-size:16px; }
+.shelf-rack { position:relative; display:flex; align-items:flex-end; justify-content:flex-start; gap:8px; padding:14px 12px 0; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none; min-height:220px; }
+.shelf-rack::-webkit-scrollbar { display:none; }
+.shelf-board { height:14px; background:linear-gradient(180deg,#8b6a4a 0%, #6b4d33 60%, #4a341f 100%); border-radius:0 0 4px 4px; box-shadow:0 6px 12px rgba(74,52,31,.35), inset 0 -3px 4px rgba(0,0,0,.25); margin:0 8px 20px; position:relative; }
+.shelf-board::before { content:''; position:absolute; top:-3px; left:0; right:0; height:3px; background:linear-gradient(180deg,#a17e58,#8b6a4a); border-radius:2px 2px 0 0; }
+.book-spine { flex:0 0 auto; width:56px; height:200px; border-radius:3px 6px 6px 3px; cursor:pointer; position:relative; box-shadow:2px 4px 10px rgba(0,0,0,.25), inset -3px 0 6px rgba(0,0,0,.18), inset 3px 0 4px rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; transition:transform .18s ease, box-shadow .18s ease; overflow:hidden; }
+.book-spine::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(180deg, transparent 0 12px, rgba(255,255,255,.04) 12px 13px, transparent 13px 25px); pointer-events:none; }
+.book-spine::after { content:''; position:absolute; top:14px; bottom:14px; left:4px; width:2px; background:linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.08)); border-radius:1px; }
+.book-spine:hover { transform:translateY(-8px); box-shadow:3px 8px 18px rgba(0,0,0,.32), inset -3px 0 6px rgba(0,0,0,.2); }
+.book-spine:active { transform:translateY(-4px) scale(.98); }
+.book-spine-label { writing-mode:vertical-rl; text-orientation:upright; color:#f4ead8; font-size:19px; font-weight:700; letter-spacing:4px; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; text-shadow:0 1px 2px rgba(0,0,0,.35); padding:14px 0; }
+.book-spine-badge { position:absolute; bottom:6px; left:0; right:0; text-align:center; font-size:9px; color:rgba(244,234,216,.75); letter-spacing:1px; }
+.book-spine.b1 { background:linear-gradient(90deg,#7c3f3a,#a15451,#7c3f3a); }
+.book-spine.b2 { background:linear-gradient(90deg,#3a5b6b,#5a7f90,#3a5b6b); }
+.book-spine.b3 { background:linear-gradient(90deg,#5f4b6b,#836b96,#5f4b6b); }
+.book-spine.b4 { background:linear-gradient(90deg,#4a6b3f,#6b8f5a,#4a6b3f); }
+.book-spine.b5 { background:linear-gradient(90deg,#8a6a3a,#b58e56,#8a6a3a); }
+.book-spine.b6 { background:linear-gradient(90deg,#6b3f5f,#96547f,#6b3f5f); }
+.shelf-empty { text-align:center; color:var(--text-soft); padding:60px 0; font-size:16px; }
+
+/* ── 本を開いた表示 ── */
+#diary-book-list { display:none; position:fixed; inset:0; z-index:200; background:var(--bg); flex-direction:column; }
 #diary-book-list.active { display:flex; }
-.diary-book-page { flex:0 0 100vw; writing-mode:vertical-rl; text-orientation:upright; background:var(--bg); padding:24px; overflow-y:auto; overflow-x:hidden; border-radius:0; margin-bottom:0; box-shadow:none; }
+.book-toolbar { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px; background:var(--card); border-bottom:1px solid var(--line); flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,.06); }
+.book-toolbar button { padding:8px 12px; border:none; background:transparent; font-size:14px; cursor:pointer; color:var(--text); border-radius:8px; font-weight:600; }
+.book-toolbar button:hover { background:var(--bg); }
+.book-toolbar .book-title-bar { font-size:16px; font-weight:700; color:var(--text); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; letter-spacing:2px; }
+.book-font-select { padding:6px 10px; border:1px solid var(--line); background:var(--card); border-radius:8px; font-size:13px; }
+.book-pages { flex:1; overflow-x:auto; overflow-y:hidden; display:flex; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; overscroll-behavior:contain; }
+.book-pages::-webkit-scrollbar { display:none; }
+.book-pages { scrollbar-width:none; }
+.diary-book-page { flex:0 0 100vw; scroll-snap-align:start; writing-mode:vertical-rl; text-orientation:upright; background:linear-gradient(90deg, #f6f0e2 0%, #efe6d1 45%, #eaddc0 100%); padding:26px 24px; overflow-y:hidden; overflow-x:hidden; box-sizing:border-box; height:100%; position:relative; box-shadow:inset 6px 0 12px -6px rgba(90,60,20,.15), inset -6px 0 12px -6px rgba(90,60,20,.15); }
+.diary-book-page::before { content:''; position:absolute; top:0; bottom:0; right:14px; width:1px; background:linear-gradient(180deg, transparent, rgba(120,80,40,.18) 30%, rgba(120,80,40,.18) 70%, transparent); pointer-events:none; }
+.book-page-num { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:11px; color:var(--text-soft); writing-mode:horizontal-tb; letter-spacing:2px; }
+
+/* 目次モーダル */
+.book-toc-overlay { display:none; position:fixed; inset:0; background:rgba(30,20,10,.55); z-index:300; align-items:center; justify-content:center; padding:20px; }
+.book-toc-overlay.active { display:flex; }
+.book-toc { background:linear-gradient(180deg,#f6f0e2,#eee2c8); border-radius:14px; padding:22px 20px 18px; max-width:420px; width:100%; max-height:75vh; overflow-y:auto; box-shadow:0 20px 50px rgba(0,0,0,.4); border:1px solid rgba(180,140,90,.4); }
+.book-toc-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:12px; border-bottom:1.5px solid rgba(180,140,90,.3); }
+.book-toc-head-title { font-size:18px; font-weight:700; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; letter-spacing:3px; color:var(--text); }
+.book-toc-close { border:none; background:transparent; font-size:22px; cursor:pointer; color:var(--text-soft); padding:0 6px; }
+.book-toc-list { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+.book-toc-item { padding:10px 4px; text-align:center; background:rgba(255,255,255,.5); border:1px solid rgba(180,140,90,.25); border-radius:8px; cursor:pointer; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; }
+.book-toc-item.has-entry { background:rgba(255,220,150,.5); font-weight:700; }
+.book-toc-item .toc-day { font-size:20px; font-weight:700; color:var(--text); line-height:1; }
+.book-toc-item .toc-dow { font-size:11px; color:var(--text-soft); margin-top:3px; letter-spacing:1px; }
+.book-toc-item.dow-su .toc-day { color:#a36a64; }
+.book-toc-item.dow-sa .toc-day { color:#5a6a8a; }
+
+/* フォント */
+.font-mincho { font-family:'Hiragino Mincho ProN','Yu Mincho','MS PMincho',serif; }
+.font-gothic { font-family:'Hiragino Sans','Yu Gothic','Meiryo',sans-serif; }
+.font-maru { font-family:'Hiragino Maru Gothic ProN','Hiragino Kaku Gothic ProN',sans-serif; }
+.font-kaisho { font-family:'Yu Mincho','Hiragino Mincho ProN',serif; font-weight:600; letter-spacing:2px; }
 .diary-month { display:none; }
 .diary-entry { background:var(--card); border-radius:14px; padding:16px; margin-bottom:14px; box-shadow:0 2px 10px rgba(60,55,50,.06); }
 .diary-nav { display:none; }
@@ -1525,6 +1582,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         </div>
       </div>
       <div id="diary-list"></div>
+      <div id="diary-shelf"></div>
       <div id="diary-book-list"></div>
     </div>
 
@@ -5136,96 +5194,248 @@ function renderDiary() {
   el.innerHTML = html || '<div class="diary-empty">記録がありません</div>';
 }
 
-// 本形式表示：縦書き本のようにスワイプで日付をめくる
-function renderDiaryBook() {
-  const el = document.getElementById('diary-book-list');
+// ── 本棚UI：月ごとに本が並んでいる ──
+let currentBookYm = null; // 開いている本の年月 "YYYY-MM"
+let currentBookFont = 'mincho';
+
+function renderDiaryShelf() {
+  const el = document.getElementById('diary-shelf');
   if (!el) return;
 
+  // 月ごとに日記のある日を集計
+  const monthMap = {}; // { "YYYY-MM": [dateKey, ...] }
+  Object.keys(allDiaries).forEach(k => {
+    const d = allDiaries[k];
+    if (!(d?.mine?.raw || d?.hers?.raw)) return;
+    const ym = k.slice(0,7);
+    (monthMap[ym] ||= []).push(k);
+  });
+  // 今月は日記がなくても表示
+  const now = new Date();
+  const nowYm = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  if (!monthMap[nowYm]) monthMap[nowYm] = [];
+
+  const yms = Object.keys(monthMap).sort((a,b) => b.localeCompare(a)); // 新しい順（本棚右→左）
+
+  if (!yms.length) {
+    el.innerHTML = '<div class="shelf-empty">まだ日記の記録がありません</div>';
+    return;
+  }
+
+  // 6冊ごとに棚（横スクロールなので実質1棚でOKだが、雰囲気のため）
+  const shelfRows = [];
+  const perShelf = 8;
+  for (let i = 0; i < yms.length; i += perShelf) {
+    shelfRows.push(yms.slice(i, i + perShelf));
+  }
+
+  let html = '<div class="shelf-title">日記の本棚</div>';
+  shelfRows.forEach(rowYms => {
+    let rowHtml = '<div class="shelf-rack">';
+    rowYms.forEach((ym, idx) => {
+      const [y, m] = ym.split('-');
+      const cnt = monthMap[ym].length;
+      const bClass = 'b' + ((idx % 6) + 1);
+      rowHtml += `<div class="book-spine ${bClass}" onclick="openDiaryBook('${ym}')">
+        <div class="book-spine-label">${y}年${Number(m)}月</div>
+        <div class="book-spine-badge">${cnt}日</div>
+      </div>`;
+    });
+    rowHtml += '</div><div class="shelf-board"></div>';
+    html += rowHtml;
+  });
+
+  el.innerHTML = html;
+}
+
+// 本を開く
+function openDiaryBook(ym) {
+  currentBookYm = ym;
+  renderDiaryBook();
+  const bookList = document.getElementById('diary-book-list');
+  if (bookList) bookList.classList.add('active');
+}
+
+// 本を閉じる
+function closeDiaryBook() {
+  const bookList = document.getElementById('diary-book-list');
+  if (bookList) bookList.classList.remove('active');
+  currentBookYm = null;
+}
+
+// 本の中身をレンダリング（開いている月の全日を1ページずつ）
+function renderDiaryBook() {
+  const el = document.getElementById('diary-book-list');
+  if (!el || !currentBookYm) return;
+
+  const [yStr, mStr] = currentBookYm.split('-');
+  const year = Number(yStr);
+  const month = Number(mStr);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const DOWS = ['日','月','火','水','木','金','土'];
+
+  // 今日以前 & 記録のある日を1ページずつ（1日〜末日の順）
   const now = new Date();
   const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-  const dateSet = new Set([todayKey]);
-  Object.keys(allDiaries).forEach(k => {
-    const d = allDiaries[k];
-    if (d?.mine?.raw || d?.hers?.raw) dateSet.add(k);
-  });
-
-  const dates = [todayKey, ...[...dateSet].filter(k => k !== todayKey && k <= todayKey).sort((a,b) => b.localeCompare(a))];
-
-  if (!currentDiaryDate || !dates.includes(currentDiaryDate)) {
-    currentDiaryDate = todayKey;
+  const pages = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateKey = `${yStr}-${mStr}-${String(d).padStart(2,'0')}`;
+    if (dateKey > todayKey) break;
+    const diary = allDiaries[dateKey];
+    // 記録がある日だけページに（今日は空でも入れる）
+    if (dateKey === todayKey || diary?.mine?.raw || diary?.hers?.raw) {
+      pages.push(dateKey);
+    }
   }
 
-  const DOWS = ['日','月','火','水','木','金','土'];
-  let html = '';
-
-  for (const dateKey of dates) {
-    const { year, month, day } = parseKey(dateKey);
+  let pagesHtml = '';
+  pages.forEach((dateKey, i) => {
+    const { day } = parseKey(dateKey);
     const photos = dayPhotos[dateKey] || [];
     const diary = allDiaries[dateKey];
     const dow = DOWS[new Date(year, month-1, day).getDay()];
     const rawMine = escapeHtml(diary?.mine?.raw || '');
     const rawHers = escapeHtml(diary?.hers?.raw || '');
 
-    const buildPersonSection = (person, label, personColor) => {
-      const rawText = person === 'hers' ? rawHers : rawMine;
-      const personPhotos = photos.filter(ph => ph.person === person);
-
-      const photos_html = personPhotos.length ? `<div class="diary-photos-grid">${personPhotos.map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${ph.img}" onclick="openLightbox(this.src)" /></div>`).join('')}</div>` : '';
-
-      return `<div class="diary-section">
-        <div class="diary-section-label sl-${personColor === 'hers' ? 'hers' : 'mine'}">${label}</div>
+    const section = (person, label, colorCls) => {
+      const raw = person === 'hers' ? rawHers : rawMine;
+      const pPhotos = photos.filter(ph => ph.person === person);
+      if (!raw && !pPhotos.length) return '';
+      const photos_html = pPhotos.length ? `<div class="diary-photos-grid" style="writing-mode:horizontal-tb; margin:12px 0;">${pPhotos.map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${ph.img}" onclick="openLightbox(this.src)"/></div>`).join('')}</div>` : '';
+      const textHtml = raw ? `<div style="white-space:pre-wrap; font-size:22px; line-height:2.1; padding:0 6px 0 0;">${raw}</div>` : '';
+      return `<div style="margin-right:24px;">
+        <div style="font-size:16px; font-weight:700; letter-spacing:3px; padding:0 4px 8px; border-bottom:1px solid rgba(120,80,40,.25); margin-bottom:12px; color:${colorCls === 'hers' ? 'var(--hers)' : 'var(--mine)'};">${label}</div>
         ${photos_html}
-        <div class="diary-ai-text" style="writing-mode:vertical-rl; text-orientation:upright; white-space:pre-wrap; padding:16px; line-height:1.8;">${rotateVerticalChars(rawText)}</div>
+        ${textHtml}
       </div>`;
     };
 
-    html += `<div class="diary-entry diary-book-page" id="diary-book-${dateKey}" data-date="${dateKey}">
-      <div class="diary-date" style="writing-mode:vertical-rl; text-orientation:upright; font-size:28px; margin-bottom:20px;">${month}月${day}日 ${dow}曜日</div>
-      ${buildPersonSection('hers', 'ちか', 'hers')}
-      ${buildPersonSection('mine', 'ひろ', 'mine')}
+    pagesHtml += `<div class="diary-book-page" data-date="${dateKey}">
+      <div style="font-size:26px; font-weight:800; letter-spacing:4px; margin-right:24px; padding:0 8px 0 0; border-right:2px solid rgba(120,80,40,.3);">${month}月${day}日<span style="font-size:16px; margin-top:8px; display:block; font-weight:600; color:var(--text-soft);">${dow}曜日</span></div>
+      ${section('hers', 'ちか', 'hers')}
+      ${section('mine', 'ひろ', 'mine')}
+      <div class="book-page-num">— ${i + 1} / ${pages.length} —</div>
     </div>`;
+  });
+
+  if (!pages.length) {
+    pagesHtml = '<div style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--text-soft); font-size:16px;">この月の日記はまだありません</div>';
   }
 
-  el.innerHTML = html || '<div class="diary-empty">記録がありません</div>';
+  el.innerHTML = `
+    <div class="book-toolbar">
+      <button onclick="closeDiaryBook()">← 本棚へ</button>
+      <div class="book-title-bar">${year}年${month}月</div>
+      <div style="display:flex; gap:6px;">
+        <select class="book-font-select" onchange="changeBookFont(this.value)">
+          <option value="mincho">明朝体</option>
+          <option value="gothic">ゴシック</option>
+          <option value="maru">丸ゴシック</option>
+          <option value="kaisho">楷書風</option>
+        </select>
+        <button onclick="showBookToc()">目次</button>
+      </div>
+    </div>
+    <div class="book-pages font-${currentBookFont}" id="book-pages">${pagesHtml}</div>
+    <div class="book-toc-overlay" id="book-toc-overlay" onclick="if(event.target===this)hideBookToc()">
+      ${buildTocHtml(year, month, daysInMonth, pages)}
+    </div>
+  `;
 
-  // 現在の日付のページまで横スクロール
-  const idx = Math.max(0, dates.indexOf(currentDiaryDate));
-  el.scrollLeft = idx * window.innerWidth;
+  // 現在日付があればそこへ、なければ最新へ
+  requestAnimationFrame(() => {
+    const pagesEl = document.getElementById('book-pages');
+    if (!pagesEl) return;
+    let targetIdx = pages.indexOf(currentDiaryDate);
+    if (targetIdx < 0) targetIdx = pages.length - 1;
+    if (targetIdx >= 0) pagesEl.scrollLeft = targetIdx * pagesEl.clientWidth;
+  });
 }
 
-function addDiarySwipeEvents() {
-  // 入力タブ用：不使用（垂直スクロール）
+function buildTocHtml(year, month, daysInMonth, entryDates) {
+  const DOWS = ['日','月','火','水','木','金','土'];
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const entrySet = new Set(entryDates);
+  let items = '';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateKey = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if (dateKey > todayKey) break;
+    const dowIdx = new Date(year, month-1, d).getDay();
+    const has = entrySet.has(dateKey);
+    const dowCls = dowIdx === 0 ? 'dow-su' : dowIdx === 6 ? 'dow-sa' : '';
+    items += `<div class="book-toc-item ${has ? 'has-entry' : ''} ${dowCls}" onclick="jumpToBookPage('${dateKey}')">
+      <div class="toc-day">${d}</div>
+      <div class="toc-dow">${DOWS[dowIdx]}</div>
+    </div>`;
+  }
+  return `<div class="book-toc">
+    <div class="book-toc-head">
+      <div class="book-toc-head-title">目 次</div>
+      <button class="book-toc-close" onclick="hideBookToc()">×</button>
+    </div>
+    <div class="book-toc-list">${items || '<div style="grid-column:1/-1; text-align:center; color:var(--text-soft); padding:20px;">記録なし</div>'}</div>
+  </div>`;
 }
+
+function showBookToc() {
+  document.getElementById('book-toc-overlay')?.classList.add('active');
+}
+function hideBookToc() {
+  document.getElementById('book-toc-overlay')?.classList.remove('active');
+}
+
+function jumpToBookPage(dateKey) {
+  hideBookToc();
+  const pagesEl = document.getElementById('book-pages');
+  if (!pagesEl) return;
+  const pageEl = pagesEl.querySelector(`.diary-book-page[data-date="${dateKey}"]`);
+  if (pageEl) {
+    pageEl.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
+    currentDiaryDate = dateKey;
+  } else {
+    // 記録のない日はスキップして最も近い日へ
+    const allPages = [...pagesEl.querySelectorAll('.diary-book-page')];
+    const target = allPages.find(p => p.dataset.date >= dateKey) || allPages[allPages.length - 1];
+    if (target) target.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
+  }
+}
+
+function changeBookFont(font) {
+  currentBookFont = font;
+  const pagesEl = document.getElementById('book-pages');
+  if (pagesEl) {
+    pagesEl.classList.remove('font-mincho','font-gothic','font-maru','font-kaisho');
+    pagesEl.classList.add('font-' + font);
+  }
+}
+
+function addDiarySwipeEvents() { /* 入力タブは通常の縦スクロール */ }
 
 // タブ切り替え機能
 let currentDiaryMode = 'input';
 function switchDiaryMode(mode) {
   currentDiaryMode = mode;
   const diaryList = document.getElementById('diary-list');
+  const diaryShelf = document.getElementById('diary-shelf');
   const diaryBook = document.getElementById('diary-book-list');
   const inputBtn = document.getElementById('diary-input-btn');
   const bookBtn = document.getElementById('diary-book-btn');
 
   if (mode === 'input') {
-    diaryList.style.display = 'block';
-    diaryBook.classList.remove('active');
-    inputBtn.style.background = 'var(--mine-bg)';
-    inputBtn.style.borderColor = 'var(--mine)';
-    inputBtn.style.color = 'var(--mine)';
-    bookBtn.style.background = 'var(--card)';
-    bookBtn.style.borderColor = 'var(--line)';
-    bookBtn.style.color = 'var(--text)';
+    if (diaryList) diaryList.style.display = 'block';
+    if (diaryShelf) diaryShelf.classList.remove('active');
+    if (diaryBook) diaryBook.classList.remove('active');
+    if (inputBtn) { inputBtn.style.background = 'var(--mine-bg)'; inputBtn.style.borderColor = 'var(--mine)'; inputBtn.style.color = 'var(--mine)'; }
+    if (bookBtn) { bookBtn.style.background = 'var(--card)'; bookBtn.style.borderColor = 'var(--line)'; bookBtn.style.color = 'var(--text)'; }
   } else {
-    diaryList.style.display = 'none';
-    diaryBook.classList.add('active');
-    bookBtn.style.background = 'var(--mine-bg)';
-    bookBtn.style.borderColor = 'var(--mine)';
-    bookBtn.style.color = 'var(--mine)';
-    inputBtn.style.background = 'var(--card)';
-    inputBtn.style.borderColor = 'var(--line)';
-    inputBtn.style.color = 'var(--text)';
-    renderDiaryBook();
+    if (diaryList) diaryList.style.display = 'none';
+    if (diaryShelf) diaryShelf.classList.add('active');
+    if (diaryBook) diaryBook.classList.remove('active'); // 本棚から開始
+    if (bookBtn) { bookBtn.style.background = 'var(--mine-bg)'; bookBtn.style.borderColor = 'var(--mine)'; bookBtn.style.color = 'var(--mine)'; }
+    if (inputBtn) { inputBtn.style.background = 'var(--card)'; inputBtn.style.borderColor = 'var(--line)'; inputBtn.style.color = 'var(--text)'; }
+    renderDiaryShelf();
   }
 }
 
@@ -5322,7 +5532,8 @@ async function saveDiaryRaw(dateKey, person) {
 
 // 数字と英語を回転させるヘルパー関数
 function rotateVerticalChars(text) {
-  return text.replace(/([0-9a-zA-Z])/g, '<span class="v-char">$1</span>');
+  // text-orientation:upright が縦書きの数字/英字を正しく立てるので追加の処理は不要
+  return text;
 }
 
 function renderDiaryText(text, photos = []) {
