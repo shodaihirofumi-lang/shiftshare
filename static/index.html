@@ -583,7 +583,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .lightbox img { max-width:96vw; max-height:90vh; border-radius:8px; object-fit:contain; }
 /* ── 日記タブ ── */
 #diary-list { overflow-y:auto; width:100%; }
-#diary-book-list { display:none; overflow-x:auto; overflow-y:hidden; scroll-behavior:smooth; width:100%; height:calc(100vh - 120px); gap:0; }
+#diary-book-list { display:none; overflow-x:auto; overflow-y:hidden; scroll-behavior:auto; width:100%; height:calc(100vh - 120px); gap:0; }
 #diary-book-list.active { display:flex; }
 .diary-book-page { flex:0 0 100vw; writing-mode:vertical-rl; text-orientation:upright; background:var(--bg); padding:24px; overflow-y:auto; position:relative; border-radius:0; margin-bottom:0; box-shadow:none; }
 .diary-month { display:none; }
@@ -609,6 +609,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-section-label.sl-hers { color:var(--hers); border-color:var(--hers); }
 .diary-section-label.sl-ai { color:var(--gold); border-color:var(--gold); }
 .diary-ai-text { font-size:20px; color:var(--text); line-height:1.8; padding:10px 12px; background:var(--gold-bg); border-radius:9px; white-space:pre-wrap; margin-top:6px; writing-mode:vertical-rl; }
+.diary-book-page .diary-ai-text { font-size:26px; background:transparent; padding:16px; border-radius:0; margin-top:12px; line-height:1.9; }
 .diary-ai-footer { font-size:14px; color:var(--text-soft); margin-top:4px; writing-mode:vertical-rl; }
 .diary-textarea { width:100%; box-sizing:border-box; border-radius:9px; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:20px; padding:12px 14px; resize:vertical; min-height:240px; font-family:inherit; line-height:1.7; margin-bottom:8px; }
 .diary-textarea.ta-mine:focus { outline:none; border-color:var(--mine); box-shadow:0 0 0 3px var(--mine-bg); }
