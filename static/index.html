@@ -602,17 +602,17 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-line { display:flex; gap:6px; align-items:flex-start; writing-mode:vertical-rl; }
 .diary-line-icon { flex-shrink:0; width:16px; text-align:center; }
 .diary-section { margin-top:14px; }
-.diary-section-label { font-size:16px; font-weight:800; letter-spacing:1px; padding-bottom:5px; margin-bottom:8px; writing-mode:vertical-rl; border-right:2px solid var(--line-soft); padding-right:8px; }
+.diary-section-label { font-size:16px; font-weight:800; letter-spacing:1px; padding-bottom:5px; margin-bottom:8px; writing-mode:vertical-rl; border-right:1px solid var(--line-soft); padding-right:6px; }
 .diary-section-label.sl-mine { color:var(--mine); border-color:var(--mine); }
 .diary-section-label.sl-hers { color:var(--hers); border-color:var(--hers); }
 .diary-section-label.sl-ai { color:var(--gold); border-color:var(--gold); }
 .diary-ai-text { font-size:20px; color:var(--text); line-height:1.8; padding:10px 12px; background:var(--gold-bg); border-radius:9px; white-space:pre-wrap; margin-top:6px; writing-mode:vertical-rl; }
 .diary-ai-footer { font-size:14px; color:var(--text-soft); margin-top:4px; writing-mode:vertical-rl; }
-.diary-textarea { height:280px; box-sizing:border-box; border-radius:9px; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:20px; padding:12px 14px; resize:none; font-family:inherit; line-height:1.7; writing-mode:vertical-rl; overflow-x:auto; overflow-y:hidden; margin-bottom:8px; }
-.diary-textarea.ta-mine:focus { outline:none; border-color:var(--mine); box-shadow:0 0 0 3px var(--mine-bg); }
-.diary-textarea.ta-hers:focus { outline:none; border-color:var(--hers); box-shadow:0 0 0 3px var(--hers-bg); }
+.diary-textarea { height:280px; box-sizing:border-box; border:none; background:transparent; color:var(--text); font-size:20px; padding:12px 14px; resize:none; font-family:inherit; line-height:1.7; writing-mode:vertical-rl; overflow-x:auto; overflow-y:hidden; margin-bottom:8px; }
+.diary-textarea.ta-mine:focus { outline:none; box-shadow:inset 0 0 0 2px var(--mine); }
+.diary-textarea.ta-hers:focus { outline:none; box-shadow:inset 0 0 0 2px var(--hers); }
 .diary-person-row { display:flex; justify-content:flex-end; margin-top:5px; writing-mode:horizontal-tb; }
-.diary-save-btn { padding:6px 14px; border-radius:8px; border:1.5px solid var(--line-soft); background:var(--card); font-size:14px; color:var(--text-soft); cursor:pointer; writing-mode:horizontal-tb; }
+.diary-save-btn { padding:4px 10px; border:none; background:transparent; font-size:12px; color:var(--text-soft); cursor:pointer; writing-mode:horizontal-tb; opacity:.7; }
 .diary-actions { display:flex; gap:8px; margin-top:14px; writing-mode:horizontal-tb; }
 .diary-person-btns { display:flex; gap:6px; margin-top:5px; justify-content:flex-end; writing-mode:horizontal-tb; }
 .diary-btn-person { padding:7px 12px; border-radius:8px; border:none; font-size:16px; font-weight:700; cursor:pointer; transition:opacity .15s; writing-mode:horizontal-tb; }
@@ -5104,7 +5104,6 @@ function renderDiary() {
         <textarea class="diary-textarea ta-${personColor === 'hers' ? 'hers' : 'mine'}" id="diary-raw-${person}-${dateKey}" placeholder="今日のことを書いてみよう...">${rawText}</textarea>
         <div class="diary-person-btns">
           <button class="diary-save-btn" onclick="saveDiaryRaw('${dateKey}','${person}')">保存</button>
-          <button class="diary-btn-person diary-btn-person-${personColor === 'hers' ? 'hers' : 'mine'}" onclick="generatePersonDiary('${dateKey}','${person}')">✨ まとめる</button>
         </div>
       </div>`;
     };
@@ -5113,8 +5112,8 @@ function renderDiary() {
       <div class="diary-date">${month}月${day}日 ${dow}曜日</div>
       ${buildPersonSection('hers', 'ちか', 'hers')}
       ${buildPersonSection('mine', 'ひろ', 'mine')}
-      <div style="margin-top:14px; padding-top:14px; border-top:1.5px solid var(--line); writing-mode:horizontal-tb;">
-        <button class="diary-btn-del" onclick="deleteDiary('${dateKey}')" style="padding:6px 14px; border-radius:8px; border:1.5px solid var(--line-soft); background:var(--card); font-size:14px; cursor:pointer;">削除</button>
+      <div style="margin-top:14px; padding-top:14px; writing-mode:horizontal-tb;">
+        <button class="diary-btn-del" onclick="deleteDiary('${dateKey}')" style="padding:6px 12px; border:none; background:transparent; font-size:12px; cursor:pointer; color:var(--text-soft); opacity:.6;">削除</button>
       </div>
     </div>`;
   }
@@ -5137,27 +5136,15 @@ function addDiarySwipeEvents() {
   const diaryList = document.getElementById('diary-list');
   if (!diaryList) return;
   let touchStartX = 0;
-  let isDragging = false;
   diaryList.addEventListener('touchstart', (e) => {
     touchStartX = e.touches[0].clientX;
-    isDragging = true;
-    diaryList.classList.remove('swiping');
-  }, { passive: true });
-  diaryList.addEventListener('touchmove', () => {
-    isDragging = true;
-    diaryList.classList.add('swiping');
   }, { passive: true });
   diaryList.addEventListener('touchend', (e) => {
     const touchEndX = e.changedTouches[0].clientX;
     const diff = touchStartX - touchEndX;
-    if (!isDragging || Math.abs(diff) < 30) return;
-    if (diff > 0) {
-      const nextEntry = diaryList.nextElementSibling;
-      diaryList.scrollLeft += window.innerWidth;
-    } else {
-      diaryList.scrollLeft -= window.innerWidth;
-    }
-    isDragging = false;
+    if (Math.abs(diff) < 50) return; // 最小スワイプ距離を50pxに
+    // スムーズなスクロール（scroll-behavior: smoothを使用）
+    diaryList.scrollLeft += diff > 0 ? window.innerWidth : -window.innerWidth;
   }, { passive: true });
 }
 
