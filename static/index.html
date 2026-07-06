@@ -749,6 +749,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .stock-memo { background:rgba(255,255,255,.6); border-left:3px solid #c8b880; padding:8px 10px; font-size:13px; color:#5a4f30; margin:6px 0 12px; white-space:pre-wrap; }
 .stock-chart { margin-top:14px; }
 .stock-chart-loading, .stock-chart-none { text-align:center; padding:24px; color:#8a7a55; font-size:12px; letter-spacing:2px; border:1px dashed #c8b880; border-radius:4px; }
+.stock-chart-pending { text-align:center; padding:22px 16px; border:1.5px dashed #c8b880; border-radius:6px; background:linear-gradient(180deg,#faf5e8,#f0e6cf); }
+.chart-pending-icon { font-size:32px; margin-bottom:6px; opacity:.7; }
+.chart-pending-msg { font-size:15px; font-weight:700; color:#5a4a20; letter-spacing:1px; margin-bottom:4px; }
+.chart-pending-msg b { color:#c04f4f; font-size:18px; }
+.chart-pending-sub { font-size:11px; color:#8a7a55; letter-spacing:1px; }
 .book-pages.lang-stock .book-page-num { color:#8a7a55; font-family:'Georgia',serif; }
 
 /* 文庫本(横書き日本語)の背表紙 */
@@ -5395,20 +5400,22 @@ function renderDiaryShelf() {
     (memoMonthMap[p][ym] ||= []).push(m);
   });
 
-  // 株取引 月ごと集計
-  const stockMonthMap = {};
+  // 株取引 月ごと集計 (person別)
+  const stockMonthMap = { mine: {}, hers: {} };
   (allTrades || []).forEach(t => {
     if (!t?.ts) return;
     const ym = ymFromTs(t.ts);
-    (stockMonthMap[ym] ||= []).push(t);
+    const p = t.person === 'hers' ? 'hers' : 'mine';
+    (stockMonthMap[p][ym] ||= []).push(t);
   });
 
   const yms = Object.keys(monthMap).sort((a,b) => b.localeCompare(a));
   const memoMineYms = Object.keys(memoMonthMap.mine).sort((a,b) => b.localeCompare(a));
   const memoHersYms = Object.keys(memoMonthMap.hers).sort((a,b) => b.localeCompare(a));
-  const stockYms = Object.keys(stockMonthMap).sort((a,b) => b.localeCompare(a));
+  const stockMineYms = Object.keys(stockMonthMap.mine).sort((a,b) => b.localeCompare(a));
+  const stockHersYms = Object.keys(stockMonthMap.hers).sort((a,b) => b.localeCompare(a));
 
-  if (!yms.length && !memoMineYms.length && !memoHersYms.length && !stockYms.length) {
+  if (!yms.length && !memoMineYms.length && !memoHersYms.length && !stockMineYms.length && !stockHersYms.length) {
     el.innerHTML = '<div class="shelf-empty">まだ日記・メモ・取引の記録がありません</div>';
     return;
   }
@@ -5419,7 +5426,8 @@ function renderDiaryShelf() {
     return r.length ? r : [[]];
   };
   const shelfRows = chunk(yms, 8);
-  const stockRows = chunk(stockYms, 8);
+  const stockHersRows = chunk(stockHersYms, 8);
+  const stockMineRows = chunk(stockMineYms, 8);
   const memoHersRows = chunk(memoHersYms, 8);
   const memoMineRows = chunk(memoMineYms, 8);
 
@@ -5509,15 +5517,33 @@ function renderDiaryShelf() {
     });
   }
 
-  // 株ノート
-  if (stockYms.length) {
-    html += '<div class="shelf-sub" style="margin-top:26px;">株ノート — 売買記録とチャート</div>';
-    stockRows.forEach(rowYms => {
+  // 株ノート (ちか)
+  if (stockHersYms.length) {
+    html += '<div class="shelf-sub" style="margin-top:26px;">ちかの株ノート — 売買記録とチャート</div>';
+    stockHersRows.forEach(rowYms => {
       let rowHtml = '<div class="shelf-rack">';
       rowYms.forEach((ym, idx) => {
         const [y, m] = ym.split('-');
-        const cnt = stockMonthMap[ym].length;
-        rowHtml += `<div class="book-spine stock s${(idx%4)+1}" onclick="openDiaryBook('${ym}','stock')">
+        const cnt = stockMonthMap.hers[ym].length;
+        rowHtml += `<div class="book-spine stock stock-hers s${(idx%4)+1}" onclick="openDiaryBook('${ym}','stock-hers')">
+          <div class="book-spine-label">${y}・${Number(m)}月</div>
+          <div class="book-spine-badge">${cnt}件</div>
+        </div>`;
+      });
+      rowHtml += '</div><div class="shelf-board"></div>';
+      html += rowHtml;
+    });
+  }
+
+  // 株ノート (ひろ)
+  if (stockMineYms.length) {
+    html += '<div class="shelf-sub" style="margin-top:26px;">ひろの株ノート — 売買記録とチャート</div>';
+    stockMineRows.forEach(rowYms => {
+      let rowHtml = '<div class="shelf-rack">';
+      rowYms.forEach((ym, idx) => {
+        const [y, m] = ym.split('-');
+        const cnt = stockMonthMap.mine[ym].length;
+        rowHtml += `<div class="book-spine stock stock-mine s${(idx%4)+1}" onclick="openDiaryBook('${ym}','stock-mine')">
           <div class="book-spine-label">${y}・${Number(m)}月</div>
           <div class="book-spine-badge">${cnt}件</div>
         </div>`;
@@ -5555,7 +5581,10 @@ function renderDiaryBook() {
   if (!el || !currentBookYm) return;
 
   // 株ノート / メモ帳は専用レンダに委譲
-  if (currentBookLang === 'stock') return renderStockBook();
+  if (currentBookLang === 'stock' || currentBookLang === 'stock-hers' || currentBookLang === 'stock-mine') {
+    const filter = currentBookLang === 'stock-hers' ? 'hers' : (currentBookLang === 'stock-mine' ? 'mine' : null);
+    return renderStockBook(filter);
+  }
   if (currentBookLang === 'memo-hers' || currentBookLang === 'memo-mine') return renderMemoBook(currentBookLang === 'memo-hers' ? 'hers' : 'mine');
 
   const [yStr, mStr] = currentBookYm.split('-');
@@ -5799,12 +5828,12 @@ function sparklineSvg(data, opt = {}) {
 
 // チャート画像キャッシュ (symbol+日付ごと)
 const chartCache = {};
-async function fetchChartData(symbol, aroundTs) {
-  const key = `${symbol}:${Math.floor(aroundTs/(24*3600*1000))}`;
+async function fetchChartData(symbol, tradeTs) {
+  const key = `${symbol}:${Math.floor(tradeTs/(24*3600*1000))}`;
   if (chartCache[key]) return chartCache[key];
-  // 取引日の±45日
-  const from = aroundTs - 45*24*3600*1000;
-  const to = Math.min(aroundTs + 45*24*3600*1000, Date.now());
+  // 取引日から+30日後まで（成功したかどうかが分かる期間）
+  const from = tradeTs - 3*24*3600*1000;      // ちょっと前(3日)から
+  const to = Math.min(tradeTs + 30*24*3600*1000, Date.now()); // 取引の30日後まで
   try {
     const r = await fetch(`/api/chart-history?symbol=${encodeURIComponent(symbol)}&from=${from}&to=${to}`);
     if (!r.ok) return null;
@@ -5842,13 +5871,11 @@ function renderMemoBook(person) {
   });
   const dateKeys = Object.keys(byDate).sort();
   const DOWS = ['日','月','火','水','木','金','土'];
-
-  // 縦書き本と同じくday1を右端にするため反転
-  const displayOrder = dateKeys.slice().reverse();
   const splitParas = (raw) => raw.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean);
 
+  // 横書きは古い順そのまま (day1が左端)
   let pagesHtml = '';
-  displayOrder.forEach(dateKey => {
+  dateKeys.forEach(dateKey => {
     const { day } = parseKey(dateKey);
     const dow = DOWS[new Date(year, month-1, day).getDay()];
     let contentInner = '';
@@ -5857,23 +5884,30 @@ function renderMemoBook(person) {
       const hh = String(time.getHours()).padStart(2,'0');
       const mm = String(time.getMinutes()).padStart(2,'0');
       const pins = m.pinned ? '★ ' : '';
-      contentInner += `<div class="who-marker" style="color:${colorVar};">◇ ${pins}${hh}:${mm}</div>`;
+      contentInner += `<div class="who-marker paperback" style="color:${colorVar};">— ${pins}${hh}:${mm} —</div>`;
       const paragraphs = splitParas(m.text || '');
       const parasHtml = paragraphs.map(p => `<div class="text-para">${escapeHtml(p)}</div>`).join('');
       contentInner += `<div class="page-text">${parasHtml || escapeHtml(m.text)}</div>`;
+      if (m.img) {
+        contentInner += `<div class="diary-photos-grid"><div class="diary-photo-item"><img class="diary-photo" src="${m.img}" onclick="openLightbox(this.src)"/></div></div>`;
+      }
     });
     if (!contentInner) contentInner = '<div class="page-empty">記録なし</div>';
-    pagesHtml += `<div class="diary-book-page" data-date="${dateKey}">
-      <header class="page-date-jp">${month}月${day}日<span>${dow}曜日</span></header>
+    pagesHtml += `<div class="diary-book-page paperback" data-date="${dateKey}">
+      <header class="page-date-jah">
+        <span class="date-day">${day}</span>
+        <span class="date-mon">${month}月</span>
+        <span class="date-dow">${dow}曜日</span>
+      </header>
       <div class="page-content">${contentInner}</div>
-      <div class="book-page-num">— ${day}日 —</div>
+      <div class="book-page-num">— ${month}/${day} —</div>
     </div>`;
   });
   if (!pagesHtml) pagesHtml = `<div style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--text-soft); font-size:16px;">この月の${label}のメモはありません</div>`;
 
-  const toolbar = `<div class="book-toolbar">
+  const toolbar = `<div class="book-toolbar paperback">
     <button onclick="closeDiaryBook()">← 本棚へ</button>
-    <div class="book-title-bar">${label}のメモ帳 ${year}年${month}月</div>
+    <div class="book-title-bar paperback">${label}のメモ帳 ${year}年${month}月</div>
     <div style="display:flex; gap:6px; align-items:center;">
       <select class="book-font-select" onchange="changeBookFont(this.value)">
         <option value="mincho">明朝</option>
@@ -5890,7 +5924,7 @@ function renderMemoBook(person) {
   const daysInMonth = new Date(year, month, 0).getDate();
   el.innerHTML = `
     ${toolbar}
-    <div class="book-pages lang-ja font-${currentBookFont}" id="book-pages" style="--book-font-size:${currentBookFontSize}px;">${pagesHtml}</div>
+    <div class="book-pages lang-ja-h font-${currentBookFont}" id="book-pages" style="--book-font-size:${currentBookFontSize}px;">${pagesHtml}</div>
     <div class="book-toc-overlay" id="book-toc-overlay" onclick="if(event.target===this)hideBookToc()">
       ${buildTocHtml(year, month, daysInMonth, dateKeys, false)}
     </div>
@@ -5898,18 +5932,12 @@ function renderMemoBook(person) {
   el.classList.add('active');
   requestAnimationFrame(() => {
     const pagesEl = document.getElementById('book-pages');
-    if (!pagesEl) return;
-    const lastPage = pagesEl.lastElementChild;
-    if (lastPage && lastPage.classList.contains('diary-book-page')) {
-      pagesEl.scrollLeft = lastPage.offsetLeft + lastPage.offsetWidth - pagesEl.clientWidth;
-    } else {
-      pagesEl.scrollLeft = pagesEl.scrollWidth;
-    }
+    if (pagesEl) pagesEl.scrollLeft = 0;
   });
 }
 
 // ── 株ノート (横書き) ──
-function renderStockBook() {
+function renderStockBook(personFilter) {
   const el = document.getElementById('diary-book-list');
   if (!el || !currentBookYm) return;
   const [yStr, mStr] = currentBookYm.split('-');
@@ -5918,6 +5946,7 @@ function renderStockBook() {
 
   const trades = (allTrades || [])
     .filter(t => t?.ts)
+    .filter(t => !personFilter || t.person === personFilter)
     .filter(t => {
       const d = new Date(t.ts);
       return d.getFullYear() === year && (d.getMonth()+1) === month;
@@ -5925,6 +5954,7 @@ function renderStockBook() {
     .sort((a,b) => (a.ts||0) - (b.ts||0));
 
   const NAMES = { mine: 'ひろ', hers: 'ちか' };
+  const bookOwnerLabel = personFilter === 'hers' ? 'ちかの株ノート' : (personFilter === 'mine' ? 'ひろの株ノート' : '株ノート');
   const curSymFn = (c) => (c || 'JPY') === 'JPY' ? '¥' : '$';
 
   let pagesHtml = '';
@@ -5985,7 +6015,7 @@ function renderStockBook() {
 
   const toolbar = `<div class="book-toolbar stock">
     <button onclick="closeDiaryBook()">← 本棚へ</button>
-    <div class="book-title-bar stock">株ノート ${year}年${month}月</div>
+    <div class="book-title-bar stock">${bookOwnerLabel} ${year}年${month}月</div>
     <div style="display:flex; gap:6px; align-items:center;">
       <button onclick="changeBookFontSize(-2)">A−</button>
       <button onclick="changeBookFontSize(2)">A+</button>
@@ -6009,6 +6039,17 @@ function renderStockBook() {
     const ts = Number(holder.dataset.ts);
     const markPrice = holder.dataset.markPrice ? Number(holder.dataset.markPrice) : null;
     if (!symbol) { holder.innerHTML = '<div class="stock-chart-none">— 銘柄コード不明 —</div>'; return; }
+    // 取引から30日経過していない場合はチャートを表示しない（成果判断のため）
+    const daysSince = (Date.now() - ts) / (24 * 3600 * 1000);
+    if (daysSince < 30) {
+      const remaining = Math.ceil(30 - daysSince);
+      holder.innerHTML = `<div class="stock-chart-pending">
+        <div class="chart-pending-icon">📈</div>
+        <div class="chart-pending-msg">あと <b>${remaining}日</b> でチャート公開</div>
+        <div class="chart-pending-sub">取引から30日経過後に成果が分かるチャートを表示します</div>
+      </div>`;
+      return;
+    }
     const data = await fetchChartData(symbol, ts);
     if (!data?.length) { holder.innerHTML = '<div class="stock-chart-none">— チャート取得できず —</div>'; return; }
     // 取引日に最も近い日のindexを探す
