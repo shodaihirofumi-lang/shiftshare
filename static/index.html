@@ -619,17 +619,30 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-pages { flex:1; overflow-x:auto; overflow-y:hidden; display:flex; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; overscroll-behavior:contain; touch-action:pan-x; }
 .book-pages::-webkit-scrollbar { display:none; }
 .book-pages { scrollbar-width:none; }
-.diary-book-page { flex:0 0 auto; min-width:100vw; scroll-snap-align:start; writing-mode:vertical-rl; text-orientation:upright; background:linear-gradient(90deg, #f6f0e2 0%, #efe6d1 45%, #eaddc0 100%); padding:24px 24px 50px; box-sizing:border-box; height:100%; position:relative; box-shadow:inset 6px 0 12px -6px rgba(90,60,20,.15), inset -6px 0 12px -6px rgba(90,60,20,.15); display:flex; align-items:stretch; }
+.diary-book-page { flex:0 0 auto; min-width:100vw; scroll-snap-align:start; writing-mode:vertical-rl; text-orientation:upright; background:linear-gradient(90deg, #f6f0e2 0%, #efe6d1 45%, #eaddc0 100%); padding:30px 30px 50px; box-sizing:border-box; height:100%; position:relative; box-shadow:inset 6px 0 12px -6px rgba(90,60,20,.15), inset -6px 0 12px -6px rgba(90,60,20,.15); }
 .diary-book-page::before { content:''; position:absolute; top:0; bottom:0; right:14px; width:1px; background:linear-gradient(180deg, transparent, rgba(120,80,40,.18) 30%, rgba(120,80,40,.18) 70%, transparent); pointer-events:none; }
 .book-page-num { position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:11px; color:var(--text-soft); writing-mode:horizontal-tb; letter-spacing:2px; }
 
-/* 日付ヘッダー: 常に右側に固定、写真の影響を受けない */
-.page-date-jp { flex:0 0 auto; align-self:flex-start; font-size:28px; font-weight:800; letter-spacing:5px; margin-right:22px; padding-right:14px; border-right:2px solid rgba(120,80,40,.3); color:var(--text); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; }
+/* 日付ヘッダー: 縦書きブロックとして右端の1列を占有。写真の高さに影響されない */
+.page-date-jp { display:block; font-size:28px; font-weight:800; letter-spacing:5px; margin:0 22px 0 0; padding:0 14px 0 0; border-right:2px solid rgba(120,80,40,.3); color:var(--text); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; }
 .page-date-jp span { display:block; margin-top:14px; font-size:15px; font-weight:600; color:var(--text-soft); letter-spacing:3px; }
-.page-content { flex:1 1 auto; display:flex; align-items:flex-start; }
-.who-marker { flex:0 0 auto; font-size:19px; font-weight:700; letter-spacing:3px; margin:0 20px 0 8px; padding:6px 4px; align-self:flex-start; }
-.page-text { flex:0 0 auto; white-space:pre-wrap; font-size:var(--book-font-size, 22px); line-height:2.1; margin:0 22px 0 6px; align-self:stretch; padding:2px 4px; }
-.page-empty { align-self:center; color:var(--text-soft); font-size:16px; padding:20px; }
+.page-content { display:block; }
+.who-marker { display:block; font-size:19px; font-weight:700; letter-spacing:3px; margin:0 14px 0 8px; padding:6px 4px; }
+.page-text { display:block; white-space:pre-wrap; font-size:var(--book-font-size, 22px); line-height:2.1; margin:0 18px 0 6px; padding:2px 4px; }
+.page-empty { color:var(--text-soft); font-size:16px; padding:20px; }
+/* 和書は縦書きブロック（display:block）が右→左に流れるので、
+   date, who-marker, photos, page-text が自然に列として並ぶ。
+   text は縦方向に上から始まり、ページ高さいっぱいで左隣の列へ折り返す。 */
+.diary-book-page > .page-date-jp,
+.diary-book-page > .page-content,
+.diary-book-page > .page-content > * { vertical-align:top; }
+
+/* 翻訳ボタン (英語モード) */
+.translate-cta { text-align:center; padding:40px 20px; max-width:420px; margin:0 auto; }
+.translate-cta p { font-family:'Georgia',serif; font-style:italic; color:#5a3f22; margin-bottom:20px; font-size:16px; }
+.translate-btn { padding:12px 28px; border:1.5px solid #8a6b45; background:#faf5e8; color:#3a2814; font-family:'Georgia',serif; font-size:16px; letter-spacing:2px; cursor:pointer; border-radius:2px; transition:all .18s; }
+.translate-btn:hover { background:#8a6b45; color:#faf5e8; }
+.translate-btn:disabled { opacity:.5; cursor:default; }
 
 /* 洋書スタイル */
 .book-toolbar.western { background:linear-gradient(180deg,#fbf8ed,#f2ead5); border-bottom-color:#c9b48a; font-family:'Georgia','Times New Roman',serif; }
@@ -5336,7 +5349,7 @@ function closeDiaryBook() {
 // 本の中身をレンダリング（開いている月の全日を1ページずつ）
 let currentBookFontSize = 22;
 
-async function renderDiaryBook() {
+function renderDiaryBook() {
   const el = document.getElementById('diary-book-list');
   if (!el || !currentBookYm) return;
 
@@ -5362,38 +5375,6 @@ async function renderDiaryBook() {
     }
   }
 
-  // 英語の場合：まだ翻訳がない日を翻訳
-  if (isEn) {
-    // ロード中UIを先出し
-    el.innerHTML = `
-      <div class="book-toolbar western">
-        <button onclick="closeDiaryBook()">← Shelf</button>
-        <div class="book-title-bar western">${EN_MONTHS[month-1]} ${year}</div>
-        <div></div>
-      </div>
-      <div style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--text-soft); font-size:16px; gap:12px;">
-        <div class="book-spinner"></div>Translating…
-      </div>`;
-    el.classList.add('active');
-    for (const dateKey of pages) {
-      const d = allDiaries[dateKey];
-      if (!d) continue;
-      if (d.translated?.en_hers || d.translated?.en_mine) continue;
-      if (!d.hers?.raw && !d.mine?.raw) continue;
-      try {
-        const r = await fetch('/api/diary/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ date: dateKey }),
-        });
-        if (r.ok) {
-          const j = await r.json();
-          allDiaries[dateKey] = { ...(allDiaries[dateKey]||{}), translated: { en_hers: j.en_hers || '', en_mine: j.en_mine || '' } };
-        }
-      } catch (e) { console.warn('translate failed', dateKey, e); }
-    }
-  }
-
   let pagesHtml = '';
   pages.forEach((dateKey, i) => {
     const { day } = parseKey(dateKey);
@@ -5404,35 +5385,47 @@ async function renderDiaryBook() {
     const enDow = EN_DOWS[dowIdx];
 
     let rawHers, rawMine;
+    const jpHers = diary?.hers?.raw || '';
+    const jpMine = diary?.mine?.raw || '';
     if (isEn) {
       rawHers = escapeHtml(diary?.translated?.en_hers || '');
       rawMine = escapeHtml(diary?.translated?.en_mine || '');
     } else {
-      rawMine = escapeHtml(diary?.mine?.raw || '');
-      rawHers = escapeHtml(diary?.hers?.raw || '');
+      rawMine = escapeHtml(jpMine);
+      rawHers = escapeHtml(jpHers);
     }
 
-    // 連続フロー: ちか→ひろを一つのコンテンツ内に流し込む
+    // 英語モードで翻訳がなく、日本語原文はある場合 → 翻訳ボタンを1つだけ表示
     let contentInner = '';
-    ['hers','mine'].forEach(person => {
-      const raw = person === 'hers' ? rawHers : rawMine;
-      const pPhotos = photos.filter(ph => ph.person === person);
-      if (!raw && !pPhotos.length) return;
-      const label = person === 'hers' ? (isEn ? 'Chika' : 'ちか') : (isEn ? 'Hiro' : 'ひろ');
-      const colorVar = person === 'hers' ? 'var(--hers)' : 'var(--mine)';
-      // 名前マーカー
-      if (isEn) {
-        contentInner += `<div class="who-marker western" style="color:${colorVar};">— ${label} —</div>`;
-      } else {
-        contentInner += `<div class="who-marker" style="color:${colorVar};">◇ ${label}</div>`;
-      }
-      if (pPhotos.length) {
-        contentInner += `<div class="diary-photos-grid" ${isEn ? '' : 'style="writing-mode:horizontal-tb;"'}>${pPhotos.map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${ph.img}" onclick="openLightbox(this.src)"/></div>`).join('')}</div>`;
-      }
-      if (raw) {
-        contentInner += `<div class="page-text">${raw}</div>`;
-      }
-    });
+    const hasEnAny = isEn && (rawHers || rawMine);
+    const hasJpSource = isEn && (jpHers || jpMine);
+
+    if (isEn && !hasEnAny && hasJpSource) {
+      contentInner = `<div class="translate-cta">
+        <p>This entry has not been translated yet.</p>
+        <button class="translate-btn" data-translate-btn="${dateKey}" onclick="translateDay('${dateKey}')">Translate this page</button>
+      </div>`;
+    } else {
+      // 連続フロー: ちか→ひろを一つのコンテンツ内に流し込む
+      ['hers','mine'].forEach(person => {
+        const raw = person === 'hers' ? rawHers : rawMine;
+        const pPhotos = photos.filter(ph => ph.person === person);
+        if (!raw && !pPhotos.length) return;
+        const label = person === 'hers' ? (isEn ? 'Chika' : 'ちか') : (isEn ? 'Hiro' : 'ひろ');
+        const colorVar = person === 'hers' ? 'var(--hers)' : 'var(--mine)';
+        if (isEn) {
+          contentInner += `<div class="who-marker western" style="color:${colorVar};">— ${label} —</div>`;
+        } else {
+          contentInner += `<div class="who-marker" style="color:${colorVar};">◇ ${label}</div>`;
+        }
+        if (pPhotos.length) {
+          contentInner += `<div class="diary-photos-grid" ${isEn ? '' : 'style="writing-mode:horizontal-tb;"'}>${pPhotos.map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${ph.img}" onclick="openLightbox(this.src)"/></div>`).join('')}</div>`;
+        }
+        if (raw) {
+          contentInner += `<div class="page-text">${raw}</div>`;
+        }
+      });
+    }
 
     if (!contentInner) {
       contentInner = `<div class="page-empty">${isEn ? 'No entry yet.' : 'まだ書かれていません'}</div>`;
@@ -5506,6 +5499,38 @@ function changeBookFontSize(delta) {
   currentBookFontSize = Math.max(14, Math.min(36, currentBookFontSize + delta));
   const pagesEl = document.getElementById('book-pages');
   if (pagesEl) pagesEl.style.setProperty('--book-font-size', currentBookFontSize + 'px');
+}
+
+// このページだけ翻訳する
+async function translateDay(dateKey) {
+  const btn = document.querySelector(`[data-translate-btn="${dateKey}"]`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Translating…'; }
+  try {
+    const r = await fetch('/api/diary/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: dateKey }),
+    });
+    if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || 'failed');
+    const j = await r.json();
+    allDiaries[dateKey] = { ...(allDiaries[dateKey]||{}), translated: { en_hers: j.en_hers || '', en_mine: j.en_mine || '' } };
+
+    // スクロール位置を保存 → 再レンダ → 復元
+    const pagesEl = document.getElementById('book-pages');
+    const savedLeft = pagesEl?.scrollLeft || 0;
+    renderDiaryBook();
+    requestAnimationFrame(() => {
+      const p = document.getElementById('book-pages');
+      if (!p) return;
+      // 翻訳した日のページに戻す（scroll-snapがずれた場合の保険）
+      const pageEl = p.querySelector(`.diary-book-page[data-date="${dateKey}"]`);
+      if (pageEl) p.scrollLeft = pageEl.offsetLeft;
+      else p.scrollLeft = savedLeft;
+    });
+  } catch (e) {
+    console.warn('translate', e);
+    if (btn) { btn.disabled = false; btn.textContent = 'Retry'; }
+  }
 }
 
 function buildTocHtml(year, month, daysInMonth, entryDates, isEn) {
