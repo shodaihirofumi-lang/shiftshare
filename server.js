@@ -1059,9 +1059,9 @@ app.get('/api/monthly-diaries', (_req, res) => res.json(getMonthlyDiaries()));
 // しおり (本のブックマーク)
 app.get('/api/bookmarks', (_req, res) => res.json(getBookmarks()));
 app.post('/api/bookmarks', async (req, res) => {
-  const { key, note, color } = req.body || {};
+  const { key, note, person, colorTop, colorBottom } = req.body || {};
   if (!key || typeof key !== 'string') return res.status(400).json({ error: 'key が必要です' });
-  await setBookmark(key, { note: note || '', color: color || 'red' });
+  await setBookmark(key, { note, person, colorTop, colorBottom });
   res.json({ success: true });
 });
 app.post('/api/bookmarks/delete', async (req, res) => {

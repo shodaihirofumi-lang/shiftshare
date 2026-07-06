@@ -634,28 +634,56 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-toolbar .book-title-bar { font-size:12px; font-weight:700; color:var(--text); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; letter-spacing:1px; }
 .book-font-select { padding:2px 5px; border:1px solid var(--line); background:var(--card); border-radius:5px; font-size:11px; height:24px; }
 
-/* しおりリボン (本のページ右上) */
-.book-bookmark-ribbon { position:absolute; top:0; right:32px; width:26px; height:44px; border:none; background:transparent; cursor:pointer; padding:0; z-index:15; transition:transform .18s; opacity:.45; }
-.book-bookmark-ribbon::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,#c9a878 0%, #8a6b45 100%); clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); }
+/* しおりリボン (本のページ右上、ツートン対応) */
+.book-bookmark-ribbon { position:absolute; top:0; right:32px; width:28px; height:48px; border:none; background:transparent; cursor:pointer; padding:0; z-index:15; transition:transform .18s; opacity:.4; --color-top:#c9a878; --color-bottom:#8a6b45; }
+.book-bookmark-ribbon::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg, var(--color-top) 0%, var(--color-top) 50%, var(--color-bottom) 50%, var(--color-bottom) 100%); clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); transition:filter .18s; }
 .book-bookmark-ribbon:hover { opacity:.85; transform:translateY(2px); }
 .book-bookmark-ribbon.has-bookmark { opacity:1; }
-.book-bookmark-ribbon.has-bookmark::before { background:linear-gradient(180deg,#e14848 0%, #a02323 100%); box-shadow:1px 2px 6px rgba(0,0,0,.25); }
-.book-bookmark-ribbon .ribbon-icon { display:none; }
-.book-bookmark-ribbon.has-bookmark .ribbon-icon { display:block; position:relative; z-index:2; color:#fff; font-size:11px; padding-top:6px; text-shadow:0 1px 2px rgba(0,0,0,.35); }
+.book-bookmark-ribbon.has-bookmark::before { box-shadow:1px 2px 6px rgba(0,0,0,.25); filter:saturate(1.05); }
+.book-bookmark-ribbon .ribbon-person-mark { position:relative; z-index:2; display:block; padding-top:6px; text-align:center; color:#fff; font-size:13px; font-weight:800; letter-spacing:1px; text-shadow:0 1px 2px rgba(0,0,0,.45); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; }
+.book-bookmark-ribbon:not(.has-bookmark) .ribbon-person-mark { display:none; }
+/* リボンの内側に微かな段差 (縫い目) */
+.book-bookmark-ribbon.has-bookmark::after { content:''; position:absolute; top:24px; left:4px; right:4px; height:1px; background:rgba(0,0,0,.15); pointer-events:none; }
 
 /* しおりモーダル */
-.bookmark-modal-overlay { position:fixed; inset:0; background:rgba(30,20,10,.55); z-index:400; display:flex; align-items:center; justify-content:center; padding:20px; }
-.bookmark-modal { background:linear-gradient(180deg,#faf5eb,#efe6d0); border-radius:14px; padding:20px 18px 16px; max-width:400px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,.4); border:1px solid rgba(180,140,90,.4); }
-.bookmark-modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1.5px solid rgba(180,140,90,.3); }
+.bookmark-modal-overlay { position:fixed; inset:0; background:rgba(30,20,10,.55); z-index:400; display:flex; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+.bookmark-modal { background:linear-gradient(180deg,#faf5eb,#efe6d0); border-radius:14px; padding:18px 16px 14px; max-width:420px; width:100%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 50px rgba(0,0,0,.4); border:1px solid rgba(180,140,90,.4); }
+.bookmark-modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:8px; border-bottom:1.5px solid rgba(180,140,90,.3); }
 .bookmark-modal-title { font-size:16px; font-weight:700; letter-spacing:2px; color:#3a2814; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; }
-.bookmark-modal-close { border:none; background:transparent; font-size:22px; cursor:pointer; color:#8a6b45; padding:0 6px; }
-.bookmark-note { width:100%; box-sizing:border-box; min-height:100px; padding:10px 12px; border:1px solid rgba(180,140,90,.35); border-radius:8px; background:#fdfaf3; font-size:15px; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; color:#3a2814; line-height:1.6; resize:vertical; }
+.bookmark-modal-close { border:none; background:transparent; font-size:22px; cursor:pointer; color:#8a6b45; padding:0 6px; line-height:1; }
+.bookmark-modal-section { margin-bottom:12px; }
+.modal-label { display:block; font-size:11px; letter-spacing:2px; color:#5a4530; margin-bottom:6px; font-weight:700; }
+.bookmark-modal-preview { display:flex; align-items:center; justify-content:center; gap:12px; padding:14px 8px 12px; background:linear-gradient(180deg,#f9f5eb,#efe6d0); border-radius:10px; margin-bottom:12px; border:1px dashed rgba(180,140,90,.35); }
+.preview-ribbon { position:relative; width:34px; height:56px; --color-top:#e084a0; --color-bottom:#e084a0; }
+.preview-ribbon::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg, var(--color-top) 0%, var(--color-top) 50%, var(--color-bottom) 50%, var(--color-bottom) 100%); clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); box-shadow:1px 2px 6px rgba(0,0,0,.25); }
+.preview-ribbon .ribbon-person-mark { position:relative; z-index:2; display:block; padding-top:9px; text-align:center; color:#fff; font-size:16px; font-weight:800; text-shadow:0 1px 2px rgba(0,0,0,.45); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; }
+.preview-ribbon::after { content:''; position:absolute; top:29px; left:4px; right:4px; height:1px; background:rgba(0,0,0,.18); }
+.preview-hint { font-size:11px; color:#8a6b45; letter-spacing:2px; }
+
+.person-btns { display:flex; gap:8px; }
+.person-btn { flex:1; padding:8px 10px; border:1.5px solid rgba(180,140,90,.35); background:#fdfaf3; color:#5a4530; font-size:14px; font-weight:700; border-radius:8px; cursor:pointer; transition:all .15s; letter-spacing:3px; }
+.person-btn.hers.active { background:linear-gradient(180deg,#e5aabb,#c07890); color:#fff; border-color:transparent; box-shadow:0 2px 6px rgba(192,120,144,.35); }
+.person-btn.mine.active { background:linear-gradient(180deg,#7d9ba8,#4f6d7a); color:#fff; border-color:transparent; box-shadow:0 2px 6px rgba(79,109,122,.35); }
+
+.palette { display:grid; grid-template-columns:repeat(11, 1fr); gap:5px; }
+.palette-chip { width:100%; aspect-ratio:1; border-radius:50%; border:1.5px solid rgba(0,0,0,.08); cursor:pointer; padding:0; transition:transform .15s, box-shadow .15s; position:relative; }
+.palette-chip:hover { transform:scale(1.15); }
+.palette-chip.selected { transform:scale(1.15); box-shadow:0 0 0 2px #3a2814, 0 0 0 4px rgba(255,255,255,.85); }
+
+.bookmark-note { width:100%; box-sizing:border-box; min-height:80px; padding:10px 12px; border:1px solid rgba(180,140,90,.35); border-radius:8px; background:#fdfaf3; font-size:15px; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; color:#3a2814; line-height:1.55; resize:vertical; }
 .bookmark-note:focus { outline:none; border-color:#c9a878; box-shadow:0 0 0 2px rgba(201,168,120,.25); }
-.bookmark-modal-actions { display:flex; justify-content:space-between; margin-top:12px; gap:8px; }
+.bookmark-modal-actions { display:flex; justify-content:space-between; margin-top:10px; gap:8px; }
 .bookmark-modal-del { padding:7px 14px; border:1px solid rgba(180,140,90,.4); background:transparent; color:#a04747; border-radius:8px; font-size:13px; cursor:pointer; }
 .bookmark-modal-save { padding:7px 18px; border:none; background:linear-gradient(180deg,#c9a878,#8a6b45); color:#fff; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; letter-spacing:1px; }
 
-/* 本棚: しおりがある本のバッジ */
+/* 目次アイテムのしおりバッジ */
+.book-toc-item { position:relative; }
+.book-toc-item.has-bookmark { border-color:rgba(0,0,0,.15); box-shadow:0 1px 2px rgba(0,0,0,.05); }
+.toc-bmk { position:absolute; top:-2px; right:4px; width:10px; height:18px; --color-top:#c04f4f; --color-bottom:#c04f4f; z-index:2; }
+.toc-bmk::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg, var(--color-top) 0%, var(--color-top) 50%, var(--color-bottom) 50%, var(--color-bottom) 100%); clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); box-shadow:0 1px 2px rgba(0,0,0,.25); }
+.toc-bmk-mark { position:absolute; top:2px; left:0; right:0; text-align:center; color:#fff; font-size:7px; font-weight:800; z-index:2; text-shadow:0 1px 1px rgba(0,0,0,.4); }
+
+/* 本棚: しおりがある本のバッジ (色は最初のしおりに合わせず、シンプルに赤系) */
 .book-spine.has-bookmark::after { content:''; position:absolute; top:-2px; right:2px; width:10px; height:16px; background:linear-gradient(180deg,#e14848,#a02323); clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%); box-shadow:1px 1px 3px rgba(0,0,0,.3); z-index:5; }
 .book-spine.has-bookmark { box-shadow:2px 4px 10px rgba(0,0,0,.25), inset -3px 0 6px rgba(0,0,0,.18), inset 3px 0 4px rgba(255,255,255,.18), 0 0 0 1px rgba(225,72,72,.35); }
 .book-pages { flex:1; overflow-x:auto; overflow-y:hidden; display:flex; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; overscroll-behavior:contain; touch-action:pan-x; }
@@ -5239,78 +5267,201 @@ async function loadDiaries() {
 }
 
 // ── しおり ──
-let allBookmarks = {}; // { "bookType:ym:dateKey": { note, color, createdAt, updatedAt } }
+let allBookmarks = {}; // { "bookType:ym:dateKey": { note, person, colorTop, colorBottom, ... } }
+
+// カラーパレット (タグ感覚で色分け)
+const BOOKMARK_COLORS = [
+  { key:'pink',    hex:'#e084a0', name:'ピンク' },
+  { key:'rose',    hex:'#c05a7a', name:'ローズ' },
+  { key:'red',     hex:'#c04f4f', name:'レッド' },
+  { key:'coral',   hex:'#e07868', name:'コーラル' },
+  { key:'orange',  hex:'#e08758', name:'オレンジ' },
+  { key:'amber',   hex:'#d4a04a', name:'アンバー' },
+  { key:'yellow',  hex:'#dcc84a', name:'イエロー' },
+  { key:'lime',    hex:'#a8c25a', name:'ライム' },
+  { key:'green',   hex:'#7ca672', name:'グリーン' },
+  { key:'emerald', hex:'#4a8a6a', name:'エメラルド' },
+  { key:'teal',    hex:'#4a8a92', name:'ティール' },
+  { key:'sky',     hex:'#6a95c0', name:'スカイ' },
+  { key:'blue',    hex:'#4f6d7a', name:'ブルー' },
+  { key:'navy',    hex:'#3a4c6a', name:'ネイビー' },
+  { key:'purple',  hex:'#8a6a94', name:'パープル' },
+  { key:'violet',  hex:'#6a5a8a', name:'バイオレット' },
+  { key:'magenta', hex:'#b34a7a', name:'マゼンタ' },
+  { key:'brown',   hex:'#8a6a45', name:'ブラウン' },
+  { key:'sand',    hex:'#c9a878', name:'サンド' },
+  { key:'gray',    hex:'#8a8580', name:'グレー' },
+  { key:'charcoal',hex:'#4a4540', name:'チャコール' },
+  { key:'ivory',   hex:'#e8ddc4', name:'アイボリー' },
+];
+const PERSON_DEFAULT_COLOR = { hers: '#e084a0', mine: '#4f6d7a' };
+
 async function loadBookmarks() {
   try { allBookmarks = await fetch('/api/bookmarks').then(r => r.json()); } catch { allBookmarks = {}; }
 }
 function bookmarkKey(bookType, ym, dateKey) { return `${bookType}:${ym}:${dateKey}`; }
+
 async function toggleBookmark(bookType, ym, dateKey) {
   const key = bookmarkKey(bookType, ym, dateKey);
   const existing = allBookmarks[key];
-  if (existing) {
-    // 既にある場合は編集モーダルを開く
-    openBookmarkModal(key, existing);
-  } else {
-    // 新規: まず空でつける → モーダルでコメント入力
-    const draft = { note: '', color: 'red', createdAt: Date.now(), updatedAt: Date.now() };
-    allBookmarks[key] = draft;
-    try {
-      await fetch('/api/bookmarks', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key, note: '', color: 'red' }),
-      });
-    } catch {}
-    // ページ上のしおり表示を更新
-    updateBookmarkVisuals(bookType, ym, dateKey);
-    openBookmarkModal(key, draft);
-  }
+  openBookmarkModal(key, existing, bookType, ym, dateKey);
 }
 function updateBookmarkVisuals(bookType, ym, dateKey) {
-  const btn = document.querySelector(`[data-bookmark-key="${bookmarkKey(bookType, ym, dateKey)}"]`);
+  const key = bookmarkKey(bookType, ym, dateKey);
+  const btn = document.querySelector(`[data-bookmark-key="${key}"]`);
   if (!btn) return;
-  const has = !!allBookmarks[bookmarkKey(bookType, ym, dateKey)];
-  btn.classList.toggle('has-bookmark', has);
+  const b = allBookmarks[key];
+  btn.classList.toggle('has-bookmark', !!b);
+  if (b) {
+    btn.style.setProperty('--color-top', b.colorTop || PERSON_DEFAULT_COLOR[b.person] || '#c04f4f');
+    btn.style.setProperty('--color-bottom', b.colorBottom || b.colorTop || PERSON_DEFAULT_COLOR[b.person] || '#c04f4f');
+    btn.setAttribute('data-person', b.person || 'hers');
+  } else {
+    btn.style.removeProperty('--color-top');
+    btn.style.removeProperty('--color-bottom');
+    btn.removeAttribute('data-person');
+  }
 }
 
-function openBookmarkModal(key, data) {
+function openBookmarkModal(key, data, bookType, ym, dateKey) {
   const existing = document.getElementById('bookmark-modal');
   if (existing) existing.remove();
+  const isNew = !data;
+  const person = data?.person || 'hers';
+  const colorTop = data?.colorTop || PERSON_DEFAULT_COLOR[person];
+  const colorBottom = data?.colorBottom || colorTop;
   const note = data?.note || '';
+
+  const paletteHtml = (which, currentHex) => BOOKMARK_COLORS.map(c =>
+    `<button type="button" class="palette-chip ${c.hex.toLowerCase()===currentHex.toLowerCase()?'selected':''}" style="background:${c.hex}" title="${c.name}" data-hex="${c.hex}" onclick="pickBookmarkColor('${which}','${c.hex}')"></button>`
+  ).join('');
+
   const el = document.createElement('div');
   el.id = 'bookmark-modal';
   el.className = 'bookmark-modal-overlay';
+  el.dataset.key = key;
+  el.dataset.bookType = bookType;
+  el.dataset.ym = ym;
+  el.dataset.dateKey = dateKey;
+  el.dataset.person = person;
+  el.dataset.colorTop = colorTop;
+  el.dataset.colorBottom = colorBottom;
   el.innerHTML = `
     <div class="bookmark-modal">
       <div class="bookmark-modal-head">
         <div class="bookmark-modal-title">🔖 しおり</div>
         <button class="bookmark-modal-close" onclick="closeBookmarkModal()">×</button>
       </div>
-      <textarea class="bookmark-note" placeholder="思い出やコメントを書き残す…" id="bookmark-note-input">${escapeHtml(note)}</textarea>
+
+      <div class="bookmark-modal-preview">
+        <div class="preview-ribbon" id="preview-ribbon" style="--color-top:${colorTop}; --color-bottom:${colorBottom};">
+          <span class="ribbon-person-mark">${person === 'hers' ? 'ち' : 'ひ'}</span>
+        </div>
+        <div class="preview-hint">プレビュー</div>
+      </div>
+
+      <div class="bookmark-modal-section">
+        <label class="modal-label">だれの しおり？</label>
+        <div class="person-btns">
+          <button type="button" class="person-btn hers ${person==='hers'?'active':''}" onclick="pickBookmarkPerson('hers')">ちか</button>
+          <button type="button" class="person-btn mine ${person==='mine'?'active':''}" onclick="pickBookmarkPerson('mine')">ひろ</button>
+        </div>
+      </div>
+
+      <div class="bookmark-modal-section">
+        <label class="modal-label">上半分の色</label>
+        <div class="palette" id="palette-top">${paletteHtml('top', colorTop)}</div>
+      </div>
+
+      <div class="bookmark-modal-section">
+        <label class="modal-label">下半分の色</label>
+        <div class="palette" id="palette-bottom">${paletteHtml('bottom', colorBottom)}</div>
+      </div>
+
+      <div class="bookmark-modal-section">
+        <label class="modal-label">コメント</label>
+        <textarea class="bookmark-note" placeholder="思い出やひとこと…" id="bookmark-note-input">${escapeHtml(note)}</textarea>
+      </div>
+
       <div class="bookmark-modal-actions">
-        <button class="bookmark-modal-del" onclick="deleteBookmark('${key}')">しおりを外す</button>
-        <button class="bookmark-modal-save" onclick="saveBookmark('${key}')">保存</button>
+        <button class="bookmark-modal-del" onclick="deleteBookmark('${key}')" ${isNew?'style="visibility:hidden"':''}>しおりを外す</button>
+        <button class="bookmark-modal-save" onclick="saveBookmark('${key}')">${isNew?'しおりをつける':'保存'}</button>
       </div>
     </div>`;
   el.addEventListener('click', (e) => { if (e.target === el) closeBookmarkModal(); });
   document.body.appendChild(el);
   setTimeout(() => document.getElementById('bookmark-note-input')?.focus(), 50);
 }
+
+function pickBookmarkPerson(person) {
+  const el = document.getElementById('bookmark-modal');
+  if (!el) return;
+  el.dataset.person = person;
+  // アクティブボタン更新
+  el.querySelectorAll('.person-btn').forEach(b => b.classList.toggle('active', b.classList.contains(person)));
+  // 色をその人のデフォルトに合わせる（既にカスタム色を選んでない場合のみ）
+  const cur = el.dataset.colorTop;
+  const wasDefault = BOOKMARK_COLORS.some(c => c.hex === cur) && (
+    cur === PERSON_DEFAULT_COLOR.hers || cur === PERSON_DEFAULT_COLOR.mine
+  );
+  if (wasDefault) {
+    const newColor = PERSON_DEFAULT_COLOR[person];
+    el.dataset.colorTop = newColor;
+    el.dataset.colorBottom = newColor;
+    // パレット再描画
+    ['top','bottom'].forEach(which => {
+      const p = document.getElementById('palette-'+which);
+      if (!p) return;
+      p.querySelectorAll('.palette-chip').forEach(chip => {
+        chip.classList.toggle('selected', chip.dataset.hex.toLowerCase() === newColor.toLowerCase());
+      });
+    });
+  }
+  updatePreviewRibbon();
+}
+function pickBookmarkColor(which, hex) {
+  const el = document.getElementById('bookmark-modal');
+  if (!el) return;
+  if (which === 'top') el.dataset.colorTop = hex;
+  else el.dataset.colorBottom = hex;
+  const p = document.getElementById('palette-'+which);
+  if (p) p.querySelectorAll('.palette-chip').forEach(chip => {
+    chip.classList.toggle('selected', chip.dataset.hex.toLowerCase() === hex.toLowerCase());
+  });
+  updatePreviewRibbon();
+}
+function updatePreviewRibbon() {
+  const el = document.getElementById('bookmark-modal');
+  const preview = document.getElementById('preview-ribbon');
+  if (!el || !preview) return;
+  preview.style.setProperty('--color-top', el.dataset.colorTop);
+  preview.style.setProperty('--color-bottom', el.dataset.colorBottom);
+  const mark = preview.querySelector('.ribbon-person-mark');
+  if (mark) mark.textContent = el.dataset.person === 'hers' ? 'ち' : 'ひ';
+}
 function closeBookmarkModal() {
   document.getElementById('bookmark-modal')?.remove();
 }
 async function saveBookmark(key) {
+  const el = document.getElementById('bookmark-modal');
+  if (!el) return;
   const note = document.getElementById('bookmark-note-input')?.value || '';
-  const color = allBookmarks[key]?.color || 'red';
-  allBookmarks[key] = { ...(allBookmarks[key] || {}), note, color, updatedAt: Date.now() };
+  const person = el.dataset.person || 'hers';
+  const colorTop = el.dataset.colorTop || PERSON_DEFAULT_COLOR[person];
+  const colorBottom = el.dataset.colorBottom || colorTop;
+  allBookmarks[key] = { ...(allBookmarks[key] || {}), note, person, colorTop, colorBottom, updatedAt: Date.now() };
   try {
     await fetch('/api/bookmarks', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, note, color }),
+      body: JSON.stringify({ key, note, person, colorTop, colorBottom }),
     });
     showToast('しおりを保存しました');
   } catch { showToast('保存失敗', true); }
   closeBookmarkModal();
-  // 本棚のバッジ更新のため再描画
+  const [bt, ym, dk] = key.split(':');
+  updateBookmarkVisuals(bt, ym, dk);
+  // 目次モーダルが開いていれば再描画（バッジ更新）
+  refreshTocIfOpen();
   if (typeof renderDiaryShelf === 'function' && document.getElementById('diary-shelf')?.classList.contains('active')) {
     renderDiaryShelf();
   }
@@ -5327,17 +5478,45 @@ async function deleteBookmark(key) {
   closeBookmarkModal();
   const [bt, ym, dk] = key.split(':');
   updateBookmarkVisuals(bt, ym, dk);
+  refreshTocIfOpen();
   if (typeof renderDiaryShelf === 'function' && document.getElementById('diary-shelf')?.classList.contains('active')) {
     renderDiaryShelf();
   }
 }
 
-// 本のページに埋め込むしおりHTML
+// 目次オーバーレイが開いていれば再構築
+function refreshTocIfOpen() {
+  const ov = document.getElementById('book-toc-overlay');
+  if (!ov || !ov.classList.contains('active') || !currentBookYm) return;
+  const [yStr, mStr] = currentBookYm.split('-');
+  const y = Number(yStr), m = Number(mStr);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const isEn = currentBookLang === 'en';
+  // 記録のある日を再取得
+  const entryDates = [];
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dk = `${yStr}-${mStr}-${String(d).padStart(2,'0')}`;
+    if (dk > todayKey) break;
+    const diary = allDiaries[dk];
+    if (dk === todayKey || diary?.mine?.raw || diary?.hers?.raw) entryDates.push(dk);
+  }
+  ov.innerHTML = buildTocHtml(y, m, daysInMonth, entryDates, isEn);
+}
+
+// 本のページに埋め込むしおりHTML (ツートン対応)
 function bookmarkRibbonHtml(bookType, ym, dateKey) {
   const key = bookmarkKey(bookType, ym, dateKey);
-  const has = !!allBookmarks[key];
-  return `<button class="book-bookmark-ribbon ${has ? 'has-bookmark' : ''}" data-bookmark-key="${key}" onclick="event.stopPropagation(); toggleBookmark('${bookType}','${ym}','${dateKey}')" title="しおり">
-    <span class="ribbon-icon">🔖</span>
+  const b = allBookmarks[key];
+  const has = !!b;
+  const colorTop = b?.colorTop || '#c9a878';
+  const colorBottom = b?.colorBottom || colorTop;
+  const person = b?.person || '';
+  const personMark = person === 'hers' ? 'ち' : person === 'mine' ? 'ひ' : '';
+  const style = `--color-top:${colorTop}; --color-bottom:${colorBottom};`;
+  return `<button class="book-bookmark-ribbon ${has ? 'has-bookmark' : ''}" data-bookmark-key="${key}" data-person="${person}" style="${style}" onclick="event.stopPropagation(); toggleBookmark('${bookType}','${ym}','${dateKey}')" title="しおり">
+    <span class="ribbon-person-mark">${personMark}</span>
   </button>`;
 }
 
@@ -6305,7 +6484,12 @@ function buildTocHtml(year, month, daysInMonth, entryDates, isEn) {
     const has = entrySet.has(dateKey);
     const dowCls = dowIdx === 0 ? 'dow-su' : dowIdx === 6 ? 'dow-sa' : '';
     const dowLabel = isEn ? EN_DOWS[dowIdx] : DOWS[dowIdx];
-    items += `<div class="book-toc-item ${has ? 'has-entry' : ''} ${dowCls}" onclick="jumpToBookPage('${dateKey}')">
+    // その日にしおりがあるか (現在の本の中で)
+    const bmkKey = bookmarkKey(currentBookLang, currentBookYm, dateKey);
+    const bmk = allBookmarks[bmkKey];
+    const bmkHtml = bmk ? `<span class="toc-bmk" style="--color-top:${bmk.colorTop||'#c04f4f'}; --color-bottom:${bmk.colorBottom||bmk.colorTop||'#c04f4f'};" data-person="${bmk.person||''}"><span class="toc-bmk-mark">${bmk.person==='hers'?'ち':bmk.person==='mine'?'ひ':''}</span></span>` : '';
+    items += `<div class="book-toc-item ${has ? 'has-entry' : ''} ${dowCls} ${bmk?'has-bookmark':''}" onclick="jumpToBookPage('${dateKey}')">
+      ${bmkHtml}
       <div class="toc-day">${d}</div>
       <div class="toc-dow">${dowLabel}</div>
     </div>`;

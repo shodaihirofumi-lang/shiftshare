@@ -750,11 +750,14 @@ export async function setMonthlyDiary(ym, data) {
 export function getBookmarks() { return cache.bookmarks || {}; }
 export async function setBookmark(key, data) {
   if (!cache.bookmarks) cache.bookmarks = {};
-  if (data && (data.note !== undefined)) {
+  if (data && (data.note !== undefined || data.person !== undefined)) {
+    const existing = cache.bookmarks[key] || {};
     cache.bookmarks[key] = {
-      note: String(data.note || '').slice(0, 500),
-      color: (data.color || 'red'),
-      createdAt: cache.bookmarks[key]?.createdAt || Date.now(),
+      note: String(data.note ?? existing.note ?? '').slice(0, 500),
+      person: (data.person === 'mine' || data.person === 'hers') ? data.person : (existing.person || 'hers'),
+      colorTop: String(data.colorTop ?? existing.colorTop ?? '#d97a94').slice(0, 20),
+      colorBottom: String(data.colorBottom ?? existing.colorBottom ?? '#d97a94').slice(0, 20),
+      createdAt: existing.createdAt || Date.now(),
       updatedAt: Date.now(),
     };
   } else {
