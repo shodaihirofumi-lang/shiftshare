@@ -620,7 +620,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-pages::-webkit-scrollbar { display:none; }
 .book-pages { scrollbar-width:none; }
 .diary-book-page { flex:0 0 auto; min-width:100vw; scroll-snap-align:end; writing-mode:vertical-rl; text-orientation:upright; background:linear-gradient(90deg, #f6f0e2 0%, #efe6d1 45%, #eaddc0 100%); padding:30px 30px 50px; box-sizing:border-box; height:100%; position:relative; box-shadow:inset 6px 0 12px -6px rgba(90,60,20,.15), inset -6px 0 12px -6px rgba(90,60,20,.15); }
-.book-pages.lang-en .diary-book-page { scroll-snap-align:start; }
+/* 洋書はページを厳密に画面幅ぴったりにする。横は動かず、長い日記だけ縦スクロール */
+.book-pages.lang-en { scroll-snap-type:x mandatory; }
+.book-pages.lang-en .diary-book-page { flex:0 0 100vw; width:100vw; max-width:100vw; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; touch-action:pan-y; }
 .diary-book-page::before { content:''; position:absolute; top:0; bottom:0; right:14px; width:1px; background:linear-gradient(180deg, transparent, rgba(120,80,40,.18) 30%, rgba(120,80,40,.18) 70%, transparent); pointer-events:none; }
 .book-page-num { position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:11px; color:var(--text-soft); writing-mode:horizontal-tb; letter-spacing:2px; }
 
