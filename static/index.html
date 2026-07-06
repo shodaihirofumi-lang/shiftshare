@@ -692,6 +692,44 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 .shelf-sub { text-align:center; font-size:13px; color:var(--text-soft); letter-spacing:4px; margin:0 0 10px; font-family:'Hiragino Mincho ProN','Georgia',serif; text-transform:uppercase; }
 
+/* 文庫本(横書き日本語)の背表紙 */
+.book-spine.paperback { border-radius:2px 4px 4px 2px; }
+.book-spine.paperback.p1 { background:linear-gradient(90deg,#c4a882,#e0c9a0,#c4a882); }
+.book-spine.paperback.p2 { background:linear-gradient(90deg,#8ba892,#b0c9a8,#8ba892); }
+.book-spine.paperback.p3 { background:linear-gradient(90deg,#a88a94,#c9a8b2,#a88a94); }
+.book-spine.paperback.p4 { background:linear-gradient(90deg,#8a94a8,#a8b2c9,#8a94a8); }
+.book-spine.paperback.p5 { background:linear-gradient(90deg,#b89475,#d4b092,#b89475); }
+.book-spine.paperback::before { background:repeating-linear-gradient(180deg, transparent 0 16px, rgba(255,255,255,.1) 16px 17px, transparent 17px 32px); }
+.book-spine.paperback::after { content:''; position:absolute; top:12px; bottom:12px; left:5px; right:5px; border:1px solid rgba(80,50,30,.18); pointer-events:none; }
+.book-spine.paperback .book-spine-label.paperback-label { writing-mode:vertical-rl; text-orientation:mixed; color:#3a2814; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; font-size:17px; font-weight:600; letter-spacing:5px; padding:18px 0; text-shadow:0 1px 1px rgba(255,255,255,.4); }
+.book-spine.paperback .book-spine-badge { color:rgba(58,40,20,.65); }
+
+/* 文庫本(横書き日本語) 紙面 */
+.book-toolbar.paperback { background:linear-gradient(180deg,#f9f5eb,#efe6d0); border-bottom-color:#c8b58e; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; }
+.book-toolbar.paperback button, .book-toolbar.paperback .book-title-bar { color:#3a2814; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; }
+.book-toolbar.paperback .book-title-bar { letter-spacing:4px; font-size:17px; }
+
+.book-pages.lang-ja-h { scroll-snap-type:x mandatory; }
+.book-pages.lang-ja-h .diary-book-page { flex:0 0 100vw; width:100vw; max-width:100vw; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; touch-action:pan-y; writing-mode:horizontal-tb; text-orientation:mixed; display:block; padding:22px 26px 44px; background:linear-gradient(180deg,#f9f5eb 0%, #f0e6cf 100%); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; color:#3a2814; box-shadow:inset 0 0 0 1px rgba(160,120,70,.15); }
+.book-pages.lang-ja-h .diary-book-page::before { display:none; }
+.book-pages.lang-ja-h .diary-book-page::after { content:''; position:absolute; top:14px; right:14px; bottom:14px; left:14px; border:1px solid rgba(120,80,40,.22); pointer-events:none; }
+
+/* 日付ヘッダー (横書き日本語) */
+.page-date-jah { text-align:center; margin:4px auto 18px; padding-bottom:12px; border-bottom:1px double rgba(120,80,40,.35); max-width:320px; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; }
+.page-date-jah .date-day { display:inline-block; font-size:44px; font-weight:800; line-height:1; color:#3a2814; letter-spacing:2px; vertical-align:middle; }
+.page-date-jah .date-mon { display:inline-block; font-size:17px; font-weight:600; letter-spacing:3px; margin-left:6px; color:#5a3f22; vertical-align:middle; }
+.page-date-jah .date-dow { display:block; font-size:12px; letter-spacing:8px; margin-top:6px; color:#8a6b45; }
+
+.book-pages.lang-ja-h .page-content { display:block; }
+.book-pages.lang-ja-h .who-marker { display:block; text-align:center; margin:14px auto 6px; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; font-size:16px; letter-spacing:6px; opacity:.85; font-weight:700; }
+.book-pages.lang-ja-h .page-text { display:block; font-size:var(--book-font-size, 18px); line-height:1.95; margin:0 auto; max-width:640px; padding:0 4px; letter-spacing:.5px; }
+.book-pages.lang-ja-h .text-para { display:block; text-indent:1em; margin-block-end:0.5em; white-space:pre-wrap; }
+.book-pages.lang-ja-h .diary-photos-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:12px auto; max-width:600px; }
+.book-pages.lang-ja-h .diary-photo-item { flex:0 0 auto; height:auto; width:auto; max-width:180px; padding:6px 6px 18px; background:#faf5e8; border:1px solid #d4b58a; box-shadow:1px 2px 6px rgba(80,50,20,.2); transform:rotate(-1deg); }
+.book-pages.lang-ja-h .diary-photo-item:nth-child(even) { transform:rotate(1.2deg); }
+.book-pages.lang-ja-h .diary-photo { width:100%; max-width:160px; height:auto; max-height:150px; object-fit:cover; }
+.book-pages.lang-ja-h .book-page-num { bottom:16px; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; color:#8a6b45; letter-spacing:2px; }
+
 /* 目次モーダル */
 .book-toc-overlay { display:none; position:fixed; inset:0; background:rgba(30,20,10,.55); z-index:300; align-items:center; justify-content:center; padding:20px; }
 .book-toc-overlay.active { display:flex; }
@@ -5317,6 +5355,21 @@ function renderDiaryShelf() {
     rowHtml += '</div><div class="shelf-board"></div>';
     html += rowHtml;
   });
+  html += '<div class="shelf-sub" style="margin-top:26px;">文庫 — 横書きの日本語</div>';
+  shelfRows.forEach(rowYms => {
+    let rowHtml = '<div class="shelf-rack">';
+    rowYms.forEach((ym, idx) => {
+      const [y, m] = ym.split('-');
+      const cnt = monthMap[ym].length;
+      const bClass = 'p' + ((idx % 5) + 1);
+      rowHtml += `<div class="book-spine paperback ${bClass}" onclick="openDiaryBook('${ym}','ja-h')">
+        <div class="book-spine-label paperback-label">${y}・${Number(m)}月</div>
+        <div class="book-spine-badge">${cnt}日</div>
+      </div>`;
+    });
+    rowHtml += '</div><div class="shelf-board"></div>';
+    html += rowHtml;
+  });
   html += '<div class="shelf-sub" style="margin-top:26px;">Western — Translated to English</div>';
   shelfRows.forEach(rowYms => {
     let rowHtml = '<div class="shelf-rack">';
@@ -5369,6 +5422,8 @@ function renderDiaryBook() {
   const EN_DOWS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const EN_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const isEn = currentBookLang === 'en';
+  const isJaH = currentBookLang === 'ja-h'; // 横書き日本語（文庫本風）
+  const isHorizontal = isEn || isJaH;       // 横スクロールでは無く固定幅+縦スクロールの共通仕様
 
   const now = new Date();
   const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
@@ -5386,8 +5441,8 @@ function renderDiaryBook() {
   // 段落単位で分割し、字下げ+段落間スペースを効かせる
   const splitParas = (raw) => raw.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean);
 
-  // 和書は日付を右→左に読み進むために表示順を反転（day1が右端）
-  const displayOrder = isEn ? pages.slice() : pages.slice().reverse();
+  // 縦書き和書だけ日付を右→左に読み進むために表示順を反転（day1が右端）
+  const displayOrder = isHorizontal ? pages.slice() : pages.slice().reverse();
 
   let pagesHtml = '';
   displayOrder.forEach((dateKey) => {
@@ -5409,7 +5464,6 @@ function renderDiaryBook() {
       rawHers = jpHers;
     }
 
-    // 英語モードで翻訳がなく、日本語原文はある場合 → 翻訳ボタンを1つだけ表示
     let contentInner = '';
     const hasEnAny = isEn && (rawHers || rawMine);
     const hasJpSource = isEn && (jpHers || jpMine);
@@ -5420,7 +5474,6 @@ function renderDiaryBook() {
         <button class="translate-btn" data-translate-btn="${dateKey}" onclick="translateDay('${dateKey}')">Translate this page</button>
       </div>`;
     } else {
-      // 連続フロー: ちか→ひろを一つのコンテンツ内に流し込む
       ['hers','mine'].forEach(person => {
         const raw = person === 'hers' ? rawHers : rawMine;
         const pPhotos = photos.filter(ph => ph.person === person);
@@ -5429,11 +5482,14 @@ function renderDiaryBook() {
         const colorVar = person === 'hers' ? 'var(--hers)' : 'var(--mine)';
         if (isEn) {
           contentInner += `<div class="who-marker western" style="color:${colorVar};">— ${label} —</div>`;
+        } else if (isJaH) {
+          contentInner += `<div class="who-marker paperback" style="color:${colorVar};">— ${label} —</div>`;
         } else {
           contentInner += `<div class="who-marker" style="color:${colorVar};">◇ ${label}</div>`;
         }
         if (pPhotos.length) {
-          contentInner += `<div class="diary-photos-grid" ${isEn ? '' : 'style="writing-mode:horizontal-tb;"'}>${pPhotos.map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${ph.img}" onclick="openLightbox(this.src)"/></div>`).join('')}</div>`;
+          const photosStyleAttr = isHorizontal ? '' : 'style="writing-mode:horizontal-tb;"';
+          contentInner += `<div class="diary-photos-grid" ${photosStyleAttr}>${pPhotos.map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${ph.img}" onclick="openLightbox(this.src)"/></div>`).join('')}</div>`;
         }
         if (raw) {
           const paragraphs = splitParas(raw);
@@ -5457,6 +5513,16 @@ function renderDiaryBook() {
         <div class="page-content">${contentInner}</div>
         <div class="book-page-num">${day} ${EN_MONTHS[month-1]}</div>
       </div>`;
+    } else if (isJaH) {
+      pagesHtml += `<div class="diary-book-page paperback" data-date="${dateKey}">
+        <header class="page-date-jah">
+          <span class="date-day">${day}</span>
+          <span class="date-mon">${month}月</span>
+          <span class="date-dow">${dow}曜日</span>
+        </header>
+        <div class="page-content">${contentInner}</div>
+        <div class="book-page-num">— ${month}/${day} —</div>
+      </div>`;
     } else {
       pagesHtml += `<div class="diary-book-page" data-date="${dateKey}">
         <header class="page-date-jp">${month}月${day}日<span>${dow}曜日</span></header>
@@ -5470,8 +5536,9 @@ function renderDiaryBook() {
     pagesHtml = `<div style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--text-soft); font-size:16px;">${isEn ? 'No entries for this month.' : 'この月の日記はまだありません'}</div>`;
   }
 
-  const toolbar = isEn ? `
-    <div class="book-toolbar western">
+  let toolbar;
+  if (isEn) {
+    toolbar = `<div class="book-toolbar western">
       <button onclick="closeDiaryBook()">← Shelf</button>
       <div class="book-title-bar western">${EN_MONTHS[month-1]} ${year}</div>
       <div style="display:flex; gap:6px; align-items:center;">
@@ -5479,8 +5546,25 @@ function renderDiaryBook() {
         <button onclick="changeBookFontSize(2)">A+</button>
         <button onclick="showBookToc()">Contents</button>
       </div>
-    </div>` : `
-    <div class="book-toolbar">
+    </div>`;
+  } else if (isJaH) {
+    toolbar = `<div class="book-toolbar paperback">
+      <button onclick="closeDiaryBook()">← 本棚へ</button>
+      <div class="book-title-bar paperback">${year}年${month}月</div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <select class="book-font-select" onchange="changeBookFont(this.value)">
+          <option value="mincho">明朝</option>
+          <option value="gothic">ゴシック</option>
+          <option value="maru">丸ゴシ</option>
+          <option value="kaisho">楷書</option>
+        </select>
+        <button onclick="changeBookFontSize(-2)">小</button>
+        <button onclick="changeBookFontSize(2)">大</button>
+        <button onclick="showBookToc()">目次</button>
+      </div>
+    </div>`;
+  } else {
+    toolbar = `<div class="book-toolbar">
       <button onclick="closeDiaryBook()">← 本棚へ</button>
       <div class="book-title-bar">${year}年${month}月</div>
       <div style="display:flex; gap:6px; align-items:center;">
@@ -5495,26 +5579,25 @@ function renderDiaryBook() {
         <button onclick="showBookToc()">目次</button>
       </div>
     </div>`;
+  }
 
+  const langClass = isEn ? 'lang-en' : (isJaH ? 'lang-ja-h' : 'lang-ja');
   el.innerHTML = `
     ${toolbar}
-    <div class="book-pages ${isEn ? 'lang-en' : 'lang-ja'} font-${currentBookFont}" id="book-pages" style="--book-font-size:${currentBookFontSize}px;">${pagesHtml}</div>
+    <div class="book-pages ${langClass} font-${currentBookFont}" id="book-pages" style="--book-font-size:${currentBookFontSize}px;">${pagesHtml}</div>
     <div class="book-toc-overlay" id="book-toc-overlay" onclick="if(event.target===this)hideBookToc()">
       ${buildTocHtml(year, month, daysInMonth, pages, isEn)}
     </div>
   `;
   el.classList.add('active');
 
-  // 初期表示は「1日目の日付位置」から
-  // 和書は日付が各ページの右端にあるので、1日目のページの右端をビューポート右端に合わせる
-  // displayOrder が reverse なので、1日目のページは最後(=右端)にある
   requestAnimationFrame(() => {
     const pagesEl = document.getElementById('book-pages');
     if (!pagesEl) return;
-    if (isEn) {
+    if (isHorizontal) {
       pagesEl.scrollLeft = 0;
     } else {
-      const lastPage = pagesEl.lastElementChild; // day1
+      const lastPage = pagesEl.lastElementChild;
       if (lastPage && lastPage.classList.contains('diary-book-page')) {
         pagesEl.scrollLeft = lastPage.offsetLeft + lastPage.offsetWidth - pagesEl.clientWidth;
       } else {
@@ -5610,10 +5693,10 @@ function jumpToBookPage(dateKey) {
   }
   if (!pageEl) return;
   // 日付の位置に飛ばす
-  // 洋書：日付が左上 → ページの左端をビューポート左端に合わせる (offsetLeft)
-  // 和書：日付が右端 → ページの右端をビューポート右端に合わせる
-  const isEn = currentBookLang === 'en';
-  const target = isEn
+  // 横書き (洋書 / 横書き日本語)：日付が上 → ページの左端をビューポート左端に合わせる
+  // 縦書き和書：日付が右端 → ページの右端をビューポート右端に合わせる
+  const isHorizontal = currentBookLang === 'en' || currentBookLang === 'ja-h';
+  const target = isHorizontal
     ? pageEl.offsetLeft
     : pageEl.offsetLeft + pageEl.offsetWidth - pagesEl.clientWidth;
   pagesEl.scrollTo({ left: target, behavior: 'smooth' });
