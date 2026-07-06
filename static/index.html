@@ -622,7 +622,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .diary-book-page { flex:0 0 auto; min-width:100vw; scroll-snap-align:end; writing-mode:vertical-rl; text-orientation:upright; background:linear-gradient(90deg, #f6f0e2 0%, #efe6d1 45%, #eaddc0 100%); padding:30px 30px 50px; box-sizing:border-box; height:100%; position:relative; box-shadow:inset 6px 0 12px -6px rgba(90,60,20,.15), inset -6px 0 12px -6px rgba(90,60,20,.15); }
 /* 洋書はページを厳密に画面幅ぴったりにする。横は動かず、長い日記だけ縦スクロール */
 .book-pages.lang-en { scroll-snap-type:x mandatory; }
-.book-pages.lang-en .diary-book-page { flex:0 0 100vw; width:100vw; max-width:100vw; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; touch-action:pan-y; }
+.book-pages.lang-en .diary-book-page { flex:0 0 100vw; width:100vw; max-width:100vw; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; touch-action:pan-y pan-x; }
 .diary-book-page::before { content:''; position:absolute; top:0; bottom:0; right:14px; width:1px; background:linear-gradient(180deg, transparent, rgba(120,80,40,.18) 30%, rgba(120,80,40,.18) 70%, transparent); pointer-events:none; }
 .book-page-num { position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:11px; color:var(--text-soft); writing-mode:horizontal-tb; letter-spacing:2px; }
 
@@ -723,7 +723,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-toolbar.stock button { color:#e3d19e; font-family:'Georgia',serif; }
 .book-toolbar.stock .book-title-bar.stock { color:#e3d19e; font-family:'Georgia',serif; letter-spacing:3px; font-size:16px; }
 .book-pages.lang-stock { scroll-snap-type:x mandatory; background:#f5f0dd; }
-.book-pages.lang-stock .diary-book-page { flex:0 0 100vw; width:100vw; max-width:100vw; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; touch-action:pan-y; writing-mode:horizontal-tb; text-orientation:mixed; display:block; padding:16px 20px 40px; background:repeating-linear-gradient(180deg,#faf7e7 0 30px,#f2ecd2 30px 31px); font-family:'Hiragino Sans','Yu Gothic',sans-serif; color:#2a2418; box-shadow:inset 20px 0 0 -18px #c08080; }
+.book-pages.lang-stock .diary-book-page { flex:0 0 100vw; width:100vw; max-width:100vw; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; touch-action:pan-y pan-x; writing-mode:horizontal-tb; text-orientation:mixed; display:block; padding:16px 20px 40px; background:repeating-linear-gradient(180deg,#faf7e7 0 30px,#f2ecd2 30px 31px); font-family:'Hiragino Sans','Yu Gothic',sans-serif; color:#2a2418; box-shadow:inset 20px 0 0 -18px #c08080; }
 .book-pages.lang-stock .diary-book-page::before, .book-pages.lang-stock .diary-book-page::after { display:none; }
 .stock-page-header { display:flex; align-items:center; gap:14px; padding-bottom:10px; border-bottom:2px solid #4a4020; margin-bottom:12px; }
 .stock-date { flex:0 0 auto; text-align:center; min-width:56px; padding:6px 8px; background:#1f2019; color:#e3d19e; border-radius:4px; font-family:'Georgia',serif; }
@@ -774,7 +774,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-toolbar.paperback .book-title-bar { letter-spacing:4px; font-size:17px; }
 
 .book-pages.lang-ja-h { scroll-snap-type:x mandatory; }
-.book-pages.lang-ja-h .diary-book-page { flex:0 0 100vw; width:100vw; max-width:100vw; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; touch-action:pan-y; writing-mode:horizontal-tb; text-orientation:mixed; display:block; padding:22px 26px 44px; background:linear-gradient(180deg,#f9f5eb 0%, #f0e6cf 100%); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; color:#3a2814; box-shadow:inset 0 0 0 1px rgba(160,120,70,.15); }
+.book-pages.lang-ja-h .diary-book-page { flex:0 0 100vw; width:100vw; max-width:100vw; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; touch-action:pan-y pan-x; writing-mode:horizontal-tb; text-orientation:mixed; display:block; padding:22px 26px 44px; background:linear-gradient(180deg,#f9f5eb 0%, #f0e6cf 100%); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; color:#3a2814; box-shadow:inset 0 0 0 1px rgba(160,120,70,.15); }
 .book-pages.lang-ja-h .diary-book-page::before { display:none; }
 .book-pages.lang-ja-h .diary-book-page::after { content:''; position:absolute; top:14px; right:14px; bottom:14px; left:14px; border:1px solid rgba(120,80,40,.22); pointer-events:none; }
 
