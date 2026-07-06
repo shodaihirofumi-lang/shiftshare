@@ -1,63 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f6ecdd"/>
-      <stop offset="1" stop-color="#efd9c2"/>
+      <stop offset="0" stop-color="#2b3038"/>
+      <stop offset="1" stop-color="#141821"/>
     </linearGradient>
-    <radialGradient id="mine" cx=".35" cy=".35" r=".7">
-      <stop offset="0" stop-color="#7d99a5"/>
-      <stop offset="1" stop-color="#4f6d7a"/>
-    </radialGradient>
-    <radialGradient id="hers" cx=".35" cy=".35" r=".7">
-      <stop offset="0" stop-color="#c78ea1"/>
-      <stop offset="1" stop-color="#a76b80"/>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e5c692"/>
+      <stop offset=".55" stop-color="#c8a56e"/>
+      <stop offset="1" stop-color="#8f7548"/>
+    </linearGradient>
+    <linearGradient id="rose" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dda3b6"/>
+      <stop offset=".55" stop-color="#b47286"/>
+      <stop offset="1" stop-color="#7d4a58"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx=".3" cy=".25" r=".9">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".06"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <!-- 背景 (ふんわりベージュ) -->
+  <!-- 深い夜のような背景 -->
   <rect width="512" height="512" fill="url(#bg)"/>
-  <!-- 星と小さな装飾 -->
-  <g fill="#e4c58e" opacity=".55">
-    <circle cx="90" cy="110" r="6"/>
-    <circle cx="440" cy="140" r="5"/>
-    <circle cx="70" cy="380" r="5"/>
-    <circle cx="450" cy="410" r="6"/>
-    <path d="M105 435l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
-    <path d="M400 90l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+  <rect width="512" height="512" fill="url(#sheen)"/>
+
+  <!-- 二つの絡み合う輪 (ふたつの人生が重なる) -->
+  <g fill="none" stroke-width="7" stroke-linecap="round">
+    <circle cx="196" cy="256" r="118" stroke="url(#gold)"/>
+    <circle cx="316" cy="256" r="118" stroke="url(#rose)"/>
   </g>
-  <!-- ハート (キャラの上、二人の絆) -->
-  <g transform="translate(256 96)">
-    <path d="M0 24c-8-24-46-24-46 4C-46 44 0 74 0 74s46-30 46-46c0-28-38-28-46-4z"
-          fill="#e0888e" opacity=".92"/>
-    <ellipse cx="-14" cy="24" rx="6" ry="4" fill="#fff" opacity=".55"/>
-  </g>
-  <!-- ひろ (青緑まる、左側) -->
-  <g transform="translate(178 300)">
-    <!-- ほほ -->
-    <ellipse cx="-22" cy="16" rx="14" ry="9" fill="#c98080" opacity=".45"/>
-    <ellipse cx="22" cy="16" rx="14" ry="9" fill="#c98080" opacity=".45"/>
-    <!-- 顔本体 -->
-    <circle cx="0" cy="0" r="86" fill="url(#mine)"/>
-    <!-- ハイライト -->
-    <ellipse cx="-28" cy="-30" rx="30" ry="18" fill="#fff" opacity=".2"/>
-    <!-- 目 -->
-    <ellipse cx="-24" cy="-4" rx="6" ry="9" fill="#f6ecdd"/>
-    <ellipse cx="24" cy="-4" rx="6" ry="9" fill="#f6ecdd"/>
-    <!-- 口 -->
-    <path d="M-12 22 Q0 34 12 22" stroke="#f6ecdd" stroke-width="5" stroke-linecap="round" fill="none"/>
-  </g>
-  <!-- ちか (モーヴまる、右側、ちょっと重なる) -->
-  <g transform="translate(334 300)">
-    <ellipse cx="-22" cy="16" rx="14" ry="9" fill="#c98080" opacity=".45"/>
-    <ellipse cx="22" cy="16" rx="14" ry="9" fill="#c98080" opacity=".45"/>
-    <circle cx="0" cy="0" r="86" fill="url(#hers)"/>
-    <ellipse cx="-28" cy="-30" rx="30" ry="18" fill="#fff" opacity=".2"/>
-    <!-- リボン (ちか だけ) -->
-    <g transform="translate(0 -84)">
-      <path d="M-22 -6 Q-32 -18 -18 -20 Q-6 -18 0 -6 Q6 -18 18 -20 Q32 -18 22 -6 Q10 4 0 -2 Q-10 4 -22 -6z" fill="#e0888e"/>
-      <circle cx="0" cy="-6" r="5" fill="#c96a76"/>
-    </g>
-    <ellipse cx="-24" cy="-4" rx="6" ry="9" fill="#f6ecdd"/>
-    <ellipse cx="24" cy="-4" rx="6" ry="9" fill="#f6ecdd"/>
-    <path d="M-12 22 Q0 34 12 22" stroke="#f6ecdd" stroke-width="5" stroke-linecap="round" fill="none"/>
-  </g>
+
+  <!-- 中央の小さなパール -->
+  <circle cx="256" cy="256" r="5" fill="#f2e4c2" opacity=".9"/>
+
+  <!-- 上下の細い装飾ライン (エディトリアル感) -->
+  <line x1="176" y1="72" x2="336" y2="72" stroke="#c9a878" stroke-width="1" opacity=".35"/>
+  <line x1="176" y1="440" x2="336" y2="440" stroke="#c9a878" stroke-width="1" opacity=".35"/>
 </svg>
