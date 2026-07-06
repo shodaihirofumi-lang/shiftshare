@@ -619,7 +619,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-pages { flex:1; overflow-x:auto; overflow-y:hidden; display:flex; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; overscroll-behavior:contain; touch-action:pan-x; }
 .book-pages::-webkit-scrollbar { display:none; }
 .book-pages { scrollbar-width:none; }
-.diary-book-page { flex:0 0 auto; min-width:100vw; scroll-snap-align:start; writing-mode:vertical-rl; text-orientation:upright; background:linear-gradient(90deg, #f6f0e2 0%, #efe6d1 45%, #eaddc0 100%); padding:30px 30px 50px; box-sizing:border-box; height:100%; position:relative; box-shadow:inset 6px 0 12px -6px rgba(90,60,20,.15), inset -6px 0 12px -6px rgba(90,60,20,.15); }
+.diary-book-page { flex:0 0 auto; min-width:100vw; scroll-snap-align:end; writing-mode:vertical-rl; text-orientation:upright; background:linear-gradient(90deg, #f6f0e2 0%, #efe6d1 45%, #eaddc0 100%); padding:30px 30px 50px; box-sizing:border-box; height:100%; position:relative; box-shadow:inset 6px 0 12px -6px rgba(90,60,20,.15), inset -6px 0 12px -6px rgba(90,60,20,.15); }
+.book-pages.lang-en .diary-book-page { scroll-snap-align:start; }
 .diary-book-page::before { content:''; position:absolute; top:0; bottom:0; right:14px; width:1px; background:linear-gradient(180deg, transparent, rgba(120,80,40,.18) 30%, rgba(120,80,40,.18) 70%, transparent); pointer-events:none; }
 .book-page-num { position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:11px; color:var(--text-soft); writing-mode:horizontal-tb; letter-spacing:2px; }
 
@@ -628,7 +629,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .page-date-jp span { display:block; margin-top:14px; font-size:15px; font-weight:600; color:var(--text-soft); letter-spacing:3px; }
 .page-content { display:block; }
 .who-marker { display:block; font-size:19px; font-weight:700; letter-spacing:3px; margin:0 14px 0 8px; padding:6px 4px; }
-.page-text { display:block; white-space:pre-wrap; font-size:var(--book-font-size, 22px); line-height:2.1; margin:0 18px 0 6px; padding:2px 4px; }
+.page-text { display:block; font-size:var(--book-font-size, 22px); line-height:2.1; margin:0 18px 0 6px; padding:2px 4px; }
+/* 段落: 1文字字下げ + 段落間スペース。縦書きでは block-end = 左に効く */
+.text-para { display:block; white-space:pre-wrap; text-indent:1em; margin:0 0 0 0; margin-block-end:0.8em; }
+.text-para:last-child { margin-block-end:0; }
 .page-empty { color:var(--text-soft); font-size:16px; padding:20px; }
 /* 和書は縦書きブロック（display:block）が右→左に流れるので、
    date, who-marker, photos, page-text が自然に列として並ぶ。
@@ -649,21 +653,23 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-toolbar.western button, .book-toolbar.western .book-title-bar { font-family:'Georgia','Times New Roman',serif; color:#3a2814; }
 .book-toolbar.western .book-title-bar { letter-spacing:3px; font-style:italic; font-size:18px; }
 .book-pages.lang-en { }
-.book-pages.lang-en .diary-book-page { writing-mode:horizontal-tb; text-orientation:mixed; display:block; padding:38px 44px 60px; background:linear-gradient(180deg,#fbf8ed 0%, #f4ecd6 100%); font-family:'Georgia','Times New Roman','Cochin',serif; color:#3a2814; overflow-y:auto; }
+.book-pages.lang-en .diary-book-page { writing-mode:horizontal-tb; text-orientation:mixed; display:block; padding:20px 26px 40px; background:linear-gradient(180deg,#fbf8ed 0%, #f4ecd6 100%); font-family:'Georgia','Times New Roman','Cochin',serif; color:#3a2814; overflow-y:auto; }
 .book-pages.lang-en .diary-book-page::before { display:none; }
-.book-pages.lang-en .diary-book-page::after { content:''; position:absolute; top:24px; right:24px; bottom:24px; left:24px; border:1px solid rgba(120,80,40,.25); pointer-events:none; }
-.page-date-en { text-align:center; margin:8px auto 30px; padding-bottom:22px; border-bottom:1px double rgba(120,80,40,.35); max-width:280px; }
-.page-date-en .date-day { font-family:'Playfair Display','Georgia',serif; font-size:64px; font-weight:400; line-height:1; color:#3a2814; letter-spacing:2px; }
-.page-date-en .date-mon { font-size:22px; font-style:italic; letter-spacing:6px; margin-top:6px; color:#5a3f22; text-transform:uppercase; }
-.page-date-en .date-dow { font-size:13px; letter-spacing:8px; margin-top:8px; color:#8a6b45; text-transform:uppercase; }
+.book-pages.lang-en .diary-book-page::after { content:''; position:absolute; top:14px; right:14px; bottom:14px; left:14px; border:1px solid rgba(120,80,40,.25); pointer-events:none; }
+.page-date-en { text-align:center; margin:4px auto 16px; padding-bottom:12px; border-bottom:1px double rgba(120,80,40,.35); max-width:260px; }
+.page-date-en .date-day { font-family:'Playfair Display','Georgia',serif; font-size:44px; font-weight:400; line-height:1; color:#3a2814; letter-spacing:2px; }
+.page-date-en .date-mon { font-size:16px; font-style:italic; letter-spacing:5px; margin-top:2px; color:#5a3f22; text-transform:uppercase; }
+.page-date-en .date-dow { font-size:11px; letter-spacing:6px; margin-top:4px; color:#8a6b45; text-transform:uppercase; }
 .book-pages.lang-en .page-content { display:block; }
-.book-pages.lang-en .who-marker { display:block; text-align:center; margin:26px auto 12px; font-family:'Playfair Display','Georgia',serif; font-style:italic; font-size:20px; letter-spacing:5px; opacity:.75; }
-.book-pages.lang-en .page-text { display:block; white-space:pre-wrap; font-size:var(--book-font-size, 18px); line-height:1.85; margin:0 auto; max-width:640px; padding:0 4px; text-align:justify; letter-spacing:.3px; }
-.book-pages.lang-en .page-text::first-letter { font-family:'Playfair Display','Georgia',serif; font-size:2.2em; float:left; line-height:.9; margin:4px 6px 0 0; color:#5a3f22; }
-.book-pages.lang-en .diary-photos-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:16px; margin:22px auto; max-width:640px; }
-.book-pages.lang-en .diary-photo-item { flex:0 0 auto; height:auto; width:auto; max-width:280px; padding:10px 10px 26px; background:#faf5e8; border:1px solid #d4b58a; box-shadow:2px 3px 10px rgba(80,50,20,.25); transform:rotate(-1deg); }
+.book-pages.lang-en .who-marker { display:block; text-align:center; margin:14px auto 6px; font-family:'Playfair Display','Georgia',serif; font-style:italic; font-size:17px; letter-spacing:4px; opacity:.75; }
+.book-pages.lang-en .page-text { display:block; font-size:var(--book-font-size, 16px); line-height:1.7; margin:0 auto; max-width:600px; padding:0 4px; text-align:justify; letter-spacing:.2px; }
+.book-pages.lang-en .text-para { display:block; text-indent:1.5em; margin-block-end:0.5em; }
+.book-pages.lang-en .text-para:first-of-type::first-letter { font-family:'Playfair Display','Georgia',serif; font-size:2.4em; float:left; line-height:.85; margin:2px 6px -2px 0; color:#5a3f22; font-weight:600; }
+.book-pages.lang-en .text-para:first-of-type { text-indent:0; }
+.book-pages.lang-en .diary-photos-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:12px auto; max-width:600px; }
+.book-pages.lang-en .diary-photo-item { flex:0 0 auto; height:auto; width:auto; max-width:180px; padding:6px 6px 18px; background:#faf5e8; border:1px solid #d4b58a; box-shadow:1px 2px 6px rgba(80,50,20,.2); transform:rotate(-1deg); }
 .book-pages.lang-en .diary-photo-item:nth-child(even) { transform:rotate(1.2deg); }
-.book-pages.lang-en .diary-photo { width:100%; max-width:260px; height:auto; max-height:260px; object-fit:cover; }
+.book-pages.lang-en .diary-photo { width:100%; max-width:160px; height:auto; max-height:150px; object-fit:cover; }
 .book-pages.lang-en .book-page-num { bottom:16px; font-family:'Georgia',serif; font-style:italic; color:#8a6b45; letter-spacing:1px; }
 .book-toc.western { background:linear-gradient(180deg,#fbf8ed,#f2ead5); font-family:'Georgia',serif; }
 .book-toc.western .book-toc-head-title { font-family:'Playfair Display','Georgia',serif; font-style:italic; }
@@ -5375,8 +5381,14 @@ function renderDiaryBook() {
     }
   }
 
+  // 段落単位で分割し、字下げ+段落間スペースを効かせる
+  const splitParas = (raw) => raw.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean);
+
+  // 和書は日付を右→左に読み進むために表示順を反転（day1が右端）
+  const displayOrder = isEn ? pages.slice() : pages.slice().reverse();
+
   let pagesHtml = '';
-  pages.forEach((dateKey, i) => {
+  displayOrder.forEach((dateKey) => {
     const { day } = parseKey(dateKey);
     const photos = dayPhotos[dateKey] || [];
     const diary = allDiaries[dateKey];
@@ -5388,11 +5400,11 @@ function renderDiaryBook() {
     const jpHers = diary?.hers?.raw || '';
     const jpMine = diary?.mine?.raw || '';
     if (isEn) {
-      rawHers = escapeHtml(diary?.translated?.en_hers || '');
-      rawMine = escapeHtml(diary?.translated?.en_mine || '');
+      rawHers = diary?.translated?.en_hers || '';
+      rawMine = diary?.translated?.en_mine || '';
     } else {
-      rawMine = escapeHtml(jpMine);
-      rawHers = escapeHtml(jpHers);
+      rawMine = jpMine;
+      rawHers = jpHers;
     }
 
     // 英語モードで翻訳がなく、日本語原文はある場合 → 翻訳ボタンを1つだけ表示
@@ -5422,7 +5434,9 @@ function renderDiaryBook() {
           contentInner += `<div class="diary-photos-grid" ${isEn ? '' : 'style="writing-mode:horizontal-tb;"'}>${pPhotos.map(ph => `<div class="diary-photo-item"><img class="diary-photo" src="${ph.img}" onclick="openLightbox(this.src)"/></div>`).join('')}</div>`;
         }
         if (raw) {
-          contentInner += `<div class="page-text">${raw}</div>`;
+          const paragraphs = splitParas(raw);
+          const parasHtml = paragraphs.map(p => `<div class="text-para">${escapeHtml(p)}</div>`).join('');
+          contentInner += `<div class="page-text">${parasHtml || escapeHtml(raw)}</div>`;
         }
       });
     }
@@ -5439,13 +5453,13 @@ function renderDiaryBook() {
           <div class="date-dow">${enDow}</div>
         </header>
         <div class="page-content">${contentInner}</div>
-        <div class="book-page-num">${i + 1} / ${pages.length}</div>
+        <div class="book-page-num">${day} ${EN_MONTHS[month-1]}</div>
       </div>`;
     } else {
       pagesHtml += `<div class="diary-book-page" data-date="${dateKey}">
         <header class="page-date-jp">${month}月${day}日<span>${dow}曜日</span></header>
         <div class="page-content">${contentInner}</div>
-        <div class="book-page-num">— ${i + 1} / ${pages.length} —</div>
+        <div class="book-page-num">— ${day}日 —</div>
       </div>`;
     }
   });
@@ -5489,9 +5503,22 @@ function renderDiaryBook() {
   `;
   el.classList.add('active');
 
+  // 初期表示は「1日目の日付位置」から
+  // 和書は日付が各ページの右端にあるので、1日目のページの右端をビューポート右端に合わせる
+  // displayOrder が reverse なので、1日目のページは最後(=右端)にある
   requestAnimationFrame(() => {
     const pagesEl = document.getElementById('book-pages');
-    if (pagesEl) pagesEl.scrollLeft = 0;
+    if (!pagesEl) return;
+    if (isEn) {
+      pagesEl.scrollLeft = 0;
+    } else {
+      const lastPage = pagesEl.lastElementChild; // day1
+      if (lastPage && lastPage.classList.contains('diary-book-page')) {
+        pagesEl.scrollLeft = lastPage.offsetLeft + lastPage.offsetWidth - pagesEl.clientWidth;
+      } else {
+        pagesEl.scrollLeft = pagesEl.scrollWidth;
+      }
+    }
   });
 }
 
@@ -5576,13 +5603,18 @@ function jumpToBookPage(dateKey) {
   if (!pagesEl) return;
   let pageEl = pagesEl.querySelector(`.diary-book-page[data-date="${dateKey}"]`);
   if (!pageEl) {
-    // 記録のない日はスキップして最も近い日へ
     const allPages = [...pagesEl.querySelectorAll('.diary-book-page')];
     pageEl = allPages.find(p => p.dataset.date >= dateKey) || allPages[allPages.length - 1];
   }
   if (!pageEl) return;
-  // offsetLeftベースで正確にスクロール（scroll-snap-alignがpageの左端に効く）
-  pagesEl.scrollTo({ left: pageEl.offsetLeft, behavior: 'smooth' });
+  // 日付の位置に飛ばす
+  // 洋書：日付が左上 → ページの左端をビューポート左端に合わせる (offsetLeft)
+  // 和書：日付が右端 → ページの右端をビューポート右端に合わせる
+  const isEn = currentBookLang === 'en';
+  const target = isEn
+    ? pageEl.offsetLeft
+    : pageEl.offsetLeft + pageEl.offsetWidth - pagesEl.clientWidth;
+  pagesEl.scrollTo({ left: target, behavior: 'smooth' });
   currentDiaryDate = pageEl.dataset.date;
 }
 
