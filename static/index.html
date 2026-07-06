@@ -796,6 +796,38 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-pages.lang-stock .diary-book-page { flex:0 0 100vw; width:100vw; max-width:100vw; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; touch-action:pan-y pan-x; writing-mode:horizontal-tb; text-orientation:mixed; display:block; padding:16px 20px 40px; background:repeating-linear-gradient(180deg,#faf7e7 0 30px,#f2ecd2 30px 31px); font-family:'Hiragino Sans','Yu Gothic',sans-serif; color:#2a2418; box-shadow:inset 20px 0 0 -18px #c08080; }
 .book-pages.lang-stock .diary-book-page::before, .book-pages.lang-stock .diary-book-page::after { display:none; }
 .stock-page-header { display:flex; align-items:center; gap:14px; padding-bottom:10px; border-bottom:2px solid #4a4020; margin-bottom:12px; }
+/* 日別ヘッダ */
+.stock-day-header { display:flex; align-items:stretch; gap:14px; padding-bottom:10px; border-bottom:2px double #4a4020; margin-bottom:14px; }
+.stock-day-header .stock-date { min-width:66px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px; }
+.stock-day-header .stock-date-day { font-size:32px; font-weight:800; line-height:1; }
+.stock-day-header .stock-date-mon { font-size:12px; letter-spacing:2px; margin-top:3px; opacity:.85; }
+.stock-day-header .stock-date-dow { font-size:11px; letter-spacing:2px; margin-top:3px; opacity:.7; }
+.stock-day-summary { flex:1 1 auto; display:flex; flex-direction:column; justify-content:center; gap:4px; }
+.stock-day-count { font-size:14px; color:#5a4520; letter-spacing:1px; font-weight:700; }
+.stock-day-totals { font-size:13px; color:#7a6a45; letter-spacing:1px; }
+.stock-day-realized-wrap { display:flex; flex-wrap:wrap; gap:6px; }
+.day-realized { display:inline-block; padding:3px 8px; border-radius:4px; font-size:12px; font-weight:800; letter-spacing:.5px; }
+.day-realized.up { background:rgba(192,79,79,.15); color:#c04f4f; }
+.day-realized.down { background:rgba(59,106,148,.15); color:#3b6a94; }
+/* 1日のトレード達 */
+.stock-trades { display:flex; flex-direction:column; gap:14px; }
+.stock-trade { padding:12px 14px; background:rgba(255,255,255,.55); border:1px solid rgba(120,80,40,.2); border-radius:8px; box-shadow:0 1px 3px rgba(120,80,40,.06); }
+.stock-trade-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.stock-trade-title { flex:1 1 auto; min-width:0; }
+.stock-trade .stock-name { font-size:16px; font-weight:800; color:#1f2019; line-height:1.25; word-break:break-word; }
+.stock-trade .stock-ticker { font-size:11px; font-family:'Georgia',serif; letter-spacing:1.5px; color:#7a6a45; margin-top:2px; }
+.stock-trade .stock-meta { display:grid; grid-template-columns:repeat(3,1fr); gap:4px 10px; margin-bottom:6px; }
+.stock-trade .stock-meta label { font-size:10px; color:#8a7a55; letter-spacing:1.5px; }
+.stock-trade .stock-meta span { font-size:14px; font-weight:700; color:#1f2019; }
+.stock-trade .stock-realized { padding:4px 8px; border-radius:4px; font-weight:700; letter-spacing:.5px; text-align:right; font-size:13px; margin:4px 0; }
+.stock-trade .stock-memo { background:rgba(255,255,255,.7); border-left:3px solid #c8b880; padding:6px 8px; font-size:12px; color:#5a4f30; margin:4px 0 8px; white-space:pre-wrap; }
+.stock-trade .stock-chart { margin-top:8px; }
+.stock-trade .stock-chart-loading, .stock-trade .stock-chart-none { padding:16px; font-size:11px; }
+.stock-trade .stock-chart-pending { padding:14px 12px; }
+.stock-trade .chart-pending-icon { font-size:24px; margin-bottom:4px; }
+.stock-trade .chart-pending-msg { font-size:13px; }
+.stock-trade .chart-pending-msg b { font-size:15px; }
+.stock-trade .chart-pending-sub { font-size:10px; }
 .stock-date { flex:0 0 auto; text-align:center; min-width:56px; padding:6px 8px; background:#1f2019; color:#e3d19e; border-radius:4px; font-family:'Georgia',serif; }
 .stock-date-day { font-size:26px; font-weight:800; line-height:1; }
 .stock-date-mon { font-size:11px; letter-spacing:2px; margin-top:2px; opacity:.85; }
@@ -6327,60 +6359,114 @@ function renderStockBook(personFilter) {
   const bookOwnerLabel = personFilter === 'hers' ? 'ちかの株ノート' : (personFilter === 'mine' ? 'ひろの株ノート' : '株ノート');
   const curSymFn = (c) => (c || 'JPY') === 'JPY' ? '¥' : '$';
 
-  let pagesHtml = '';
-  trades.forEach((t, idx) => {
+  // 同じ日付でまとめる
+  const tradesByDate = {};
+  trades.forEach(t => {
     const d = new Date(t.ts);
-    const day = d.getDate();
-    const hh = String(d.getHours()).padStart(2,'0');
-    const mm = String(d.getMinutes()).padStart(2,'0');
-    const isBuy = t.type === 'buy';
-    const price = isBuy ? t.price : t.sellPrice;
-    const sym = curSymFn(t.currency);
-    const name = (typeof stockName === 'function') ? stockName(t) : (t.name || t.ticker);
-    const ticker = t.ticker || '';
-    const who = NAMES[t.person] || '';
-    const shares = t.shares || 0;
-    const total = (price || 0) * shares;
-    const sideBadge = isBuy
-      ? '<span class="stock-side buy">BUY 買い</span>'
-      : '<span class="stock-side sell">SELL 売り</span>';
-    let realized = '';
-    if (!isBuy && t.realized != null) {
-      const cls = t.realized >= 0 ? 'up' : 'down';
-      realized = `<div class="stock-realized ${cls}">実現損益 ${t.realized >= 0 ? '+' : ''}${sym}${Number(t.realized).toLocaleString()}</div>`;
-    }
-    const stockDateKey = d.toISOString().slice(0,10);
-    const stockRibbon = bookmarkRibbonHtml(currentBookLang, currentBookYm, `${stockDateKey}-${idx}`);
-    pagesHtml += `<div class="diary-book-page stock-page" data-date="${stockDateKey}" data-trade-idx="${idx}">
-      ${stockRibbon}
-      <header class="stock-page-header">
-        <div class="stock-date">
-          <div class="stock-date-day">${day}</div>
-          <div class="stock-date-mon">${month}月</div>
-          <div class="stock-date-time">${hh}:${mm}</div>
-        </div>
-        <div class="stock-title">
-          <div class="stock-name">${escapeHtml(name || '')}</div>
-          <div class="stock-ticker">${escapeHtml(ticker)}</div>
-        </div>
-        <div class="stock-who">${who}</div>
-      </header>
-      <div class="stock-body">
-        <div class="stock-row">
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    (tradesByDate[dateKey] ||= []).push(t);
+  });
+  const dateKeys = Object.keys(tradesByDate).sort();
+
+  let pagesHtml = '';
+  dateKeys.forEach((dateKey, pageIdx) => {
+    const dayTrades = tradesByDate[dateKey];
+    const [, , dd] = dateKey.split('-');
+    const day = Number(dd);
+    const DOWS = ['日','月','火','水','木','金','土'];
+    const dow = DOWS[new Date(year, month-1, day).getDay()];
+    const stockRibbon = bookmarkRibbonHtml(currentBookLang, currentBookYm, dateKey);
+
+    // その日の合計値
+    let jpBuy = 0, jpSell = 0, usBuy = 0, usSell = 0, jpRealized = 0, usRealized = 0;
+    dayTrades.forEach(t => {
+      const isBuy = t.type === 'buy';
+      const price = isBuy ? t.price : t.sellPrice;
+      const total = (price || 0) * (t.shares || 0);
+      const cur = t.currency || 'JPY';
+      if (cur === 'JPY') {
+        if (isBuy) jpBuy += total; else jpSell += total;
+        if (!isBuy && t.realized != null) jpRealized += t.realized;
+      } else {
+        if (isBuy) usBuy += total; else usSell += total;
+        if (!isBuy && t.realized != null) usRealized += t.realized;
+      }
+    });
+
+    // トレード一覧
+    const tradesHtml = dayTrades.map((t, ti) => {
+      const td = new Date(t.ts);
+      const hh = String(td.getHours()).padStart(2,'0');
+      const mm = String(td.getMinutes()).padStart(2,'0');
+      const isBuy = t.type === 'buy';
+      const price = isBuy ? t.price : t.sellPrice;
+      const sym = curSymFn(t.currency);
+      const name = (typeof stockName === 'function') ? stockName(t) : (t.name || t.ticker);
+      const ticker = t.ticker || '';
+      const who = NAMES[t.person] || '';
+      const shares = t.shares || 0;
+      const total = (price || 0) * shares;
+      const sideBadge = isBuy
+        ? '<span class="stock-side buy">BUY</span>'
+        : '<span class="stock-side sell">SELL</span>';
+      let realized = '';
+      if (!isBuy && t.realized != null) {
+        const cls = t.realized >= 0 ? 'up' : 'down';
+        realized = `<div class="stock-realized ${cls}">実現損益 ${t.realized >= 0 ? '+' : ''}${sym}${Number(t.realized).toLocaleString()}</div>`;
+      }
+      return `<div class="stock-trade">
+        <div class="stock-trade-head">
           ${sideBadge}
-          <div class="stock-meta">
-            <div><label>価格</label><span>${sym}${(price != null) ? Number(price).toLocaleString(undefined,{maximumFractionDigits:2}) : '—'}</span></div>
-            <div><label>株数</label><span>${shares}株</span></div>
-            <div><label>合計</label><span>${sym}${total.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
+          <div class="stock-trade-title">
+            <div class="stock-name">${escapeHtml(name || '')}</div>
+            <div class="stock-ticker">${escapeHtml(ticker)} · ${hh}:${mm}${who?` · ${who}`:''}</div>
           </div>
+        </div>
+        <div class="stock-meta">
+          <div><label>価格</label><span>${sym}${(price != null) ? Number(price).toLocaleString(undefined,{maximumFractionDigits:2}) : '—'}</span></div>
+          <div><label>株数</label><span>${shares}株</span></div>
+          <div><label>合計</label><span>${sym}${total.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
         </div>
         ${realized}
         ${t.memo ? `<div class="stock-memo">${escapeHtml(t.memo)}</div>` : ''}
         <div class="stock-chart" data-symbol="${escapeHtml(ticker)}" data-ts="${t.ts}" data-mark-price="${price ?? ''}">
           <div class="stock-chart-loading">チャート読み込み中…</div>
         </div>
-      </div>
-      <div class="book-page-num">${idx + 1} / ${trades.length}</div>
+      </div>`;
+    }).join('');
+
+    // 日別サマリ
+    const summaryParts = [];
+    if (jpBuy > 0) summaryParts.push(`買¥${Math.round(jpBuy).toLocaleString()}`);
+    if (jpSell > 0) summaryParts.push(`売¥${Math.round(jpSell).toLocaleString()}`);
+    if (usBuy > 0) summaryParts.push(`買$${usBuy.toLocaleString(undefined,{maximumFractionDigits:2})}`);
+    if (usSell > 0) summaryParts.push(`売$${usSell.toLocaleString(undefined,{maximumFractionDigits:2})}`);
+    let realizedTotal = '';
+    if (jpRealized !== 0) {
+      const cls = jpRealized >= 0 ? 'up' : 'down';
+      realizedTotal += `<span class="day-realized ${cls}">日別損益 ${jpRealized >= 0 ? '+' : ''}¥${Math.round(jpRealized).toLocaleString()}</span>`;
+    }
+    if (usRealized !== 0) {
+      const cls = usRealized >= 0 ? 'up' : 'down';
+      realizedTotal += `<span class="day-realized ${cls}">日別損益 ${usRealized >= 0 ? '+' : ''}$${usRealized.toLocaleString(undefined,{maximumFractionDigits:2})}</span>`;
+    }
+
+    pagesHtml += `<div class="diary-book-page stock-page" data-date="${dateKey}">
+      ${stockRibbon}
+      <header class="stock-day-header">
+        <div class="stock-date">
+          <div class="stock-date-day">${day}</div>
+          <div class="stock-date-mon">${month}月</div>
+          <div class="stock-date-dow">${dow}</div>
+        </div>
+        <div class="stock-day-summary">
+          <div class="stock-day-count">${dayTrades.length}件の取引</div>
+          <div class="stock-day-totals">${summaryParts.join(' / ') || '—'}</div>
+          <div class="stock-day-realized-wrap">${realizedTotal}</div>
+        </div>
+      </header>
+      <div class="stock-trades">${tradesHtml}</div>
+      <div class="book-page-num">${pageIdx + 1} / ${dateKeys.length}</div>
     </div>`;
   });
 
