@@ -31,7 +31,9 @@
 }
 
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-body { font-family:'Hiragino Mincho ProN','Hiragino Sans','Yu Gothic',serif; background:var(--bg); color:var(--text); min-height:100vh; }
+/* iOS Safari が狭い列(カレンダー等)の文字を勝手に拡大するのを防ぐ */
+html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+body { font-family:'Hiragino Mincho ProN','Hiragino Sans','Yu Gothic',serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
 body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 .screen { display:none; }
