@@ -266,6 +266,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 /* ── EVENT CHIPS (calendar) ── */
 .event-row { display:flex; flex-wrap:wrap; gap:6px; padding:0 2px 0 56px; cursor:pointer; }
 .ev-chip { display:inline-flex; align-items:center; gap:5px; background:#efe7d6; color:#8a6f43; border:1px solid var(--gold-border); border-radius:8px; padding:4px 10px; font-size:16px; font-weight:600; text-decoration:none; }
+/* 決算日チップ (月カレンダー) */
+.earn-day-row { display:flex; flex-wrap:wrap; gap:5px; padding:4px 2px 0 56px; }
+.earn-chip { display:inline-flex; align-items:center; gap:3px; font-size:14px; font-weight:700; padding:3px 9px; border-radius:8px; letter-spacing:.5px; }
+.earn-chip.mine { background:var(--mine-bg); color:var(--mine); border:1px solid var(--mine-border); }
+.earn-chip.hers { background:var(--hers-bg); color:var(--hers); border:1px solid var(--hers-border); }
 .ev-chip.mine { background:var(--mine-bg); color:var(--mine); border-color:var(--mine-border); }
 .ev-chip.hers { background:var(--hers-bg); color:var(--hers); border-color:var(--hers-border); }
 .ev-chip .ev-time { font-weight:700; opacity:.8; }
@@ -2264,6 +2269,10 @@ async function loadHoldings() {
   await loadRealized(); // 実現損益も合わせて反映
   renderHeatmap();
   loadHoldReplay(); // 売却した銘柄の現在価格を取って未売却シナリオと比較
+  // 月カレンダーが開かれていれば決算日チップを反映するため再描画
+  if (typeof renderCalendar === 'function' && document.getElementById('cal-grid')) {
+    try { renderCalendar(); } catch {}
+  }
 }
 function setFolioPerson(p){ folioPerson=p; document.querySelectorAll('.fh-btn').forEach(b=>b.classList.toggle('active', b.dataset.p===p)); }
 function renderPortfolio() {
@@ -3624,6 +3633,12 @@ function renderCalendar() {
     if (!realDateCal[dk][rv.person]) realDateCal[dk][rv.person] = {};
     realDateCal[dk][rv.person][cur] = (realDateCal[dk][rv.person][cur] || 0) + rv.realized;
   }
+  // 決算日ごとに保有株を集計
+  const earningsByDate = {};
+  for (const h of (holdings || [])) {
+    if (!h?.earningsDate || !/^\d{4}-\d{2}-\d{2}$/.test(h.earningsDate)) continue;
+    (earningsByDate[h.earningsDate] ||= []).push(h);
+  }
   const dayNames = ['日','月','火','水','木','金','土'];
   const now = new Date();
   const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
@@ -3656,6 +3671,18 @@ function renderCalendar() {
     if (evs.length || gevs.length || tasks.length) {
       const er = document.createElement('div'); er.className = 'event-row';
       er.innerHTML = evs.map(eventChip).join('') + gevs.map(gcalChip).join('') + tasks.map(taskChip).join('');
+      block.appendChild(er);
+    }
+    // 決算日チップ
+    const earns = earningsByDate[key];
+    if (earns?.length) {
+      const er = document.createElement('div');
+      er.className = 'earn-day-row';
+      er.innerHTML = earns.map(h => {
+        const nm = (typeof stockName === 'function') ? stockName(h) : (h.name || h.ticker || '');
+        const pc = h.person === 'mine' ? 'mine' : 'hers';
+        return `<span class="earn-chip ${pc}" title="${escapeHtml(h.ticker || '')}">📊 ${escapeHtml(nm)} 決算</span>`;
+      }).join('');
       block.appendChild(er);
     }
     if (bothOff) {
@@ -6773,7 +6800,18 @@ async function fetchEarningsDate() {
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || '取得失敗');
     document.getElementById('tgt-earn').value = d.earningsDate;
-    showToast('決算日を自動入力しました：' + d.earningsDate);
+    // 取得と同時にサーバー保存も済ませる (「取得したのに消える」を防ぐ)
+    const tp = parseFloat(document.getElementById('tgt-tp').value);
+    const sl = parseFloat(document.getElementById('tgt-sl').value);
+    const sr = await fetch('/api/holding/targets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: targetingHolding.id, takeProfit: tp, stopLoss: sl, earningsDate: d.earningsDate }),
+    });
+    if (!sr.ok) throw new Error('保存失敗');
+    // 保有株のキャッシュも更新して再描画
+    if (typeof loadHoldings === 'function') await loadHoldings();
+    showToast('決算日を保存しました：' + d.earningsDate);
   } catch (e) { showToast('決算日取得失敗: ' + e.message, true); }
   finally { btn.disabled = false; btn.textContent = '自動取得'; }
 }
