@@ -110,14 +110,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .today-block { background:var(--mine-bg); border:1.5px solid var(--mine-border); border-radius:14px; padding:10px 8px; margin:4px 0; }
 .cal-row { display:grid; grid-template-columns:50px 1fr 1fr; gap:6px; }
 .cal-date { display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:14px; padding:8px 0; }
-.dn { font-size:32px; font-weight:600; line-height:1; }
-.dw { font-size:24px; margin-top:3px; font-weight:500; }
+.dn { font-size:22px; font-weight:600; line-height:1; }
+.dw { font-size:15px; margin-top:3px; font-weight:500; }
 .cal-date.wd { background:#eceae3; color:#74695b; }
 .cal-date.su { background:#f0e6e3; color:#a36a64; }
 .cal-date.sa { background:#e9ecef; color:#6a7384; }
 .cal-date.gold { background:var(--gold-bg); color:var(--gold); border:1.5px solid var(--gold-border); }
 .cal-date.today { background:var(--grad); color:#fbf9f5; box-shadow:0 0 0 3px rgba(86,110,120,.3); }
-.today-tag { font-size:18px; font-weight:700; margin-top:3px; background:rgba(255,255,255,.28); padding:1px 5px; border-radius:5px; letter-spacing:.5px; }
+.today-tag { font-size:11px; font-weight:700; margin-top:3px; background:rgba(255,255,255,.28); padding:1px 5px; border-radius:5px; letter-spacing:.5px; }
 .today-line { font-size:15px; color:var(--mine); font-weight:700; margin-top:5px; letter-spacing:.5px; }
 
 .shift-cell { border-radius:14px; padding:8px 11px; display:flex; flex-direction:column; justify-content:flex-start; min-height:64px; background:var(--card); }
@@ -127,11 +127,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .wx-temp { font-size:20px; font-weight:700; color:var(--text); }
 .wx-pop { display:flex; align-items:center; gap:1px; font-size:18px; font-weight:700; color:#3a82bd; }
 .wx-drop { flex-shrink:0; }
-.sc-lbl { font-size:20px; font-weight:600; letter-spacing:.5px; margin-bottom:3px; display:flex; align-items:center; gap:5px; }
+.sc-lbl { font-size:13px; font-weight:600; letter-spacing:.5px; margin-bottom:3px; display:flex; align-items:center; gap:5px; }
 .sc-ava { width:16px; height:16px; border-radius:50%; object-fit:cover; flex-shrink:0; }
-.sc-time { font-size:28px; font-weight:700; }
-.sc-end { font-size:26px; font-weight:700; }
-.sc-realized { font-size:24px; font-weight:700; display:block; margin-top:3px; }
+.sc-time { font-size:19px; font-weight:700; }
+.sc-end { font-size:17px; font-weight:700; }
+.sc-realized { font-size:15px; font-weight:700; display:block; margin-top:3px; }
 .sc-realized.up { color:#c0392b; }
 .sc-realized.down { color:#2e6da4; }
 .sc-mine { background:var(--mine-bg); border:1.5px solid var(--mine-border); color:var(--mine); }
@@ -265,10 +265,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 /* ── EVENT CHIPS (calendar) ── */
 .event-row { display:flex; flex-wrap:wrap; gap:6px; padding:0 2px 0 56px; cursor:pointer; }
-.ev-chip { display:inline-flex; align-items:center; gap:5px; background:#efe7d6; color:#8a6f43; border:1px solid var(--gold-border); border-radius:8px; padding:4px 10px; font-size:16px; font-weight:600; text-decoration:none; }
+.ev-chip { display:inline-flex; align-items:center; gap:5px; background:#efe7d6; color:#8a6f43; border:1px solid var(--gold-border); border-radius:8px; padding:3px 8px; font-size:12px; font-weight:600; text-decoration:none; }
 /* 決算日チップ (月カレンダー) */
-.earn-day-row { display:flex; flex-wrap:wrap; gap:5px; padding:4px 2px 0 56px; }
-.earn-chip { display:inline-flex; align-items:center; gap:3px; font-size:14px; font-weight:700; padding:3px 9px; border-radius:8px; letter-spacing:.5px; }
+.earn-day-row { display:flex; flex-wrap:wrap; gap:4px; padding:3px 2px 0 56px; }
+.earn-chip { display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:700; padding:2px 7px; border-radius:6px; letter-spacing:.3px; }
 .earn-chip.mine { background:var(--mine-bg); color:var(--mine); border:1px solid var(--mine-border); }
 .earn-chip.hers { background:var(--hers-bg); color:var(--hers); border:1px solid var(--hers-border); }
 .ev-chip.mine { background:var(--mine-bg); color:var(--mine); border-color:var(--mine-border); }
