@@ -745,6 +745,24 @@ export async function setMonthlyDiary(ym, data) {
   await persist();
 }
 
+// ── しおり (本のブックマーク) ──
+// キー: `${bookType}:${ym}:${dateKey}` 例 "ja:2026-07:2026-07-06"
+export function getBookmarks() { return cache.bookmarks || {}; }
+export async function setBookmark(key, data) {
+  if (!cache.bookmarks) cache.bookmarks = {};
+  if (data && (data.note !== undefined)) {
+    cache.bookmarks[key] = {
+      note: String(data.note || '').slice(0, 500),
+      color: (data.color || 'red'),
+      createdAt: cache.bookmarks[key]?.createdAt || Date.now(),
+      updatedAt: Date.now(),
+    };
+  } else {
+    delete cache.bookmarks[key];
+  }
+  await persist();
+}
+
 // ── 通知済みのふたり休み日（重複pushを防ぐ）──
 export function getNotifiedOff() {
   return cache.notifiedOff || {};

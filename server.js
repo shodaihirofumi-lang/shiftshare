@@ -22,6 +22,7 @@ import {
   getMemos, addMemo, deleteMemo, editMemo, pinMemo, setMemoImage,
   getPhotos, addPhoto, deletePhoto, reloadPhotoCache,
   getDiaries, getDiary, setDiary, getMonthlyDiaries, setMonthlyDiary,
+  getBookmarks, setBookmark,
   getNotifiedOff, markNotifiedOff,
   getGoals, addGoal, deleteGoal,
   getTargetPrices, addTargetPrice, deleteTargetPrice,
@@ -1054,6 +1055,21 @@ app.get('/api/chart-history', async (req, res) => {
 });
 
 app.get('/api/monthly-diaries', (_req, res) => res.json(getMonthlyDiaries()));
+
+// しおり (本のブックマーク)
+app.get('/api/bookmarks', (_req, res) => res.json(getBookmarks()));
+app.post('/api/bookmarks', async (req, res) => {
+  const { key, note, color } = req.body || {};
+  if (!key || typeof key !== 'string') return res.status(400).json({ error: 'key が必要です' });
+  await setBookmark(key, { note: note || '', color: color || 'red' });
+  res.json({ success: true });
+});
+app.post('/api/bookmarks/delete', async (req, res) => {
+  const { key } = req.body || {};
+  if (!key) return res.status(400).json({ error: 'key が必要です' });
+  await setBookmark(key, null);
+  res.json({ success: true });
+});
 app.post('/api/diary/monthly', async (req, res) => {
   const { yearMonth, person } = req.body;
   if (!yearMonth || !person) return res.status(400).json({ error: 'yearMonth と person が必要です' });

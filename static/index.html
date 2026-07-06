@@ -628,11 +628,36 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 /* ── 本を開いた表示 ── */
 #diary-book-list { display:none; position:fixed; inset:0; z-index:200; background:var(--bg); flex-direction:column; }
 #diary-book-list.active { display:flex; }
-.book-toolbar { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px; background:var(--card); border-bottom:1px solid var(--line); flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,.06); }
-.book-toolbar button { padding:8px 12px; border:none; background:transparent; font-size:14px; cursor:pointer; color:var(--text); border-radius:8px; font-weight:600; }
+.book-toolbar { display:flex; align-items:center; justify-content:space-between; gap:4px; padding:5px 8px; background:var(--card); border-bottom:1px solid var(--line); flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,.06); min-height:32px; }
+.book-toolbar button { padding:3px 7px; border:none; background:transparent; font-size:11px; cursor:pointer; color:var(--text); border-radius:5px; font-weight:600; line-height:1.4; }
 .book-toolbar button:hover { background:var(--bg); }
-.book-toolbar .book-title-bar { font-size:16px; font-weight:700; color:var(--text); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; letter-spacing:2px; }
-.book-font-select { padding:6px 10px; border:1px solid var(--line); background:var(--card); border-radius:8px; font-size:13px; }
+.book-toolbar .book-title-bar { font-size:12px; font-weight:700; color:var(--text); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; letter-spacing:1px; }
+.book-font-select { padding:2px 5px; border:1px solid var(--line); background:var(--card); border-radius:5px; font-size:11px; height:24px; }
+
+/* しおりリボン (本のページ右上) */
+.book-bookmark-ribbon { position:absolute; top:0; right:32px; width:26px; height:44px; border:none; background:transparent; cursor:pointer; padding:0; z-index:15; transition:transform .18s; opacity:.45; }
+.book-bookmark-ribbon::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,#c9a878 0%, #8a6b45 100%); clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); }
+.book-bookmark-ribbon:hover { opacity:.85; transform:translateY(2px); }
+.book-bookmark-ribbon.has-bookmark { opacity:1; }
+.book-bookmark-ribbon.has-bookmark::before { background:linear-gradient(180deg,#e14848 0%, #a02323 100%); box-shadow:1px 2px 6px rgba(0,0,0,.25); }
+.book-bookmark-ribbon .ribbon-icon { display:none; }
+.book-bookmark-ribbon.has-bookmark .ribbon-icon { display:block; position:relative; z-index:2; color:#fff; font-size:11px; padding-top:6px; text-shadow:0 1px 2px rgba(0,0,0,.35); }
+
+/* しおりモーダル */
+.bookmark-modal-overlay { position:fixed; inset:0; background:rgba(30,20,10,.55); z-index:400; display:flex; align-items:center; justify-content:center; padding:20px; }
+.bookmark-modal { background:linear-gradient(180deg,#faf5eb,#efe6d0); border-radius:14px; padding:20px 18px 16px; max-width:400px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,.4); border:1px solid rgba(180,140,90,.4); }
+.bookmark-modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1.5px solid rgba(180,140,90,.3); }
+.bookmark-modal-title { font-size:16px; font-weight:700; letter-spacing:2px; color:#3a2814; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; }
+.bookmark-modal-close { border:none; background:transparent; font-size:22px; cursor:pointer; color:#8a6b45; padding:0 6px; }
+.bookmark-note { width:100%; box-sizing:border-box; min-height:100px; padding:10px 12px; border:1px solid rgba(180,140,90,.35); border-radius:8px; background:#fdfaf3; font-size:15px; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; color:#3a2814; line-height:1.6; resize:vertical; }
+.bookmark-note:focus { outline:none; border-color:#c9a878; box-shadow:0 0 0 2px rgba(201,168,120,.25); }
+.bookmark-modal-actions { display:flex; justify-content:space-between; margin-top:12px; gap:8px; }
+.bookmark-modal-del { padding:7px 14px; border:1px solid rgba(180,140,90,.4); background:transparent; color:#a04747; border-radius:8px; font-size:13px; cursor:pointer; }
+.bookmark-modal-save { padding:7px 18px; border:none; background:linear-gradient(180deg,#c9a878,#8a6b45); color:#fff; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; letter-spacing:1px; }
+
+/* 本棚: しおりがある本のバッジ */
+.book-spine.has-bookmark::after { content:''; position:absolute; top:-2px; right:2px; width:10px; height:16px; background:linear-gradient(180deg,#e14848,#a02323); clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%); box-shadow:1px 1px 3px rgba(0,0,0,.3); z-index:5; }
+.book-spine.has-bookmark { box-shadow:2px 4px 10px rgba(0,0,0,.25), inset -3px 0 6px rgba(0,0,0,.18), inset 3px 0 4px rgba(255,255,255,.18), 0 0 0 1px rgba(225,72,72,.35); }
 .book-pages { flex:1; overflow-x:auto; overflow-y:hidden; display:flex; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; overscroll-behavior:contain; touch-action:pan-x; }
 .book-pages::-webkit-scrollbar { display:none; }
 .book-pages { scrollbar-width:none; }
@@ -5210,6 +5235,120 @@ async function loadDiaries() {
     const now = new Date();
     currentDiaryDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   }
+  await loadBookmarks();
+}
+
+// ── しおり ──
+let allBookmarks = {}; // { "bookType:ym:dateKey": { note, color, createdAt, updatedAt } }
+async function loadBookmarks() {
+  try { allBookmarks = await fetch('/api/bookmarks').then(r => r.json()); } catch { allBookmarks = {}; }
+}
+function bookmarkKey(bookType, ym, dateKey) { return `${bookType}:${ym}:${dateKey}`; }
+async function toggleBookmark(bookType, ym, dateKey) {
+  const key = bookmarkKey(bookType, ym, dateKey);
+  const existing = allBookmarks[key];
+  if (existing) {
+    // 既にある場合は編集モーダルを開く
+    openBookmarkModal(key, existing);
+  } else {
+    // 新規: まず空でつける → モーダルでコメント入力
+    const draft = { note: '', color: 'red', createdAt: Date.now(), updatedAt: Date.now() };
+    allBookmarks[key] = draft;
+    try {
+      await fetch('/api/bookmarks', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, note: '', color: 'red' }),
+      });
+    } catch {}
+    // ページ上のしおり表示を更新
+    updateBookmarkVisuals(bookType, ym, dateKey);
+    openBookmarkModal(key, draft);
+  }
+}
+function updateBookmarkVisuals(bookType, ym, dateKey) {
+  const btn = document.querySelector(`[data-bookmark-key="${bookmarkKey(bookType, ym, dateKey)}"]`);
+  if (!btn) return;
+  const has = !!allBookmarks[bookmarkKey(bookType, ym, dateKey)];
+  btn.classList.toggle('has-bookmark', has);
+}
+
+function openBookmarkModal(key, data) {
+  const existing = document.getElementById('bookmark-modal');
+  if (existing) existing.remove();
+  const note = data?.note || '';
+  const el = document.createElement('div');
+  el.id = 'bookmark-modal';
+  el.className = 'bookmark-modal-overlay';
+  el.innerHTML = `
+    <div class="bookmark-modal">
+      <div class="bookmark-modal-head">
+        <div class="bookmark-modal-title">🔖 しおり</div>
+        <button class="bookmark-modal-close" onclick="closeBookmarkModal()">×</button>
+      </div>
+      <textarea class="bookmark-note" placeholder="思い出やコメントを書き残す…" id="bookmark-note-input">${escapeHtml(note)}</textarea>
+      <div class="bookmark-modal-actions">
+        <button class="bookmark-modal-del" onclick="deleteBookmark('${key}')">しおりを外す</button>
+        <button class="bookmark-modal-save" onclick="saveBookmark('${key}')">保存</button>
+      </div>
+    </div>`;
+  el.addEventListener('click', (e) => { if (e.target === el) closeBookmarkModal(); });
+  document.body.appendChild(el);
+  setTimeout(() => document.getElementById('bookmark-note-input')?.focus(), 50);
+}
+function closeBookmarkModal() {
+  document.getElementById('bookmark-modal')?.remove();
+}
+async function saveBookmark(key) {
+  const note = document.getElementById('bookmark-note-input')?.value || '';
+  const color = allBookmarks[key]?.color || 'red';
+  allBookmarks[key] = { ...(allBookmarks[key] || {}), note, color, updatedAt: Date.now() };
+  try {
+    await fetch('/api/bookmarks', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, note, color }),
+    });
+    showToast('しおりを保存しました');
+  } catch { showToast('保存失敗', true); }
+  closeBookmarkModal();
+  // 本棚のバッジ更新のため再描画
+  if (typeof renderDiaryShelf === 'function' && document.getElementById('diary-shelf')?.classList.contains('active')) {
+    renderDiaryShelf();
+  }
+}
+async function deleteBookmark(key) {
+  delete allBookmarks[key];
+  try {
+    await fetch('/api/bookmarks/delete', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key }),
+    });
+    showToast('しおりを外しました');
+  } catch { showToast('削除失敗', true); }
+  closeBookmarkModal();
+  const [bt, ym, dk] = key.split(':');
+  updateBookmarkVisuals(bt, ym, dk);
+  if (typeof renderDiaryShelf === 'function' && document.getElementById('diary-shelf')?.classList.contains('active')) {
+    renderDiaryShelf();
+  }
+}
+
+// 本のページに埋め込むしおりHTML
+function bookmarkRibbonHtml(bookType, ym, dateKey) {
+  const key = bookmarkKey(bookType, ym, dateKey);
+  const has = !!allBookmarks[key];
+  return `<button class="book-bookmark-ribbon ${has ? 'has-bookmark' : ''}" data-bookmark-key="${key}" onclick="event.stopPropagation(); toggleBookmark('${bookType}','${ym}','${dateKey}')" title="しおり">
+    <span class="ribbon-icon">🔖</span>
+  </button>`;
+}
+
+// 本棚: この月にしおりがあるかチェック
+function hasBookmarksInMonth(bookType, ym) {
+  const prefix = `${bookType}:${ym}:`;
+  return Object.keys(allBookmarks).some(k => k.startsWith(prefix));
+}
+function countBookmarksInMonth(bookType, ym) {
+  const prefix = `${bookType}:${ym}:`;
+  return Object.keys(allBookmarks).filter(k => k.startsWith(prefix)).length;
 }
 
 // その日のデータを文章コンテキストとして組み立てる（AI送信用）
@@ -5480,7 +5619,8 @@ function renderDiaryShelf() {
       const [y, m] = ym.split('-');
       const cnt = monthMap[ym].length;
       const bClass = 'b' + ((idx % 6) + 1);
-      rowHtml += `<div class="book-spine ${bClass}" onclick="openDiaryBook('${ym}','ja')">
+      const bmk = hasBookmarksInMonth('ja', ym) ? ' has-bookmark' : '';
+      rowHtml += `<div class="book-spine ${bClass}${bmk}" onclick="openDiaryBook('${ym}','ja')">
         <div class="book-spine-label">${y}年${Number(m)}月</div>
         <div class="book-spine-badge">${cnt}日</div>
       </div>`;
@@ -5495,7 +5635,8 @@ function renderDiaryShelf() {
       const [y, m] = ym.split('-');
       const cnt = monthMap[ym].length;
       const bClass = 'p' + ((idx % 5) + 1);
-      rowHtml += `<div class="book-spine paperback ${bClass}" onclick="openDiaryBook('${ym}','ja-h')">
+      const bmk = hasBookmarksInMonth('ja-h', ym) ? ' has-bookmark' : '';
+      rowHtml += `<div class="book-spine paperback ${bClass}${bmk}" onclick="openDiaryBook('${ym}','ja-h')">
         <div class="book-spine-label paperback-label">${y}・${Number(m)}月</div>
         <div class="book-spine-badge">${cnt}日</div>
       </div>`;
@@ -5511,7 +5652,8 @@ function renderDiaryShelf() {
       const monthName = EN_MONTHS[Number(m) - 1];
       const cnt = monthMap[ym].length;
       const bClass = 'w' + ((idx % 5) + 1);
-      rowHtml += `<div class="book-spine western ${bClass}" onclick="openDiaryBook('${ym}','en')">
+      const bmk = hasBookmarksInMonth('en', ym) ? ' has-bookmark' : '';
+      rowHtml += `<div class="book-spine western ${bClass}${bmk}" onclick="openDiaryBook('${ym}','en')">
         <div class="book-spine-label western-label">${monthName} ${y}</div>
         <div class="book-spine-badge">${cnt} entries</div>
       </div>`;
@@ -5528,7 +5670,8 @@ function renderDiaryShelf() {
       rowYms.forEach((ym, idx) => {
         const [y, m] = ym.split('-');
         const cnt = memoMonthMap.hers[ym].length;
-        rowHtml += `<div class="book-spine memo-hers m${(idx%3)+1}" onclick="openDiaryBook('${ym}','memo-hers')">
+        const bmk = hasBookmarksInMonth('memo-hers', ym) ? ' has-bookmark' : '';
+        rowHtml += `<div class="book-spine memo-hers m${(idx%3)+1}${bmk}" onclick="openDiaryBook('${ym}','memo-hers')">
           <div class="book-spine-label">${y}年${Number(m)}月</div>
           <div class="book-spine-badge">${cnt}件</div>
         </div>`;
@@ -5546,7 +5689,8 @@ function renderDiaryShelf() {
       rowYms.forEach((ym, idx) => {
         const [y, m] = ym.split('-');
         const cnt = memoMonthMap.mine[ym].length;
-        rowHtml += `<div class="book-spine memo-mine m${(idx%3)+1}" onclick="openDiaryBook('${ym}','memo-mine')">
+        const bmk = hasBookmarksInMonth('memo-mine', ym) ? ' has-bookmark' : '';
+        rowHtml += `<div class="book-spine memo-mine m${(idx%3)+1}${bmk}" onclick="openDiaryBook('${ym}','memo-mine')">
           <div class="book-spine-label">${y}年${Number(m)}月</div>
           <div class="book-spine-badge">${cnt}件</div>
         </div>`;
@@ -5564,7 +5708,8 @@ function renderDiaryShelf() {
       rowYms.forEach((ym, idx) => {
         const [y, m] = ym.split('-');
         const cnt = stockMonthMap.hers[ym].length;
-        rowHtml += `<div class="book-spine stock stock-hers s${(idx%4)+1}" onclick="openDiaryBook('${ym}','stock-hers')">
+        const bmk = hasBookmarksInMonth('stock-hers', ym) ? ' has-bookmark' : '';
+        rowHtml += `<div class="book-spine stock stock-hers s${(idx%4)+1}${bmk}" onclick="openDiaryBook('${ym}','stock-hers')">
           <div class="book-spine-label">${y}・${Number(m)}月</div>
           <div class="book-spine-badge">${cnt}件</div>
         </div>`;
@@ -5582,7 +5727,8 @@ function renderDiaryShelf() {
       rowYms.forEach((ym, idx) => {
         const [y, m] = ym.split('-');
         const cnt = stockMonthMap.mine[ym].length;
-        rowHtml += `<div class="book-spine stock stock-mine s${(idx%4)+1}" onclick="openDiaryBook('${ym}','stock-mine')">
+        const bmk = hasBookmarksInMonth('stock-mine', ym) ? ' has-bookmark' : '';
+        rowHtml += `<div class="book-spine stock stock-mine s${(idx%4)+1}${bmk}" onclick="openDiaryBook('${ym}','stock-mine')">
           <div class="book-spine-label">${y}・${Number(m)}月</div>
           <div class="book-spine-badge">${cnt}件</div>
         </div>`;
@@ -5715,8 +5861,10 @@ function renderDiaryBook() {
       contentInner = `<div class="page-empty">${isEn ? 'No entry yet.' : 'まだ書かれていません'}</div>`;
     }
 
+    const ribbon = bookmarkRibbonHtml(currentBookLang, currentBookYm, dateKey);
     if (isEn) {
       pagesHtml += `<div class="diary-book-page western" data-date="${dateKey}">
+        ${ribbon}
         <header class="page-date-en">
           <div class="date-day">${day}</div>
           <div class="date-mon">${EN_MONTHS[month-1]}</div>
@@ -5727,6 +5875,7 @@ function renderDiaryBook() {
       </div>`;
     } else if (isJaH) {
       pagesHtml += `<div class="diary-book-page paperback" data-date="${dateKey}">
+        ${ribbon}
         <header class="page-date-jah">
           <span class="date-day">${day}</span>
           <span class="date-mon">${month}月</span>
@@ -5737,6 +5886,7 @@ function renderDiaryBook() {
       </div>`;
     } else {
       pagesHtml += `<div class="diary-book-page" data-date="${dateKey}">
+        ${ribbon}
         <header class="page-date-jp">${month}月${day}日<span>${dow}曜日</span></header>
         <div class="page-content">${contentInner}</div>
         <div class="book-page-num">— ${day}日 —</div>
@@ -5932,7 +6082,9 @@ function renderMemoBook(person) {
       }
     });
     if (!contentInner) contentInner = '<div class="page-empty">記録なし</div>';
+    const memoRibbon = bookmarkRibbonHtml(currentBookLang, currentBookYm, dateKey);
     pagesHtml += `<div class="diary-book-page paperback" data-date="${dateKey}">
+      ${memoRibbon}
       <header class="page-date-jah">
         <span class="date-day">${day}</span>
         <span class="date-mon">${month}月</span>
@@ -6018,7 +6170,10 @@ function renderStockBook(personFilter) {
       const cls = t.realized >= 0 ? 'up' : 'down';
       realized = `<div class="stock-realized ${cls}">実現損益 ${t.realized >= 0 ? '+' : ''}${sym}${Number(t.realized).toLocaleString()}</div>`;
     }
-    pagesHtml += `<div class="diary-book-page stock-page" data-date="${d.toISOString().slice(0,10)}" data-trade-idx="${idx}">
+    const stockDateKey = d.toISOString().slice(0,10);
+    const stockRibbon = bookmarkRibbonHtml(currentBookLang, currentBookYm, `${stockDateKey}-${idx}`);
+    pagesHtml += `<div class="diary-book-page stock-page" data-date="${stockDateKey}" data-trade-idx="${idx}">
+      ${stockRibbon}
       <header class="stock-page-header">
         <div class="stock-date">
           <div class="stock-date-day">${day}</div>
