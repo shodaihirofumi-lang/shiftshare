@@ -692,6 +692,65 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 .shelf-sub { text-align:center; font-size:13px; color:var(--text-soft); letter-spacing:4px; margin:0 0 10px; font-family:'Hiragino Mincho ProN','Georgia',serif; text-transform:uppercase; }
 
+/* メモ帳の背表紙 (縦書き 手帳風) */
+.book-spine.memo-hers { border-radius:2px 4px 4px 2px; }
+.book-spine.memo-hers.m1 { background:linear-gradient(90deg,#8f5266,#b57a8c,#8f5266); }
+.book-spine.memo-hers.m2 { background:linear-gradient(90deg,#a76b80,#c48ea1,#a76b80); }
+.book-spine.memo-hers.m3 { background:linear-gradient(90deg,#7f4059,#a56175,#7f4059); }
+.book-spine.memo-hers::after { content:''; position:absolute; top:4px; bottom:4px; left:5px; right:5px; border:1px dashed rgba(255,255,255,.3); pointer-events:none; }
+.book-spine.memo-hers .book-spine-label { color:#f5e4ea; font-family:'Hiragino Maru Gothic ProN','Yu Gothic',sans-serif; font-size:16px; letter-spacing:5px; padding:16px 0; }
+
+.book-spine.memo-mine { border-radius:2px 4px 4px 2px; }
+.book-spine.memo-mine.m1 { background:linear-gradient(90deg,#3f5764,#5d7c8e,#3f5764); }
+.book-spine.memo-mine.m2 { background:linear-gradient(90deg,#4f6d7a,#7a95a4,#4f6d7a); }
+.book-spine.memo-mine.m3 { background:linear-gradient(90deg,#3a4b57,#5a6e7c,#3a4b57); }
+.book-spine.memo-mine::after { content:''; position:absolute; top:4px; bottom:4px; left:5px; right:5px; border:1px dashed rgba(255,255,255,.3); pointer-events:none; }
+.book-spine.memo-mine .book-spine-label { color:#e6eef3; font-family:'Hiragino Maru Gothic ProN','Yu Gothic',sans-serif; font-size:16px; letter-spacing:5px; padding:16px 0; }
+
+/* 株ノートの背表紙 (バインダー風) */
+.book-spine.stock { border-radius:1px 3px 3px 1px; }
+.book-spine.stock.s1 { background:linear-gradient(90deg,#1f2e2a,#2f4640,#1f2e2a); }
+.book-spine.stock.s2 { background:linear-gradient(90deg,#2a2018,#463a2a,#2a2018); }
+.book-spine.stock.s3 { background:linear-gradient(90deg,#302030,#4a3050,#302030); }
+.book-spine.stock.s4 { background:linear-gradient(90deg,#252525,#3d3d3d,#252525); }
+.book-spine.stock::before { background:repeating-linear-gradient(180deg, transparent 0 22px, rgba(200,170,90,.06) 22px 24px, transparent 24px 46px); }
+.book-spine.stock::after { content:''; position:absolute; top:8px; bottom:8px; left:6px; right:6px; border-top:1px solid rgba(200,170,90,.35); border-bottom:1px solid rgba(200,170,90,.35); pointer-events:none; }
+.book-spine.stock .book-spine-label { color:#e3d19e; font-family:'Georgia','Hiragino Mincho ProN',serif; font-size:15px; letter-spacing:4px; padding:20px 0; font-weight:600; }
+.book-spine.stock .book-spine-badge { color:rgba(227,209,158,.7); }
+
+/* 株ノートの紙面 (横書き) */
+.book-toolbar.stock { background:linear-gradient(180deg,#1f2019,#2e2e24); border-bottom-color:#4a4020; color:#e3d19e; }
+.book-toolbar.stock button { color:#e3d19e; font-family:'Georgia',serif; }
+.book-toolbar.stock .book-title-bar.stock { color:#e3d19e; font-family:'Georgia',serif; letter-spacing:3px; font-size:16px; }
+.book-pages.lang-stock { scroll-snap-type:x mandatory; background:#f5f0dd; }
+.book-pages.lang-stock .diary-book-page { flex:0 0 100vw; width:100vw; max-width:100vw; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; touch-action:pan-y; writing-mode:horizontal-tb; text-orientation:mixed; display:block; padding:16px 20px 40px; background:repeating-linear-gradient(180deg,#faf7e7 0 30px,#f2ecd2 30px 31px); font-family:'Hiragino Sans','Yu Gothic',sans-serif; color:#2a2418; box-shadow:inset 20px 0 0 -18px #c08080; }
+.book-pages.lang-stock .diary-book-page::before, .book-pages.lang-stock .diary-book-page::after { display:none; }
+.stock-page-header { display:flex; align-items:center; gap:14px; padding-bottom:10px; border-bottom:2px solid #4a4020; margin-bottom:12px; }
+.stock-date { flex:0 0 auto; text-align:center; min-width:56px; padding:6px 8px; background:#1f2019; color:#e3d19e; border-radius:4px; font-family:'Georgia',serif; }
+.stock-date-day { font-size:26px; font-weight:800; line-height:1; }
+.stock-date-mon { font-size:11px; letter-spacing:2px; margin-top:2px; opacity:.85; }
+.stock-date-time { font-size:10px; letter-spacing:1px; margin-top:4px; opacity:.7; }
+.stock-title { flex:1 1 auto; min-width:0; }
+.stock-name { font-size:19px; font-weight:800; line-height:1.25; color:#1f2019; letter-spacing:.5px; word-break:break-word; }
+.stock-ticker { font-size:12px; font-family:'Georgia',serif; letter-spacing:2px; color:#7a6a45; margin-top:2px; }
+.stock-who { flex:0 0 auto; font-size:11px; color:#8a7a55; padding:4px 8px; border:1px solid #c8b880; border-radius:99px; background:#faf7e7; }
+.stock-body { }
+.stock-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
+.stock-side { display:inline-block; padding:6px 14px; border-radius:4px; font-family:'Georgia',serif; font-weight:700; font-size:14px; letter-spacing:2px; }
+.stock-side.buy { background:#c04f4f; color:#fff; }
+.stock-side.sell { background:#3b6a94; color:#fff; }
+.stock-meta { display:grid; grid-template-columns:repeat(3,1fr); gap:6px 12px; flex:1 1 auto; min-width:200px; }
+.stock-meta > div { display:flex; flex-direction:column; }
+.stock-meta label { font-size:10px; color:#8a7a55; letter-spacing:2px; }
+.stock-meta span { font-size:15px; font-weight:700; color:#1f2019; }
+.stock-realized { padding:6px 10px; border-radius:4px; font-weight:800; margin:6px 0 10px; letter-spacing:1px; text-align:right; font-size:15px; }
+.stock-realized.up { background:rgba(192,79,79,.15); color:#c04f4f; }
+.stock-realized.down { background:rgba(59,106,148,.15); color:#3b6a94; }
+.stock-memo { background:rgba(255,255,255,.6); border-left:3px solid #c8b880; padding:8px 10px; font-size:13px; color:#5a4f30; margin:6px 0 12px; white-space:pre-wrap; }
+.stock-chart { margin-top:14px; }
+.stock-chart-loading, .stock-chart-none { text-align:center; padding:24px; color:#8a7a55; font-size:12px; letter-spacing:2px; border:1px dashed #c8b880; border-radius:4px; }
+.book-pages.lang-stock .book-page-num { color:#8a7a55; font-family:'Georgia',serif; }
+
 /* 文庫本(横書き日本語)の背表紙 */
 .book-spine.paperback { border-radius:2px 4px 4px 2px; }
 .book-spine.paperback.p1 { background:linear-gradient(90deg,#c4a882,#e0c9a0,#c4a882); }
@@ -5306,36 +5365,63 @@ function renderDiary() {
 let currentBookYm = null; // 開いている本の年月 "YYYY-MM"
 let currentBookFont = 'mincho';
 
+function ymFromTs(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
 function renderDiaryShelf() {
   const el = document.getElementById('diary-shelf');
   if (!el) return;
 
   // 月ごとに日記のある日を集計
-  const monthMap = {}; // { "YYYY-MM": [dateKey, ...] }
+  const monthMap = {};
   Object.keys(allDiaries).forEach(k => {
     const d = allDiaries[k];
     if (!(d?.mine?.raw || d?.hers?.raw)) return;
     const ym = k.slice(0,7);
     (monthMap[ym] ||= []).push(k);
   });
-  // 今月は日記がなくても表示
   const now = new Date();
   const nowYm = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   if (!monthMap[nowYm]) monthMap[nowYm] = [];
 
-  const yms = Object.keys(monthMap).sort((a,b) => b.localeCompare(a)); // 新しい順（本棚右→左）
+  // メモ月ごと集計 (person別)
+  const memoMonthMap = { mine: {}, hers: {} };
+  (allMemos || []).forEach(m => {
+    if (!m?.createdAt || !m?.text) return;
+    const ym = ymFromTs(m.createdAt);
+    const p = m.person === 'hers' ? 'hers' : 'mine';
+    (memoMonthMap[p][ym] ||= []).push(m);
+  });
 
-  if (!yms.length) {
-    el.innerHTML = '<div class="shelf-empty">まだ日記の記録がありません</div>';
+  // 株取引 月ごと集計
+  const stockMonthMap = {};
+  (allTrades || []).forEach(t => {
+    if (!t?.ts) return;
+    const ym = ymFromTs(t.ts);
+    (stockMonthMap[ym] ||= []).push(t);
+  });
+
+  const yms = Object.keys(monthMap).sort((a,b) => b.localeCompare(a));
+  const memoMineYms = Object.keys(memoMonthMap.mine).sort((a,b) => b.localeCompare(a));
+  const memoHersYms = Object.keys(memoMonthMap.hers).sort((a,b) => b.localeCompare(a));
+  const stockYms = Object.keys(stockMonthMap).sort((a,b) => b.localeCompare(a));
+
+  if (!yms.length && !memoMineYms.length && !memoHersYms.length && !stockYms.length) {
+    el.innerHTML = '<div class="shelf-empty">まだ日記・メモ・取引の記録がありません</div>';
     return;
   }
 
-  // 6冊ごとに棚（横スクロールなので実質1棚でOKだが、雰囲気のため）
-  const shelfRows = [];
-  const perShelf = 8;
-  for (let i = 0; i < yms.length; i += perShelf) {
-    shelfRows.push(yms.slice(i, i + perShelf));
-  }
+  const chunk = (arr, size) => {
+    const r = [];
+    for (let i = 0; i < arr.length; i += size) r.push(arr.slice(i, i + size));
+    return r.length ? r : [[]];
+  };
+  const shelfRows = chunk(yms, 8);
+  const stockRows = chunk(stockYms, 8);
+  const memoHersRows = chunk(memoHersYms, 8);
+  const memoMineRows = chunk(memoMineYms, 8);
 
   const EN_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -5387,6 +5473,60 @@ function renderDiaryShelf() {
     html += rowHtml;
   });
 
+  // ちかのメモ帳
+  if (memoHersYms.length) {
+    html += '<div class="shelf-sub" style="margin-top:32px;">ちかのメモ帳 — 縦書き</div>';
+    memoHersRows.forEach(rowYms => {
+      let rowHtml = '<div class="shelf-rack">';
+      rowYms.forEach((ym, idx) => {
+        const [y, m] = ym.split('-');
+        const cnt = memoMonthMap.hers[ym].length;
+        rowHtml += `<div class="book-spine memo-hers m${(idx%3)+1}" onclick="openDiaryBook('${ym}','memo-hers')">
+          <div class="book-spine-label">${y}年${Number(m)}月</div>
+          <div class="book-spine-badge">${cnt}件</div>
+        </div>`;
+      });
+      rowHtml += '</div><div class="shelf-board"></div>';
+      html += rowHtml;
+    });
+  }
+
+  // ひろのメモ帳
+  if (memoMineYms.length) {
+    html += '<div class="shelf-sub" style="margin-top:26px;">ひろのメモ帳 — 縦書き</div>';
+    memoMineRows.forEach(rowYms => {
+      let rowHtml = '<div class="shelf-rack">';
+      rowYms.forEach((ym, idx) => {
+        const [y, m] = ym.split('-');
+        const cnt = memoMonthMap.mine[ym].length;
+        rowHtml += `<div class="book-spine memo-mine m${(idx%3)+1}" onclick="openDiaryBook('${ym}','memo-mine')">
+          <div class="book-spine-label">${y}年${Number(m)}月</div>
+          <div class="book-spine-badge">${cnt}件</div>
+        </div>`;
+      });
+      rowHtml += '</div><div class="shelf-board"></div>';
+      html += rowHtml;
+    });
+  }
+
+  // 株ノート
+  if (stockYms.length) {
+    html += '<div class="shelf-sub" style="margin-top:26px;">株ノート — 売買記録とチャート</div>';
+    stockRows.forEach(rowYms => {
+      let rowHtml = '<div class="shelf-rack">';
+      rowYms.forEach((ym, idx) => {
+        const [y, m] = ym.split('-');
+        const cnt = stockMonthMap[ym].length;
+        rowHtml += `<div class="book-spine stock s${(idx%4)+1}" onclick="openDiaryBook('${ym}','stock')">
+          <div class="book-spine-label">${y}・${Number(m)}月</div>
+          <div class="book-spine-badge">${cnt}件</div>
+        </div>`;
+      });
+      rowHtml += '</div><div class="shelf-board"></div>';
+      html += rowHtml;
+    });
+  }
+
   el.innerHTML = html;
 }
 
@@ -5414,6 +5554,10 @@ function renderDiaryBook() {
   const el = document.getElementById('diary-book-list');
   if (!el || !currentBookYm) return;
 
+  // 株ノート / メモ帳は専用レンダに委譲
+  if (currentBookLang === 'stock') return renderStockBook();
+  if (currentBookLang === 'memo-hers' || currentBookLang === 'memo-mine') return renderMemoBook(currentBookLang === 'memo-hers' ? 'hers' : 'mine');
+
   const [yStr, mStr] = currentBookYm.split('-');
   const year = Number(yStr);
   const month = Number(mStr);
@@ -5422,8 +5566,8 @@ function renderDiaryBook() {
   const EN_DOWS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const EN_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const isEn = currentBookLang === 'en';
-  const isJaH = currentBookLang === 'ja-h'; // 横書き日本語（文庫本風）
-  const isHorizontal = isEn || isJaH;       // 横スクロールでは無く固定幅+縦スクロールの共通仕様
+  const isJaH = currentBookLang === 'ja-h';
+  const isHorizontal = isEn || isJaH;
 
   const now = new Date();
   const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
@@ -5611,6 +5755,273 @@ function changeBookFontSize(delta) {
   currentBookFontSize = Math.max(14, Math.min(36, currentBookFontSize + delta));
   const pagesEl = document.getElementById('book-pages');
   if (pagesEl) pagesEl.style.setProperty('--book-font-size', currentBookFontSize + 'px');
+}
+
+// SVGスパークライン (株価の推移を小さく描画)
+function sparklineSvg(data, opt = {}) {
+  const width = opt.width || 320;
+  const height = opt.height || 110;
+  if (!data?.length) return '<div style="color:#8a6b45; font-size:12px; text-align:center; padding:20px;">チャート取得できず</div>';
+  const closes = data.map(d => d.c);
+  const min = Math.min(...closes);
+  const max = Math.max(...closes);
+  const range = (max - min) || 1;
+  const padX = 8, padY = 10;
+  const usableW = width - padX*2;
+  const usableH = height - padY*2;
+  const points = data.map((d, i) => {
+    const x = padX + (i / (data.length - 1 || 1)) * usableW;
+    const y = padY + usableH - ((d.c - min) / range) * usableH;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const rising = closes[closes.length-1] >= closes[0];
+  const strokeColor = rising ? '#c04f4f' : '#3b6a94';
+  const fillColor = rising ? 'rgba(192,79,79,0.12)' : 'rgba(59,106,148,0.12)';
+  // 塗りつぶし用のポリゴン
+  const areaPoints = `${padX},${padY+usableH} ${points} ${padX+usableW},${padY+usableH}`;
+  // 取引ポイント (opt.markPrice, opt.markIndex)
+  let mark = '';
+  if (opt.markPrice != null) {
+    const y = padY + usableH - ((opt.markPrice - min) / range) * usableH;
+    const x = opt.markIndex != null
+      ? padX + (opt.markIndex / (data.length - 1 || 1)) * usableW
+      : padX + usableW;
+    mark = `<circle cx="${x}" cy="${y}" r="4" fill="${opt.markColor || '#c48b4a'}" stroke="#fff" stroke-width="1.5"/>`;
+  }
+  return `<svg viewBox="0 0 ${width} ${height}" width="100%" preserveAspectRatio="none" style="display:block; background:linear-gradient(180deg,#fbf8ed,#f2e9d0); border:1px solid rgba(120,80,40,.25); border-radius:2px;">
+    <polygon points="${areaPoints}" fill="${fillColor}" stroke="none"/>
+    <polyline points="${points}" fill="none" stroke="${strokeColor}" stroke-width="1.6" stroke-linejoin="round"/>
+    ${mark}
+    <text x="${padX}" y="${padY + 8}" font-family="Georgia,serif" font-size="9" fill="#8a6b45">${max.toFixed(2)}</text>
+    <text x="${padX}" y="${height - 2}" font-family="Georgia,serif" font-size="9" fill="#8a6b45">${min.toFixed(2)}</text>
+  </svg>`;
+}
+
+// チャート画像キャッシュ (symbol+日付ごと)
+const chartCache = {};
+async function fetchChartData(symbol, aroundTs) {
+  const key = `${symbol}:${Math.floor(aroundTs/(24*3600*1000))}`;
+  if (chartCache[key]) return chartCache[key];
+  // 取引日の±45日
+  const from = aroundTs - 45*24*3600*1000;
+  const to = Math.min(aroundTs + 45*24*3600*1000, Date.now());
+  try {
+    const r = await fetch(`/api/chart-history?symbol=${encodeURIComponent(symbol)}&from=${from}&to=${to}`);
+    if (!r.ok) return null;
+    const j = await r.json();
+    chartCache[key] = j.data || [];
+    return chartCache[key];
+  } catch { return null; }
+}
+
+// ── メモ帳の本 (縦書き、person毎) ──
+function renderMemoBook(person) {
+  const el = document.getElementById('diary-book-list');
+  if (!el || !currentBookYm) return;
+  const [yStr, mStr] = currentBookYm.split('-');
+  const year = Number(yStr);
+  const month = Number(mStr);
+  const label = person === 'hers' ? 'ちか' : 'ひろ';
+  const colorVar = person === 'hers' ? 'var(--hers)' : 'var(--mine)';
+
+  // この月の memos (person)
+  const memos = (allMemos || [])
+    .filter(m => m.person === person && m.createdAt && m.text)
+    .filter(m => {
+      const d = new Date(m.createdAt);
+      return d.getFullYear() === year && (d.getMonth()+1) === month;
+    })
+    .sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+
+  // 日付ごとにグループ化
+  const byDate = {};
+  memos.forEach(m => {
+    const d = new Date(m.createdAt);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    (byDate[key] ||= []).push(m);
+  });
+  const dateKeys = Object.keys(byDate).sort();
+  const DOWS = ['日','月','火','水','木','金','土'];
+
+  // 縦書き本と同じくday1を右端にするため反転
+  const displayOrder = dateKeys.slice().reverse();
+  const splitParas = (raw) => raw.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean);
+
+  let pagesHtml = '';
+  displayOrder.forEach(dateKey => {
+    const { day } = parseKey(dateKey);
+    const dow = DOWS[new Date(year, month-1, day).getDay()];
+    let contentInner = '';
+    byDate[dateKey].forEach(m => {
+      const time = new Date(m.createdAt);
+      const hh = String(time.getHours()).padStart(2,'0');
+      const mm = String(time.getMinutes()).padStart(2,'0');
+      const pins = m.pinned ? '★ ' : '';
+      contentInner += `<div class="who-marker" style="color:${colorVar};">◇ ${pins}${hh}:${mm}</div>`;
+      const paragraphs = splitParas(m.text || '');
+      const parasHtml = paragraphs.map(p => `<div class="text-para">${escapeHtml(p)}</div>`).join('');
+      contentInner += `<div class="page-text">${parasHtml || escapeHtml(m.text)}</div>`;
+    });
+    if (!contentInner) contentInner = '<div class="page-empty">記録なし</div>';
+    pagesHtml += `<div class="diary-book-page" data-date="${dateKey}">
+      <header class="page-date-jp">${month}月${day}日<span>${dow}曜日</span></header>
+      <div class="page-content">${contentInner}</div>
+      <div class="book-page-num">— ${day}日 —</div>
+    </div>`;
+  });
+  if (!pagesHtml) pagesHtml = `<div style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--text-soft); font-size:16px;">この月の${label}のメモはありません</div>`;
+
+  const toolbar = `<div class="book-toolbar">
+    <button onclick="closeDiaryBook()">← 本棚へ</button>
+    <div class="book-title-bar">${label}のメモ帳 ${year}年${month}月</div>
+    <div style="display:flex; gap:6px; align-items:center;">
+      <select class="book-font-select" onchange="changeBookFont(this.value)">
+        <option value="mincho">明朝</option>
+        <option value="gothic">ゴシック</option>
+        <option value="maru">丸ゴシ</option>
+        <option value="kaisho">楷書</option>
+      </select>
+      <button onclick="changeBookFontSize(-2)">小</button>
+      <button onclick="changeBookFontSize(2)">大</button>
+      <button onclick="showBookToc()">目次</button>
+    </div>
+  </div>`;
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  el.innerHTML = `
+    ${toolbar}
+    <div class="book-pages lang-ja font-${currentBookFont}" id="book-pages" style="--book-font-size:${currentBookFontSize}px;">${pagesHtml}</div>
+    <div class="book-toc-overlay" id="book-toc-overlay" onclick="if(event.target===this)hideBookToc()">
+      ${buildTocHtml(year, month, daysInMonth, dateKeys, false)}
+    </div>
+  `;
+  el.classList.add('active');
+  requestAnimationFrame(() => {
+    const pagesEl = document.getElementById('book-pages');
+    if (!pagesEl) return;
+    const lastPage = pagesEl.lastElementChild;
+    if (lastPage && lastPage.classList.contains('diary-book-page')) {
+      pagesEl.scrollLeft = lastPage.offsetLeft + lastPage.offsetWidth - pagesEl.clientWidth;
+    } else {
+      pagesEl.scrollLeft = pagesEl.scrollWidth;
+    }
+  });
+}
+
+// ── 株ノート (横書き) ──
+function renderStockBook() {
+  const el = document.getElementById('diary-book-list');
+  if (!el || !currentBookYm) return;
+  const [yStr, mStr] = currentBookYm.split('-');
+  const year = Number(yStr);
+  const month = Number(mStr);
+
+  const trades = (allTrades || [])
+    .filter(t => t?.ts)
+    .filter(t => {
+      const d = new Date(t.ts);
+      return d.getFullYear() === year && (d.getMonth()+1) === month;
+    })
+    .sort((a,b) => (a.ts||0) - (b.ts||0));
+
+  const NAMES = { mine: 'ひろ', hers: 'ちか' };
+  const curSymFn = (c) => (c || 'JPY') === 'JPY' ? '¥' : '$';
+
+  let pagesHtml = '';
+  trades.forEach((t, idx) => {
+    const d = new Date(t.ts);
+    const day = d.getDate();
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    const isBuy = t.type === 'buy';
+    const price = isBuy ? t.price : t.sellPrice;
+    const sym = curSymFn(t.currency);
+    const name = (typeof stockName === 'function') ? stockName(t) : (t.name || t.ticker);
+    const ticker = t.ticker || '';
+    const who = NAMES[t.person] || '';
+    const shares = t.shares || 0;
+    const total = (price || 0) * shares;
+    const sideBadge = isBuy
+      ? '<span class="stock-side buy">BUY 買い</span>'
+      : '<span class="stock-side sell">SELL 売り</span>';
+    let realized = '';
+    if (!isBuy && t.realized != null) {
+      const cls = t.realized >= 0 ? 'up' : 'down';
+      realized = `<div class="stock-realized ${cls}">実現損益 ${t.realized >= 0 ? '+' : ''}${sym}${Number(t.realized).toLocaleString()}</div>`;
+    }
+    pagesHtml += `<div class="diary-book-page stock-page" data-date="${d.toISOString().slice(0,10)}" data-trade-idx="${idx}">
+      <header class="stock-page-header">
+        <div class="stock-date">
+          <div class="stock-date-day">${day}</div>
+          <div class="stock-date-mon">${month}月</div>
+          <div class="stock-date-time">${hh}:${mm}</div>
+        </div>
+        <div class="stock-title">
+          <div class="stock-name">${escapeHtml(name || '')}</div>
+          <div class="stock-ticker">${escapeHtml(ticker)}</div>
+        </div>
+        <div class="stock-who">${who}</div>
+      </header>
+      <div class="stock-body">
+        <div class="stock-row">
+          ${sideBadge}
+          <div class="stock-meta">
+            <div><label>価格</label><span>${sym}${(price != null) ? Number(price).toLocaleString(undefined,{maximumFractionDigits:2}) : '—'}</span></div>
+            <div><label>株数</label><span>${shares}株</span></div>
+            <div><label>合計</label><span>${sym}${total.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
+          </div>
+        </div>
+        ${realized}
+        ${t.memo ? `<div class="stock-memo">${escapeHtml(t.memo)}</div>` : ''}
+        <div class="stock-chart" data-symbol="${escapeHtml(ticker)}" data-ts="${t.ts}" data-mark-price="${price ?? ''}">
+          <div class="stock-chart-loading">チャート読み込み中…</div>
+        </div>
+      </div>
+      <div class="book-page-num">${idx + 1} / ${trades.length}</div>
+    </div>`;
+  });
+
+  if (!pagesHtml) pagesHtml = '<div style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--text-soft); font-size:16px;">この月の売買記録はありません</div>';
+
+  const toolbar = `<div class="book-toolbar stock">
+    <button onclick="closeDiaryBook()">← 本棚へ</button>
+    <div class="book-title-bar stock">株ノート ${year}年${month}月</div>
+    <div style="display:flex; gap:6px; align-items:center;">
+      <button onclick="changeBookFontSize(-2)">A−</button>
+      <button onclick="changeBookFontSize(2)">A+</button>
+    </div>
+  </div>`;
+
+  el.innerHTML = `
+    ${toolbar}
+    <div class="book-pages lang-stock font-gothic" id="book-pages" style="--book-font-size:${currentBookFontSize}px;">${pagesHtml}</div>
+  `;
+  el.classList.add('active');
+
+  requestAnimationFrame(() => {
+    const pagesEl = document.getElementById('book-pages');
+    if (pagesEl) pagesEl.scrollLeft = 0;
+  });
+
+  // 各ページのチャートを非同期で埋め込み
+  el.querySelectorAll('.stock-chart').forEach(async (holder) => {
+    const symbol = holder.dataset.symbol;
+    const ts = Number(holder.dataset.ts);
+    const markPrice = holder.dataset.markPrice ? Number(holder.dataset.markPrice) : null;
+    if (!symbol) { holder.innerHTML = '<div class="stock-chart-none">— 銘柄コード不明 —</div>'; return; }
+    const data = await fetchChartData(symbol, ts);
+    if (!data?.length) { holder.innerHTML = '<div class="stock-chart-none">— チャート取得できず —</div>'; return; }
+    // 取引日に最も近い日のindexを探す
+    let markIdx = null;
+    if (ts) {
+      let bestDiff = Infinity;
+      data.forEach((p, i) => {
+        const diff = Math.abs(p.t - ts);
+        if (diff < bestDiff) { bestDiff = diff; markIdx = i; }
+      });
+    }
+    holder.innerHTML = sparklineSvg(data, { width: 340, height: 130, markPrice, markIndex: markIdx });
+  });
 }
 
 // このページだけ翻訳する

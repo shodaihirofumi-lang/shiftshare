@@ -1027,6 +1027,32 @@ ${parts.join('\n\n')}`;
 });
 
 // 月間まとめ
+// 銘柄の期間チャート (取引日周辺のミニチャート用)
+app.get('/api/chart-history', async (req, res) => {
+  const { symbol, from, to } = req.query;
+  if (!symbol) return res.status(400).json({ error: 'symbol required' });
+  try {
+    // from/to (ms) が指定なければ 3ヶ月分
+    const now = Date.now();
+    const toTs = to ? Math.floor(Number(to)/1000) : Math.floor(now/1000);
+    const fromTs = from ? Math.floor(Number(from)/1000) : Math.floor((now - 90*24*3600*1000)/1000);
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${fromTs}&period2=${toTs}&interval=1d`;
+    const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!r.ok) return res.status(r.status).json({ error: 'yahoo error' });
+    const j = await r.json();
+    const result = j.chart?.result?.[0];
+    if (!result) return res.status(404).json({ error: 'no data' });
+    const closes = result.indicators?.quote?.[0]?.close || [];
+    const timestamps = result.timestamp || [];
+    const data = timestamps
+      .map((t, i) => ({ t: t*1000, c: closes[i] }))
+      .filter(d => d.c != null);
+    res.json({ symbol, data });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/monthly-diaries', (_req, res) => res.json(getMonthlyDiaries()));
 app.post('/api/diary/monthly', async (req, res) => {
   const { yearMonth, person } = req.body;
