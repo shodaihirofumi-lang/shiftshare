@@ -968,6 +968,64 @@ ${raw}`;
   }
 });
 
+// 日記の英訳
+app.post('/api/diary/translate', async (req, res) => {
+  const { date } = req.body;
+  if (!date) return res.status(400).json({ error: 'date が必要です' });
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが設定されていません' });
+  const existing = getDiary(date) || {};
+  const rawHers = existing.hers?.raw || '';
+  const rawMine = existing.mine?.raw || '';
+  if (!rawHers && !rawMine) return res.status(400).json({ error: 'この日には日記がありません' });
+  try {
+    const parts = [];
+    if (rawHers) parts.push(`[Chika]\n${rawHers}`);
+    if (rawMine) parts.push(`[Hiro]\n${rawMine}`);
+    const prompt = `Translate the following Japanese diary entries into natural, warm English suitable for a personal journal / novel excerpt. Keep the same tone (casual if casual, polite if polite). Preserve the [Chika] and [Hiro] labels exactly. Do NOT add any extra commentary — output ONLY the translation.
+
+${parts.join('\n\n')}`;
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] }),
+    });
+    if (!response.ok) {
+      const e = await response.json().catch(() => ({}));
+      throw new Error(e.error?.message || `API error ${response.status}`);
+    }
+    const data = await response.json();
+    const text = data.content?.[0]?.text?.trim() || '';
+    // [Chika] ... [Hiro] ... のパートに分割
+    let en_hers = '', en_mine = '';
+    const parts2 = text.split(/\n?\[(Chika|Hiro)\]\n?/);
+    // parts2 = ['', 'Chika', '...text...', 'Hiro', '...text...']
+    for (let i = 1; i < parts2.length; i += 2) {
+      const who = parts2[i], body = (parts2[i+1] || '').trim();
+      if (who === 'Chika') en_hers = body;
+      else if (who === 'Hiro') en_mine = body;
+    }
+    if (!en_hers && !en_mine) {
+      // フォールバック: 全文を hers/mine のあった側に
+      if (rawHers && !rawMine) en_hers = text;
+      else if (!rawHers && rawMine) en_mine = text;
+      else en_hers = text;
+    }
+    const merged = {
+      ...existing,
+      translated: {
+        en_hers,
+        en_mine,
+        generatedAt: Date.now(),
+      },
+    };
+    await setDiary(date, merged);
+    res.json({ success: true, en_hers, en_mine });
+  } catch (e) {
+    console.error('[diary/translate]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // 月間まとめ
 app.get('/api/monthly-diaries', (_req, res) => res.json(getMonthlyDiaries()));
 app.post('/api/diary/monthly', async (req, res) => {
