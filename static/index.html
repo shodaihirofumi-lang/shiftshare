@@ -1277,6 +1277,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .gcal2-diary-text { font-size:19px; line-height:1.75; white-space:pre-wrap; color:var(--text); }
 .gcal2-edit-btn { display:block; width:100%; margin-top:13px; padding:9px; border-radius:10px; border:1.5px solid var(--line); background:var(--bg); font-size:16px; font-weight:700; color:var(--text-soft); cursor:pointer; text-align:center; letter-spacing:1px; }
 .gcal2-empty-note { font-size:16px; color:var(--text-soft); padding:6px 0; }
+.gcal2-photo-icon { font-size:10px; vertical-align:top; margin-left:1px; }
+.gcal2-photos { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+.gcal2-photo { width:80px; height:80px; object-fit:cover; border-radius:8px; border:1px solid var(--line); cursor:pointer; }
 /* ── REALIZED TOP SUMMARY ── */
 .realized-top-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line-soft); }
 .realized-top-row:last-child { border-bottom:none; }
@@ -3459,10 +3462,11 @@ function renderGridCalendar() {
       cellClass += ' has-trade';
     }
     const tradeRow = tradeBadges ? `<div class="gcal2-trade-row">${tradeBadges}</div>` : '';
+    const photoMark = (!c.dim && dayPhotos[key]?.length) ? `<span class="gcal2-photo-icon">📷</span>` : '';
     const cellEl = document.createElement('div');
     cellEl.className = cellClass;
     cellEl.dataset.key = key;
-    cellEl.innerHTML = `<div class="${numClass}">${c.day}</div>${tags}${evDots}${tradeRow}`;
+    cellEl.innerHTML = `<div class="${numClass}">${c.day}${photoMark}</div>${tags}${evDots}${tradeRow}`;
     if (!c.dim) cellEl.addEventListener('click', () => showGridDiary(key));
     grid.appendChild(cellEl);
   }
@@ -3502,6 +3506,12 @@ function showGridDiary(key) {
   }
   if (!tmpl && !diary?.mine?.raw && !diary?.mine?.text && !diary?.hers?.raw && !diary?.hers?.text) {
     html += `<div class="gcal2-empty-note">この日の記録はまだありません</div>`;
+  }
+  const photos = dayPhotos[key] || [];
+  if (photos.length) {
+    html += `<div class="gcal2-photos">${photos.map(p =>
+      `<img src="${p.img}" class="gcal2-photo" onclick="openLightbox('${p.img.replace(/'/g,"\\'")}')">`
+    ).join('')}</div>`;
   }
   html += `<button class="gcal2-edit-btn" onclick="openDayEditor('${key}')">この日を編集する</button>`;
   panel.innerHTML = html;
