@@ -482,10 +482,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-gain { font-size:20px; font-weight:700; }
 .folio-gain.up { color:#c0392b; } .folio-gain.down { color:#2e6da4; }
 .folio-empty { font-size:16px; color:var(--text-soft); }
-.folio-manage { margin-top:8px; border-top:1px solid var(--line); }
-.folio-manage summary { font-size:16px; font-weight:600; color:var(--mine); cursor:pointer; padding:10px 0 4px; list-style:none; }
-.folio-manage summary::-webkit-details-marker { display:none; }
-.folio-manage .gcal-body { padding:0; }
+.folio-add-card { border:1.5px solid var(--mine-border); background:var(--mine-bg); }
+.folio-add-head { font-size:17px; font-weight:700; color:var(--mine); margin-bottom:10px; letter-spacing:.5px; }
 .fh-btn { flex:1; padding:8px 0; border-radius:9px; border:1.5px solid var(--line); background:var(--card); font-size:16px; font-weight:600; color:var(--text-soft); cursor:pointer; }
 .fh-btn.active[data-p=mine] { background:var(--mine-bg); color:var(--mine); border-color:var(--mine); }
 .fh-btn.active[data-p=hers] { background:var(--hers-bg); color:var(--hers); border-color:var(--hers); }
@@ -1526,6 +1524,22 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div class="page-top">
         <div><div class="page-title">保有株</div><div class="page-sub">日経平均・ポートフォリオ</div></div>
       </div>
+      <div class="folio-card folio-add-card">
+        <div class="folio-add-head">＋ 銘柄を追加</div>
+        <div class="ev-person-toggle" style="margin-bottom:8px">
+          <button class="fh-btn active" data-p="mine" onclick="setFolioPerson('mine')">ひろ</button>
+          <button class="fh-btn" data-p="hers" onclick="setFolioPerson('hers')">ちか</button>
+        </div>
+        <input id="fh-ticker" class="ev-in" placeholder="銘柄コード（日本株は4桁 例7203 / 米国株 AAPL）">
+        <input id="fh-name" class="ev-in" placeholder="表示名（任意・日本語で 例 トヨタ自動車）">
+        <div class="ev-add-row">
+          <input id="fh-shares" class="ev-in" type="number" inputmode="decimal" placeholder="株数">
+          <input id="fh-cost" class="ev-in" type="number" inputmode="decimal" placeholder="取得単価">
+          <button class="ev-add-btn" onclick="addHoldingFromUI()">追加</button>
+        </div>
+        <input id="fh-date" class="ev-in" type="date" style="margin-top:6px" title="購入日">
+        <input id="fh-reason" class="ev-in" placeholder="買う理由（任意・例：好決算で押し目買い）" maxlength="200" style="margin-top:6px">
+      </div>
       <div class="nikkei-card">
         <div class="nk-head">日経平均株価</div>
         <div class="nk-main">
@@ -1538,24 +1552,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div class="folio-card">
         <div class="income-head">保有株（名前をタップで明細・銘柄をタップでチャート）</div>
         <div id="folio-summary"></div>
-        <details class="folio-manage">
-          <summary>＋ 銘柄を追加</summary>
-          <div class="gcal-body">
-            <div class="ev-person-toggle">
-              <button class="fh-btn active" data-p="mine" onclick="setFolioPerson('mine')">ひろ</button>
-              <button class="fh-btn" data-p="hers" onclick="setFolioPerson('hers')">ちか</button>
-            </div>
-            <input id="fh-ticker" class="ev-in" placeholder="銘柄コード（日本株は4桁 例7203 / 米国株 AAPL）">
-            <input id="fh-name" class="ev-in" placeholder="表示名（任意・日本語で 例 トヨタ自動車）">
-            <div class="ev-add-row">
-              <input id="fh-shares" class="ev-in" type="number" inputmode="decimal" placeholder="株数">
-              <input id="fh-cost" class="ev-in" type="number" inputmode="decimal" placeholder="取得単価">
-              <button class="ev-add-btn" onclick="addHoldingFromUI()">追加</button>
-            </div>
-            <input id="fh-date" class="ev-in" type="date" style="margin-top:6px" title="購入日">
-            <input id="fh-reason" class="ev-in" placeholder="買う理由（任意・例：好決算で押し目買い）" maxlength="200" style="margin-top:6px">
-          </div>
-        </details>
         <div class="folio-note">※「買い/売り/様子見」は週足の移動平均線(13週・26週)とRSI(14週)による機械的な目安です。投資判断はご自身の責任で。</div>
       </div>
     </div>
