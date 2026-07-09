@@ -98,7 +98,7 @@ function curSymStr(cur) { return CUR_SYM[cur] || (cur + ' '); }
 function inferCurrency(ticker) {
   const t = String(ticker || '').toUpperCase();
   // 「.T」付きでも、生の4〜5桁コード（addHoldingで .T が付く前のユーザー入力）でもJPY扱い
-  if (t.endsWith('.T') || /^\d{4,5}$/.test(t)) return 'JPY';
+  if (t.endsWith('.T') || /^\d{3,5}[A-Z]?$/.test(t)) return 'JPY';
   return 'USD';
 }
 function fmtMoney(n, cur) {
@@ -204,7 +204,7 @@ app.get('/api/hold-replay', async (_req, res) => {
 // 取引履歴（買い＋売り）。チャートにマーカーを描画する用途。person/ticker でフィルタ可。
 app.get('/api/transactions', (req, res) => {
   const { person, ticker } = req.query;
-  const normTicker = (t) => { t = String(t || '').toUpperCase(); return /^\d{4,5}$/.test(t) ? t + '.T' : t; };
+  const normTicker = (t) => { t = String(t || '').toUpperCase(); return /^\d{3,5}[A-Z]?$/.test(t) ? t + '.T' : t; };
   const tk = ticker ? normTicker(ticker) : null;
   const buys = getBuys().map(b => ({ ...b, type: 'buy' }));
   const sells = getRealized().map(s => ({ ...s, type: 'sell', price: s.sellPrice }));
@@ -550,7 +550,7 @@ app.get('/api/quotes', async (req, res) => {
   const out = {};
   for (const sym of symbols) {
     // 4〜5桁の日本株コードは .T を補う（古いデータ対応）。結果は元のキーで返す
-    const ySym = /^\d{4,5}$/.test(sym) ? sym + '.T' : sym;
+    const ySym = /^\d{3,5}[A-Z]?$/.test(sym) ? sym + '.T' : sym;
     try {
       const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ySym)}?interval=1wk&range=2y`, {
         headers: { 'User-Agent': 'Mozilla/5.0' },
@@ -634,7 +634,7 @@ app.get('/api/portfolio-history', async (_req, res) => {
 // ── 個別銘柄の値動き（チャート用）──
 app.get('/api/stock-history', async (req, res) => {
   const sym0 = String(req.query.symbol || '').trim();
-  const sym = /^\d{4,5}$/.test(sym0) ? sym0 + '.T' : sym0;
+  const sym = /^\d{3,5}[A-Z]?$/.test(sym0) ? sym0 + '.T' : sym0;
   if (!sym) return res.status(400).json({ error: 'symbol が必要です' });
   const range = ['1mo', '6mo', '1y', '5y'].includes(req.query.range) ? req.query.range : '6mo';
   const interval = (range === '1y' || range === '5y') ? '1wk' : '1d';

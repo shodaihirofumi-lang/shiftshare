@@ -267,7 +267,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .chart-axis span:nth-child(2) { color:var(--text); font-weight:600; }
 
 /* ── MONTH NAV ── */
-.month-nav { display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:16px; }
+.month-nav { display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:16px; position:relative; }
+.cal-zoom-ctl { position:absolute; right:0; display:flex; align-items:center; gap:4px; }
+.cz-btn { width:26px; height:26px; border-radius:50%; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; line-height:1; }
+.cz-btn:active { background:var(--bg); }
+#cal-zoom-pct { font-size:11px; color:var(--text-soft); min-width:28px; text-align:center; }
 .mn-btn { width:38px; height:38px; border-radius:50%; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:20px; cursor:pointer; box-shadow:var(--shadow-sm); line-height:1; }
 .mn-btn:active { background:var(--bg); }
 .mn-btn:disabled { opacity:.32; cursor:default; box-shadow:none; }
@@ -1419,6 +1423,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <button class="mn-btn" onclick="changeMonth(-1)">'</button>
         <div id="month-label">—</div>
         <button class="mn-btn" onclick="changeMonth(1)">'</button>
+        <span class="cal-zoom-ctl">
+          <button class="cz-btn" onclick="calZoom(-1)">−</button>
+          <span id="cal-zoom-pct"></span>
+          <button class="cz-btn" onclick="calZoom(1)">＋</button>
+        </span>
       </div>
       <div class="legend">
         <div class="leg"><span class="leg-ava mine" id="leg-ava-mine"></span><span id="leg-name-mine">ひろ</span></div>
@@ -2130,7 +2139,21 @@ const edTypes = { mine: 'none', hers: 'none' };
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 
+let calZoomLevel = Number(localStorage.getItem('calZoom')) || 100;
+function calZoom(dir) {
+  calZoomLevel = Math.max(50, Math.min(120, calZoomLevel + dir * 5));
+  localStorage.setItem('calZoom', calZoomLevel);
+  applyCalZoom();
+}
+function applyCalZoom() {
+  const g = document.getElementById('cal-grid');
+  if (g) g.style.zoom = (calZoomLevel / 100);
+  const el = document.getElementById('cal-zoom-pct');
+  if (el) el.textContent = calZoomLevel + '%';
+}
+
 async function enterApp() {
+  applyCalZoom();
   loadAvatars();
   await loadCalendar();
   setTimeout(scrollToToday, 100);
@@ -2230,6 +2253,7 @@ const STOCK_JA = {
   '7203.T':'トヨタ自動車','6758.T':'ソニーグループ','9984.T':'ソフトバンクG','6861.T':'キーエンス','8306.T':'三菱UFJ','9432.T':'NTT','6098.T':'リクルート','7974.T':'任天堂','8035.T':'東京エレクトロン','4063.T':'信越化学','6501.T':'日立製作所','7267.T':'ホンダ','6902.T':'デンソー','9433.T':'KDDI','8316.T':'三井住友FG','4502.T':'武田薬品','6594.T':'ニデック','7741.T':'HOYA','9983.T':'ファーストリテイリング','8058.T':'三菱商事','8001.T':'伊藤忠商事','6367.T':'ダイキン工業','6981.T':'村田製作所','4901.T':'富士フイルム','6752.T':'パナソニック','7751.T':'キヤノン','8411.T':'みずほFG','9020.T':'JR東日本','2914.T':'JT','4661.T':'オリエンタルランド','8766.T':'東京海上','9434.T':'ソフトバンク','7182.T':'ゆうちょ銀行','8031.T':'三井物産',
   '7453.T':'良品計画','5016.T':'JX金属','9509.T':'北海道電力','9501.T':'東京電力HD','9502.T':'中部電力','9503.T':'関西電力','9531.T':'東京ガス','9532.T':'大阪ガス','8053.T':'住友商事','8002.T':'丸紅','7011.T':'三菱重工','7012.T':'川崎重工','6503.T':'三菱電機','6702.T':'富士通','6701.T':'NEC','4568.T':'第一三共','4503.T':'アステラス製薬','8801.T':'三井不動産','8802.T':'三菱地所','9101.T':'日本郵船','9104.T':'商船三井','5401.T':'日本製鉄','5411.T':'JFE','3382.T':'セブン&アイ','9843.T':'ニトリ','2802.T':'味の素','2502.T':'アサヒ','2503.T':'キリンHD','4452.T':'花王','4911.T':'資生堂','6178.T':'日本郵政','8604.T':'野村HD','8613.T':'丸三証券','8593.T':'三菱HCキャピタル','5262.T':'日本ヒューム','5076.T':'インフロニアHD','5020.T':'ENEOS','5803.T':'フジクラ',
   '4151.T':'協和キリン','4519.T':'中外製薬','4523.T':'エーザイ','4578.T':'大塚HD','7269.T':'スズキ','7201.T':'日産自動車','7202.T':'いすゞ自動車','7270.T':'SUBARU','6752.T':'パナソニック','6971.T':'京セラ','6723.T':'ルネサスエレクトロニクス','6770.T':'アルプスアルパイン','3659.T':'ネクソン','4755.T':'楽天グループ','3産.T':'','2413.T':'エムスリー','6532.T':'ベイカレント','3697.T':'SHIFT','4385.T':'メルカリ','9449.T':'GMOインターネット','3092.T':'ZOZO','4751.T':'サイバーエージェント','2432.T':'DeNA','3765.T':'ガンホー',
+  '5802.T':'住友電気工業','6706.T':'電気興業','218A.T':'Liberaware',
   '9022.T':'JR東海','9021.T':'JR西日本','9041.T':'近鉄GHD','9048.T':'名鉄','9142.T':'九州旅客鉄道','9107.T':'川崎汽船','8309.T':'三井住友トラスト','8308.T':'りそなHD','8354.T':'ふくおかFG','8304.T':'あおぞら銀行','8316.T':'三井住友FG','8601.T':'大和証券G','8750.T':'第一生命','8752.T':'三井住友海上','8630.T':'SOMPO','1925.T':'大和ハウス','1928.T':'積水ハウス','3003.T':'ヒューリック',
   // 米国株
   'AAPL':'アップル','MSFT':'マイクロソフト','GOOGL':'アルファベット','GOOG':'アルファベット','AMZN':'アマゾン','TSLA':'テスラ','NVDA':'エヌビディア','META':'メタ','NFLX':'ネットフリックス','AMD':'AMD','INTC':'インテル','KO':'コカ・コーラ','DIS':'ディズニー','V':'ビザ','MA':'マスターカード','JPM':'JPモルガン','BAC':'バンクオブアメリカ','WFC':'ウェルズファーゴ','C':'シティグループ','GS':'ゴールドマンサックス','MS':'モルガンスタンレー','BRK-B':'バークシャー','BRK.B':'バークシャー','PLTR':'パランティア','PG':'P&G','JNJ':'ジョンソン&ジョンソン','PFE':'ファイザー','MRK':'メルク','ABBV':'アッヴィ','UNH':'ユナイテッドヘルス','CVS':'CVSヘルス','XOM':'エクソンモービル','CVX':'シェブロン','COP':'コノコフィリップス','WMT':'ウォルマート','TGT':'ターゲット','COST':'コストコ','AMGN':'アムジェン','GILD':'ギリアド','BIIB':'バイオジェン',

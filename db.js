@@ -402,8 +402,7 @@ export function getHoldings() {
 export async function addHolding(h) {
   if (!cache.holdings) cache.holdings = [];
   let ticker = String(h.ticker || '').trim().toUpperCase().slice(0, 20);
-  // 日本株の4〜5桁コードは自動で .T（東証）を付ける
-  if (/^\d{4,5}$/.test(ticker)) ticker += '.T';
+  if (/^\d{3,5}[A-Z]?$/.test(ticker)) ticker += '.T';
   const person = ['mine', 'hers'].includes(h.person) ? h.person : 'mine';
   const addShares = Number(h.shares) || 0;
   const addCost = Number(h.cost) || 0;
@@ -482,7 +481,7 @@ export function getBuys() {
 export async function sellHolding({ person, ticker, shares, sellPrice, currency, reason }) {
   if (!['mine','hers'].includes(person)) throw new Error('person が不正です');
   ticker = String(ticker || '').trim().toUpperCase();
-  if (/^\d{4,5}$/.test(ticker)) ticker += '.T';
+  if (/^\d{3,5}[A-Z]?$/.test(ticker)) ticker += '.T';
   const h = (cache.holdings || []).find(x => x.person === person && x.ticker === ticker);
   if (!h) throw new Error('該当する保有銘柄がありません');
   const soldShares = Number(shares) || 0;
