@@ -267,11 +267,12 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .chart-axis span:nth-child(2) { color:var(--text); font-weight:600; }
 
 /* ── MONTH NAV ── */
-.month-nav { display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:16px; position:relative; }
-.cal-zoom-ctl { position:absolute; right:0; display:flex; align-items:center; gap:4px; }
-.cz-btn { width:26px; height:26px; border-radius:50%; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; line-height:1; }
+.month-nav { display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:16px; }
+.zoom-bar { display:flex; align-items:center; justify-content:center; gap:8px; padding:4px 12px; background:var(--card); border-top:1px solid var(--line); }
+.zoom-bar input[type=range] { flex:1; max-width:140px; accent-color:var(--mine); height:18px; }
+.cz-btn { width:28px; height:28px; border-radius:50%; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; line-height:1; }
 .cz-btn:active { background:var(--bg); }
-#cal-zoom-pct { font-size:11px; color:var(--text-soft); min-width:28px; text-align:center; }
+.zoom-pct { font-size:11px; color:var(--text-soft); min-width:32px; text-align:center; font-weight:600; }
 .mn-btn { width:38px; height:38px; border-radius:50%; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:20px; cursor:pointer; box-shadow:var(--shadow-sm); line-height:1; }
 .mn-btn:active { background:var(--bg); }
 .mn-btn:disabled { opacity:.32; cursor:default; box-shadow:none; }
@@ -1423,11 +1424,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <button class="mn-btn" onclick="changeMonth(-1)">'</button>
         <div id="month-label">—</div>
         <button class="mn-btn" onclick="changeMonth(1)">'</button>
-        <span class="cal-zoom-ctl">
-          <button class="cz-btn" onclick="calZoom(-1)">−</button>
-          <span id="cal-zoom-pct"></span>
-          <button class="cz-btn" onclick="calZoom(1)">＋</button>
-        </span>
       </div>
       <div class="legend">
         <div class="leg"><span class="leg-ava mine" id="leg-ava-mine"></span><span id="leg-name-mine">ひろ</span></div>
@@ -1931,6 +1927,12 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
   </div>
 
+  <div class="zoom-bar">
+    <button class="cz-btn" onclick="appZoom(-5)">−</button>
+    <input type="range" id="zoom-slider" min="50" max="150" step="5" oninput="appZoomSet(Number(this.value))">
+    <button class="cz-btn" onclick="appZoom(5)">＋</button>
+    <span id="zoom-pct" class="zoom-pct"></span>
+  </div>
   <nav class="bottom-nav">
     <button class="nav-btn" id="nav-memo" onclick="showTab('memo')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -2139,21 +2141,24 @@ const edTypes = { mine: 'none', hers: 'none' };
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 
-let calZoomLevel = Number(localStorage.getItem('calZoom')) || 100;
-function calZoom(dir) {
-  calZoomLevel = Math.max(50, Math.min(120, calZoomLevel + dir * 5));
-  localStorage.setItem('calZoom', calZoomLevel);
-  applyCalZoom();
+let appZoomLevel = Number(localStorage.getItem('appZoom')) || 100;
+function appZoom(delta) { appZoomSet(Math.max(50, Math.min(150, appZoomLevel + delta))); }
+function appZoomSet(v) {
+  appZoomLevel = Math.max(50, Math.min(150, v));
+  localStorage.setItem('appZoom', appZoomLevel);
+  applyAppZoom();
 }
-function applyCalZoom() {
-  const g = document.getElementById('cal-grid');
-  if (g) g.style.zoom = (calZoomLevel / 100);
-  const el = document.getElementById('cal-zoom-pct');
-  if (el) el.textContent = calZoomLevel + '%';
+function applyAppZoom() {
+  const c = document.querySelector('.app-content');
+  if (c) c.style.zoom = (appZoomLevel / 100);
+  const el = document.getElementById('zoom-pct');
+  if (el) el.textContent = appZoomLevel + '%';
+  const sl = document.getElementById('zoom-slider');
+  if (sl) sl.value = appZoomLevel;
 }
 
 async function enterApp() {
-  applyCalZoom();
+  applyAppZoom();
   loadAvatars();
   await loadCalendar();
   setTimeout(scrollToToday, 100);
