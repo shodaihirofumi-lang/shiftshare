@@ -2162,7 +2162,7 @@ async function enterApp() {
   applyAppZoom();
   loadAvatars();
   await loadCalendar();
-  setTimeout(scrollToToday, 100);
+  setTimeout(scrollToToday, 200);
   loadWeather();
   loadGcal();
   loadGoogleStatus();
@@ -3163,7 +3163,7 @@ function showTab(name) {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
-  if (name === 'calendar') { window.scrollTo(0,0); setTimeout(scrollToToday, 80); return; }
+  if (name === 'calendar') { setTimeout(scrollToToday, 50); return; }
   if (name === 'holdings') { loadNikkei(); loadHoldings(); window.scrollTo(0,0); return; }
   if (name === 'gridcal') {
     renderGridCalendar();
