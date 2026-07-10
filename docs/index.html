@@ -859,6 +859,19 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .chart-pending-msg { font-size:15px; font-weight:700; color:#5a4a20; letter-spacing:1px; margin-bottom:4px; }
 .chart-pending-msg b { color:#c04f4f; font-size:18px; }
 .chart-pending-sub { font-size:11px; color:#8a7a55; letter-spacing:1px; }
+.stock-analysis { margin-top:10px; }
+.sa-badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:6px; }
+.sa-good { background:#d4edda; color:#256029; }
+.sa-bad { background:#f8d7da; color:#842029; }
+.sa-neutral { background:#fff3cd; color:#664d03; }
+.sa-indicators { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:5px; }
+.sa-tag { font-size:10px; padding:2px 7px; border-radius:8px; background:#f0e6cf; color:#5a4a20; letter-spacing:.5px; }
+.sa-targets { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:5px; }
+.sa-tp { font-size:11px; color:#256029; font-weight:600; }
+.sa-sl { font-size:11px; color:#842029; font-weight:600; }
+.sa-hindsight { font-size:11px; padding:4px 8px; border-radius:6px; margin-top:4px; }
+.sa-hindsight.sa-good { background:#d4edda; }
+.sa-hindsight.sa-bad { background:#f8d7da; }
 .book-pages.lang-stock .book-page-num { color:#8a7a55; font-family:'Georgia',serif; }
 
 /* 文庫本(横書き日本語)の背表紙 */
@@ -6275,11 +6288,10 @@ const chartCache = {};
 async function fetchChartData(symbol, tradeTs) {
   const key = `${symbol}:${Math.floor(tradeTs/(24*3600*1000))}`;
   if (chartCache[key]) return chartCache[key];
-  // 取引日から+30日後まで（成功したかどうかが分かる期間）
-  const from = tradeTs - 3*24*3600*1000;      // ちょっと前(3日)から
-  const to = Math.min(tradeTs + 30*24*3600*1000, Date.now()); // 取引の30日後まで
+  const from = tradeTs - 30*24*3600*1000;
+  const to = Date.now();
   try {
-    const r = await fetch(`/api/chart-history?symbol=${encodeURIComponent(symbol)}&from=${from}&to=${to}`);
+    const r = await fetch(API_BASE+`/api/chart-history?symbol=${encodeURIComponent(symbol)}&from=${from}&to=${to}`);
     if (!r.ok) return null;
     const j = await r.json();
     chartCache[key] = j.data || [];
@@ -6473,6 +6485,7 @@ function renderStockBook(personFilter) {
         </div>
         ${realized}
         ${t.memo ? `<div class="stock-memo">${escapeHtml(t.memo)}</div>` : ''}
+        <div class="stock-analysis" data-symbol="${escapeHtml(ticker)}" data-ts="${t.ts}" data-price="${price ?? ''}" data-type="${t.type}"></div>
         <div class="stock-chart" data-symbol="${escapeHtml(ticker)}" data-ts="${t.ts}" data-mark-price="${price ?? ''}">
           <div class="stock-chart-loading">チャート読み込み中…</div>
         </div>
@@ -6536,35 +6549,55 @@ function renderStockBook(personFilter) {
     if (pagesEl) pagesEl.scrollLeft = 0;
   });
 
-  // 各ページのチャートを非同期で埋め込み
   el.querySelectorAll('.stock-chart').forEach(async (holder) => {
     const symbol = holder.dataset.symbol;
     const ts = Number(holder.dataset.ts);
     const markPrice = holder.dataset.markPrice ? Number(holder.dataset.markPrice) : null;
     if (!symbol) { holder.innerHTML = '<div class="stock-chart-none">— 銘柄コード不明 —</div>'; return; }
-    // 取引から30日経過していない場合はチャートを表示しない（成果判断のため）
-    const daysSince = (Date.now() - ts) / (24 * 3600 * 1000);
-    if (daysSince < 30) {
-      const remaining = Math.ceil(30 - daysSince);
-      holder.innerHTML = `<div class="stock-chart-pending">
-        <div class="chart-pending-icon">📈</div>
-        <div class="chart-pending-msg">あと <b>${remaining}日</b> でチャート公開</div>
-        <div class="chart-pending-sub">取引から30日経過後に成果が分かるチャートを表示します</div>
-      </div>`;
-      return;
-    }
     const data = await fetchChartData(symbol, ts);
     if (!data?.length) { holder.innerHTML = '<div class="stock-chart-none">— チャート取得できず —</div>'; return; }
-    // 取引日に最も近い日のindexを探す
     let markIdx = null;
     if (ts) {
       let bestDiff = Infinity;
-      data.forEach((p, i) => {
-        const diff = Math.abs(p.t - ts);
-        if (diff < bestDiff) { bestDiff = diff; markIdx = i; }
-      });
+      data.forEach((p, i) => { const diff = Math.abs(p.t - ts); if (diff < bestDiff) { bestDiff = diff; markIdx = i; } });
     }
     holder.innerHTML = sparklineSvg(data, { width: 340, height: 130, markPrice, markIndex: markIdx });
+  });
+  el.querySelectorAll('.stock-analysis').forEach(async (holder) => {
+    const symbol = holder.dataset.symbol;
+    const ts = holder.dataset.ts;
+    const price = holder.dataset.price;
+    const type = holder.dataset.type;
+    if (!symbol || !ts || !price) return;
+    try {
+      const r = await fetch(API_BASE+`/api/trade-analysis?symbol=${encodeURIComponent(symbol)}&tradeTs=${ts}&tradePrice=${price}&tradeType=${type}`);
+      const a = await r.json();
+      if (a.error) return;
+      const sym = symbol.endsWith('.T') || /^\d{3,5}[A-Z]?$/.test(symbol) ? '¥' : '$';
+      const jLabels = { good:'良い判断', bad:'悪い判断', neutral:'妥当' };
+      const jCls = { good:'sa-good', bad:'sa-bad', neutral:'sa-neutral' };
+      const hLabels = { correct:'正しかった', wrong:'裏目に出た' };
+      const hCls = { correct:'sa-good', wrong:'sa-bad' };
+      let html = `<div class="sa-badge ${jCls[a.judgment]||'sa-neutral'}">${jLabels[a.judgment]||'—'}</div>`;
+      html += `<div class="sa-indicators">`;
+      if (a.trend) html += `<span class="sa-tag">トレンド ${a.trend==='up'?'↑上昇':'↓下降'}</span>`;
+      if (a.rsi!=null) html += `<span class="sa-tag">RSI ${a.rsi}</span>`;
+      if (a.ma13!=null) html += `<span class="sa-tag">MA13 ${sym}${a.ma13.toLocaleString()}</span>`;
+      html += `</div>`;
+      if (a.takeProfit!=null || a.stopLoss!=null) {
+        html += `<div class="sa-targets">`;
+        if (a.takeProfit!=null) html += `<span class="sa-tp">利確目安 ${sym}${a.takeProfit.toLocaleString()}</span>`;
+        if (a.stopLoss!=null) html += `<span class="sa-sl">損切目安 ${sym}${a.stopLoss.toLocaleString()}</span>`;
+        html += `</div>`;
+      }
+      if (a.currentPrice!=null && a.hindsight) {
+        const diffSign = a.priceDiff >= 0 ? '+' : '';
+        html += `<div class="sa-hindsight ${hCls[a.hindsight]||''}">`;
+        html += `現在 ${sym}${a.currentPrice.toLocaleString()} (${diffSign}${a.priceDiffPct}%) → <b>${hLabels[a.hindsight]||'—'}</b>`;
+        html += `</div>`;
+      }
+      holder.innerHTML = html;
+    } catch {}
   });
 }
 

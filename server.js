@@ -1061,6 +1061,83 @@ app.get('/api/chart-history', async (req, res) => {
   }
 });
 
+app.get('/api/trade-analysis', async (req, res) => {
+  const { symbol, tradeTs, tradePrice, tradeType } = req.query;
+  if (!symbol || !tradeTs || !tradePrice) return res.status(400).json({ error: 'params required' });
+  const ts = Number(tradeTs);
+  const price = Number(tradePrice);
+  const isBuy = tradeType !== 'sell';
+  const sym = /^\d{3,5}[A-Z]?$/.test(symbol) ? symbol + '.T' : symbol;
+  try {
+    const toSec = Math.floor(Date.now() / 1000);
+    const fromSec = Math.floor((ts - 180 * 24 * 3600 * 1000) / 1000);
+    const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?period1=${fromSec}&period2=${toSec}&interval=1d`, {
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    }).then(r => r.json());
+    const r0 = j.chart?.result?.[0];
+    if (!r0) return res.json({ error: 'no data' });
+    const timestamps = r0.timestamp || [];
+    const q = r0.indicators?.quote?.[0] || {};
+    const closes = q.close || [];
+    const highs = q.high || [];
+    const lows = q.low || [];
+    const tradeSec = Math.floor(ts / 1000);
+    let tradeIdx = 0;
+    let bestDiff = Infinity;
+    timestamps.forEach((t, i) => { const d = Math.abs(t - tradeSec); if (d < bestDiff) { bestDiff = d; tradeIdx = i; } });
+    const beforeCloses = closes.slice(0, tradeIdx + 1).filter(x => x != null);
+    const ma13 = smaCalc(beforeCloses, 13);
+    const ma26 = smaCalc(beforeCloses, 26);
+    const rsi = rsiCalc(beforeCloses, 14);
+    const atrPeriod = 14;
+    let atr = null;
+    if (tradeIdx >= atrPeriod) {
+      let sum = 0;
+      for (let i = tradeIdx - atrPeriod + 1; i <= tradeIdx; i++) {
+        const h = highs[i], l = lows[i], pc = closes[i - 1];
+        if (h != null && l != null && pc != null) sum += Math.max(h - l, Math.abs(h - pc), Math.abs(l - pc));
+      }
+      atr = sum / atrPeriod;
+    }
+    let takeProfit = null, stopLoss = null;
+    if (atr != null) {
+      if (isBuy) { takeProfit = price + atr * 3; stopLoss = price - atr * 1.5; }
+      else { takeProfit = price - atr * 3; stopLoss = price + atr * 1.5; }
+    }
+    const trend = ma13 != null && ma26 != null ? (ma13 > ma26 ? 'up' : 'down') : null;
+    const aboveMa = ma13 != null ? price >= ma13 : null;
+    let judgment = 'neutral';
+    if (isBuy) {
+      if (trend === 'up' && aboveMa && rsi != null && rsi < 70) judgment = 'good';
+      else if (trend === 'down' && !aboveMa) judgment = 'bad';
+      else if (rsi != null && rsi >= 70) judgment = 'bad';
+      else if (rsi != null && rsi <= 30) judgment = 'good';
+    } else {
+      if (trend === 'down' && !aboveMa) judgment = 'good';
+      else if (trend === 'up' && aboveMa && rsi != null && rsi < 70) judgment = 'bad';
+      else if (rsi != null && rsi >= 70) judgment = 'good';
+      else if (rsi != null && rsi <= 30) judgment = 'bad';
+    }
+    const currentPrice = closes.filter(x => x != null).pop() || null;
+    let hindsight = null;
+    if (currentPrice != null) {
+      const diff = currentPrice - price;
+      if (isBuy) hindsight = diff >= 0 ? 'correct' : 'wrong';
+      else hindsight = diff <= 0 ? 'correct' : 'wrong';
+    }
+    res.json({
+      ma13: ma13 ? Math.round(ma13 * 100) / 100 : null,
+      ma26: ma26 ? Math.round(ma26 * 100) / 100 : null,
+      rsi: rsi != null ? Math.round(rsi) : null,
+      trend, judgment, takeProfit: takeProfit ? Math.round(takeProfit * 100) / 100 : null,
+      stopLoss: stopLoss ? Math.round(stopLoss * 100) / 100 : null,
+      currentPrice, hindsight,
+      priceDiff: currentPrice != null ? Math.round((currentPrice - price) * 100) / 100 : null,
+      priceDiffPct: currentPrice != null ? Math.round((currentPrice - price) / price * 10000) / 100 : null,
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/monthly-diaries', (_req, res) => res.json(getMonthlyDiaries()));
 
 // しおり (本のブックマーク)
