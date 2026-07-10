@@ -6002,13 +6002,15 @@ function openDiaryBook(ym, lang = 'ja') {
   renderDiaryBook();
   const bookList = document.getElementById('diary-book-list');
   if (bookList) bookList.classList.add('active');
+  const c = document.querySelector('.app-content');
+  if (c) { c.style.transform = ''; c.style.width = ''; c.style.marginLeft = ''; }
 }
 
-// 本を閉じる
 function closeDiaryBook() {
   const bookList = document.getElementById('diary-book-list');
   if (bookList) bookList.classList.remove('active');
   currentBookYm = null;
+  applyAppZoom();
 }
 
 // 本の中身をレンダリング（開いている月の全日を1ページずつ）
