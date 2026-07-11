@@ -2127,6 +2127,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 <script>
 const API_BASE = location.origin.includes('onrender.com') || location.hostname === 'localhost' ? '' : 'https://shiftshare.onrender.com';
+// PWAインストール可能にするため Service Worker をログイン前から登録
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
 const NAMES = { mine: 'ひろ', hers: 'ちか' };
 let selectedPerson = 'mine';
 let selectedFiles = [];
