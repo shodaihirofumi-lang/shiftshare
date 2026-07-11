@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>ShiftShare</title>
 <!-- PWA: ホーム画面追加時に URL バー無しで開く -->
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#566e78">
 <!-- iOS Safari 用: Add to Home Screen 時に全画面表示 -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ShiftShare">
-<link rel="apple-touch-icon" href="/icon.svg">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon.svg">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
 <style>
 :root {
   --bg-grad: linear-gradient(165deg, #ece7de 0%, #e1dbce 100%);
@@ -5327,7 +5327,7 @@ async function onRestoreFile(input) {
 async function setupPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
+    const reg = await navigator.serviceWorker.register('./sw.js');
     const { publicKey } = await fetch(API_BASE+'/api/vapid-key').then(r=>r.json());
     if (!publicKey) return;
     if (await Notification.requestPermission() !== 'granted') return;
