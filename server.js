@@ -15,7 +15,7 @@ import {
   getExpenses, addExpense, deleteExpense,
   getGcalUrls, saveGcalUrl,
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
-  getHoldings, addHolding, deleteHolding, sellHolding, getRealized,
+  getHoldings, addHolding, deleteHolding, editHolding, sellHolding, getRealized,
   setHoldingTargets, markHoldingTargetFired, markHoldingEarningsNotified, getBuys,
   hasMoveAlert, markMoveAlert,
   getNotes, addNote, deleteNote, toggleNote,
@@ -156,6 +156,18 @@ app.post('/api/holding', async (req, res) => {
 });
 app.post('/api/holding/delete', async (req, res) => {
   await deleteHolding(req.body.id);
+  res.json({ success: true });
+});
+// 保有銘柄の訂正（株数・平均取得単価・銘柄名）。売買履歴には触れない。
+app.post('/api/holding/edit', async (req, res) => {
+  const { id, name, shares, cost } = req.body;
+  if (!id) return res.status(400).json({ error: 'idが必要です' });
+  const nShares = Number(shares);
+  const nCost = Number(cost);
+  if (!Number.isFinite(nShares) || nShares <= 0) return res.status(400).json({ error: '株数が不正です' });
+  if (!Number.isFinite(nCost) || nCost < 0) return res.status(400).json({ error: '取得単価が不正です' });
+  const ok = await editHolding(id, { name, shares: nShares, cost: nCost });
+  if (!ok) return res.status(404).json({ error: '銘柄が見つかりません' });
   res.json({ success: true });
 });
 app.post('/api/holding/sell', async (req, res) => {

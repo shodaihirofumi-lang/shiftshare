@@ -518,6 +518,19 @@ export async function deleteHolding(id) {
   await persist();
 }
 
+// 保有銘柄の訂正（株数・平均取得単価・銘柄名のみ。売買履歴は変更しない）
+export async function editHolding(id, { name, shares, cost }) {
+  const h = (cache.holdings || []).find(x => x.id === id);
+  if (!h) return false;
+  const nShares = Number(shares);
+  const nCost = Number(cost);
+  if (Number.isFinite(nShares) && nShares > 0) h.shares = nShares;
+  if (Number.isFinite(nCost) && nCost >= 0) h.cost = nCost;
+  if (typeof name === 'string' && name.trim()) h.name = name.trim().slice(0, 40);
+  await persist();
+  return true;
+}
+
 // ── 実現損益（売却履歴）──
 export function getRealized() {
   return cache.realized || [];

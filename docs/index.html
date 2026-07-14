@@ -512,6 +512,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-tgt { flex-shrink:0; padding:6px 11px; border-radius:9px; border:1.5px solid var(--line); background:var(--card); color:var(--text-soft); font-size:16px; font-weight:700; cursor:pointer; }
 .folio-tgt:active { background:var(--bg); }
 .folio-tgt.has { color:var(--gold); border-color:var(--gold); }
+.folio-edit { flex-shrink:0; padding:6px 11px; border-radius:9px; border:1.5px solid var(--line); background:var(--card); color:var(--text-soft); font-size:16px; font-weight:700; cursor:pointer; }
+.folio-edit:active { background:var(--bg); }
+.eh-hint { font-size:13px; color:var(--text-soft); line-height:1.6; margin:10px 0 4px; }
 .folio-targets { display:flex; flex-wrap:wrap; gap:5px 10px; margin-top:3px; }
 .tgt-chip { display:inline-flex; align-items:center; gap:3px; font-size:16px; font-weight:700; padding:2px 8px; border-radius:6px; }
 .tgt-chip.tp { background:rgba(192,57,43,.13); color:#c0392b; }
@@ -2057,6 +2060,25 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
   </div>
 </div>
 
+<!-- 保有銘柄の編集・訂正 -->
+<div class="modal-bg" id="edit-holding-modal" onclick="if(event.target===this)closeEditHolding()">
+  <div class="modal">
+    <div class="modal-title">保有銘柄の訂正</div>
+    <div class="modal-sub" id="eh-sub"></div>
+    <label class="sell-lbl">銘柄名</label>
+    <input id="eh-name" class="ev-in" placeholder="例：住友電気工業" maxlength="40">
+    <label class="sell-lbl">保有株数</label>
+    <input id="eh-shares" type="number" inputmode="decimal" class="ev-in" placeholder="株数">
+    <label class="sell-lbl">平均取得単価</label>
+    <input id="eh-cost" type="number" inputmode="decimal" class="ev-in" placeholder="1株あたりの取得額">
+    <div class="eh-hint">※ 保有情報の訂正のみ行います。過去の売買記録・実現損益は変わりません。</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditHolding()">キャンセル</button>
+      <button class="btn-save" onclick="doEditHolding()">訂正を保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- DAY EDITOR MODAL -->
 <div class="modal-bg" id="day-editor" onclick="if(event.target===this)closeEditor()">
   <div class="modal">
@@ -2487,8 +2509,9 @@ function holdingLine(h) {
   const sellBtn = `<button class="folio-sell" onclick="event.stopPropagation();openSell('${h.id}')">売る</button>`;
   const hasTgt = (h.takeProfit && h.takeProfit > 0) || (h.stopLoss && h.stopLoss > 0);
   const tgtBtn = `<button class="folio-tgt ${hasTgt?'has':''}" onclick="event.stopPropagation();openTargets('${h.id}')" title="損切・利確の目標">目標</button>`;
+  const editBtn = `<button class="folio-edit" onclick="event.stopPropagation();openEditHolding('${h.id}')" title="株数・取得単価・銘柄名を訂正">訂正</button>`;
   const delBtn = `<button class="folio-del" onclick="event.stopPropagation();delHolding('${h.id}','${escapeHtml(name)}')">削除</button>`;
-  const actions = `<div class="folio-actions">${sellBtn}${tgtBtn}${delBtn}</div>`;
+  const actions = `<div class="folio-actions">${sellBtn}${tgtBtn}${editBtn}${delBtn}</div>`;
   const tap = `onclick="openStockChart('${h.ticker}','${escapeHtml(name)}')"`;
   const sig = q && q.signal && SIG[q.signal]
     ? `<span class="sig ${SIG[q.signal][1]}">${SIG[q.signal][0]}${q.rsi!=null?`<span class="sig-rsi">RSI${q.rsi}</span>`:''}</span>` : '';
@@ -2541,6 +2564,38 @@ async function delHolding(id, name) {
   if (!confirm(`「${name||'この銘柄'}」を削除しますか？\n（実現損益として記録したい場合は「売る」を使ってください）`)) return;
   try { await fetch(API_BASE+'/api/holding/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) }); await loadHoldings(); await loadPortfolioHistory(); showToast('銘柄を削除しました'); }
   catch { showToast('削除に失敗しました', true); }
+}
+
+// ── 保有銘柄の訂正 ──
+let editingHolding = null;
+function openEditHolding(id) {
+  const h = holdings.find(x => x.id === id);
+  if (!h) return;
+  editingHolding = h;
+  document.getElementById('eh-sub').textContent = `${stockName(h)}（${h.ticker}）`;
+  document.getElementById('eh-name').value = (h.name && h.name.trim()) || stockName(h) || '';
+  document.getElementById('eh-shares').value = h.shares ?? '';
+  document.getElementById('eh-cost').value = h.cost ?? '';
+  document.getElementById('edit-holding-modal').classList.add('active');
+}
+function closeEditHolding() {
+  document.getElementById('edit-holding-modal').classList.remove('active');
+  editingHolding = null;
+}
+async function doEditHolding() {
+  if (!editingHolding) return;
+  const name = document.getElementById('eh-name').value.trim();
+  const shares = parseFloat(document.getElementById('eh-shares').value);
+  const cost = parseFloat(document.getElementById('eh-cost').value);
+  if (!(shares > 0)) { showToast('株数を入力してください', true); return; }
+  if (!(cost >= 0)) { showToast('取得単価を入力してください', true); return; }
+  try {
+    const r = await fetch(API_BASE+'/api/holding/edit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id: editingHolding.id, name, shares, cost }) });
+    if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error||'エラー'); }
+    closeEditHolding();
+    await Promise.all([loadHoldings(), loadPortfolioHistory()]);
+    showToast('訂正を保存しました');
+  } catch (e) { showToast('保存失敗: '+e.message, true); }
 }
 
 // ── 売却 ──
@@ -6478,7 +6533,7 @@ function renderStockBook(personFilter) {
         <div class="stock-trade-head">
           ${sideBadge}
           <div class="stock-trade-title">
-            <div class="stock-name">${escapeHtml(name || '')}</div>
+            <div class="stock-name" data-ticker="${escapeHtml(ticker)}">${escapeHtml(name || '')}</div>
             <div class="stock-ticker">${escapeHtml(ticker)} · ${hh}:${mm}${who?` · ${who}`:''}</div>
           </div>
         </div>
@@ -6602,6 +6657,33 @@ function renderStockBook(personFilter) {
       }
       holder.innerHTML = html;
     } catch {}
+  });
+
+  // 銘柄名が未解決（コードのまま）のものは Yahoo から名前を取得して補完
+  resolveStockNames(el);
+}
+
+// 銘柄名がコードのままの .stock-name を Yahoo の名前で補完する
+async function resolveStockNames(scope) {
+  const spans = [...scope.querySelectorAll('.stock-name[data-ticker]')];
+  const need = new Set();
+  spans.forEach(sp => {
+    const tk = sp.dataset.ticker;
+    if (!tk) return;
+    const shown = (sp.textContent || '').trim();
+    // 表示が空、またはコードそのまま（名前未解決）なら取得対象
+    if (!shown || shown === tk) need.add(tk);
+  });
+  if (!need.size) return;
+  try {
+    const syms = [...need].join(',');
+    const q = await fetch(API_BASE+'/api/quotes?symbols='+encodeURIComponent(syms)).then(r => r.json());
+    Object.assign(quotes, q || {});
+  } catch { return; }
+  spans.forEach(sp => {
+    const tk = sp.dataset.ticker;
+    const nm = stockName({ ticker: tk });
+    if (nm && nm !== tk) sp.textContent = nm;
   });
 }
 
