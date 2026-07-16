@@ -2888,9 +2888,9 @@ async function loadStockChart() {
   const body = document.getElementById('chart-body');
   body.innerHTML = '<div class="ev-empty">読み込み中…</div>';
   let d, txs = [];
-  try { d = await fetch(`/api/stock-history?symbol=${encodeURIComponent(chartSymbol)}&range=${chartRange}`).then(r=>r.json()); } catch { body.innerHTML='<div class="ev-empty">取得できませんでした</div>'; return; }
+  try { d = await fetch(API_BASE+`/api/stock-history?symbol=${encodeURIComponent(chartSymbol)}&range=${chartRange}`).then(r=>r.json()); } catch { body.innerHTML='<div class="ev-empty">取得できませんでした</div>'; return; }
   if (!d.history || d.history.length < 2) { body.innerHTML='<div class="ev-empty">データがありません</div>'; return; }
-  try { txs = await fetch(`/api/transactions?ticker=${encodeURIComponent(chartSymbol)}`).then(r=>r.json()); } catch { txs = []; }
+  try { txs = await fetch(API_BASE+`/api/transactions?ticker=${encodeURIComponent(chartSymbol)}`).then(r=>r.json()); } catch { txs = []; }
   const vals = d.history.map(h=>h.close);
   const last = vals[vals.length-1], first = vals[0]; const up = last>=first;
   const chg = last-first, chgPct = first?Math.round(chg/first*1000)/10:0;
@@ -7338,7 +7338,7 @@ async function loadTradeReview() {
   if (!mineEl || !hersEl) return;
   const loading = '<div class="screening-progress">AIが分析中…（10秒ほど）</div>';
   mineEl.innerHTML = hersEl.innerHTML = loading;
-  const fetch1 = (p) => fetch(`/api/trade-review?person=${p}`).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || '分析に失敗しました'); return d; });
+  const fetch1 = (p) => fetch(API_BASE+`/api/trade-review?person=${p}`).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || '分析に失敗しました'); return d; });
   const [mr, hr] = await Promise.allSettled([fetch1('mine'), fetch1('hers')]);
   const render = (res) => res.status === 'fulfilled'
     ? `<div class="review-text">${formatReview(res.value.text)}</div><div class="review-meta">${res.value.count}件の売買から分析</div>`
