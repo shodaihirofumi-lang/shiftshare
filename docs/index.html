@@ -2247,7 +2247,7 @@ async function loadGoogleStatus() {
   const note = document.getElementById('gt-note');
   if (note) note.style.display = gtasksStatus.configured ? 'none' : 'block';
 }
-function connectGtasks(person) { window.location.href = '/api/google/connect?person=' + person; }
+function connectGtasks(person) { window.location.href = API_BASE + '/api/google/connect?person=' + person; }
 async function disconnectGtasks(person) {
   try { await fetch(API_BASE+'/api/google/disconnect', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person}) }); } catch {}
   await loadGoogleStatus(); await loadGtasks();
