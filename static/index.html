@@ -281,7 +281,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 #month-label { font-size:18px; font-weight:600; letter-spacing:1px; min-width:120px; text-align:center; }
 
 /* ── EVENT CHIPS (calendar) ── */
-.event-row { display:flex; flex-wrap:wrap; gap:6px; padding:0 2px 0 56px; cursor:pointer; }
+.event-row { display:grid; grid-template-columns:50px 1fr 1fr; gap:6px; cursor:pointer; margin-top:4px; }
+.event-col { display:flex; flex-wrap:wrap; gap:4px; align-content:flex-start; }
+.event-col.mine { grid-column:2; }
+.event-col.hers { grid-column:3; }
 .ev-chip { display:inline-flex; align-items:center; gap:5px; background:#efe7d6; color:#8a6f43; border:1px solid var(--gold-border); border-radius:8px; padding:3px 8px; font-size:12px; font-weight:600; text-decoration:none; }
 /* 決算日チップ (月カレンダー) */
 .earn-day-row { display:flex; flex-wrap:wrap; gap:4px; padding:3px 2px 0 56px; }
@@ -3880,8 +3883,14 @@ function renderCalendar() {
     block.appendChild(row);
 
     if (evs.length || gevs.length || tasks.length) {
+      const mineHtml = evs.filter(e=>e.person==='mine').map(eventChip).join('')
+        + gevs.filter(e=>e.person==='mine').map(gcalChip).join('')
+        + tasks.filter(t=>t.person==='mine').map(taskChip).join('');
+      const hersHtml = evs.filter(e=>e.person==='hers').map(eventChip).join('')
+        + gevs.filter(e=>e.person==='hers').map(gcalChip).join('')
+        + tasks.filter(t=>t.person==='hers').map(taskChip).join('');
       const er = document.createElement('div'); er.className = 'event-row';
-      er.innerHTML = evs.map(eventChip).join('') + gevs.map(gcalChip).join('') + tasks.map(taskChip).join('');
+      er.innerHTML = `<div></div><div class="event-col mine">${mineHtml}</div><div class="event-col hers">${hersHtml}</div>`;
       block.appendChild(er);
     }
     // 決算日チップ
