@@ -14,6 +14,16 @@
 <meta name="apple-mobile-web-app-title" content="ShiftShare">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
+<!-- 起動高速化: RenderのDNS/TLSを先に確立し、コールドスタートを解凍 -->
+<link rel="preconnect" href="https://shiftshare.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://shiftshare.onrender.com">
+<script>
+  // GitHub Pages版 or PWA起動時、HTMLパース中にウォームアップを開始する
+  (function(){
+    var isRemote = !location.origin.includes('onrender.com') && location.hostname !== 'localhost';
+    if (isRemote) fetch('https://shiftshare.onrender.com/api/status', { cache: 'no-store' }).catch(function(){});
+  })();
+</script>
 <style>
 :root {
   --bg-grad: linear-gradient(165deg, #ece7de 0%, #e1dbce 100%);
@@ -3397,7 +3407,30 @@ function resizeImage(file, max) {
 }
 
 // ── CALENDAR ──
+function applyCalendarPayload(shifts, status, events, wagesData, locData, expData, gcalUrlData) {
+  allShifts = shifts || []; allEvents = events || []; lastStatus = status || {};
+  wages = wagesData || {}; locations = locData || {}; allExpenses = expData || [];
+  gcalUrls = gcalUrlData || {};
+  ['mine','hers'].forEach(p => { const el = document.getElementById('gcal-'+p); if (el && document.activeElement !== el) el.value = gcalUrls[p] || ''; });
+  if (!viewYM) {
+    const d = new Date();
+    viewYM = termOfDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+  }
+  rebuildMaps();
+  renderCalendar();
+}
 async function loadCalendar() {
+  // 前回のキャッシュがあれば即表示（stale-while-revalidate）
+  let renderedFromCache = false;
+  try {
+    const cached = localStorage.getItem('calCache');
+    if (cached) {
+      const c = JSON.parse(cached);
+      applyCalendarPayload(c.shifts, c.status, c.events, c.wages, c.locations, c.expenses, c.gcalUrls);
+      renderedFromCache = true;
+    }
+  } catch {}
+
   const [shifts, status, events, wagesData, locData, expData, gcalUrlData] = await Promise.all([
     fetch(API_BASE+'/api/shifts').then(r=>r.json()),
     fetch(API_BASE+'/api/status').then(r=>r.json()),
@@ -3407,16 +3440,9 @@ async function loadCalendar() {
     fetch(API_BASE+'/api/expenses').then(r=>r.json()).catch(()=>[]),
     fetch(API_BASE+'/api/gcal-urls').then(r=>r.json()).catch(()=>({})),
   ]);
-  allShifts = shifts; allEvents = events; lastStatus = status; wages = wagesData || {}; locations = locData || {}; allExpenses = expData || [];
-  gcalUrls = gcalUrlData || {};
-  ['mine','hers'].forEach(p => { const el = document.getElementById('gcal-'+p); if (el && document.activeElement !== el) el.value = gcalUrls[p] || ''; });
-  if (!viewYM) {
-    // 起動時は常に「今日を含む月度」を表示（今日のセルが必ず見える）
-    const d = new Date();
-    viewYM = termOfDate(d.getFullYear(), d.getMonth()+1, d.getDate());
-  }
-  rebuildMaps();
-  renderCalendar();
+  applyCalendarPayload(shifts, status, events, wagesData, locData, expData, gcalUrlData);
+  try { localStorage.setItem('calCache', JSON.stringify({ shifts, status, events, wages: wagesData, locations: locData, expenses: expData, gcalUrls: gcalUrlData, savedAt: Date.now() })); } catch {}
+  return renderedFromCache;
 }
 // 給与サイクル（16日締め）: 「N月度」= (N-1)月16日 〜 N月15日
 function termOfDate(year, month, day) {
