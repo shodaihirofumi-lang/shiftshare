@@ -5348,13 +5348,45 @@ function onFiles(files) {
   }
   document.getElementById('btn-analyze').disabled = selectedFiles.length===0;
 }
+// iPhone HEIC等のフォーマットや大きすぎる画像をJPEGに変換する（Vision API対応形式に統一 + サイズ削減）
+async function toJpegBlob(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = () => reject(new Error('画像を読み込めません（HEIC等の未対応形式かも）'));
+      im.src = url;
+    });
+    // 長辺を最大2000pxに縮小（AI解析には十分・帯域も節約）
+    const maxSide = 2000;
+    let w = img.naturalWidth || img.width;
+    let h = img.naturalHeight || img.height;
+    const scale = Math.min(1, maxSide / Math.max(w, h));
+    w = Math.round(w * scale); h = Math.round(h * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.9));
+    if (!blob) throw new Error('JPEG変換に失敗しました');
+    return new File([blob], (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+  } finally { URL.revokeObjectURL(url); }
+}
+
 async function doUpload() {
   if (!selectedFiles.length) return;
   document.getElementById('overlay').classList.add('active');
-  const form = new FormData();
-  form.append('person', selectedPerson);
-  for (const f of selectedFiles) form.append('files', f);
   try {
+    // 送信前にJPEGへ統一。HEICが読めない場合はここでエラーになるので分かりやすい
+    const jpegs = [];
+    for (const f of selectedFiles) {
+      try { jpegs.push(await toJpegBlob(f)); }
+      catch (e) { throw new Error(`「${f.name}」を読めません: ${e.message}`); }
+    }
+    const form = new FormData();
+    form.append('person', selectedPerson);
+    for (const f of jpegs) form.append('files', f);
     const r = await fetch(API_BASE+'/api/upload', { method:'POST', body:form });
     if (!r.ok) { const e = await r.json().catch(()=>({detail:'不明なエラー'})); throw new Error(e.error||e.detail||'エラー'); }
     const data = await r.json();

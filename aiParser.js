@@ -52,7 +52,7 @@ export async function parseShiftImages(imagesB64, mimeTypes) {
   });
 
   const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     max_tokens: 4096,
     temperature: 0,
     messages: [{ role: 'user', content }],
@@ -113,7 +113,7 @@ export async function parseExpenseAmount(imageB64, mimeType) {
 金額が読み取れない場合は {"amount": null} を返してください。` },
   ];
   const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     max_tokens: 256,
     messages: [{ role: 'user', content }],
   });
