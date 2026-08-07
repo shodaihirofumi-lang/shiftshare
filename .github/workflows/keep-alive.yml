@@ -1,0 +1,20 @@
+name: Keep Render Awake
+
+# Renderの無料プランは15分アクセスがないと眠るので、10分ごとにpingを送って起こしたままにする
+# GitHub Actionsは無料で、pingはRenderの無料枠(750h/月)を消費しない別プロセスから飛ぶ
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # 10分ごと
+  workflow_dispatch:         # 手動実行も可能
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render
+        run: |
+          curl -s -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" \
+            --max-time 60 \
+            --retry 2 --retry-delay 5 \
+            https://shiftshare.onrender.com/api/status
