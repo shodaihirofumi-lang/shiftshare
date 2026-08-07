@@ -1150,6 +1150,162 @@ app.get('/api/trade-analysis', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── 保有株の「買い増しゾーン」判定 ──
+// 各保有銘柄について週足MA13/MA26/RSIをチェックし、押し目買いに適したゾーンかを返す
+app.get('/api/buy-zones', async (_req, res) => {
+  const holdings = getHoldings();
+  const results = [];
+  for (const h of holdings) {
+    try {
+      const sym = h.ticker;
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1wk&range=2y`, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      }).then(r => r.json());
+      const r0 = j.chart?.result?.[0];
+      if (!r0) continue;
+      const closes = (r0.indicators?.quote?.[0]?.close || []).filter(x => x != null);
+      const price = r0.meta?.regularMarketPrice;
+      if (!price || closes.length < 26) continue;
+      const ma13 = smaCalc(closes, 13);
+      const ma26 = smaCalc(closes, 26);
+      const rsi = rsiCalc(closes, 14);
+      if (ma13 == null || ma26 == null || rsi == null) continue;
+      const uptrend = ma13 > ma26;
+      const nearMa13 = price <= ma13 * 1.03 && price >= ma13 * 0.97;
+      const nearMa26 = price <= ma26 * 1.03 && price >= ma26 * 0.97;
+      const oversold = rsi <= 35;
+      let zone = null;
+      let reason = null;
+      if (uptrend && nearMa13 && rsi < 60) { zone = 'good'; reason = '上昇トレンド中でMA13(押し目)まで下げてきた'; }
+      else if (uptrend && nearMa26 && rsi < 55) { zone = 'good'; reason = '上昇トレンド中でMA26(強い押し目)まで下げた'; }
+      else if (oversold && uptrend) { zone = 'good'; reason = 'RSI30台の売られすぎ+上昇トレンドは反発期待'; }
+      else if (oversold && !uptrend) { zone = 'caution'; reason = '売られすぎだが下降トレンド中。反発は短期的な可能性'; }
+      if (zone) {
+        results.push({
+          id: h.id, person: h.person, ticker: h.ticker, name: h.name || '',
+          price, ma13: Math.round(ma13 * 100) / 100, ma26: Math.round(ma26 * 100) / 100,
+          rsi: Math.round(rsi), trend: uptrend ? 'up' : 'down',
+          zone, reason,
+          diffFromMa13Pct: Math.round((price - ma13) / ma13 * 10000) / 100,
+        });
+      }
+    } catch { /* skip */ }
+  }
+  res.json({ zones: results });
+});
+
+// ── AI銘柄解説（企業の事業内容・強み・リスク） ──
+// 同じ銘柄を短時間で連打しないよう in-memory キャッシュ（7日）
+const stockExplainCache = new Map();
+const STOCK_EXPLAIN_TTL = 7 * 24 * 3600 * 1000;
+app.get('/api/stock-explain', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが未設定です' });
+  const symbol = String(req.query.symbol || '').trim();
+  const name = String(req.query.name || '').trim();
+  if (!symbol) return res.status(400).json({ error: 'symbol が必要です' });
+  const cacheKey = symbol + '|' + name;
+  const cached = stockExplainCache.get(cacheKey);
+  if (cached && Date.now() - cached.ts < STOCK_EXPLAIN_TTL) return res.json({ text: cached.text, cached: true });
+  const isJp = /\.T$/.test(symbol) || /^\d{3,5}[A-Z]?$/.test(symbol);
+  const marketNote = isJp ? '（東証上場の日本企業）' : '（米国上場企業）';
+  const prompt = `${name || symbol}${marketNote}について、個人投資家向けにやさしく解説してください。
+
+【出力形式】以下の順で、各段落は1〜2行にまとめて簡潔に：
+① 事業内容（何で儲けている会社か）
+② 強み・特徴（他社と違う点）
+③ 主なリスク・注意点
+④ 中長期投資の観点でひとこと
+
+【条件】
+- 全体で300字前後
+- 専門用語は避け、初心者にも分かる言葉で
+- 予想や推奨は避け、事実ベースで
+- 情報が不確かな場合は「〜と言われています」と婉曲に
+- 前置きや締めの挨拶は不要`;
+  try {
+    const j = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 800, messages: [{ role: 'user', content: prompt }] }),
+    }).then(r => r.json());
+    const text = j?.content?.[0]?.text?.trim();
+    if (!text) return res.status(500).json({ error: 'AIから応答がありませんでした' });
+    stockExplainCache.set(cacheKey, { text, ts: Date.now() });
+    res.json({ text });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── 年末損益レポート ──
+// 指定年の売買・実現損益を集計し、AIによる振り返り文を添える
+app.get('/api/year-review', async (req, res) => {
+  const year = Number(req.query.year) || new Date().getFullYear();
+  const person = ['mine', 'hers'].includes(req.query.person) ? req.query.person : null;
+  const yStart = new Date(year, 0, 1).getTime();
+  const yEnd = new Date(year + 1, 0, 1).getTime();
+  let buys = getBuys().filter(b => b.ts >= yStart && b.ts < yEnd);
+  let sells = getRealized().filter(s => s.ts >= yStart && s.ts < yEnd);
+  if (person) { buys = buys.filter(b => b.person === person); sells = sells.filter(s => s.person === person); }
+  const byCur = { JPY: 0, USD: 0 };
+  const perTicker = {};
+  let wins = 0, losses = 0;
+  for (const s of sells) {
+    const cur = s.currency || 'JPY';
+    byCur[cur] = (byCur[cur] || 0) + (s.realized || 0);
+    perTicker[s.ticker] ||= { ticker: s.ticker, name: s.name || '', realized: 0, currency: cur };
+    perTicker[s.ticker].realized += s.realized || 0;
+    if ((s.realized || 0) >= 0) wins++; else losses++;
+  }
+  const holdingDays = [];
+  for (const s of sells) {
+    // 対応する買いから保有日数を推定（同person×tickerの最初の買い）
+    const b = buys.find(x => x.person === s.person && x.ticker === s.ticker && x.ts <= s.ts);
+    if (b) holdingDays.push(Math.round((s.ts - b.ts) / (24 * 3600 * 1000)));
+  }
+  const tickers = Object.values(perTicker).sort((a, b) => b.realized - a.realized);
+  const best = tickers.slice(0, 3);
+  const worst = tickers.slice(-3).reverse();
+  const totalWinLoss = wins + losses;
+  const winRate = totalWinLoss ? Math.round(wins / totalWinLoss * 100) : null;
+  const avgHold = holdingDays.length ? Math.round(holdingDays.reduce((a, b) => a + b, 0) / holdingDays.length) : null;
+
+  let aiSummary = null;
+  if (process.env.ANTHROPIC_API_KEY && sells.length > 0) {
+    const personLabel = person === 'mine' ? 'ひろ' : person === 'hers' ? 'ちか' : 'ふたり';
+    const lines = tickers.slice(0, 10).map(t => `- ${t.name || t.ticker}: ${t.realized >= 0 ? '+' : ''}${(t.currency==='USD'?'$':'¥')}${Math.round(t.realized).toLocaleString()}`).join('\n');
+    const prompt = `${personLabel}の${year}年の売買記録の総括をお願いします。
+売買件数: 買${buys.length}件 / 売${sells.length}件
+実現損益: 円 ${Math.round(byCur.JPY).toLocaleString()}円 / ドル ${byCur.USD.toFixed(2)}$
+勝敗: ${wins}勝${losses}敗（勝率${winRate}%）
+平均保有日数: ${avgHold}日
+
+銘柄別損益:
+${lines}
+
+【出力】3〜4文で今年の投資の傾向を優しくまとめてください。
+・良かった点1つ
+・改善余地1つ
+・来年に向けた一言
+専門用語なし、励ます口調で。`;
+    try {
+      const j = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+        body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 500, messages: [{ role: 'user', content: prompt }] }),
+      }).then(r => r.json());
+      aiSummary = j?.content?.[0]?.text?.trim() || null;
+    } catch {}
+  }
+
+  res.json({
+    year, person,
+    buyCount: buys.length, sellCount: sells.length,
+    realizedJpy: Math.round(byCur.JPY), realizedUsd: Math.round(byCur.USD * 100) / 100,
+    wins, losses, winRate, avgHoldingDays: avgHold,
+    best, worst,
+    aiSummary,
+  });
+});
+
 app.get('/api/monthly-diaries', (_req, res) => res.json(getMonthlyDiaries()));
 
 // しおり (本のブックマーク)

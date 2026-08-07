@@ -342,6 +342,52 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .theme-swatch .th-p:first-of-type { border:1px solid var(--line-soft); }
 .theme-swatch .th-name { font-size:13px; font-weight:600; color:var(--text); margin-top:2px; letter-spacing:1px; }
 
+/* 感情トレード日記 */
+.emotion-pick { margin-top:8px; }
+.emotion-label { font-size:13px; color:var(--text-soft); margin-bottom:5px; letter-spacing:.5px; }
+.emotion-btns { display:flex; flex-wrap:wrap; gap:5px; }
+.emo-btn { padding:5px 10px; border-radius:9px; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:14px; cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent; }
+.emo-btn:active { background:var(--bg); }
+.emo-btn.active { background:var(--mine-bg); border-color:var(--mine); color:var(--mine); font-weight:700; }
+.emo-tag { display:inline-block; font-size:11px; padding:1px 6px; border-radius:5px; background:var(--gold-bg); color:var(--gold); font-weight:700; margin-left:4px; }
+
+/* 買い増しゾーン */
+.bz-card { background:var(--card); border-radius:14px; padding:13px 16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
+.bz-head { font-size:15px; font-weight:800; color:var(--text); margin-bottom:8px; letter-spacing:.5px; display:flex; align-items:center; gap:6px; }
+.bz-list { display:flex; flex-direction:column; gap:8px; }
+.bz-empty { font-size:13px; color:var(--text-soft); padding:8px 0; }
+.bz-item { border:1.5px solid var(--line); border-radius:10px; padding:9px 11px; }
+.bz-item.good { border-color:#7fb87f; background:#effbef; }
+.bz-item.caution { border-color:#d6b06a; background:#fbf6ea; }
+.bz-item-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:3px; }
+.bz-item-reason { font-size:12px; color:var(--text-soft); line-height:1.5; }
+.bz-item-meta { font-size:11px; color:var(--text-soft); margin-top:3px; }
+:root[data-theme="night"] .bz-item.good, :root[data-theme="deepsea"] .bz-item.good, :root[data-theme="forestnight"] .bz-item.good, :root[data-theme="midnight"] .bz-item.good, :root[data-theme="charcoal"] .bz-item.good { background:#1d2c1d; border-color:#3d6a3d; color:#c8e5c8; }
+:root[data-theme="night"] .bz-item.caution, :root[data-theme="deepsea"] .bz-item.caution, :root[data-theme="forestnight"] .bz-item.caution, :root[data-theme="midnight"] .bz-item.caution, :root[data-theme="charcoal"] .bz-item.caution { background:#302716; border-color:#6a5230; color:#e5d5b0; }
+
+/* AI銘柄解説 */
+.folio-explain { flex-shrink:0; padding:6px 11px; border-radius:9px; border:1.5px solid var(--line); background:var(--card); color:var(--text-soft); font-size:14px; font-weight:700; cursor:pointer; }
+.folio-explain:active { background:var(--bg); }
+.explain-body { font-size:15px; line-height:1.75; color:var(--text); white-space:pre-wrap; }
+.explain-loading { text-align:center; padding:20px; color:var(--text-soft); }
+
+/* 年末レポート */
+.yr-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; border:1.5px solid var(--gold-border); background:var(--gold-bg); color:var(--gold); font-size:14px; font-weight:700; cursor:pointer; margin-bottom:12px; font-family:inherit; }
+.yr-btn:active { opacity:.85; }
+.yr-modal .yr-year-nav { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:14px; }
+.yr-year-nav button { width:32px; height:32px; border-radius:50%; border:1.5px solid var(--line); background:var(--card); font-size:16px; cursor:pointer; color:var(--text); }
+.yr-year { font-size:20px; font-weight:800; letter-spacing:1px; }
+.yr-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+.yr-stat { background:var(--bg); border-radius:10px; padding:9px 11px; }
+.yr-stat-lbl { font-size:11px; color:var(--text-soft); letter-spacing:1px; }
+.yr-stat-val { font-size:18px; font-weight:800; color:var(--text); margin-top:2px; }
+.yr-stat-val.up { color:#c0392b; } .yr-stat-val.down { color:#2e6da4; }
+.yr-section-title { font-size:13px; font-weight:800; color:var(--text-soft); letter-spacing:1px; margin:10px 0 6px; }
+.yr-ticker-row { display:flex; justify-content:space-between; padding:4px 0; font-size:14px; border-bottom:1px dashed var(--line-soft); }
+.yr-ticker-row:last-child { border-bottom:none; }
+.yr-ai { background:var(--mine-bg); border-radius:10px; padding:11px 13px; margin-top:12px; font-size:14px; line-height:1.7; color:var(--text); border-left:3px solid var(--mine); white-space:pre-wrap; }
+.yr-empty { text-align:center; padding:24px 0; color:var(--text-soft); }
+
 /* ── OVERLAY ── */
 .overlay { position:fixed; inset:0; background:rgba(232,227,218,.93); backdrop-filter:blur(6px); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:200; gap:20px; }
 .overlay.active { display:flex; }
@@ -1684,6 +1730,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         </div>
         <input id="fh-date" class="ev-in" type="date" style="margin-top:6px" title="購入日">
         <input id="fh-reason" class="ev-in" placeholder="買う理由（任意・例：好決算で押し目買い）" maxlength="200" style="margin-top:6px">
+        <div class="emotion-pick" id="fh-emotion" data-value="">
+          <div class="emotion-label">今の気持ち（任意・あとで振り返り用）</div>
+          <div class="emotion-btns">
+            <button type="button" class="emo-btn" data-emo="confident" onclick="pickEmotion('fh-emotion',this)">😌 確信</button>
+            <button type="button" class="emo-btn" data-emo="calm" onclick="pickEmotion('fh-emotion',this)">🎯 冷静</button>
+            <button type="button" class="emo-btn" data-emo="unsure" onclick="pickEmotion('fh-emotion',this)">🤔 迷い</button>
+            <button type="button" class="emo-btn" data-emo="anxious" onclick="pickEmotion('fh-emotion',this)">😰 不安</button>
+            <button type="button" class="emo-btn" data-emo="rushed" onclick="pickEmotion('fh-emotion',this)">🔥 焦り</button>
+          </div>
+        </div>
       </div>
       <div class="nikkei-card">
         <div class="nk-head">日経平均株価</div>
@@ -1694,9 +1750,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="nk-chart" id="nk-chart"></div>
         <div class="nk-date" id="nk-date"></div>
       </div>
+      <div class="bz-card" id="buyzones-card" style="display:none">
+        <div class="bz-head">🎯 買い増しゾーン（週足MA・RSIから機械判定）</div>
+        <div class="bz-list" id="bz-list"></div>
+      </div>
       <div class="folio-card">
         <div class="income-head">保有株（名前をタップで明細・銘柄をタップでチャート）</div>
         <div id="folio-summary"></div>
+        <button class="yr-btn" onclick="openYearReview()">📊 年末損益レポートを見る</button>
         <div class="folio-note">※「買い/売り/様子見」は週足の移動平均線(13週・26週)とRSI(14週)による機械的な目安です。投資判断はご自身の責任で。</div>
       </div>
     </div>
@@ -2193,10 +2254,53 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <input id="sell-price" type="number" inputmode="decimal" class="ev-in" placeholder="1株あたりの売却額">
     <label class="sell-lbl">売る理由（任意）</label>
     <input id="sell-reason" class="ev-in" placeholder="例：目標到達で利確 / 想定が崩れた" maxlength="200">
+    <div class="emotion-pick" id="sell-emotion" data-value="">
+      <div class="emotion-label">今の気持ち（任意）</div>
+      <div class="emotion-btns">
+        <button type="button" class="emo-btn" data-emo="confident" onclick="pickEmotion('sell-emotion',this)">😌 確信</button>
+        <button type="button" class="emo-btn" data-emo="calm" onclick="pickEmotion('sell-emotion',this)">🎯 冷静</button>
+        <button type="button" class="emo-btn" data-emo="unsure" onclick="pickEmotion('sell-emotion',this)">🤔 迷い</button>
+        <button type="button" class="emo-btn" data-emo="anxious" onclick="pickEmotion('sell-emotion',this)">😰 不安</button>
+        <button type="button" class="emo-btn" data-emo="rushed" onclick="pickEmotion('sell-emotion',this)">🔥 焦り</button>
+      </div>
+    </div>
     <div id="sell-preview" class="sell-preview"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSell()">キャンセル</button>
       <button class="btn-save" onclick="doSell()">売却を確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI銘柄解説 -->
+<div class="modal-bg" id="explain-modal" onclick="if(event.target===this)closeExplain()">
+  <div class="modal">
+    <div class="modal-title" id="explain-title">AI銘柄解説</div>
+    <div class="modal-sub" id="explain-sub"></div>
+    <div class="explain-body" id="explain-body"><div class="explain-loading">AIが調べています…</div></div>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="closeExplain()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 年末損益レポート -->
+<div class="modal-bg" id="yr-modal" onclick="if(event.target===this)closeYearReview()">
+  <div class="modal yr-modal">
+    <div class="modal-title">年末損益レポート</div>
+    <div class="yr-year-nav">
+      <button onclick="yrNav(-1)">◀</button>
+      <span class="yr-year" id="yr-year">—</span>
+      <button onclick="yrNav(1)">▶</button>
+    </div>
+    <div class="ev-person-toggle" style="margin-bottom:10px">
+      <button class="fh-btn active" id="yr-p-all" onclick="yrSetPerson(null)">ふたり合算</button>
+      <button class="fh-btn" id="yr-p-mine" onclick="yrSetPerson('mine')">ひろ</button>
+      <button class="fh-btn" id="yr-p-hers" onclick="yrSetPerson('hers')">ちか</button>
+    </div>
+    <div id="yr-body"><div class="explain-loading">読み込み中…</div></div>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="closeYearReview()">閉じる</button>
     </div>
   </div>
 </div>
@@ -2594,6 +2698,7 @@ async function loadHoldings() {
   if (quotes['USDJPY=X']?.price) pnlUsdjpy = quotes['USDJPY=X'].price;
   await loadRealized(); // 実現損益も合わせて反映
   renderHeatmap();
+  loadBuyZones(); // 押し目買いゾーンの検出（非同期）
   loadHoldReplay(); // 売却した銘柄の現在価格を取って未売却シナリオと比較
   // 月カレンダーが開かれていれば決算日チップを反映するため再描画
   if (typeof renderCalendar === 'function' && document.getElementById('cal-grid')) {
@@ -2665,8 +2770,9 @@ function holdingLine(h) {
   const hasTgt = (h.takeProfit && h.takeProfit > 0) || (h.stopLoss && h.stopLoss > 0);
   const tgtBtn = `<button class="folio-tgt ${hasTgt?'has':''}" onclick="event.stopPropagation();openTargets('${h.id}')" title="損切・利確の目標">目標</button>`;
   const editBtn = `<button class="folio-edit" onclick="event.stopPropagation();openEditHolding('${h.id}')" title="株数・取得単価・銘柄名を訂正">訂正</button>`;
+  const explainBtn = `<button class="folio-explain" onclick="event.stopPropagation();openStockExplain('${h.ticker}','${escapeHtml(name)}')" title="AIに事業内容を解説してもらう">AI解説</button>`;
   const delBtn = `<button class="folio-del" onclick="event.stopPropagation();delHolding('${h.id}','${escapeHtml(name)}')">削除</button>`;
-  const actions = `<div class="folio-actions">${sellBtn}${tgtBtn}${editBtn}${delBtn}</div>`;
+  const actions = `<div class="folio-actions">${sellBtn}${tgtBtn}${explainBtn}${editBtn}${delBtn}</div>`;
   const tap = `onclick="openStockChart('${h.ticker}','${escapeHtml(name)}')"`;
   const sig = q && q.signal && SIG[q.signal]
     ? `<span class="sig ${SIG[q.signal][1]}">${SIG[q.signal][0]}${q.rsi!=null?`<span class="sig-rsi">RSI${q.rsi}</span>`:''}</span>` : '';
@@ -2704,13 +2810,15 @@ async function addHoldingFromUI() {
   const cost = parseFloat(document.getElementById('fh-cost').value);
   const reason = document.getElementById('fh-reason').value.trim();
   const purchaseDate = document.getElementById('fh-date').value || null;
+  const emotion = document.getElementById('fh-emotion')?.dataset.value || null;
   if (!ticker) { showToast('銘柄コードを入力してください', true); return; }
   if (!(shares>0)) { showToast('株数を入力してください', true); return; }
   try {
     const jaName = (name && name.trim()) || stockName({ ticker, name });
-    const r = await fetch(API_BASE+'/api/holding', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person:folioPerson, ticker, name: jaName, shares, cost:cost||0, reason, purchaseDate}) });
+    const r = await fetch(API_BASE+'/api/holding', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person:folioPerson, ticker, name: jaName, shares, cost:cost||0, reason, emotion, purchaseDate}) });
     if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error||'エラー'); }
     document.getElementById('fh-ticker').value=''; document.getElementById('fh-name').value=''; document.getElementById('fh-shares').value=''; document.getElementById('fh-cost').value=''; document.getElementById('fh-reason').value=''; document.getElementById('fh-date').value='';
+    resetEmotion('fh-emotion');
     await Promise.all([loadHoldings(), loadDiaries(), loadTrades()]);
     showToast('銘柄を追加しました');
   } catch (e) { showToast('追加失敗: '+e.message, true); }
@@ -2719,6 +2827,132 @@ async function delHolding(id, name) {
   if (!confirm(`「${name||'この銘柄'}」を削除しますか？\n（実現損益として記録したい場合は「売る」を使ってください）`)) return;
   try { await fetch(API_BASE+'/api/holding/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) }); await loadHoldings(); await loadPortfolioHistory(); showToast('銘柄を削除しました'); }
   catch { showToast('削除に失敗しました', true); }
+}
+
+// ── 感情トレード日記 ──
+const EMOTION_LABEL = { confident:'😌 確信', calm:'🎯 冷静', unsure:'🤔 迷い', anxious:'😰 不安', rushed:'🔥 焦り' };
+function pickEmotion(pickerId, btn) {
+  const box = document.getElementById(pickerId);
+  if (!box) return;
+  const v = btn.dataset.emo;
+  const wasActive = btn.classList.contains('active');
+  box.querySelectorAll('.emo-btn').forEach(b => b.classList.remove('active'));
+  if (!wasActive) { btn.classList.add('active'); box.dataset.value = v; }
+  else { box.dataset.value = ''; }
+}
+function resetEmotion(pickerId) {
+  const box = document.getElementById(pickerId);
+  if (!box) return;
+  box.dataset.value = '';
+  box.querySelectorAll('.emo-btn').forEach(b => b.classList.remove('active'));
+}
+
+// ── AI銘柄解説 ──
+async function openStockExplain(ticker, name) {
+  const modal = document.getElementById('explain-modal');
+  document.getElementById('explain-title').textContent = name || ticker;
+  document.getElementById('explain-sub').textContent = ticker;
+  document.getElementById('explain-body').innerHTML = '<div class="explain-loading">AIが調べています…（10秒ほど）</div>';
+  modal.classList.add('active');
+  try {
+    const r = await fetch(API_BASE+`/api/stock-explain?symbol=${encodeURIComponent(ticker)}&name=${encodeURIComponent(name||'')}`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'エラー');
+    document.getElementById('explain-body').textContent = d.text;
+  } catch (e) {
+    document.getElementById('explain-body').innerHTML = `<div class="explain-loading">取得に失敗しました: ${escapeHtml(e.message)}</div>`;
+  }
+}
+function closeExplain() { document.getElementById('explain-modal').classList.remove('active'); }
+
+// ── 買い増しゾーン ──
+async function loadBuyZones() {
+  const card = document.getElementById('buyzones-card');
+  const list = document.getElementById('bz-list');
+  if (!card || !list) return;
+  try {
+    const r = await fetch(API_BASE+'/api/buy-zones');
+    const d = await r.json();
+    const zones = d?.zones || [];
+    if (!zones.length) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    list.innerHTML = zones.map(z => {
+      const who = NAMES[z.person] || '';
+      const nm = z.name || z.ticker;
+      const sym = z.ticker.endsWith('.T') ? '¥' : '$';
+      return `<div class="bz-item ${z.zone}">
+        <div class="bz-item-title">${escapeHtml(nm)} <span style="color:var(--text-soft);font-size:12px;font-weight:500">${escapeHtml(z.ticker)} · ${who}</span></div>
+        <div class="bz-item-reason">${escapeHtml(z.reason)}</div>
+        <div class="bz-item-meta">現在 ${sym}${z.price.toLocaleString()} / MA13 ${sym}${z.ma13.toLocaleString()} (${z.diffFromMa13Pct>=0?'+':''}${z.diffFromMa13Pct}%) / RSI ${z.rsi}</div>
+      </div>`;
+    }).join('');
+  } catch { card.style.display = 'none'; }
+}
+
+// ── 年末損益レポート ──
+let yrYear = new Date().getFullYear();
+let yrPerson = null;
+function openYearReview() {
+  yrYear = new Date().getFullYear();
+  yrPerson = null;
+  document.querySelectorAll('#yr-p-all, #yr-p-mine, #yr-p-hers').forEach(b => b.classList.remove('active'));
+  document.getElementById('yr-p-all').classList.add('active');
+  document.getElementById('yr-modal').classList.add('active');
+  loadYearReview();
+}
+function closeYearReview() { document.getElementById('yr-modal').classList.remove('active'); }
+function yrNav(delta) { yrYear += delta; loadYearReview(); }
+function yrSetPerson(p) {
+  yrPerson = p;
+  document.querySelectorAll('#yr-p-all, #yr-p-mine, #yr-p-hers').forEach(b => b.classList.remove('active'));
+  document.getElementById(p === 'mine' ? 'yr-p-mine' : p === 'hers' ? 'yr-p-hers' : 'yr-p-all').classList.add('active');
+  loadYearReview();
+}
+async function loadYearReview() {
+  const body = document.getElementById('yr-body');
+  const yEl = document.getElementById('yr-year');
+  if (yEl) yEl.textContent = yrYear + '年';
+  body.innerHTML = '<div class="explain-loading">集計中…</div>';
+  try {
+    const q = new URLSearchParams({ year: yrYear });
+    if (yrPerson) q.set('person', yrPerson);
+    const r = await fetch(API_BASE+'/api/year-review?'+q);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'エラー');
+    if (!d.sellCount && !d.buyCount) {
+      body.innerHTML = '<div class="yr-empty">この年の売買記録はありません</div>';
+      return;
+    }
+    const jpyCls = d.realizedJpy >= 0 ? 'up' : 'down';
+    const usdCls = d.realizedUsd >= 0 ? 'up' : 'down';
+    let html = `<div class="yr-stats">
+      <div class="yr-stat"><div class="yr-stat-lbl">実現損益 (円)</div><div class="yr-stat-val ${jpyCls}">${d.realizedJpy>=0?'+':''}¥${d.realizedJpy.toLocaleString()}</div></div>
+      <div class="yr-stat"><div class="yr-stat-lbl">実現損益 (ドル)</div><div class="yr-stat-val ${usdCls}">${d.realizedUsd>=0?'+':''}$${d.realizedUsd.toLocaleString()}</div></div>
+      <div class="yr-stat"><div class="yr-stat-lbl">売買件数</div><div class="yr-stat-val">買${d.buyCount} / 売${d.sellCount}</div></div>
+      <div class="yr-stat"><div class="yr-stat-lbl">勝率</div><div class="yr-stat-val">${d.winRate!=null?d.winRate+'%':'—'}<span style="font-size:11px;color:var(--text-soft);font-weight:500">（${d.wins}勝${d.losses}敗）</span></div></div>
+      <div class="yr-stat" style="grid-column:1/-1"><div class="yr-stat-lbl">平均保有日数</div><div class="yr-stat-val">${d.avgHoldingDays!=null?d.avgHoldingDays+'日':'—'}</div></div>
+    </div>`;
+    if (d.best?.length) {
+      html += `<div class="yr-section-title">🏆 ベスト銘柄</div>`;
+      html += d.best.map(t => {
+        const sym = t.currency==='USD'?'$':'¥';
+        const sign = t.realized>=0?'+':'';
+        return `<div class="yr-ticker-row"><span>${escapeHtml(t.name||t.ticker)}</span><span style="color:${t.realized>=0?'#c0392b':'#2e6da4'};font-weight:700">${sign}${sym}${Math.round(t.realized).toLocaleString()}</span></div>`;
+      }).join('');
+    }
+    if (d.worst?.length && d.worst[0]?.ticker !== d.best?.[0]?.ticker) {
+      html += `<div class="yr-section-title">📉 ワースト銘柄</div>`;
+      html += d.worst.map(t => {
+        const sym = t.currency==='USD'?'$':'¥';
+        const sign = t.realized>=0?'+':'';
+        return `<div class="yr-ticker-row"><span>${escapeHtml(t.name||t.ticker)}</span><span style="color:${t.realized>=0?'#c0392b':'#2e6da4'};font-weight:700">${sign}${sym}${Math.round(t.realized).toLocaleString()}</span></div>`;
+      }).join('');
+    }
+    if (d.aiSummary) html += `<div class="yr-ai">${escapeHtml(d.aiSummary)}</div>`;
+    body.innerHTML = html;
+  } catch (e) {
+    body.innerHTML = `<div class="yr-empty">取得失敗: ${escapeHtml(e.message)}</div>`;
+  }
 }
 
 // ── 保有銘柄の訂正 ──
@@ -2791,7 +3025,7 @@ function updateSellPreview() {
   el.innerHTML = `<div>売却額：<b>${curSym(cur)}${Math.round(gross).toLocaleString()}</b></div>
     <div style="margin-top:6px">実現損益（予想）<span class="${up?'sell-up':'sell-down'}">${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(r)).toLocaleString()}</span></div>`;
 }
-function closeSell() { document.getElementById('sell-modal').classList.remove('active'); sellingHolding = null; }
+function closeSell() { document.getElementById('sell-modal').classList.remove('active'); sellingHolding = null; resetEmotion('sell-emotion'); }
 // ── 目標株価（損切・利確） ──
 let targetingHolding = null;
 function openTargets(id) {
@@ -2903,9 +3137,10 @@ async function doSell() {
   if (shares > sellingHolding.shares) { showToast(`保有数を超えています（${sellingHolding.shares}株まで）`, true); return; }
   const cur = (quotes[sellingHolding.ticker]?.currency) || 'JPY';
   const reason = document.getElementById('sell-reason').value.trim();
+  const emotion = document.getElementById('sell-emotion')?.dataset.value || null;
   try {
     const jaName = stockName(sellingHolding);
-    const res = await fetch(API_BASE+'/api/holding/sell', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person: sellingHolding.person, ticker: sellingHolding.ticker, name: jaName, shares, sellPrice, currency: cur, reason}) });
+    const res = await fetch(API_BASE+'/api/holding/sell', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person: sellingHolding.person, ticker: sellingHolding.ticker, name: jaName, shares, sellPrice, currency: cur, reason, emotion}) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '売却失敗');
     const up = data.realized >= 0;
@@ -6752,6 +6987,8 @@ function renderStockBook(personFilter) {
           <div><label>合計</label><span>${sym}${total.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
         </div>
         ${realized}
+        ${t.emotion && EMOTION_LABEL[t.emotion] ? `<div class="stock-memo"><span class="emo-tag">${EMOTION_LABEL[t.emotion]}</span></div>` : ''}
+        ${t.reason ? `<div class="stock-memo">💭 ${escapeHtml(t.reason)}</div>` : ''}
         ${t.memo ? `<div class="stock-memo">${escapeHtml(t.memo)}</div>` : ''}
         <div class="stock-analysis" data-symbol="${escapeHtml(ticker)}" data-ts="${t.ts}" data-price="${price ?? ''}" data-type="${t.type}"></div>
         <div class="stock-chart" data-symbol="${escapeHtml(ticker)}" data-ts="${t.ts}" data-mark-price="${price ?? ''}">

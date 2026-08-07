@@ -399,6 +399,13 @@ export function getHoldings() {
   return cache.holdings || [];
 }
 
+// 感情タグを既定候補に丸める（自由入力させない）
+const EMOTIONS = new Set(['confident', 'anxious', 'rushed', 'calm', 'unsure']);
+function normEmotion(v) {
+  const s = String(v || '').trim();
+  return EMOTIONS.has(s) ? s : null;
+}
+
 export async function addHolding(h) {
   if (!cache.holdings) cache.holdings = [];
   let ticker = String(h.ticker || '').trim().toUpperCase().slice(0, 20);
@@ -416,6 +423,7 @@ export async function addHolding(h) {
       shares: addShares, price: addCost,
       currency: ticker.endsWith('.T') ? 'JPY' : 'USD',
       reason: String(h.reason || '').slice(0, 200) || null,
+      emotion: normEmotion(h.emotion),
       ts: buyTs,
     });
   }
@@ -478,7 +486,7 @@ export function getBuys() {
   return cache.buys || [];
 }
 
-export async function sellHolding({ person, ticker, shares, sellPrice, currency, reason }) {
+export async function sellHolding({ person, ticker, shares, sellPrice, currency, reason, emotion }) {
   if (!['mine','hers'].includes(person)) throw new Error('person が不正です');
   ticker = String(ticker || '').trim().toUpperCase();
   if (/^\d{3,5}[A-Z]?$/.test(ticker)) ticker += '.T';
@@ -499,6 +507,7 @@ export async function sellHolding({ person, ticker, shares, sellPrice, currency,
     shares: soldShares, sellPrice: px, costAtSale: h.cost,
     realized, currency: cur,
     reason: String(reason || '').slice(0, 200) || null,
+    emotion: normEmotion(emotion),
     ts: Date.now(),
   });
   const remaining = h.shares - soldShares;
