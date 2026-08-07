@@ -1194,47 +1194,6 @@ app.get('/api/buy-zones', async (_req, res) => {
   res.json({ zones: results });
 });
 
-// ── AI銘柄解説（企業の事業内容・強み・リスク） ──
-// 同じ銘柄を短時間で連打しないよう in-memory キャッシュ（7日）
-const stockExplainCache = new Map();
-const STOCK_EXPLAIN_TTL = 7 * 24 * 3600 * 1000;
-app.get('/api/stock-explain', async (req, res) => {
-  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'API キーが未設定です' });
-  const symbol = String(req.query.symbol || '').trim();
-  const name = String(req.query.name || '').trim();
-  if (!symbol) return res.status(400).json({ error: 'symbol が必要です' });
-  const cacheKey = symbol + '|' + name;
-  const cached = stockExplainCache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < STOCK_EXPLAIN_TTL) return res.json({ text: cached.text, cached: true });
-  const isJp = /\.T$/.test(symbol) || /^\d{3,5}[A-Z]?$/.test(symbol);
-  const marketNote = isJp ? '（東証上場の日本企業）' : '（米国上場企業）';
-  const prompt = `${name || symbol}${marketNote}について、個人投資家向けにやさしく解説してください。
-
-【出力形式】以下の順で、各段落は1〜2行にまとめて簡潔に：
-① 事業内容（何で儲けている会社か）
-② 強み・特徴（他社と違う点）
-③ 主なリスク・注意点
-④ 中長期投資の観点でひとこと
-
-【条件】
-- 全体で300字前後
-- 専門用語は避け、初心者にも分かる言葉で
-- 予想や推奨は避け、事実ベースで
-- 情報が不確かな場合は「〜と言われています」と婉曲に
-- 前置きや締めの挨拶は不要`;
-  try {
-    const j = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 800, messages: [{ role: 'user', content: prompt }] }),
-    }).then(r => r.json());
-    const text = j?.content?.[0]?.text?.trim();
-    if (!text) return res.status(500).json({ error: 'AIから応答がありませんでした' });
-    stockExplainCache.set(cacheKey, { text, ts: Date.now() });
-    res.json({ text });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
 // ── 年末損益レポート ──
 // 指定年の売買・実現損益を集計し、AIによる振り返り文を添える
 app.get('/api/year-review', async (req, res) => {

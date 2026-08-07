@@ -365,13 +365,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 :root[data-theme="night"] .bz-item.good, :root[data-theme="deepsea"] .bz-item.good, :root[data-theme="forestnight"] .bz-item.good, :root[data-theme="midnight"] .bz-item.good, :root[data-theme="charcoal"] .bz-item.good { background:#1d2c1d; border-color:#3d6a3d; color:#c8e5c8; }
 :root[data-theme="night"] .bz-item.caution, :root[data-theme="deepsea"] .bz-item.caution, :root[data-theme="forestnight"] .bz-item.caution, :root[data-theme="midnight"] .bz-item.caution, :root[data-theme="charcoal"] .bz-item.caution { background:#302716; border-color:#6a5230; color:#e5d5b0; }
 
-/* AI銘柄解説 */
-.folio-explain { flex-shrink:0; padding:6px 11px; border-radius:9px; border:1.5px solid var(--line); background:var(--card); color:var(--text-soft); font-size:14px; font-weight:700; cursor:pointer; }
-.folio-explain:active { background:var(--bg); }
-.explain-body { font-size:15px; line-height:1.75; color:var(--text); white-space:pre-wrap; }
-.explain-loading { text-align:center; padding:20px; color:var(--text-soft); }
-
 /* 年末レポート */
+.explain-loading { text-align:center; padding:20px; color:var(--text-soft); }
 .yr-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; border:1.5px solid var(--gold-border); background:var(--gold-bg); color:var(--gold); font-size:14px; font-weight:700; cursor:pointer; margin-bottom:12px; font-family:inherit; }
 .yr-btn:active { opacity:.85; }
 .yr-modal .yr-year-nav { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:14px; }
@@ -2272,18 +2267,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
   </div>
 </div>
 
-<!-- AI銘柄解説 -->
-<div class="modal-bg" id="explain-modal" onclick="if(event.target===this)closeExplain()">
-  <div class="modal">
-    <div class="modal-title" id="explain-title">AI銘柄解説</div>
-    <div class="modal-sub" id="explain-sub"></div>
-    <div class="explain-body" id="explain-body"><div class="explain-loading">AIが調べています…</div></div>
-    <div class="modal-actions">
-      <button class="btn-save" onclick="closeExplain()">閉じる</button>
-    </div>
-  </div>
-</div>
-
 <!-- 年末損益レポート -->
 <div class="modal-bg" id="yr-modal" onclick="if(event.target===this)closeYearReview()">
   <div class="modal yr-modal">
@@ -2770,9 +2753,8 @@ function holdingLine(h) {
   const hasTgt = (h.takeProfit && h.takeProfit > 0) || (h.stopLoss && h.stopLoss > 0);
   const tgtBtn = `<button class="folio-tgt ${hasTgt?'has':''}" onclick="event.stopPropagation();openTargets('${h.id}')" title="損切・利確の目標">目標</button>`;
   const editBtn = `<button class="folio-edit" onclick="event.stopPropagation();openEditHolding('${h.id}')" title="株数・取得単価・銘柄名を訂正">訂正</button>`;
-  const explainBtn = `<button class="folio-explain" onclick="event.stopPropagation();openStockExplain('${h.ticker}','${escapeHtml(name)}')" title="AIに事業内容を解説してもらう">AI解説</button>`;
   const delBtn = `<button class="folio-del" onclick="event.stopPropagation();delHolding('${h.id}','${escapeHtml(name)}')">削除</button>`;
-  const actions = `<div class="folio-actions">${sellBtn}${tgtBtn}${explainBtn}${editBtn}${delBtn}</div>`;
+  const actions = `<div class="folio-actions">${sellBtn}${tgtBtn}${editBtn}${delBtn}</div>`;
   const tap = `onclick="openStockChart('${h.ticker}','${escapeHtml(name)}')"`;
   const sig = q && q.signal && SIG[q.signal]
     ? `<span class="sig ${SIG[q.signal][1]}">${SIG[q.signal][0]}${q.rsi!=null?`<span class="sig-rsi">RSI${q.rsi}</span>`:''}</span>` : '';
@@ -2846,24 +2828,6 @@ function resetEmotion(pickerId) {
   box.dataset.value = '';
   box.querySelectorAll('.emo-btn').forEach(b => b.classList.remove('active'));
 }
-
-// ── AI銘柄解説 ──
-async function openStockExplain(ticker, name) {
-  const modal = document.getElementById('explain-modal');
-  document.getElementById('explain-title').textContent = name || ticker;
-  document.getElementById('explain-sub').textContent = ticker;
-  document.getElementById('explain-body').innerHTML = '<div class="explain-loading">AIが調べています…（10秒ほど）</div>';
-  modal.classList.add('active');
-  try {
-    const r = await fetch(API_BASE+`/api/stock-explain?symbol=${encodeURIComponent(ticker)}&name=${encodeURIComponent(name||'')}`);
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error || 'エラー');
-    document.getElementById('explain-body').textContent = d.text;
-  } catch (e) {
-    document.getElementById('explain-body').innerHTML = `<div class="explain-loading">取得に失敗しました: ${escapeHtml(e.message)}</div>`;
-  }
-}
-function closeExplain() { document.getElementById('explain-modal').classList.remove('active'); }
 
 // ── 買い増しゾーン ──
 async function loadBuyZones() {
