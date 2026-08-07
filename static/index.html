@@ -50,6 +50,62 @@
   --shadow-sm: 0 2px 10px rgba(60,55,50,.06);
 }
 
+/* テーマ: 桜 - 春の柔らかいピンク */
+:root[data-theme="sakura"] {
+  --bg-grad: linear-gradient(165deg, #fbeef1 0%, #f4e0e5 100%);
+  --bg: #fbeef1; --card: #fffafb; --text: #4a3038; --text-soft: #9b7d86;
+  --line: #ecd6dc; --line-soft: #f5e3e8;
+  --mine: #6b8e6d; --mine-bg: #ebf1eb; --mine-border: #c6d5c7;
+  --hers: #c47493; --hers-bg: #f7e4ec; --hers-border: #e5c1cf;
+  --gold: #b58a63; --gold-bg: #f2e6d8; --gold-border: #dcc4a8;
+  --grad: linear-gradient(135deg, #c47493, #8b6d75);
+}
+
+/* テーマ: 海 - 涼やかな青緑 */
+:root[data-theme="ocean"] {
+  --bg-grad: linear-gradient(165deg, #e4eef2 0%, #d5e5ea 100%);
+  --bg: #e4eef2; --card: #f7fbfc; --text: #24404a; --text-soft: #6d8892;
+  --line: #cbdde3; --line-soft: #dde9ee;
+  --mine: #2d6b8a; --mine-bg: #dbeaf1; --mine-border: #a8c5d4;
+  --hers: #4a9d9d; --hers-bg: #d9ecec; --hers-border: #a5cfcf;
+  --gold: #c19a5b; --gold-bg: #f0e6d0; --gold-border: #d8c39c;
+  --grad: linear-gradient(135deg, #2d6b8a, #3f5b70);
+}
+
+/* テーマ: 森 - 落ち着いた緑と茶 */
+:root[data-theme="forest"] {
+  --bg-grad: linear-gradient(165deg, #eaead9 0%, #dedec6 100%);
+  --bg: #eaead9; --card: #f8f8ee; --text: #2f3a24; --text-soft: #7d8567;
+  --line: #d0d1b7; --line-soft: #dfe0ca;
+  --mine: #4d704a; --mine-bg: #e3ede1; --mine-border: #b8ccb5;
+  --hers: #9a6b4c; --hers-bg: #efe3d7; --hers-border: #d1b89e;
+  --gold: #8f7a3c; --gold-bg: #e9e0c3; --gold-border: #c8b788;
+  --grad: linear-gradient(135deg, #4d704a, #3a5c4a);
+}
+
+/* テーマ: 夜 - ダークモード */
+:root[data-theme="night"] {
+  --bg-grad: linear-gradient(165deg, #1e2028 0%, #14161c 100%);
+  --bg: #1a1c22; --card: #262932; --text: #e6e2d8; --text-soft: #8f8a80;
+  --line: #383b45; --line-soft: #2e313a;
+  --mine: #7fa5b5; --mine-bg: #2a3540; --mine-border: #3e5361;
+  --hers: #d18ea4; --hers-bg: #3b2b34; --hers-border: #5d3f4b;
+  --gold: #d4b876; --gold-bg: #3a3428; --gold-border: #5b4f36;
+  --grad: linear-gradient(135deg, #4a6674, #35323d);
+  --shadow: 0 4px 22px rgba(0,0,0,.35); --shadow-sm: 0 2px 10px rgba(0,0,0,.25);
+}
+
+/* テーマ: ラベンダー - 上品な紫系 */
+:root[data-theme="lavender"] {
+  --bg-grad: linear-gradient(165deg, #ece5f0 0%, #dcd1e4 100%);
+  --bg: #ece5f0; --card: #faf7fc; --text: #3a2f45; --text-soft: #8a7d95;
+  --line: #d6cadd; --line-soft: #e3d8e8;
+  --mine: #6b5b8f; --mine-bg: #e5dfef; --mine-border: #c3b7d5;
+  --hers: #a97a9a; --hers-bg: #efe1e9; --hers-border: #d5bccc;
+  --gold: #b8985a; --gold-bg: #efe4c9; --gold-border: #d4bd8f;
+  --grad: linear-gradient(135deg, #6b5b8f, #57436d);
+}
+
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 /* iOS Safari が狭い列(カレンダー等)の文字を勝手に拡大するのを防ぐ */
 html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
@@ -230,6 +286,13 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .backup-btn:active { opacity:.85; }
 .backup-btn:disabled { opacity:.5; cursor:not-allowed; }
 .backup-warn { font-size:16px; color:#b5544f; margin-top:11px; line-height:1.6; }
+.theme-picker { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:8px; }
+.theme-swatch { background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:10px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px; font-family:inherit; -webkit-tap-highlight-color:transparent; transition:border-color .15s, transform .1s; }
+.theme-swatch:active { transform:scale(.97); }
+.theme-swatch.active { border-color:var(--mine); border-width:2.5px; padding:9px 5px; }
+.theme-swatch .th-p { display:inline-block; width:100%; height:14px; border-radius:4px; }
+.theme-swatch .th-p:first-of-type { border:1px solid var(--line-soft); }
+.theme-swatch .th-name { font-size:13px; font-weight:600; color:var(--text); margin-top:2px; letter-spacing:1px; }
 
 /* ── OVERLAY ── */
 .overlay { position:fixed; inset:0; background:rgba(232,227,218,.93); backdrop-filter:blur(6px); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:200; gap:20px; }
@@ -1939,6 +2002,19 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       </button>
 
       <div class="backup-card">
+        <div class="backup-title">カラーテーマ</div>
+        <div class="backup-note">アプリ全体の配色を変えられます。</div>
+        <div class="theme-picker">
+          <button class="theme-swatch" data-theme="default" onclick="setTheme('default')" title="デフォルト（ベージュ）"><span class="th-p" style="background:#e8e3da"></span><span class="th-p" style="background:#4f6d7a"></span><span class="th-p" style="background:#a76b80"></span><span class="th-name">デフォルト</span></button>
+          <button class="theme-swatch" data-theme="sakura" onclick="setTheme('sakura')" title="桜"><span class="th-p" style="background:#fbeef1"></span><span class="th-p" style="background:#6b8e6d"></span><span class="th-p" style="background:#c47493"></span><span class="th-name">桜</span></button>
+          <button class="theme-swatch" data-theme="ocean" onclick="setTheme('ocean')" title="海"><span class="th-p" style="background:#e4eef2"></span><span class="th-p" style="background:#2d6b8a"></span><span class="th-p" style="background:#4a9d9d"></span><span class="th-name">海</span></button>
+          <button class="theme-swatch" data-theme="forest" onclick="setTheme('forest')" title="森"><span class="th-p" style="background:#eaead9"></span><span class="th-p" style="background:#4d704a"></span><span class="th-p" style="background:#9a6b4c"></span><span class="th-name">森</span></button>
+          <button class="theme-swatch" data-theme="lavender" onclick="setTheme('lavender')" title="ラベンダー"><span class="th-p" style="background:#ece5f0"></span><span class="th-p" style="background:#6b5b8f"></span><span class="th-p" style="background:#a97a9a"></span><span class="th-name">ラベンダー</span></button>
+          <button class="theme-swatch" data-theme="night" onclick="setTheme('night')" title="夜"><span class="th-p" style="background:#1a1c22"></span><span class="th-p" style="background:#7fa5b5"></span><span class="th-p" style="background:#d18ea4"></span><span class="th-name">夜</span></button>
+        </div>
+      </div>
+
+      <div class="backup-card">
         <div class="backup-title">データのバックアップ</div>
         <div class="backup-note">日記・シフト・メモ・保有株・取引・写真など、すべてのデータを1つのファイルに保存します。万一に備えて、ときどき保存しておくと安心です。写真も含めた完全バックアップです。</div>
         <button class="backup-btn dl" onclick="downloadBackup(this)">
@@ -2196,6 +2272,20 @@ let expPerson = 'mine';
 const edTypes = { mine: 'none', hers: 'none' };
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+
+// ── カラーテーマ ──
+function setTheme(name) {
+  if (name === 'default') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', name);
+  localStorage.setItem('appTheme', name);
+  document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.theme === name));
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    if (bg) meta.setAttribute('content', bg);
+  }
+}
+setTheme(localStorage.getItem('appTheme') || 'default');
 
 let appZoomLevel = Number(localStorage.getItem('appZoom')) || 100;
 function appZoom(delta) { appZoomSet(Math.max(50, Math.min(150, appZoomLevel + delta))); }
