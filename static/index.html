@@ -83,7 +83,7 @@
   --grad: linear-gradient(135deg, #4d704a, #3a5c4a);
 }
 
-/* テーマ: 夜 - ダークモード */
+/* テーマ: 夜 - スタンダードなダーク（ニュートラル） */
 :root[data-theme="night"] {
   --bg-grad: linear-gradient(165deg, #1e2028 0%, #14161c 100%);
   --bg: #1a1c22; --card: #262932; --text: #e6e2d8; --text-soft: #8f8a80;
@@ -93,6 +93,54 @@
   --gold: #d4b876; --gold-bg: #3a3428; --gold-border: #5b4f36;
   --grad: linear-gradient(135deg, #4a6674, #35323d);
   --shadow: 0 4px 22px rgba(0,0,0,.35); --shadow-sm: 0 2px 10px rgba(0,0,0,.25);
+}
+
+/* テーマ: 深海 - ネイビーブルー系ダーク */
+:root[data-theme="deepsea"] {
+  --bg-grad: linear-gradient(165deg, #0f1a26 0%, #0a1119 100%);
+  --bg: #0f1a26; --card: #172433; --text: #d8e4ef; --text-soft: #7a8fa5;
+  --line: #2a3a4e; --line-soft: #1e2c3d;
+  --mine: #6bb2d4; --mine-bg: #1a2f42; --mine-border: #2d4b66;
+  --hers: #b592d1; --hers-bg: #2a2340; --hers-border: #443660;
+  --gold: #d8c477; --gold-bg: #2f2a1c; --gold-border: #4d4128;
+  --grad: linear-gradient(135deg, #2d5b7e, #1e3550);
+  --shadow: 0 4px 22px rgba(0,10,20,.5); --shadow-sm: 0 2px 10px rgba(0,10,20,.35);
+}
+
+/* テーマ: 森夜 - 深緑系ダーク（森の夜） */
+:root[data-theme="forestnight"] {
+  --bg-grad: linear-gradient(165deg, #16201a 0%, #0e1611 100%);
+  --bg: #16201a; --card: #1f2a24; --text: #dee5d6; --text-soft: #869080;
+  --line: #35423a; --line-soft: #26312a;
+  --mine: #82b088; --mine-bg: #24352a; --mine-border: #3e5646;
+  --hers: #d19a7c; --hers-bg: #3a2b23; --hers-border: #5a4235;
+  --gold: #cdb96f; --gold-bg: #35301e; --gold-border: #524a32;
+  --grad: linear-gradient(135deg, #3d6247, #2a4432);
+  --shadow: 0 4px 22px rgba(0,5,0,.4); --shadow-sm: 0 2px 10px rgba(0,5,0,.28);
+}
+
+/* テーマ: 深紫 - パープル系ダーク（ミッドナイト） */
+:root[data-theme="midnight"] {
+  --bg-grad: linear-gradient(165deg, #1c1526 0%, #120e19 100%);
+  --bg: #1c1526; --card: #271f34; --text: #e2dcec; --text-soft: #948aa5;
+  --line: #3d3350; --line-soft: #2c2540;
+  --mine: #9787c9; --mine-bg: #2c2340; --mine-border: #443666;
+  --hers: #e0899e; --hers-bg: #3b2530; --hers-border: #5c384a;
+  --gold: #d8b96f; --gold-bg: #38301e; --gold-border: #564a2f;
+  --grad: linear-gradient(135deg, #55437a, #3d2c5a);
+  --shadow: 0 4px 22px rgba(10,0,20,.45); --shadow-sm: 0 2px 10px rgba(10,0,20,.3);
+}
+
+/* テーマ: 炭 - 暖色ダーク（アンバー/銅） */
+:root[data-theme="charcoal"] {
+  --bg-grad: linear-gradient(165deg, #221c17 0%, #17130e 100%);
+  --bg: #1e1913; --card: #2a231c; --text: #efe4d0; --text-soft: #9a8b77;
+  --line: #3d3427; --line-soft: #2e2820;
+  --mine: #d19a5b; --mine-bg: #3a2e1e; --mine-border: #5c4728;
+  --hers: #d68585; --hers-bg: #3b2626; --hers-border: #5c3838;
+  --gold: #e2c17a; --gold-bg: #3b3320; --gold-border: #5c4d2e;
+  --grad: linear-gradient(135deg, #8a5f38, #4a3722);
+  --shadow: 0 4px 22px rgba(10,5,0,.4); --shadow-sm: 0 2px 10px rgba(10,5,0,.28);
 }
 
 /* テーマ: ラベンダー - 上品な紫系 */
@@ -2011,6 +2059,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <button class="theme-swatch" data-theme="forest" onclick="setTheme('forest')" title="森"><span class="th-p" style="background:#eaead9"></span><span class="th-p" style="background:#4d704a"></span><span class="th-p" style="background:#9a6b4c"></span><span class="th-name">森</span></button>
           <button class="theme-swatch" data-theme="lavender" onclick="setTheme('lavender')" title="ラベンダー"><span class="th-p" style="background:#ece5f0"></span><span class="th-p" style="background:#6b5b8f"></span><span class="th-p" style="background:#a97a9a"></span><span class="th-name">ラベンダー</span></button>
           <button class="theme-swatch" data-theme="night" onclick="setTheme('night')" title="夜"><span class="th-p" style="background:#1a1c22"></span><span class="th-p" style="background:#7fa5b5"></span><span class="th-p" style="background:#d18ea4"></span><span class="th-name">夜</span></button>
+          <button class="theme-swatch" data-theme="deepsea" onclick="setTheme('deepsea')" title="深海"><span class="th-p" style="background:#0f1a26"></span><span class="th-p" style="background:#6bb2d4"></span><span class="th-p" style="background:#b592d1"></span><span class="th-name">深海</span></button>
+          <button class="theme-swatch" data-theme="forestnight" onclick="setTheme('forestnight')" title="森の夜"><span class="th-p" style="background:#16201a"></span><span class="th-p" style="background:#82b088"></span><span class="th-p" style="background:#d19a7c"></span><span class="th-name">森夜</span></button>
+          <button class="theme-swatch" data-theme="midnight" onclick="setTheme('midnight')" title="深紫"><span class="th-p" style="background:#1c1526"></span><span class="th-p" style="background:#9787c9"></span><span class="th-p" style="background:#e0899e"></span><span class="th-name">深紫</span></button>
+          <button class="theme-swatch" data-theme="charcoal" onclick="setTheme('charcoal')" title="炭"><span class="th-p" style="background:#1e1913"></span><span class="th-p" style="background:#d19a5b"></span><span class="th-p" style="background:#d68585"></span><span class="th-name">炭</span></button>
         </div>
       </div>
 
