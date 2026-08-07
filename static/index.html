@@ -800,6 +800,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 /* ── 本を開いた表示 ── */
 #diary-book-list { display:none; position:fixed; inset:0; z-index:200; background:var(--bg); flex-direction:column; padding-top:env(safe-area-inset-top); }
+/* PC/タブレット向けのページめくりボタン。本が開いている時だけ表示、スマホでは非表示 */
+.book-nav-btn { display:none; position:fixed; top:50%; transform:translateY(-50%); width:52px; height:52px; border-radius:50%; border:1.5px solid rgba(120,80,40,.25); background:rgba(255,255,255,.85); color:#5a4a20; font-size:32px; line-height:1; cursor:pointer; z-index:210; box-shadow:0 2px 12px rgba(0,0,0,.15); font-family:inherit; padding:0; -webkit-tap-highlight-color:transparent; }
+.book-nav-btn:hover { background:#fff; }
+.book-nav-btn:active { transform:translateY(-50%) scale(.95); }
+.book-nav-btn.prev { left:16px; }
+.book-nav-btn.next { right:16px; }
+@media (min-width: 720px) {
+  #diary-book-list.active ~ .book-nav-btn { display:flex; align-items:center; justify-content:center; }
+}
 #diary-book-list.active { display:flex; }
 .book-toolbar { display:flex; align-items:center; justify-content:space-between; gap:4px; padding:5px 8px; background:var(--card); border-bottom:1px solid var(--line); flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,.06); min-height:32px; }
 .book-toolbar button { padding:3px 7px; border:none; background:transparent; font-size:11px; cursor:pointer; color:var(--text); border-radius:5px; font-weight:600; line-height:1.4; }
@@ -2185,6 +2194,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 </div>
 
 <div id="diary-book-list"></div>
+<button class="book-nav-btn prev" id="book-nav-prev" onclick="bookNav(-1)" aria-label="前のページ">‹</button>
+<button class="book-nav-btn next" id="book-nav-next" onclick="bookNav(1)" aria-label="次のページ">›</button>
 
 <div class="overlay" id="overlay"><div class="ring"></div><h3>AIがシフトを解析中…</h3><p>しばらくお待ちください</p></div>
 <div class="toast" id="toast"></div>
@@ -2437,10 +2448,18 @@ function applyAppZoom() {
   const c = document.querySelector('.app-content');
   if (c) {
     const s = appZoomLevel / 100;
-    c.style.transform = `scale(${s})`;
-    c.style.transformOrigin = 'top center';
-    c.style.width = (100 / s) + '%';
-    c.style.marginLeft = ((100 - 100 / s) / 2) + '%';
+    if (s === 1) {
+      // 等倍時は何もいじらず、CSSの max-width:480px + margin:0 auto に任せる
+      c.style.transform = '';
+      c.style.width = '';
+      c.style.marginLeft = '';
+    } else {
+      c.style.transform = `scale(${s})`;
+      c.style.transformOrigin = 'top center';
+      c.style.width = (100 / s) + '%';
+      // margin:0 auto を活かすため marginLeft は auto のままにする
+      c.style.marginLeft = 'auto';
+    }
   }
   const el = document.getElementById('zoom-pct');
   if (el) el.textContent = appZoomLevel + '%';
@@ -6484,13 +6503,52 @@ function openDiaryBook(ym, lang = 'ja') {
   renderDiaryBook();
   const bookList = document.getElementById('diary-book-list');
   if (bookList) bookList.classList.add('active');
+  attachBookNavigation();
 }
 
 function closeDiaryBook() {
   const bookList = document.getElementById('diary-book-list');
   if (bookList) bookList.classList.remove('active');
   currentBookYm = null;
+  detachBookNavigation();
   applyAppZoom();
+}
+
+// PCでのページめくり: マウスホイールを横スクロールに変換 + 矢印キーでページ送り
+let _bookWheelHandler = null;
+let _bookKeyHandler = null;
+function attachBookNavigation() {
+  detachBookNavigation();
+  _bookWheelHandler = (e) => {
+    const pages = document.getElementById('book-pages');
+    if (!pages || !document.getElementById('diary-book-list')?.classList.contains('active')) return;
+    // 縦ホイールを横スクロールに変換（横ホイールはそのまま）
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      pages.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+  };
+  _bookKeyHandler = (e) => {
+    const pages = document.getElementById('book-pages');
+    if (!pages || !document.getElementById('diary-book-list')?.classList.contains('active')) return;
+    // ページ幅分スクロール（1ページ=viewport幅）
+    const step = pages.clientWidth;
+    if (e.key === 'ArrowLeft')       { pages.scrollBy({ left: -step, behavior: 'smooth' }); e.preventDefault(); }
+    else if (e.key === 'ArrowRight') { pages.scrollBy({ left:  step, behavior: 'smooth' }); e.preventDefault(); }
+    else if (e.key === 'Escape')     { closeDiaryBook(); }
+  };
+  window.addEventListener('wheel', _bookWheelHandler, { passive: false });
+  window.addEventListener('keydown', _bookKeyHandler);
+}
+function detachBookNavigation() {
+  if (_bookWheelHandler) window.removeEventListener('wheel', _bookWheelHandler);
+  if (_bookKeyHandler) window.removeEventListener('keydown', _bookKeyHandler);
+  _bookWheelHandler = _bookKeyHandler = null;
+}
+function bookNav(delta) {
+  const pages = document.getElementById('book-pages');
+  if (!pages) return;
+  pages.scrollBy({ left: pages.clientWidth * delta, behavior: 'smooth' });
 }
 
 // 本の中身をレンダリング（開いている月の全日を1ページずつ）
