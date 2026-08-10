@@ -5,7 +5,8 @@ name: Keep Render Awake
 
 on:
   schedule:
-    - cron: '*/10 * * * *'   # 10分ごと
+    # 5分ごと（GitHub Actionsのcronは5〜15分遅延するので、15分の睡眠閾値を確実にカバーするため短めに）
+    - cron: '*/5 * * * *'
   workflow_dispatch:         # 手動実行も可能
 
 jobs:

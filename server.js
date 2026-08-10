@@ -1152,24 +1152,24 @@ app.get('/api/trade-analysis', async (req, res) => {
 
 // ── 保有株の「買い増しゾーン」判定 ──
 // 各保有銘柄について週足MA13/MA26/RSIをチェックし、押し目買いに適したゾーンかを返す
+// Yahooへの問い合わせは並列化（保有20銘柄でも数秒で完了）
 app.get('/api/buy-zones', async (_req, res) => {
   const holdings = getHoldings();
-  const results = [];
-  for (const h of holdings) {
+  const results = await Promise.all(holdings.map(async (h) => {
     try {
       const sym = h.ticker;
       const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1wk&range=2y`, {
         headers: { 'User-Agent': 'Mozilla/5.0' },
       }).then(r => r.json());
       const r0 = j.chart?.result?.[0];
-      if (!r0) continue;
+      if (!r0) return null;
       const closes = (r0.indicators?.quote?.[0]?.close || []).filter(x => x != null);
       const price = r0.meta?.regularMarketPrice;
-      if (!price || closes.length < 26) continue;
+      if (!price || closes.length < 26) return null;
       const ma13 = smaCalc(closes, 13);
       const ma26 = smaCalc(closes, 26);
       const rsi = rsiCalc(closes, 14);
-      if (ma13 == null || ma26 == null || rsi == null) continue;
+      if (ma13 == null || ma26 == null || rsi == null) return null;
       const uptrend = ma13 > ma26;
       const nearMa13 = price <= ma13 * 1.03 && price >= ma13 * 0.97;
       const nearMa26 = price <= ma26 * 1.03 && price >= ma26 * 0.97;
@@ -1180,18 +1180,17 @@ app.get('/api/buy-zones', async (_req, res) => {
       else if (uptrend && nearMa26 && rsi < 55) { zone = 'good'; reason = '上昇トレンド中でMA26(強い押し目)まで下げた'; }
       else if (oversold && uptrend) { zone = 'good'; reason = 'RSI30台の売られすぎ+上昇トレンドは反発期待'; }
       else if (oversold && !uptrend) { zone = 'caution'; reason = '売られすぎだが下降トレンド中。反発は短期的な可能性'; }
-      if (zone) {
-        results.push({
-          id: h.id, person: h.person, ticker: h.ticker, name: h.name || '',
-          price, ma13: Math.round(ma13 * 100) / 100, ma26: Math.round(ma26 * 100) / 100,
-          rsi: Math.round(rsi), trend: uptrend ? 'up' : 'down',
-          zone, reason,
-          diffFromMa13Pct: Math.round((price - ma13) / ma13 * 10000) / 100,
-        });
-      }
-    } catch { /* skip */ }
-  }
-  res.json({ zones: results });
+      if (!zone) return null;
+      return {
+        id: h.id, person: h.person, ticker: h.ticker, name: h.name || '',
+        price, ma13: Math.round(ma13 * 100) / 100, ma26: Math.round(ma26 * 100) / 100,
+        rsi: Math.round(rsi), trend: uptrend ? 'up' : 'down',
+        zone, reason,
+        diffFromMa13Pct: Math.round((price - ma13) / ma13 * 10000) / 100,
+      };
+    } catch { return null; }
+  }));
+  res.json({ zones: results.filter(Boolean) });
 });
 
 // ── 年末損益レポート ──
@@ -1201,36 +1200,57 @@ app.get('/api/year-review', async (req, res) => {
   const person = ['mine', 'hers'].includes(req.query.person) ? req.query.person : null;
   const yStart = new Date(year, 0, 1).getTime();
   const yEnd = new Date(year + 1, 0, 1).getTime();
-  let buys = getBuys().filter(b => b.ts >= yStart && b.ts < yEnd);
+  // 保有日数の計算に前年以前の買いも参照するため、buysは年フィルタしない
+  let allBuys = getBuys();
   let sells = getRealized().filter(s => s.ts >= yStart && s.ts < yEnd);
-  if (person) { buys = buys.filter(b => b.person === person); sells = sells.filter(s => s.person === person); }
+  let buysThisYear = allBuys.filter(b => b.ts >= yStart && b.ts < yEnd);
+  if (person) {
+    allBuys = allBuys.filter(b => b.person === person);
+    sells = sells.filter(s => s.person === person);
+    buysThisYear = buysThisYear.filter(b => b.person === person);
+  }
   const byCur = { JPY: 0, USD: 0 };
-  const perTicker = {};
+  // 通貨混合を避けるため ticker + currency 複合キーで集計
+  const perTickerCur = {};
   let wins = 0, losses = 0;
   for (const s of sells) {
     const cur = s.currency || 'JPY';
     byCur[cur] = (byCur[cur] || 0) + (s.realized || 0);
-    perTicker[s.ticker] ||= { ticker: s.ticker, name: s.name || '', realized: 0, currency: cur };
-    perTicker[s.ticker].realized += s.realized || 0;
+    const key = `${s.ticker}|${cur}`;
+    perTickerCur[key] ||= { ticker: s.ticker, name: s.name || '', realized: 0, currency: cur };
+    perTickerCur[key].realized += s.realized || 0;
     if ((s.realized || 0) >= 0) wins++; else losses++;
   }
+  // ベスト/ワーストは通貨別に集計してから統合（順位比較は通貨をまたがない）
+  const byCurTickers = { JPY: [], USD: [] };
+  for (const t of Object.values(perTickerCur)) {
+    (byCurTickers[t.currency] || byCurTickers.JPY).push(t);
+  }
+  const bestPerCur = { JPY: [], USD: [] };
+  const worstPerCur = { JPY: [], USD: [] };
+  for (const cur of ['JPY', 'USD']) {
+    const sorted = byCurTickers[cur].slice().sort((a, b) => b.realized - a.realized);
+    bestPerCur[cur] = sorted.filter(t => t.realized > 0).slice(0, 3);
+    worstPerCur[cur] = sorted.filter(t => t.realized < 0).slice(-3).reverse();
+  }
+  const best = [...bestPerCur.JPY, ...bestPerCur.USD];
+  const worst = [...worstPerCur.JPY, ...worstPerCur.USD];
+  // 保有日数: 前年以前の買いも探索対象に含める（cross-year hold対応）
   const holdingDays = [];
   for (const s of sells) {
-    // 対応する買いから保有日数を推定（同person×tickerの最初の買い）
-    const b = buys.find(x => x.person === s.person && x.ticker === s.ticker && x.ts <= s.ts);
+    const b = allBuys.find(x => x.person === s.person && x.ticker === s.ticker && x.ts <= s.ts);
     if (b) holdingDays.push(Math.round((s.ts - b.ts) / (24 * 3600 * 1000)));
   }
-  const tickers = Object.values(perTicker).sort((a, b) => b.realized - a.realized);
-  const best = tickers.slice(0, 3);
-  const worst = tickers.slice(-3).reverse();
   const totalWinLoss = wins + losses;
   const winRate = totalWinLoss ? Math.round(wins / totalWinLoss * 100) : null;
   const avgHold = holdingDays.length ? Math.round(holdingDays.reduce((a, b) => a + b, 0) / holdingDays.length) : null;
+  const buys = buysThisYear; // AIプロンプトで買い件数を出すため
 
   let aiSummary = null;
   if (process.env.ANTHROPIC_API_KEY && sells.length > 0) {
     const personLabel = person === 'mine' ? 'ひろ' : person === 'hers' ? 'ちか' : 'ふたり';
-    const lines = tickers.slice(0, 10).map(t => `- ${t.name || t.ticker}: ${t.realized >= 0 ? '+' : ''}${(t.currency==='USD'?'$':'¥')}${Math.round(t.realized).toLocaleString()}`).join('\n');
+    const allTickers = Object.values(perTickerCur).sort((a, b) => Math.abs(b.realized) - Math.abs(a.realized));
+    const lines = allTickers.slice(0, 10).map(t => `- ${t.name || t.ticker}: ${t.realized >= 0 ? '+' : ''}${(t.currency==='USD'?'$':'¥')}${Math.round(t.realized).toLocaleString()}`).join('\n');
     const prompt = `${personLabel}の${year}年の売買記録の総括をお願いします。
 売買件数: 買${buys.length}件 / 売${sells.length}件
 実現損益: 円 ${Math.round(byCur.JPY).toLocaleString()}円 / ドル ${byCur.USD.toFixed(2)}$

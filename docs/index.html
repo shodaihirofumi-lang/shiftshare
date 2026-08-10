@@ -2425,6 +2425,8 @@ let evPerson = 'mine';
 let expPerson = 'mine';
 const edTypes = { mine: 'none', hers: 'none' };
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// onclick等の属性内JS文字列に安全に埋め込むためのエスケープ（アポストロフィ・引用符・バックスラッシュを\uXXXXに）
+function jsAttr(s){ return String(s).replace(/[<>&"'\\`]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')); }
 
 
 // ── カラーテーマ ──
@@ -2635,7 +2637,7 @@ function renderHeatmap() {
       const w = Math.max(0.5, i.value / total * 100); // 最小0.5%でも見えるように
       const sign = i.pct >= 0 ? '+' : '−';
       const shortName = i.name.length > 7 ? i.name.slice(0, 6) + '…' : i.name;
-      const tap = `onclick="openStockChart('${i.h.ticker}','${escapeHtml(i.name)}')"`;
+      const tap = `onclick="openStockChart('${jsAttr(i.h.ticker)}','${jsAttr(i.name)}')"`;
       return `<div class="hm-tile" ${tap} style="flex-grow:${w.toFixed(2)};background:${hmColor(i.pct)}">
         <div class="hm-name">${escapeHtml(shortName)}</div>
         <div class="hm-pct">${sign}${Math.abs(i.pct).toFixed(1)}%</div>
@@ -2778,7 +2780,7 @@ function holdingLine(h) {
   const editBtn = `<button class="folio-edit" onclick="event.stopPropagation();openEditHolding('${h.id}')" title="株数・取得単価・銘柄名を訂正">訂正</button>`;
   const delBtn = `<button class="folio-del" onclick="event.stopPropagation();delHolding('${h.id}','${escapeHtml(name)}')">削除</button>`;
   const actions = `<div class="folio-actions">${sellBtn}${tgtBtn}${editBtn}${delBtn}</div>`;
-  const tap = `onclick="openStockChart('${h.ticker}','${escapeHtml(name)}')"`;
+  const tap = `onclick="openStockChart('${jsAttr(h.ticker)}','${jsAttr(name)}')"`;
   const sig = q && q.signal && SIG[q.signal]
     ? `<span class="sig ${SIG[q.signal][1]}">${SIG[q.signal][0]}${q.rsi!=null?`<span class="sig-rsi">RSI${q.rsi}</span>`:''}</span>` : '';
   const chartIcon = '<svg class="folio-chart-ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>';
@@ -3704,7 +3706,7 @@ function renderScreeningResults(results) {
       const sigCls = s.signals >= 3 ? 's3' : 's2';
       const tags = s.reasons.map(r => `<span class="screening-tag">${r}</span>`).join('');
       const jaName = stockName({ ticker: s.symbol, name: s.name });
-      return `<div class="screening-item" onclick="openStockChart('${s.symbol}','${jaName.replace(/'/g,'')}')" style="cursor:pointer">
+      return `<div class="screening-item" onclick="openStockChart('${jsAttr(s.symbol)}','${jsAttr(jaName)}')" style="cursor:pointer">
         <span class="screening-rank">${medals[i]||'•'}</span>
         <div class="screening-info">
           <div><span class="screening-name">${jaName}</span><span class="screening-code">${s.code}</span><span class="screening-sig ${sigCls}">${s.signals}/3シグナル</span></div>
@@ -3783,15 +3785,22 @@ function applyCalendarPayload(shifts, status, events, wagesData, locData, expDat
   rebuildMaps();
   renderCalendar();
 }
+// 相手端末の編集が反映されない期間を短くするため、キャッシュは6時間で失効
+const CAL_CACHE_TTL_MS = 6 * 3600 * 1000;
 async function loadCalendar() {
-  // 前回のキャッシュがあれば即表示（stale-while-revalidate）
+  // 前回のキャッシュがあれば即表示（stale-while-revalidate、TTLあり）
   let renderedFromCache = false;
   try {
     const cached = localStorage.getItem('calCache');
     if (cached) {
       const c = JSON.parse(cached);
-      applyCalendarPayload(c.shifts, c.status, c.events, c.wages, c.locations, c.expenses, c.gcalUrls);
-      renderedFromCache = true;
+      const savedAt = Number(c.savedAt) || 0;
+      if (Date.now() - savedAt < CAL_CACHE_TTL_MS) {
+        applyCalendarPayload(c.shifts, c.status, c.events, c.wages, c.locations, c.expenses, c.gcalUrls);
+        renderedFromCache = true;
+      } else {
+        localStorage.removeItem('calCache');
+      }
     }
   } catch {}
 
