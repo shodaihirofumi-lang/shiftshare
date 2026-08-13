@@ -7618,18 +7618,26 @@ function addDiaryPhoto(dateKey, person) {
     const file = e.target.files[0];
     if (!file) return;
     showToast('写真を保存中…');
-    const img = await compressImage(file);
-    if (!img) { showToast('画像の読み込みに失敗しました', true); return; }
-    const r = await fetch(API_BASE+'/api/day-photo', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: dateKey, person, img }),
-    });
-    if (!r.ok) { showToast('保存に失敗しました', true); return; }
+    const { img, error } = await compressImage(file);
+    if (!img) { showToast(error || '画像の読み込みに失敗しました', true); return; }
+    let r;
+    try {
+      r = await fetch(API_BASE+'/api/day-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: dateKey, person, img }),
+      });
+    } catch (e) { showToast('通信エラー: ' + e.message, true); return; }
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      showToast('保存失敗: ' + (err.error || `HTTP ${r.status}`), true);
+      return;
+    }
     const { id } = await r.json();
     if (!dayPhotos[dateKey]) dayPhotos[dateKey] = [];
     dayPhotos[dateKey].push({ id, person, img });
     renderDiaryPhotoArea(dateKey);
+    if (typeof renderCalendar === 'function') { try { renderCalendar(); } catch {} }
     showToast('写真を追加しました');
   };
   input.click();
@@ -7650,23 +7658,51 @@ async function removeDiaryPhoto(dateKey, id) {
 }
 
 // ── 画像圧縮（共通ユーティリティ）──
-function compressImage(file, maxPx = 800, quality = 0.68) {
-  return new Promise(resolve => {
-    const img = new Image();
+// 画像を縮小してJPEG data URLに変換する（HEIC等の非対応形式はエラー付きで返す）
+async function compressImage(file, maxPx = 800, quality = 0.68) {
+  if (!file) return { img: null, error: 'ファイルがありません' };
+  const type = (file.type || '').toLowerCase();
+  const name = (file.name || '').toLowerCase();
+  const isVideo = type.startsWith('video/') || /\.(mov|mp4|m4v)$/i.test(name);
+  if (isVideo) return { img: null, error: '動画は追加できません（LivePhotoの場合は写真を選び直してください）' };
+  const looksHeic = /heic|heif/.test(type) || /\.(heic|heif)$/i.test(name);
+
+  // 1) 標準の <img> でデコードを試みる（大半のブラウザ・iOS Safariで対応）
+  let bitmap = null;
+  try {
+    bitmap = await loadImageAsBitmap(file);
+  } catch (_) { /* try fallback below */ }
+
+  // 2) createImageBitmap フォールバック（HEIC が <img> で失敗した場合）
+  if (!bitmap && 'createImageBitmap' in window) {
+    try { bitmap = await createImageBitmap(file); } catch (_) {}
+  }
+
+  if (!bitmap) {
+    const reason = looksHeic
+      ? 'iPhoneのHEIC形式です。設定→カメラ→フォーマットを「互換性優先」にするか、Safariで開いてください'
+      : `画像を読み込めません (${type || '不明な形式'})`;
+    return { img: null, error: reason };
+  }
+
+  let w = bitmap.width, h = bitmap.height;
+  if (w > maxPx || h > maxPx) {
+    if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+    else { w = Math.round(w * maxPx / h); h = maxPx; }
+  }
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  c.getContext('2d').drawImage(bitmap, 0, 0, w, h);
+  if (bitmap.close) try { bitmap.close(); } catch {}
+  return { img: c.toDataURL('image/jpeg', quality), error: null };
+}
+
+function loadImageAsBitmap(file) {
+  return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      let w = img.width, h = img.height;
-      if (w > maxPx || h > maxPx) {
-        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
-        else { w = Math.round(w * maxPx / h); h = maxPx; }
-      }
-      const c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      c.getContext('2d').drawImage(img, 0, 0, w, h);
-      resolve(c.toDataURL('image/jpeg', quality));
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('img decode failed')); };
     img.src = url;
   });
 }
@@ -7686,13 +7722,13 @@ function openLightbox(src) {
 let memoImgPending = null;
 async function onMemoImgSelect(file) {
   if (!file) return;
-  const compressed = await compressImage(file, 800, 0.68);
-  if (!compressed) { showToast('画像の読み込みに失敗しました', true); return; }
-  memoImgPending = compressed;
+  const { img, error } = await compressImage(file, 800, 0.68);
+  if (!img) { showToast(error || '画像の読み込みに失敗しました', true); return; }
+  memoImgPending = img;
   const wrap = document.getElementById('memo-pending-img-wrap');
   if (wrap) {
     wrap.innerHTML = `<div class="memo-pending-img">
-      <img src="${compressed}" alt="プレビュー">
+      <img src="${img}" alt="プレビュー">
       <button class="memo-pending-del" onclick="clearMemoImgPending()" title="削除">×</button>
     </div>`;
   }
@@ -7725,21 +7761,29 @@ function renderEdPhotos() {
 }
 async function onEdPhotoSelect(file, person) {
   if (!file) return;
-  const img = await compressImage(file, 900, 0.72);
-  if (!img) { showToast('画像の読み込みに失敗しました', true); return; }
+  const { img, error } = await compressImage(file, 900, 0.72);
+  if (!img) { showToast(error || '画像の読み込みに失敗しました', true); return; }
   showToast('保存中…');
-  const r = await fetch(API_BASE+'/api/day-photo', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date: editorDate, person, img }),
-  });
-  if (!r.ok) { showToast('写真の保存に失敗しました', true); return; }
+  let r;
+  try {
+    r = await fetch(API_BASE+'/api/day-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: editorDate, person, img }),
+    });
+  } catch (e) { showToast('通信エラー: ' + e.message, true); return; }
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    showToast('保存失敗: ' + (err.error || `HTTP ${r.status}`), true);
+    return;
+  }
   const { id } = await r.json();
   const entry = { id, person, img };
   if (!dayPhotos[editorDate]) dayPhotos[editorDate] = [];
   dayPhotos[editorDate].push(entry);
   edDayPhotos.push(entry);
   renderEdPhotos();
+  if (typeof renderCalendar === 'function') { try { renderCalendar(); } catch {} }
   showToast('写真を追加しました');
 }
 async function deleteEdPhoto(id) {
