@@ -813,6 +813,26 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .dash-bo-sub b { color:var(--text); font-weight:700; }
 
 .dash-duo { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.dash-split { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.dash-split-tile { border-radius:10px; padding:9px 11px; border:1.5px solid transparent; }
+.dash-split-tile.mine { background:var(--mine-bg); border-color:var(--mine-border); }
+.dash-split-tile.hers { background:var(--hers-bg); border-color:var(--hers-border); }
+.dash-split-name { font-size:11px; font-weight:700; letter-spacing:1px; margin-bottom:3px; }
+.dash-split-name.mine { color:var(--mine); }
+.dash-split-name.hers { color:var(--hers); }
+.dash-split-val { font-size:17px; font-weight:800; line-height:1.15; }
+.dash-diary-row { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:9px; margin-bottom:6px; border:1.5px solid transparent; }
+.dash-diary-row:last-child { margin-bottom:0; }
+.dash-diary-row.mine { background:var(--mine-bg); border-color:var(--mine-border); }
+.dash-diary-row.hers { background:var(--hers-bg); border-color:var(--hers-border); }
+.dash-diary-name { font-size:12px; font-weight:700; letter-spacing:1.5px; }
+.dash-diary-name.mine { color:var(--mine); }
+.dash-diary-name.hers { color:var(--hers); }
+.dash-diary-stats { display:flex; gap:12px; align-items:center; }
+.dash-diary-stats .dash-streak-hot { font-size:14px; font-weight:700; }
+.dash-diary-stats .dash-streak-hot .fire { font-size:15px; }
+.dash-diary-stats .dash-streak-month { font-size:11px; color:var(--text-soft); }
+.dash-diary-stats .dash-streak-month b { color:var(--text); font-weight:700; }
 .dash-pf-val, .dash-exp-val { font-size:20px; font-weight:800; }
 .dash-pf-chg { font-size:12px; font-weight:700; margin-top:2px; }
 .dash-pf-chg.up { color:var(--up, #c0392b); }
@@ -6426,37 +6446,41 @@ function countBothOffInMonth(year, month) {
   }
   return n;
 }
-function diaryStreak() {
+function diaryStreak(person) {
   const today = new Date();
   let streak = 0;
   for (let i = 0; i < 60; i++) {
     const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
     const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const e = allDiaries[k];
-    const has = e && (e.mine?.raw || e.hers?.raw);
+    const has = person ? !!e?.[person]?.raw : !!(e && (e.mine?.raw || e.hers?.raw));
     if (has) streak++;
     else if (i === 0) continue; // 今日未入力は許容
     else break;
   }
   return streak;
 }
-function diaryCountThisMonth() {
+function diaryCountThisMonth(person) {
   const now = new Date();
   const prefix = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-`;
   let n = 0;
   for (const k of Object.keys(allDiaries)) {
     if (!k.startsWith(prefix)) continue;
     const e = allDiaries[k];
-    if (e?.mine?.raw || e?.hers?.raw) n++;
+    const has = person ? !!e?.[person]?.raw : !!(e?.mine?.raw || e?.hers?.raw);
+    if (has) n++;
   }
   return n;
 }
-function monthlyExpenseTotal(year, month) {
-  return (allExpenses || []).filter(e => e.year === year && e.month === month).reduce((s, e) => s + (Number(e.amount) || 0), 0);
+function monthlyExpenseTotal(year, month, person) {
+  return (allExpenses || [])
+    .filter(e => e.year === year && e.month === month && (!person || e.person === person))
+    .reduce((s, e) => s + (Number(e.amount) || 0), 0);
 }
-function portfolioSnapshot() {
+function portfolioSnapshot(person) {
   let jpy = 0, chg = 0;
   for (const h of (holdings || [])) {
+    if (person && h.person !== person) continue;
     const q = quotes[h.ticker];
     if (!q?.price) continue;
     const fx = (q.currency === 'USD') ? (pnlUsdjpy || 157) : 1;
@@ -6550,38 +6574,66 @@ function renderDashboard() {
     </div>`);
   }
 
-  // 株 + 家計 (2列)
-  const pfSnap = portfolioSnapshot();
-  const bzCount = (buyZonesData || []).length;
-  const thisMonthExp = monthlyExpenseTotal(now.getFullYear(), now.getMonth()+1);
-  const prevMonthDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
-  const prevMonthExp = monthlyExpenseTotal(prevMonthDate.getFullYear(), prevMonthDate.getMonth()+1);
-  const expDiffPct = prevMonthExp ? Math.round((thisMonthExp - prevMonthExp) / prevMonthExp * 100) : null;
-  const chgSign = pfSnap.change >= 0 ? '▲ +' : '▼ ';
-  const chgCls = pfSnap.change >= 0 ? 'up' : 'down';
-  parts.push(`<div class="dash-duo">
-    <div class="dash-card">
-      <div class="dash-label">📈 PORTFOLIO</div>
-      <div class="dash-pf-val">¥${pfSnap.total.toLocaleString()}</div>
-      <div class="dash-pf-chg ${chgCls}">${chgSign}¥${Math.abs(pfSnap.change).toLocaleString()}</div>
-      ${bzCount ? `<div class="dash-pf-extra">🎯 買増ゾーン ${bzCount}件</div>` : ''}
-    </div>
-    <div class="dash-card">
-      <div class="dash-label">💳 THIS MONTH</div>
-      <div class="dash-exp-val">¥${thisMonthExp.toLocaleString()}</div>
-      ${expDiffPct !== null ? `<div class="dash-exp-vs ${expDiffPct > 0 ? 'up' : 'down'}">先月比 ${expDiffPct >= 0 ? '+' : ''}${expDiffPct}%</div>` : `<div class="dash-exp-vs">—</div>`}
-    </div>
+  // ── PORTFOLIO（ふたり別）──
+  const pfMine = portfolioSnapshot('mine');
+  const pfHers = portfolioSnapshot('hers');
+  const bzMine = (buyZonesData || []).filter(z => z.person === 'mine').length;
+  const bzHers = (buyZonesData || []).filter(z => z.person === 'hers').length;
+  const pfTileHtml = (p, snap) => {
+    const chgSign = snap.change >= 0 ? '▲ +' : '▼ ';
+    const chgCls = snap.change >= 0 ? 'up' : 'down';
+    return `<div class="dash-split-tile ${p}">
+      <div class="dash-split-name ${p}">${NAMES[p]}</div>
+      <div class="dash-split-val">¥${snap.total.toLocaleString()}</div>
+      <div class="dash-pf-chg ${chgCls}">${chgSign}¥${Math.abs(snap.change).toLocaleString()}</div>
+    </div>`;
+  };
+  const bzTag = (bzMine || bzHers)
+    ? `<div class="dash-pf-extra">🎯 買増ゾーン ${bzMine ? `ひろ ${bzMine}件` : ''}${bzMine && bzHers ? ' / ' : ''}${bzHers ? `ちか ${bzHers}件` : ''}</div>`
+    : '';
+  parts.push(`<div class="dash-card">
+    <div class="dash-label">📈 PORTFOLIO</div>
+    <div class="dash-split">${pfTileHtml('mine', pfMine)}${pfTileHtml('hers', pfHers)}</div>
+    ${bzTag}
   </div>`);
 
-  // 日記
-  const streak = diaryStreak();
-  const monthCount = diaryCountThisMonth();
+  // ── THIS MONTH（ふたり別）──
+  const y = now.getFullYear(), m = now.getMonth() + 1;
+  const prevMonthDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  const py = prevMonthDate.getFullYear(), pm = prevMonthDate.getMonth() + 1;
+  const expTileHtml = (p) => {
+    const cur = monthlyExpenseTotal(y, m, p);
+    const prev = monthlyExpenseTotal(py, pm, p);
+    const diffPct = prev ? Math.round((cur - prev) / prev * 100) : null;
+    const diffCls = diffPct === null ? '' : (diffPct > 0 ? 'up' : 'down');
+    const diffTxt = diffPct === null ? '—' : `先月比 ${diffPct >= 0 ? '+' : ''}${diffPct}%`;
+    return `<div class="dash-split-tile ${p}">
+      <div class="dash-split-name ${p}">${NAMES[p]}</div>
+      <div class="dash-split-val">¥${cur.toLocaleString()}</div>
+      <div class="dash-exp-vs ${diffCls}">${diffTxt}</div>
+    </div>`;
+  };
+  parts.push(`<div class="dash-card">
+    <div class="dash-label">💳 THIS MONTH</div>
+    <div class="dash-split">${expTileHtml('mine')}${expTileHtml('hers')}</div>
+  </div>`);
+
+  // ── DIARY（ふたり別）──
+  const diaryRow = (p) => {
+    const s = diaryStreak(p);
+    const c = diaryCountThisMonth(p);
+    return `<div class="dash-diary-row ${p}">
+      <div class="dash-diary-name ${p}">${NAMES[p]}</div>
+      <div class="dash-diary-stats">
+        <span class="dash-streak-hot"><span class="fire">🔥</span>${s}日連続</span>
+        <span class="dash-streak-month">今月 <b>${c}</b> 日</span>
+      </div>
+    </div>`;
+  };
   parts.push(`<div class="dash-card">
     <div class="dash-label">📓 DIARY</div>
-    <div class="dash-streak-row">
-      <div class="dash-streak-hot"><span class="fire">🔥</span>${streak}日連続</div>
-      <div class="dash-streak-month">今月 <b>${monthCount}</b> 日書いた</div>
-    </div>
+    ${diaryRow('mine')}
+    ${diaryRow('hers')}
   </div>`);
 
   // 1年前の今日（コンパクト）
