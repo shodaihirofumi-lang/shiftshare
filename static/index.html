@@ -780,6 +780,31 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 /* ── 日記タブ ── */
 #diary-list { overflow-y:auto; width:100%; }
 
+/* デイリー日記プロンプト */
+#daily-prompt-card { margin-bottom:12px; }
+.prompt-card { background:linear-gradient(135deg, var(--mine-bg), #dfe9ec); border:1.5px solid var(--mine-border); border-radius:14px; padding:12px 16px; box-shadow:var(--shadow-sm); }
+.prompt-lbl { font-size:10px; font-weight:700; color:var(--mine); letter-spacing:2.5px; margin-bottom:5px; }
+.prompt-text { font-size:16px; font-weight:700; color:var(--text); line-height:1.5; }
+.prompt-hint { font-size:11px; color:var(--text-soft); margin-top:4px; letter-spacing:.5px; }
+:root[data-theme="night"] .prompt-card, :root[data-theme="deepsea"] .prompt-card, :root[data-theme="forestnight"] .prompt-card, :root[data-theme="midnight"] .prompt-card, :root[data-theme="charcoal"] .prompt-card { background:linear-gradient(135deg, var(--mine-bg), var(--card)); }
+
+/* 週フォトチャレンジ (ダッシュボード内) */
+.dash-photo-challenge { background:linear-gradient(135deg, var(--hers-bg), #f7dce6); border:1.5px solid var(--hers-border); }
+.dash-photo-challenge .dash-label { color:var(--hers); }
+.pc-theme { font-size:20px; font-weight:800; color:var(--hers); letter-spacing:1px; }
+.pc-hint { font-size:11px; color:var(--text-soft); margin-top:4px; letter-spacing:.5px; }
+:root[data-theme="night"] .dash-photo-challenge, :root[data-theme="deepsea"] .dash-photo-challenge, :root[data-theme="forestnight"] .dash-photo-challenge, :root[data-theme="midnight"] .dash-photo-challenge, :root[data-theme="charcoal"] .dash-photo-challenge { background:linear-gradient(135deg, var(--hers-bg), var(--card)); }
+
+/* 株の1日1トピック (保有株タブ) */
+#stock-tip-card { margin-bottom:16px; }
+.stock-tip { background:linear-gradient(135deg, var(--gold-bg), #f4e6c4); border:1.5px solid var(--gold-border); border-radius:14px; padding:13px 16px; box-shadow:var(--shadow-sm); }
+.stock-tip-lbl { font-size:10px; font-weight:700; color:#8a6f43; letter-spacing:2.5px; margin-bottom:5px; }
+.stock-tip-term { font-size:18px; font-weight:800; color:#6a5320; margin-bottom:5px; letter-spacing:.5px; }
+.stock-tip-desc { font-size:13px; color:var(--text); line-height:1.7; }
+:root[data-theme="night"] .stock-tip, :root[data-theme="deepsea"] .stock-tip, :root[data-theme="forestnight"] .stock-tip, :root[data-theme="midnight"] .stock-tip, :root[data-theme="charcoal"] .stock-tip { background:linear-gradient(135deg, #3a3220, #2a2318); border-color:#5c4d2e; }
+:root[data-theme="night"] .stock-tip-lbl, :root[data-theme="deepsea"] .stock-tip-lbl, :root[data-theme="forestnight"] .stock-tip-lbl, :root[data-theme="midnight"] .stock-tip-lbl, :root[data-theme="charcoal"] .stock-tip-lbl { color:#d4b876; }
+:root[data-theme="night"] .stock-tip-term, :root[data-theme="deepsea"] .stock-tip-term, :root[data-theme="forestnight"] .stock-tip-term, :root[data-theme="midnight"] .stock-tip-term, :root[data-theme="charcoal"] .stock-tip-term { color:#e2c886; }
+
 /* ── ダッシュボード ── */
 #dash-content { display:flex; flex-direction:column; gap:10px; }
 .dash-card { background:var(--card); border-radius:14px; padding:13px 16px; box-shadow:var(--shadow-sm); }
@@ -1880,6 +1905,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="nk-chart" id="nk-chart"></div>
         <div class="nk-date" id="nk-date"></div>
       </div>
+      <div id="stock-tip-card"></div>
       <div class="bz-card" id="buyzones-card" style="display:none">
         <div class="bz-head">🎯 買い増しゾーン（週足MA・RSIから機械判定）</div>
         <div class="bz-list" id="bz-list"></div>
@@ -2192,6 +2218,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           </div>
         </div>
       </div>
+      <div id="daily-prompt-card"></div>
       <div id="memory-card"></div>
       <div id="diary-list"></div>
       <div id="diary-shelf"></div>
@@ -2833,6 +2860,7 @@ async function loadHoldings() {
   if (quotes['USDJPY=X']?.price) pnlUsdjpy = quotes['USDJPY=X'].price;
   await loadRealized(); // 実現損益も合わせて反映
   renderHeatmap();
+  renderStockTipCard(); // 今日の株用語トピック
   loadBuyZones(); // 押し目買いゾーンの検出（非同期）
   loadHoldReplay(); // 売却した銘柄の現在価格を取って未売却シナリオと比較
   // 月カレンダーが開かれていれば決算日チップを反映するため再描画
@@ -6368,6 +6396,96 @@ function buildDiaryTemplate(dateKey) {
   ).join('');
 }
 
+// ── ローテーション系コンテンツ（日付/週固定でランダム風に選ぶ） ──
+function dayOfYearIndex() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now - start) / 86400000);
+}
+function weekOfYearIndex() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  return Math.floor((now - start) / (7 * 86400000));
+}
+
+const DIARY_PROMPTS = [
+  '今日の「良かったこと」を3つ',
+  '今日一番笑った瞬間は？',
+  '感謝したい人ひとり、思い浮かべてみて',
+  '今日食べたもので一番おいしかったもの',
+  '今日「意外」だったこと',
+  '明日の自分に一言メッセージ',
+  '最近ハマっているものは？',
+  '今日の空はどんな色だった？',
+  '今週のマイベスト行動',
+  '「これ買って良かった」最近の1品',
+  '今週やりたいこと1つ',
+  'ちょっとした癒し、あった？',
+  '今日出会った良い言葉',
+  'ふと思い出した昔の話',
+  '今の気分を色で表すと？',
+  '誰かに教えたい豆知識',
+  '今日の勝ち（小さくてもOK）',
+  '今日の負け（気にしなくてOK）',
+  '明日食べたいもの',
+  '最近「うれしいな」と感じた瞬間',
+  'あの頃の自分に伝えたいこと',
+  '眠る前に一言',
+  '今週のマイニュース',
+  '5年後どうなっていたい？',
+  '今日を漢字1字で表すと？',
+  '明日をどう過ごしたい？',
+  '最近読んだ・見たものでおすすめ',
+  '当たり前だけどありがたいこと',
+  '今週チャレンジしたいこと',
+  '今日一番静かだった時間',
+];
+
+const PHOTO_THEMES = [
+  '今週の"青いもの"', '今週の"食べたもの"', '今週の"空"', '今週の"見つけた"',
+  '今週の"光"', '今週の"朝"', '今週の"お気に入り"', '今週の"かわいい"',
+  '今週の"うつくしい"', '今週の"レトロ"', '今週の"緑"', '今週の"赤"',
+  '今週の"高い所"', '今週の"低い所"', '今週の"水"', '今週の"反射"',
+  '今週の"影"', '今週の"はじめて"', '今週の"いつもの"', '今週の"夜景"',
+];
+
+const STOCK_TIPS = [
+  ['PER', '1株あたり利益の何倍で買われているか。低いほど割安の目安。日経平均は15倍前後が普通。'],
+  ['PBR', '株価÷1株純資産。1倍未満だと"解散価値以下"扱いで割安の目安に。'],
+  ['配当利回り', '年配当÷株価。3%以上あると高配当扱い。銀行預金より高い"収入源"。'],
+  ['移動平均線 (MA)', '過去N日の平均値をつないだ線。25日/75日/200日が定番。株価がMAを上抜けると強気サイン。'],
+  ['RSI', '買われすぎ/売られすぎを0-100で示す指標。70以上で買われすぎ、30以下で売られすぎ。'],
+  ['ゴールデンクロス', '短期MAが長期MAを下から上へ抜けること。上昇トレンド入りの目安。'],
+  ['デッドクロス', 'ゴールデンクロスの逆。下降トレンド入りの目安、注意サイン。'],
+  ['ROE', '自己資本利益率。会社が自分の資本でどれだけ稼げるか。日本株なら8%以上あれば優良の目安。'],
+  ['時価総額', '発行済み株式数×株価。会社の"値段"。大型のほうが値動き安定。'],
+  ['売買代金', '1日の取引金額。多いほど売買しやすい。少ないと"流動性リスク"あり。'],
+  ['VIX指数', '米国株の恐怖指数。20以上で警戒、40以上でパニック相場と言われる。'],
+  ['決算短信', '3ヶ月ごとの会社の成績表。売上・利益・進捗率をチェック。'],
+  ['フォワードガイダンス', '会社が示す"次の展望"。想定より強気/弱気で株価が動く。'],
+  ['株価分割', '1株を2株等に分割。1株の価格が下がって買いやすくなる。株数増えて価値は同じ。'],
+  ['配当落ち日', 'この日までに保有すると配当をもらえる。翌日は配当分下がる傾向あり。'],
+  ['東証プライム/スタンダード/グロース', '大企業/中堅/新興の3市場。プライムほど厳しい上場基準。'],
+  ['日経平均 vs TOPIX', '日経は225銘柄の平均、TOPIXはプライム全体。TOPIXの方が広く相場を反映。'],
+  ['円安/円高', '円安=輸出企業(トヨタ等)は追い風、輸入企業は逆風。'],
+  ['金利と株価', '一般に金利上昇=株安、金利低下=株高。特に成長株は金利に敏感。'],
+  ['ディフェンシブ銘柄', '食品・薬品・電力等、景気に左右されにくい株。不況時に強い。'],
+  ['グロース vs バリュー', 'グロース=成長期待、バリュー=割安放置株。相場フェーズで強弱が変わる。'],
+  ['配当再投資', '配当をそのまま買い増しに回す戦略。長期でパワーを発揮する。'],
+  ['NISA枠', '年間360万まで(成長240+つみたて120)、税金ゼロで運用可能。売った分は翌年復活。'],
+  ['損益通算・繰越控除', '損失は3年繰り越して他の利益と相殺できる。確定申告が必要。'],
+  ['順張り vs 逆張り', 'トレンドに乗るのが順張り、下がった所を拾うのが逆張り。相場で強い方が違う。'],
+  ['ドルコスト平均法', '毎月一定額を買う戦略。高値づかみを避けやすい。積立に最適。'],
+  ['出来高急増', '普段より2倍以上の出来高が出た日は要注目。何かニュースがあった可能性。'],
+  ['一目均衡表', '雲・基準線・転換線などで相場観を掴む指標。雲を抜けるとトレンド転換の目安。'],
+  ['半導体銘柄', 'レーザーテック、東エレク等。米国景気・AIブームに連動しやすい。'],
+  ['ADR', '米国預託証券。日本企業を米国で買える形式。トヨタADR等。'],
+];
+
+function todaysPrompt() { return DIARY_PROMPTS[dayOfYearIndex() % DIARY_PROMPTS.length]; }
+function thisWeekTheme() { return PHOTO_THEMES[weekOfYearIndex() % PHOTO_THEMES.length]; }
+function todayStockTip() { return STOCK_TIPS[dayOfYearIndex() % STOCK_TIPS.length]; }
+
 // 入力用：月表示で日記をリスト表示
 // 「N年前の今日」メモリーカード：過去の同じ月日から日記/写真があれば表示
 function renderMemoryCard() {
@@ -6638,6 +6756,13 @@ function renderDashboard() {
     ${diaryRow('hers')}
   </div>`);
 
+  // ── 週フォトチャレンジ ──
+  parts.push(`<div class="dash-card dash-photo-challenge">
+    <div class="dash-label">📸 WEEKLY PHOTO CHALLENGE</div>
+    <div class="pc-theme">${escapeHtml(thisWeekTheme())}</div>
+    <div class="pc-hint">今週の被写体テーマ。日記の写真として気軽に</div>
+  </div>`);
+
   // 1年前の今日（コンパクト）
   const mo = String(now.getMonth()+1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
@@ -6690,7 +6815,28 @@ function renderDashboard() {
   content.innerHTML = parts.join('');
 }
 
+function renderDailyPromptCard() {
+  const el = document.getElementById('daily-prompt-card');
+  if (!el) return;
+  el.innerHTML = `<div class="prompt-card">
+    <div class="prompt-lbl">📝 今日のお題</div>
+    <div class="prompt-text">${escapeHtml(todaysPrompt())}</div>
+    <div class="prompt-hint">書くことがない日のヒントに</div>
+  </div>`;
+}
+function renderStockTipCard() {
+  const el = document.getElementById('stock-tip-card');
+  if (!el) return;
+  const [term, desc] = todayStockTip();
+  el.innerHTML = `<div class="stock-tip">
+    <div class="stock-tip-lbl">📚 今日の株用語</div>
+    <div class="stock-tip-term">${escapeHtml(term)}</div>
+    <div class="stock-tip-desc">${escapeHtml(desc)}</div>
+  </div>`;
+}
+
 function renderDiary() {
+  renderDailyPromptCard();
   renderMemoryCard();
   const el = document.getElementById('diary-list');
   if (!el) return;
@@ -7740,11 +7886,13 @@ function switchDiaryMode(mode) {
   const bookBtn = document.getElementById('diary-book-btn');
 
   const memoryCard = document.getElementById('memory-card');
+  const promptCard = document.getElementById('daily-prompt-card');
   if (mode === 'input') {
     if (diaryList) diaryList.style.display = 'block';
     if (diaryShelf) diaryShelf.classList.remove('active');
     if (diaryBook) diaryBook.classList.remove('active');
     if (memoryCard) memoryCard.style.display = 'block';
+    if (promptCard) promptCard.style.display = 'block';
     if (inputBtn) { inputBtn.style.background = 'var(--mine-bg)'; inputBtn.style.borderColor = 'var(--mine)'; inputBtn.style.color = 'var(--mine)'; }
     if (bookBtn) { bookBtn.style.background = 'var(--card)'; bookBtn.style.borderColor = 'var(--line)'; bookBtn.style.color = 'var(--text)'; }
   } else {
@@ -7752,6 +7900,7 @@ function switchDiaryMode(mode) {
     if (diaryShelf) diaryShelf.classList.add('active');
     if (diaryBook) diaryBook.classList.remove('active'); // 本棚から開始
     if (memoryCard) memoryCard.style.display = 'none';
+    if (promptCard) promptCard.style.display = 'none';
     if (bookBtn) { bookBtn.style.background = 'var(--mine-bg)'; bookBtn.style.borderColor = 'var(--mine)'; bookBtn.style.color = 'var(--mine)'; }
     if (inputBtn) { inputBtn.style.background = 'var(--card)'; inputBtn.style.borderColor = 'var(--line)'; inputBtn.style.color = 'var(--text)'; }
     renderDiaryShelf();
