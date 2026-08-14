@@ -777,6 +777,26 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .lightbox img { max-width:96vw; max-height:90vh; border-radius:8px; object-fit:contain; }
 /* ── 日記タブ ── */
 #diary-list { overflow-y:auto; width:100%; }
+/* ── 1年前の今日 メモリーカード ── */
+#memory-card { margin-bottom:14px; }
+.memory-card { background:linear-gradient(180deg, #f5efe0 0%, #ede4cd 100%); border:1.5px solid #d6c39c; border-radius:16px; padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow-sm); position:relative; }
+.memory-head { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:#8a6f43; letter-spacing:2px; margin-bottom:8px; }
+.memory-head .memory-icon { font-size:16px; }
+.memory-date { font-size:15px; font-weight:800; color:var(--text); margin-bottom:6px; }
+.memory-photos { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+.memory-photos img { width:64px; height:64px; object-fit:cover; border-radius:8px; border:1.5px solid #d6c39c; cursor:pointer; }
+.memory-diary { font-size:14px; color:var(--text); line-height:1.7; }
+.memory-diary .memory-who { display:inline-block; font-size:11px; font-weight:700; padding:1px 6px; border-radius:5px; margin-right:5px; letter-spacing:1px; }
+.memory-diary .memory-who.mine { background:var(--mine-bg); color:var(--mine); }
+.memory-diary .memory-who.hers { background:var(--hers-bg); color:var(--hers); }
+.memory-diary .memory-text { display:block; margin-top:4px; margin-bottom:8px; white-space:pre-wrap; }
+.memory-diary .memory-text.truncated { max-height:6em; overflow:hidden; position:relative; }
+.memory-diary .memory-text.truncated::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2em; background:linear-gradient(180deg, transparent, #ede4cd); pointer-events:none; }
+.memory-empty { font-size:13px; color:var(--text-soft); text-align:center; padding:6px 0; }
+.memory-more { display:inline-block; font-size:11px; color:#8a6f43; margin-top:4px; cursor:pointer; text-decoration:underline; }
+:root[data-theme="night"] .memory-card, :root[data-theme="deepsea"] .memory-card, :root[data-theme="forestnight"] .memory-card, :root[data-theme="midnight"] .memory-card, :root[data-theme="charcoal"] .memory-card { background:linear-gradient(180deg, #2e2820 0%, #221d15 100%); border-color:#5c4d2e; }
+:root[data-theme="night"] .memory-head, :root[data-theme="deepsea"] .memory-head, :root[data-theme="forestnight"] .memory-head, :root[data-theme="midnight"] .memory-head, :root[data-theme="charcoal"] .memory-head { color:#d4b876; }
+:root[data-theme="night"] .memory-diary .memory-text.truncated::after, :root[data-theme="deepsea"] .memory-diary .memory-text.truncated::after, :root[data-theme="forestnight"] .memory-diary .memory-text.truncated::after, :root[data-theme="midnight"] .memory-diary .memory-text.truncated::after, :root[data-theme="charcoal"] .memory-diary .memory-text.truncated::after { background:linear-gradient(180deg, transparent, #221d15); }
 
 /* ── 本棚UI ── */
 #diary-shelf { display:none; padding:20px 8px 24px; }
@@ -2070,6 +2090,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           </div>
         </div>
       </div>
+      <div id="memory-card"></div>
       <div id="diary-list"></div>
       <div id="diary-shelf"></div>
     </div>
@@ -6236,7 +6257,51 @@ function buildDiaryTemplate(dateKey) {
 }
 
 // 入力用：月表示で日記をリスト表示
+// 「N年前の今日」メモリーカード：過去の同じ月日から日記/写真があれば表示
+function renderMemoryCard() {
+  const el = document.getElementById('memory-card');
+  if (!el) return;
+  const now = new Date();
+  const mo = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const thisYear = now.getFullYear();
+  // 過去5年まで遡って同月日データを集める
+  const memories = [];
+  for (let yearsAgo = 1; yearsAgo <= 5; yearsAgo++) {
+    const y = thisYear - yearsAgo;
+    const key = `${y}-${mo}-${dd}`;
+    const diary = allDiaries[key];
+    const photos = dayPhotos[key] || [];
+    const hasDiary = diary && (diary.mine?.raw || diary.hers?.raw);
+    if (!hasDiary && !photos.length) continue;
+    memories.push({ yearsAgo, key, y, diary, photos });
+  }
+  if (!memories.length) { el.innerHTML = ''; return; }
+
+  const html = memories.map(m => {
+    const yearsLabel = m.yearsAgo === 1 ? '1年前の今日' : `${m.yearsAgo}年前の今日`;
+    const dateLine = `${m.y}年${Number(mo)}月${Number(dd)}日`;
+    const photoRow = m.photos.length ? `<div class="memory-photos">${m.photos.slice(0, 6).map(p => `<img src="${p.img}" onclick="openLightbox(this.src)" alt="">`).join('')}</div>` : '';
+    let diaryHtml = '';
+    for (const person of ['hers', 'mine']) {
+      const raw = m.diary?.[person]?.raw;
+      if (!raw) continue;
+      const label = person === 'hers' ? 'ちか' : 'ひろ';
+      const truncated = raw.length > 200 ? ' truncated' : '';
+      diaryHtml += `<div><span class="memory-who ${person}">${label}</span><span class="memory-text${truncated}">${escapeHtml(raw)}</span></div>`;
+    }
+    return `<div class="memory-card">
+      <div class="memory-head"><span class="memory-icon">🕰️</span><span>${yearsLabel}</span></div>
+      <div class="memory-date">${dateLine}</div>
+      ${photoRow}
+      ${diaryHtml ? `<div class="memory-diary">${diaryHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+  el.innerHTML = html;
+}
+
 function renderDiary() {
+  renderMemoryCard();
   const el = document.getElementById('diary-list');
   if (!el) return;
 
@@ -7284,16 +7349,19 @@ function switchDiaryMode(mode) {
   const inputBtn = document.getElementById('diary-input-btn');
   const bookBtn = document.getElementById('diary-book-btn');
 
+  const memoryCard = document.getElementById('memory-card');
   if (mode === 'input') {
     if (diaryList) diaryList.style.display = 'block';
     if (diaryShelf) diaryShelf.classList.remove('active');
     if (diaryBook) diaryBook.classList.remove('active');
+    if (memoryCard) memoryCard.style.display = 'block';
     if (inputBtn) { inputBtn.style.background = 'var(--mine-bg)'; inputBtn.style.borderColor = 'var(--mine)'; inputBtn.style.color = 'var(--mine)'; }
     if (bookBtn) { bookBtn.style.background = 'var(--card)'; bookBtn.style.borderColor = 'var(--line)'; bookBtn.style.color = 'var(--text)'; }
   } else {
     if (diaryList) diaryList.style.display = 'none';
     if (diaryShelf) diaryShelf.classList.add('active');
     if (diaryBook) diaryBook.classList.remove('active'); // 本棚から開始
+    if (memoryCard) memoryCard.style.display = 'none';
     if (bookBtn) { bookBtn.style.background = 'var(--mine-bg)'; bookBtn.style.borderColor = 'var(--mine)'; bookBtn.style.color = 'var(--mine)'; }
     if (inputBtn) { inputBtn.style.background = 'var(--card)'; inputBtn.style.borderColor = 'var(--line)'; inputBtn.style.color = 'var(--text)'; }
     renderDiaryShelf();
