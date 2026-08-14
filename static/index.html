@@ -804,6 +804,61 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 :root[data-theme="night"] .stock-tip, :root[data-theme="deepsea"] .stock-tip, :root[data-theme="forestnight"] .stock-tip, :root[data-theme="midnight"] .stock-tip, :root[data-theme="charcoal"] .stock-tip { background:linear-gradient(135deg, #3a3220, #2a2318); border-color:#5c4d2e; }
 :root[data-theme="night"] .stock-tip-lbl, :root[data-theme="deepsea"] .stock-tip-lbl, :root[data-theme="forestnight"] .stock-tip-lbl, :root[data-theme="midnight"] .stock-tip-lbl, :root[data-theme="charcoal"] .stock-tip-lbl { color:#d4b876; }
 :root[data-theme="night"] .stock-tip-term, :root[data-theme="deepsea"] .stock-tip-term, :root[data-theme="forestnight"] .stock-tip-term, :root[data-theme="midnight"] .stock-tip-term, :root[data-theme="charcoal"] .stock-tip-term { color:#e2c886; }
+.stock-tip-more { margin-top:10px; padding:7px 12px; border-radius:8px; border:1.5px solid #d6c39c; background:rgba(255,255,255,.5); color:#6a5320; font-size:12px; font-weight:700; cursor:pointer; letter-spacing:.5px; font-family:inherit; }
+.stock-tip-more:active { opacity:.85; }
+:root[data-theme="night"] .stock-tip-more, :root[data-theme="deepsea"] .stock-tip-more, :root[data-theme="forestnight"] .stock-tip-more, :root[data-theme="midnight"] .stock-tip-more, :root[data-theme="charcoal"] .stock-tip-more { background:rgba(255,255,255,.1); color:#e2c886; border-color:#5c4d2e; }
+
+/* 株を学ぶモーダル */
+.learn-modal { max-height:92vh; }
+.learn-tabs { display:flex; gap:4px; margin-bottom:14px; border-bottom:1.5px solid var(--line); padding-bottom:0; }
+.learn-tab { flex:1; padding:9px 6px; border:none; background:transparent; font-size:13px; font-weight:700; color:var(--text-soft); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-1.5px; font-family:inherit; }
+.learn-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+#learn-content { max-height:60vh; overflow-y:auto; padding:0 2px 4px; }
+
+/* 入門講座 */
+.lesson-progress { margin-bottom:12px; }
+.lp-bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; }
+.lp-fill { height:100%; background:linear-gradient(90deg, var(--gold), #c9a86f); transition:width .3s; }
+.lp-text { font-size:12px; color:var(--text-soft); margin-top:4px; text-align:center; }
+.lesson-list { display:flex; flex-direction:column; gap:2px; }
+.lesson-item { display:flex; align-items:center; gap:8px; padding:11px 10px; border-radius:8px; cursor:pointer; border:1px solid transparent; }
+.lesson-item:hover, .lesson-item:active { background:var(--bg); border-color:var(--line); }
+.lesson-item.read { opacity:.7; }
+.lesson-item.read .lesson-title { text-decoration:line-through; color:var(--text-soft); }
+.lesson-check { width:20px; text-align:center; font-weight:700; color:var(--gold); font-size:14px; }
+.lesson-num { font-size:12px; color:var(--text-soft); font-weight:600; min-width:24px; }
+.lesson-title { font-size:14px; font-weight:600; }
+.lesson-detail { padding:0 2px; }
+.lesson-back { padding:6px 12px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); font-size:12px; cursor:pointer; margin-bottom:12px; font-family:inherit; color:var(--text-soft); }
+.lesson-detail-num { font-size:11px; color:var(--gold); letter-spacing:2px; font-weight:700; margin-bottom:2px; }
+.lesson-detail-title { font-size:20px; font-weight:800; margin-bottom:14px; letter-spacing:.5px; }
+.lesson-detail-body { font-size:15px; line-height:1.9; color:var(--text); margin-bottom:16px; }
+.lesson-mark { width:100%; padding:11px; border-radius:10px; border:none; background:var(--grad); color:#fbf9f5; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:1px; }
+.lesson-mark:active { opacity:.85; }
+
+/* 用語辞典 */
+.glossary-search-wrap { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+.glossary-search { flex:1; padding:9px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--card); font-size:14px; font-family:inherit; color:var(--text); }
+.glossary-search:focus { outline:none; border-color:var(--gold); }
+.glossary-count { font-size:11px; color:var(--text-soft); font-weight:600; white-space:nowrap; }
+.glossary-list { display:flex; flex-direction:column; gap:6px; }
+.glossary-item { padding:9px 11px; border:1px solid var(--line-soft); border-radius:8px; background:var(--card); }
+.glossary-head { display:flex; align-items:center; gap:8px; margin-bottom:2px; }
+.glossary-term { font-size:15px; font-weight:800; color:var(--text); }
+.glossary-cat { font-size:10px; padding:1px 6px; border-radius:5px; font-weight:700; }
+.glossary-reading { font-size:11px; color:var(--text-soft); margin-bottom:3px; }
+.glossary-desc { font-size:13px; line-height:1.6; color:var(--text); }
+.glossary-empty { padding:20px; text-align:center; color:var(--text-soft); font-size:13px; }
+
+/* チャート図鑑 */
+.pattern-list { display:flex; flex-direction:column; gap:10px; }
+.pattern-item { display:flex; gap:10px; padding:9px; border:1px solid var(--line-soft); border-radius:10px; background:var(--card); align-items:stretch; }
+.pattern-svg-wrap { flex-shrink:0; width:110px; background:var(--bg); border-radius:6px; display:flex; align-items:center; justify-content:center; padding:4px; }
+.pattern-svg-wrap svg { width:100%; height:auto; display:block; }
+.pattern-info { flex:1; min-width:0; }
+.pattern-name { font-size:14px; font-weight:800; color:var(--text); margin-bottom:2px; }
+.pattern-signal { font-size:11px; font-weight:700; color:var(--gold); background:var(--gold-bg); display:inline-block; padding:2px 7px; border-radius:5px; margin-bottom:4px; }
+.pattern-desc { font-size:12px; line-height:1.6; color:var(--text-soft); }
 
 /* ── ダッシュボード ── */
 #dash-content { display:flex; flex-direction:column; gap:10px; }
@@ -2432,6 +2487,22 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSell()">キャンセル</button>
       <button class="btn-save" onclick="doSell()">売却を確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 株を学ぶ -->
+<div class="modal-bg" id="learn-modal" onclick="if(event.target===this)closeLearn()">
+  <div class="modal learn-modal">
+    <div class="modal-title">📚 株を学ぶ</div>
+    <div class="learn-tabs">
+      <button class="learn-tab active" data-t="lessons" onclick="switchLearnTab('lessons')">入門講座</button>
+      <button class="learn-tab" data-t="glossary" onclick="switchLearnTab('glossary')">用語辞典</button>
+      <button class="learn-tab" data-t="patterns" onclick="switchLearnTab('patterns')">チャート図鑑</button>
+    </div>
+    <div id="learn-content"></div>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="closeLearn()">閉じる</button>
     </div>
   </div>
 </div>
@@ -6486,6 +6557,275 @@ function todaysPrompt() { return DIARY_PROMPTS[dayOfYearIndex() % DIARY_PROMPTS.
 function thisWeekTheme() { return PHOTO_THEMES[weekOfYearIndex() % PHOTO_THEMES.length]; }
 function todayStockTip() { return STOCK_TIPS[dayOfYearIndex() % STOCK_TIPS.length]; }
 
+// ── 株入門講座（章立て） ──
+const LESSONS = [
+  { id:1, title:'株ってなに？', body:'株は「会社の一部を持つ権利」です。あなたが1株買うと、その会社の一員（オーナー）になります。会社が儲かれば、その一部があなたのものになります。トヨタやユニクロ等、上場している会社の株は誰でも買えます。\n\nつまり株を買う=応援しつつ、会社の成長で自分の資産も増える仕組みです。' },
+  { id:2, title:'なぜ株で利益が出る？', body:'株で得られる利益は2種類：\n\n① 値上がり益（キャピタルゲイン）\n買った時より高く売れれば、その差額が儲け。100株×1000円で買って、1500円で売れば5万円の利益。\n\n② 配当（インカムゲイン）\n多くの会社は年1-2回、利益の一部を株主に還元します。100株持ってて配当30円なら3000円もらえる。\n\n長期投資では両方を合わせた「トータルリターン」で考えます。' },
+  { id:3, title:'株価はなぜ動く？', body:'株価は「買いたい人」と「売りたい人」のバランスで動きます。\n\n・買いたい人多い → 株価上がる\n・売りたい人多い → 株価下がる\n\n何が需給を動かすか？\n・業績（決算が好調 → 買われる）\n・経済ニュース（金利、為替、政治）\n・市場心理（みんな強気/弱気）\n\n短期は心理、長期は業績で動きます。' },
+  { id:4, title:'証券口座を作ろう', body:'株を買うにはまず証券口座が必要。おすすめは：\n\n・SBI証券\n・楽天証券\n・マネックス証券\n\n口座開設は無料、スマホで15分程度。開設時に「特定口座（源泉徴収あり）」を選ぶと、税金計算を証券会社がやってくれるので楽です。\n\nさらに「NISA口座」も同時に開設すると、年間360万まで税金ゼロで運用可能。' },
+  { id:5, title:'銘柄選びの基本', body:'初心者向けの選び方：\n\n① 知っている会社（トヨタ、ユニクロ、KDDI等）\n事業内容がイメージできる会社なら、決算ニュースも理解しやすい。\n\n② 時価総額の大きい会社\n1兆円以上の"大型株"は倒産リスクが低く、値動きも比較的穏やか。\n\n③ 配当を出している会社\n配当利回り2-4%程度あれば、"持っているだけで収入"になる。\n\n最初は少額でOK。まず1銘柄買って、動きを感じるのが一番の勉強。' },
+  { id:6, title:'決算はここを見る', body:'3ヶ月ごとに発表される「決算短信」の重要ポイント：\n\n① 売上高：会社の規模、成長しているか\n② 営業利益：本業でどれだけ稼いだか\n③ 純利益：税金等引いた最終利益\n④ 進捗率：通期予想に対してどれくらい進んだか\n\n特に「上方修正」があると株価急騰、「下方修正」で急落することが多い。\n\n発表は決算後15時以降、翌日株価に反映されます。' },
+  { id:6.5, title:'PER・PBRってなに？', body:'銘柄の"割安/割高"を判断する指標：\n\n【PER（株価収益率）】\n株価 ÷ 1株利益。「利益の何倍で買われているか」\n・10倍 → 割安\n・15倍 → 平均\n・30倍以上 → 割高（成長期待あり）\n\n【PBR（株価純資産倍率）】\n株価 ÷ 1株純資産。「解散価値の何倍か」\n・1倍未満 → 割安\n・1倍前後 → 妥当\n\n単独では判断できないので、同業他社との比較が大事。' },
+  { id:7, title:'配当利回りの見方', body:'配当利回り = 年配当 ÷ 株価\n\n例：株価1000円で年30円配当なら、利回り3%\n\n目安：\n・1%以下 → 低配当（成長株が多い）\n・2-3% → 平均的\n・4%以上 → 高配当（安定株）\n\n注意点：\n・株価が下がっただけで利回りが上がって見える\n・業績悪化で「減配」される可能性もある\n\n連続増配銘柄（10年以上増配続けてる会社）は安全性高め。花王・KDDI・伊藤忠等。' },
+  { id:8, title:'損切りと利確', body:'投資で一番大事な"出口"：\n\n【損切り】\n買値から-10%〜-20%下がったら売る、というルールを事前に決める。「そのうち戻る」で持ち続けると大損することが多い。\n\n【利確】\n目標株価に到達したら売る。欲を出すと逃す。\n\nコツ：\n・買う前に「いくらで売るか」を決める\n・チャートで直近の安値/高値を目安に\n・感情ではなくルールで判断\n\n"損小利大"（負けは小さく、勝ちは大きく）が理想。' },
+  { id:9, title:'テクニカル分析入門', body:'株価チャートから売買タイミングを読む手法：\n\n【移動平均線（MA）】\n過去N日の平均株価をつないだ線。25日/75日/200日が定番。株価がMAを上抜けたら強気サイン。\n\n【RSI】\n買われすぎ/売られすぎを0-100で示す。\n・70以上 → 買われすぎ、警戒\n・30以下 → 売られすぎ、反発期待\n\n【ゴールデンクロス/デッドクロス】\n短期MAが長期MAを上/下抜け。トレンド転換のサイン。\n\n完璧な指標はないので、複数を組み合わせるのがコツ。' },
+  { id:10, title:'分散投資の重要性', body:'"卵は1つのカゴに盛るな"\n\n1銘柄集中は当たると大きいが、外れると全損。分散すれば、1つが下がっても他でカバーできる。\n\n分散の3つの軸：\n① 銘柄：最低5-10銘柄\n② 業種：銀行、自動車、通信、食品等バラバラに\n③ 地域：日本株だけでなく米国株も\n④ 時間：一度に買わず、複数回に分けて（ドルコスト平均法）\n\nインデックスファンド（日経平均連動等）を1つ持つだけで、実質225社に分散されます。' },
+  { id:11, title:'円安/円高と株価', body:'為替は日本株に大きく影響：\n\n【円安（例：1ドル=150円 → 160円）】\n・輸出企業（トヨタ、ソニー等）→ 追い風\n海外で稼いだドルを円に換えると多く手に入る\n・輸入企業（原材料、食料等）→ 逆風\n仕入れコストが上がる\n\n【円高（例：1ドル=150円 → 140円）】\n・輸出企業 → 逆風\n・輸入企業（航空、電力、食料）→ 追い風\n\n自分の保有銘柄が"どっち系か"を知っておくと、為替ニュース時に慌てない。' },
+  { id:12, title:'NISA活用術', body:'NISAは「税金ゼロで運用できる特別口座」：\n\n【成長投資枠】\n年240万まで。個別株・ETF・投資信託。\n\n【つみたて投資枠】\n年120万まで。金融庁指定のインデックスファンド中心。\n\n【生涯投資枠】1800万円\n（成長分は1200万まで）\n\nポイント：\n・売却するとその年の枠は復活しない、が翌年復活\n・配当・売却益ともに非課税\n・長期保有と相性抜群\n\n"まずNISA枠を使い切る"が鉄則。' },
+  { id:13, title:'ドルコスト平均法', body:'"毎月一定額を買い続ける"シンプルな戦略：\n\n例：毎月3万円ずつS&P500を買う\n・高い月は少ない口数\n・安い月は多くの口数\n→ 平均取得価格が均される\n\nメリット：\n・高値づかみを避けられる\n・タイミングを考えなくていい\n・時間分散で心理的にラク\n\nデメリット：\n・上昇相場では一括投資に負ける\n・下落相場でも買い続ける勇気が必要\n\nつみたてNISA・iDeCoはこの方式に最適化されています。' },
+  { id:14, title:'決算日カレンダー活用', body:'決算発表は株価が大きく動く瞬間：\n\n【当日】\n・15:00に発表（東証取引時間終了後）\n・上方修正 → 翌日ストップ高もあり\n・下方修正 → 翌日急落\n\n【対応の考え方】\n① 決算前に売却して様子見（安全策）\n② 決算持ち越し（サプライズ狙い）\n③ 決算後に判断（結果を見てから）\n\nこのアプリの「決算日カレンダー」で保有株の発表日を事前把握しておくと動きやすい。' },
+  { id:15, title:'投資家のマインドセット', body:'技術より大事な心構え：\n\n① 長期目線を持つ\n短期の値動きに一喜一憂しない。5年10年で見る。\n\n② 感情を排する\n"焦って買う""恐怖で売る"は失敗のもと。ルールで動く。\n\n③ 他人と比較しない\nSNSで儲け話を見ても気にしない。自分のペースで。\n\n④ 学び続ける\n"1年目は勉強"のつもりで少額から。失敗も授業料。\n\n⑤ 生活を犠牲にしない\n生活費や緊急資金は別に確保。余裕資金でやる。\n\nバフェット曰く「投資で最も重要なのは気質。IQではない」。' },
+];
+
+// ── 用語辞典 ──
+const GLOSSARY = [
+  ['PER', 'ぴーいーあーる', '基礎', '株価÷1株利益。低いほど割安の目安。15倍前後が平均。'],
+  ['PBR', 'ぴーびーあーる', '基礎', '株価÷1株純資産。1倍未満で"解散価値以下"。'],
+  ['ROE', 'あーるおーいー', '基礎', '自己資本利益率。8%以上で優良。'],
+  ['ROA', 'あーるおーえー', '基礎', '総資産利益率。会社全体の効率。'],
+  ['EPS', 'いーぴーえす', '基礎', '1株あたり利益。純利益÷株数。'],
+  ['BPS', 'びーぴーえす', '基礎', '1株あたり純資産。'],
+  ['配当利回り', 'はいとうりまわり', '基礎', '年配当÷株価。3%以上で高配当。'],
+  ['時価総額', 'じかそうがく', '基礎', '発行済株式×株価。会社の"値段"。'],
+  ['単元株', 'たんげんかぶ', '基礎', '売買の最小単位。通常100株。'],
+  ['出来高', 'できだか', '基礎', '1日の取引株数。流動性の指標。'],
+  ['売買代金', 'ばいばいだいきん', '基礎', '1日の取引金額。'],
+  ['MA', 'えむえー', 'テクニカル', '移動平均線。過去N日の株価平均。'],
+  ['RSI', 'あーるえすあい', 'テクニカル', '買われすぎ/売られすぎ指標。70超で警戒。'],
+  ['MACD', 'まっくでぃー', 'テクニカル', 'トレンド転換を示す指標。'],
+  ['ボリンジャーバンド', 'ぼりんじゃーばんど', 'テクニカル', '価格の変動範囲を示す線。'],
+  ['一目均衡表', 'いちもくきんこうひょう', 'テクニカル', '雲・基準線でトレンドを判断。'],
+  ['サポートライン', 'さぽーとらいん', 'テクニカル', '下値支持線。反発しやすい価格。'],
+  ['レジスタンスライン', 'れじすたんすらいん', 'テクニカル', '上値抵抗線。跳ね返されやすい価格。'],
+  ['ゴールデンクロス', 'ごーるでんくろす', 'テクニカル', '短期MAが長期MAを上抜け。強気サイン。'],
+  ['デッドクロス', 'でっどくろす', 'テクニカル', '短期MAが長期MAを下抜け。弱気サイン。'],
+  ['ローソク足', 'ろーそくあし', 'テクニカル', '始値/高値/安値/終値を表示する足。'],
+  ['陽線', 'ようせん', 'テクニカル', '終値>始値のローソク足。'],
+  ['陰線', 'いんせん', 'テクニカル', '終値<始値のローソク足。'],
+  ['決算短信', 'けっさんたんしん', 'ファンダメンタル', '3ヶ月ごとの会社の成績表。'],
+  ['有価証券報告書', 'ゆうかしょうけんほうこくしょ', 'ファンダメンタル', '年1回の詳細な財務レポート。'],
+  ['IR', 'あいあーる', 'ファンダメンタル', '投資家向け情報発信。'],
+  ['フォワードガイダンス', 'ふぉわーどがいだんす', 'ファンダメンタル', '会社が示す将来の見通し。'],
+  ['上方修正', 'じょうほうしゅうせい', 'ファンダメンタル', '業績予想を上に修正。株価上げやすい。'],
+  ['下方修正', 'かほうしゅうせい', 'ファンダメンタル', '業績予想を下に修正。株価下げやすい。'],
+  ['増配', 'ぞうはい', 'ファンダメンタル', '配当額を増やすこと。'],
+  ['減配', 'げんぱい', 'ファンダメンタル', '配当額を減らすこと。'],
+  ['無配', 'むはい', 'ファンダメンタル', '配当を出さないこと。'],
+  ['東証プライム', 'とうしょうぷらいむ', '市場', '東証の最上位市場。大企業中心。'],
+  ['スタンダード', 'すたんだーど', '市場', '東証の中堅市場。'],
+  ['グロース', 'ぐろーす', '市場', '東証の新興市場。成長企業中心。'],
+  ['TOPIX', 'とぴっくす', '市場', '東証プライム全体の指数。'],
+  ['日経平均', 'にっけいへいきん', '市場', '代表225銘柄の平均株価。'],
+  ['VIX', 'びっくす', '市場', '米国株の恐怖指数。20超で警戒。'],
+  ['S&P500', 'えすあんどぴー500', '市場', '米国代表500銘柄の指数。'],
+  ['ナスダック', 'なすだっく', '市場', '米国ハイテク中心の指数。'],
+  ['IPO', 'あいぴーおー', '市場', '新規株式公開。初値高騰しやすい。'],
+  ['上場廃止', 'じょうじょうはいし', '市場', '取引所から退場。株が売れなくなる。'],
+  ['成行注文', 'なりゆきちゅうもん', '売買', '価格を指定せず現在値で買う/売る。'],
+  ['指値注文', 'さしねちゅうもん', '売買', '価格を指定して注文。届かないと成立せず。'],
+  ['逆指値', 'ぎゃくさしね', '売買', '損切り用の注文方法。特定価格で自動売却。'],
+  ['信用取引', 'しんようとりひき', '売買', '証券会社からお金/株を借りて取引。ハイリスク。'],
+  ['空売り', 'からうり', '売買', '株を借りて売り、下がったら買い戻す。下落で儲かる。'],
+  ['現物取引', 'げんぶつとりひき', '売買', '自分のお金で株を買う通常の取引。'],
+  ['PTS', 'ぴーてぃーえす', '売買', '取引所外での夜間取引。'],
+  ['特定口座', 'とくていこうざ', '売買', '税金計算を証券会社がやってくれる口座。'],
+  ['NISA', 'にーさ', '税金', '税金ゼロで運用可能。年360万まで。'],
+  ['iDeCo', 'いでこ', '税金', '個人型年金。掛金が所得控除。'],
+  ['損益通算', 'そんえきつうさん', '税金', '複数口座の損益を合算して税金計算。'],
+  ['繰越控除', 'くりこしこうじょ', '税金', '損失を3年繰り越して利益と相殺可能。'],
+  ['配当控除', 'はいとうこうじょ', '税金', '配当所得の税負担軽減の制度。'],
+  ['譲渡益税', 'じょうとえきぜい', '税金', '株の売却益にかかる税金。約20%。'],
+  ['順張り', 'じゅんばり', '戦略', 'トレンドの方向に乗る手法。'],
+  ['逆張り', 'ぎゃくばり', '戦略', 'トレンドと逆に賭ける手法。'],
+  ['ドルコスト平均法', 'どるこすとへいきんほう', '戦略', '毎月一定額を買い続ける戦略。'],
+  ['グロース投資', 'ぐろーすとうし', '戦略', '成長企業に投資する戦略。'],
+  ['バリュー投資', 'ばりゅーとうし', '戦略', '割安放置の株に投資する戦略。'],
+  ['インデックス投資', 'いんでっくすとうし', '戦略', '指数連動ファンドで市場全体に投資。'],
+  ['分散投資', 'ぶんさんとうし', '戦略', '複数銘柄・業種・地域に分散する基本戦略。'],
+  ['FOMC', 'えふおーえむしー', 'マクロ', '米連邦公開市場委員会。米金利を決める。'],
+  ['金利', 'きんり', 'マクロ', '一般に金利上昇=株安、低下=株高。'],
+  ['円安', 'えんやす', 'マクロ', '輸出企業に追い風、輸入企業に逆風。'],
+  ['円高', 'えんだか', 'マクロ', '輸出企業に逆風、輸入企業に追い風。'],
+  ['インフレ', 'いんふれ', 'マクロ', '物価上昇。株はインフレ耐性のある資産。'],
+  ['CPI', 'しーぴーあい', 'マクロ', '消費者物価指数。インフレの目安。'],
+  ['GDP', 'じーでぃーぴー', 'マクロ', '国内総生産。経済規模の指標。'],
+  ['ADR', 'えーでぃーあーる', 'その他', '米国預託証券。日本株を米国で売買可。'],
+  ['配当落ち日', 'はいとうおちび', 'その他', '配当権利がなくなる日。株価が配当分下がる。'],
+  ['権利確定日', 'けんりかくていび', 'その他', 'この日までに保有で配当をもらえる。'],
+  ['株主優待', 'かぶぬしゆうたい', 'その他', '株主に贈られる商品・割引券。'],
+  ['議決権', 'ぎけつけん', 'その他', '株主総会で投票する権利。'],
+  ['ストップ高', 'すとっぷだか', 'その他', '1日の値幅上限に達すること。'],
+  ['ストップ安', 'すとっぷやす', 'その他', '1日の値幅下限に達すること。'],
+];
+
+// ── チャートパターン図鑑 ──
+// SVGはviewBox 240x80、path/polylineで簡素に表現
+const CHART_PATTERNS = [
+  { id:'dbot', name:'ダブルボトム (W字)', signal:'反発期待（上昇）', desc:'2度同じ価格で反発した後、間の高値を超えると強い上昇シグナル。下降トレンド終わりの典型パターン。',
+    svg:'<polyline points="10,30 40,50 70,20 110,60 140,30 170,60 200,20 230,10" fill="none" stroke="#4f6d7a" stroke-width="2"/><line x1="70" y1="20" x2="200" y2="20" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,3"/>' },
+  { id:'dtop', name:'ダブルトップ (M字)', signal:'下落警戒', desc:'2度同じ高値で跳ね返された後、間の安値を割ると下落シグナル。上昇トレンド終わりの典型。',
+    svg:'<polyline points="10,60 40,30 70,60 110,20 140,60 170,20 200,60 230,70" fill="none" stroke="#a76b80" stroke-width="2"/><line x1="70" y1="60" x2="200" y2="60" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,3"/>' },
+  { id:'hns', name:'ヘッド&ショルダー', signal:'下落警戒', desc:'左肩・頭・右肩の3山。ネックラインを下抜けると強い下落シグナル。長期上昇トレンドの終わり。',
+    svg:'<polyline points="10,50 40,30 70,50 100,10 130,50 160,30 190,50 230,70" fill="none" stroke="#a76b80" stroke-width="2"/><line x1="70" y1="50" x2="190" y2="50" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,3"/>' },
+  { id:'ihns', name:'逆ヘッド&ショルダー', signal:'反発期待（上昇）', desc:'ヘッド&ショルダーの上下逆。ネックラインを上抜けると強い上昇シグナル。長期下落トレンドの終わり。',
+    svg:'<polyline points="10,30 40,50 70,30 100,70 130,30 160,50 190,30 230,10" fill="none" stroke="#4f6d7a" stroke-width="2"/><line x1="70" y1="30" x2="190" y2="30" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,3"/>' },
+  { id:'cup', name:'カップ&ハンドル', signal:'上昇継続', desc:'U字型（カップ）の後に小さな下げ（ハンドル）、その後上昇。中長期の押し目買いに最適。',
+    svg:'<path d="M10,20 Q20,20 30,50 Q60,75 100,75 Q140,75 170,50 Q180,20 190,20 L190,35 L205,45 L220,25 L230,15" fill="none" stroke="#4f6d7a" stroke-width="2"/>' },
+  { id:'tri', name:'三角持ち合い', signal:'ブレイク方向に大きく動く', desc:'高値が切り下がり、安値が切り上がり、収束する。上下どちらかに抜けた方向へ勢いよく動きやすい。',
+    svg:'<polyline points="10,15 40,50 70,25 100,50 130,32 160,50 190,40 220,50" fill="none" stroke="#4f6d7a" stroke-width="2"/><line x1="10" y1="15" x2="230" y2="42" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,3"/><line x1="10" y1="70" x2="230" y2="42" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,3"/>' },
+  { id:'box', name:'ボックス相場', signal:'レンジ内で往復', desc:'一定範囲を行ったり来たり。上限で売り、下限で買いの短期スイングに適す。上抜け/下抜けまで待つのも手。',
+    svg:'<polyline points="10,30 30,60 60,30 90,60 120,30 150,60 180,30 210,60 230,40" fill="none" stroke="#4f6d7a" stroke-width="2"/><line x1="10" y1="30" x2="230" y2="30" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,3"/><line x1="10" y1="60" x2="230" y2="60" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,3"/>' },
+  { id:'up', name:'上昇トレンド', signal:'順張り買い有効', desc:'高値・安値ともに切り上がる。押し目（MA25まで下がった所）が買いポイント。',
+    svg:'<polyline points="10,60 40,50 70,55 100,40 130,45 160,25 190,30 220,15" fill="none" stroke="#4f6d7a" stroke-width="2"/><line x1="10" y1="70" x2="230" y2="10" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,3"/>' },
+  { id:'down', name:'下降トレンド', signal:'空売り or 静観', desc:'高値・安値ともに切り下がる。戻り（一時的な反発）が売り or 逃げるポイント。',
+    svg:'<polyline points="10,15 40,25 70,20 100,40 130,35 160,50 190,55 220,70" fill="none" stroke="#a76b80" stroke-width="2"/><line x1="10" y1="10" x2="230" y2="70" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,3"/>' },
+  { id:'sr', name:'サポート & レジスタンス', signal:'ブレイクで方向転換', desc:'何度も反発している価格帯。上=レジスタンス（抵抗）、下=サポート（支持）。抜けると流れが変わる。',
+    svg:'<polyline points="10,25 30,60 55,25 80,60 105,25 135,55 165,25 195,60 230,45" fill="none" stroke="#4f6d7a" stroke-width="2"/><line x1="10" y1="25" x2="230" y2="25" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="10" y1="60" x2="230" y2="60" stroke="#2e6da4" stroke-width="1.5" stroke-dasharray="4,3"/>' },
+  { id:'gc', name:'ゴールデンクロス', signal:'買いサイン', desc:'短期MA（青）が長期MA（赤）を下から上へ抜ける。中長期上昇トレンドの入り口。',
+    svg:'<polyline points="10,55 60,50 110,42 160,30 210,20" fill="none" stroke="#4f6d7a" stroke-width="2"/><polyline points="10,30 60,35 110,42 160,50 210,55" fill="none" stroke="#a76b80" stroke-width="2"/><circle cx="110" cy="42" r="4" fill="none" stroke="#a4884f" stroke-width="2"/>' },
+  { id:'dc', name:'デッドクロス', signal:'売りサイン', desc:'短期MA（青）が長期MA（赤）を上から下へ抜ける。中長期下降トレンドの入り口。',
+    svg:'<polyline points="10,20 60,25 110,42 160,55 210,60" fill="none" stroke="#4f6d7a" stroke-width="2"/><polyline points="10,55 60,50 110,42 160,35 210,25" fill="none" stroke="#a76b80" stroke-width="2"/><circle cx="110" cy="42" r="4" fill="none" stroke="#a4884f" stroke-width="2"/>' },
+];
+
+let currentLearnTab = 'lessons';
+let glossarySearch = '';
+function openLearn() {
+  document.getElementById('learn-modal').classList.add('active');
+  switchLearnTab('lessons');
+}
+function closeLearn() {
+  document.getElementById('learn-modal').classList.remove('active');
+}
+function switchLearnTab(tab) {
+  currentLearnTab = tab;
+  document.querySelectorAll('.learn-tab').forEach(b => b.classList.toggle('active', b.dataset.t === tab));
+  renderLearnContent();
+}
+function renderLearnContent() {
+  const el = document.getElementById('learn-content');
+  if (!el) return;
+  if (currentLearnTab === 'lessons') el.innerHTML = renderLessons();
+  else if (currentLearnTab === 'glossary') el.innerHTML = renderGlossary();
+  else if (currentLearnTab === 'patterns') el.innerHTML = renderPatterns();
+}
+function getReadLessons() {
+  try { return JSON.parse(localStorage.getItem('readLessons') || '[]'); } catch { return []; }
+}
+function markLessonRead(id) {
+  const s = new Set(getReadLessons()); s.add(id);
+  localStorage.setItem('readLessons', JSON.stringify([...s]));
+  renderLessonList();
+}
+function unmarkLessonRead(id) {
+  const s = new Set(getReadLessons()); s.delete(id);
+  localStorage.setItem('readLessons', JSON.stringify([...s]));
+  renderLessonList();
+}
+function renderLessons() {
+  const read = new Set(getReadLessons());
+  const total = LESSONS.length;
+  const doneCnt = LESSONS.filter(l => read.has(l.id)).length;
+  const pct = Math.round(doneCnt / total * 100);
+  const list = LESSONS.map(l => {
+    const isRead = read.has(l.id);
+    return `<div class="lesson-item ${isRead?'read':''}" onclick="openLesson(${l.id})">
+      <span class="lesson-check">${isRead?'✓':'○'}</span>
+      <span class="lesson-num">${l.id}.</span>
+      <span class="lesson-title">${escapeHtml(l.title)}</span>
+    </div>`;
+  }).join('');
+  return `<div class="lesson-progress">
+    <div class="lp-bar"><div class="lp-fill" style="width:${pct}%"></div></div>
+    <div class="lp-text">${doneCnt} / ${total} 章 読了 (${pct}%)</div>
+  </div>
+  <div id="lesson-list-inner" class="lesson-list">${list}</div>`;
+}
+function renderLessonList() {
+  const el = document.getElementById('lesson-list-inner');
+  if (!el) return;
+  const read = new Set(getReadLessons());
+  el.innerHTML = LESSONS.map(l => {
+    const isRead = read.has(l.id);
+    return `<div class="lesson-item ${isRead?'read':''}" onclick="openLesson(${l.id})">
+      <span class="lesson-check">${isRead?'✓':'○'}</span>
+      <span class="lesson-num">${l.id}.</span>
+      <span class="lesson-title">${escapeHtml(l.title)}</span>
+    </div>`;
+  }).join('');
+  // 進捗も更新
+  const total = LESSONS.length;
+  const doneCnt = LESSONS.filter(l => read.has(l.id)).length;
+  const pct = Math.round(doneCnt / total * 100);
+  const bar = document.querySelector('.lp-fill'); if (bar) bar.style.width = pct + '%';
+  const txt = document.querySelector('.lp-text'); if (txt) txt.textContent = `${doneCnt} / ${total} 章 読了 (${pct}%)`;
+}
+function openLesson(id) {
+  const l = LESSONS.find(x => x.id === id);
+  if (!l) return;
+  const isRead = getReadLessons().includes(id);
+  const el = document.getElementById('learn-content');
+  el.innerHTML = `<div class="lesson-detail">
+    <button class="lesson-back" onclick="switchLearnTab('lessons')">← 一覧に戻る</button>
+    <div class="lesson-detail-num">第 ${id} 章</div>
+    <div class="lesson-detail-title">${escapeHtml(l.title)}</div>
+    <div class="lesson-detail-body">${escapeHtml(l.body).replace(/\n/g,'<br>')}</div>
+    <button class="lesson-mark" onclick="${isRead?'unmarkLessonRead':'markLessonRead'}(${id});switchLearnTab('lessons')">${isRead?'☒ 未読に戻す':'✓ 読了マーク'}</button>
+  </div>`;
+}
+function renderGlossary() {
+  const q = (glossarySearch || '').trim().toLowerCase();
+  const filtered = GLOSSARY.filter(([t, r, cat, d]) =>
+    !q || t.toLowerCase().includes(q) || r.includes(q) || d.toLowerCase().includes(q) || cat.includes(q)
+  ).sort((a, b) => a[1].localeCompare(b[1], 'ja'));
+  const cats = { '基礎':'#4f6d7a', 'テクニカル':'#a76b80', 'ファンダメンタル':'#a4884f', '市場':'#5c8a68', '売買':'#8a7a5c', '税金':'#7a6a94', '戦略':'#6b8c8a', 'マクロ':'#94795c', 'その他':'#8a8a8a' };
+  const list = filtered.map(([t, r, cat, d]) => `<div class="glossary-item">
+    <div class="glossary-head">
+      <span class="glossary-term">${escapeHtml(t)}</span>
+      <span class="glossary-cat" style="background:${cats[cat]||'#888'}22;color:${cats[cat]||'#888'}">${cat}</span>
+    </div>
+    <div class="glossary-reading">${escapeHtml(r)}</div>
+    <div class="glossary-desc">${escapeHtml(d)}</div>
+  </div>`).join('');
+  return `<div class="glossary-search-wrap">
+    <input class="glossary-search" placeholder="用語・読み仮名・カテゴリで検索" value="${escapeHtml(q)}" oninput="glossarySearch=this.value;glossaryLive()">
+    <span class="glossary-count">${filtered.length} 件</span>
+  </div>
+  <div id="glossary-list-inner" class="glossary-list">${list || '<div class="glossary-empty">該当なし</div>'}</div>`;
+}
+function glossaryLive() {
+  // 検索の即時反映（再描画は入力欄以下のみ）
+  const q = (glossarySearch || '').trim().toLowerCase();
+  const filtered = GLOSSARY.filter(([t, r, cat, d]) =>
+    !q || t.toLowerCase().includes(q) || r.includes(q) || d.toLowerCase().includes(q) || cat.includes(q)
+  ).sort((a, b) => a[1].localeCompare(b[1], 'ja'));
+  const cats = { '基礎':'#4f6d7a', 'テクニカル':'#a76b80', 'ファンダメンタル':'#a4884f', '市場':'#5c8a68', '売買':'#8a7a5c', '税金':'#7a6a94', '戦略':'#6b8c8a', 'マクロ':'#94795c', 'その他':'#8a8a8a' };
+  const list = filtered.map(([t, r, cat, d]) => `<div class="glossary-item">
+    <div class="glossary-head">
+      <span class="glossary-term">${escapeHtml(t)}</span>
+      <span class="glossary-cat" style="background:${cats[cat]||'#888'}22;color:${cats[cat]||'#888'}">${cat}</span>
+    </div>
+    <div class="glossary-reading">${escapeHtml(r)}</div>
+    <div class="glossary-desc">${escapeHtml(d)}</div>
+  </div>`).join('');
+  const el = document.getElementById('glossary-list-inner');
+  if (el) el.innerHTML = list || '<div class="glossary-empty">該当なし</div>';
+  const cnt = document.querySelector('.glossary-count');
+  if (cnt) cnt.textContent = filtered.length + ' 件';
+}
+function renderPatterns() {
+  const list = CHART_PATTERNS.map(p => `<div class="pattern-item">
+    <div class="pattern-svg-wrap">
+      <svg viewBox="0 0 240 80" preserveAspectRatio="none">${p.svg}</svg>
+    </div>
+    <div class="pattern-info">
+      <div class="pattern-name">${escapeHtml(p.name)}</div>
+      <div class="pattern-signal">${escapeHtml(p.signal)}</div>
+      <div class="pattern-desc">${escapeHtml(p.desc)}</div>
+    </div>
+  </div>`).join('');
+  return `<div class="pattern-list">${list}</div>`;
+}
+
 // 入力用：月表示で日記をリスト表示
 // 「N年前の今日」メモリーカード：過去の同じ月日から日記/写真があれば表示
 function renderMemoryCard() {
@@ -6832,6 +7172,7 @@ function renderStockTipCard() {
     <div class="stock-tip-lbl">📚 今日の株用語</div>
     <div class="stock-tip-term">${escapeHtml(term)}</div>
     <div class="stock-tip-desc">${escapeHtml(desc)}</div>
+    <button class="stock-tip-more" onclick="openLearn()">📖 株を学ぶ (講座 / 辞典 / 図鑑)</button>
   </div>`;
 }
 
