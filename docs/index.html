@@ -777,6 +777,78 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .lightbox img { max-width:96vw; max-height:90vh; border-radius:8px; object-fit:contain; }
 /* ── 日記タブ ── */
 #diary-list { overflow-y:auto; width:100%; }
+
+/* ── ダッシュボード ── */
+#dash-content { display:flex; flex-direction:column; gap:10px; }
+.dash-card { background:var(--card); border-radius:14px; padding:13px 16px; box-shadow:var(--shadow-sm); }
+.dash-label { font-size:10px; font-weight:700; color:var(--text-soft); letter-spacing:2.5px; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.dash-today-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.dash-pt { border-radius:10px; padding:10px 11px; }
+.dash-pt.mine { background:var(--mine-bg); border:1.5px solid var(--mine-border); }
+.dash-pt.hers { background:var(--hers-bg); border:1.5px solid var(--hers-border); }
+.dash-pt-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+.dash-pt-name { font-size:13px; font-weight:700; letter-spacing:1px; }
+.dash-pt-name.mine { color:var(--mine); }
+.dash-pt-name.hers { color:var(--hers); }
+.dash-pt-wx { font-size:12px; color:var(--text-soft); }
+.dash-pt-shift { font-size:17px; font-weight:700; line-height:1.15; }
+.dash-pt-shift.off { color:var(--text-soft); }
+.dash-pt-shift .end { font-size:14px; color:var(--text-soft); }
+.dash-events { margin-top:8px; padding:6px 4px 0; font-size:13px; color:var(--text-soft); border-top:1px dashed var(--line-soft); }
+.dash-events b { color:var(--text); font-weight:600; }
+
+.dash-tomorrow { background:linear-gradient(135deg, var(--gold-bg), #f7eecf); border:1.5px solid var(--gold-border); }
+.dash-tomorrow .dash-label { color:#8a6f43; }
+.dash-tom-hero { font-size:20px; font-weight:700; color:var(--gold); letter-spacing:1px; }
+.dash-tom-hero .em { font-size:24px; margin-right:4px; }
+.dash-tom-row { display:flex; gap:14px; font-size:13px; margin-top:5px; color:var(--text); flex-wrap:wrap; }
+.dash-tom-row div { display:flex; gap:4px; align-items:center; }
+.dash-tom-plan { font-size:13px; color:var(--text); padding:6px 0 0; }
+.dash-tom-plan b { color:var(--gold); }
+
+.dash-bo { display:flex; align-items:baseline; justify-content:space-between; }
+.dash-bo-count { font-size:26px; font-weight:800; color:var(--gold); letter-spacing:1px; }
+.dash-bo-count small { font-size:12px; font-weight:600; color:var(--text-soft); margin-left:3px; }
+.dash-bo-sub { font-size:12px; color:var(--text-soft); text-align:right; line-height:1.6; }
+.dash-bo-sub b { color:var(--text); font-weight:700; }
+
+.dash-duo { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.dash-pf-val, .dash-exp-val { font-size:20px; font-weight:800; }
+.dash-pf-chg { font-size:12px; font-weight:700; margin-top:2px; }
+.dash-pf-chg.up { color:var(--up, #c0392b); }
+.dash-pf-chg.down { color:var(--down, #2e6da4); }
+.dash-pf-extra { font-size:11px; color:var(--gold); background:var(--gold-bg); padding:3px 7px; border-radius:6px; display:inline-block; margin-top:6px; font-weight:600; }
+.dash-exp-vs { font-size:11px; margin-top:2px; font-weight:600; }
+.dash-exp-vs.up { color:#c0392b; }
+.dash-exp-vs.down { color:#6e8b6a; }
+
+.dash-streak-row { display:flex; justify-content:space-between; align-items:center; }
+.dash-streak-hot { font-size:18px; font-weight:800; color:var(--text); }
+.dash-streak-hot .fire { font-size:20px; margin-right:2px; }
+.dash-streak-month { font-size:12px; color:var(--text-soft); }
+.dash-streak-month b { color:var(--text); font-weight:700; }
+
+.dash-mem { background:linear-gradient(90deg, #f5efe0, #ede4cd); border:1.5px solid var(--gold-border); display:flex; align-items:center; gap:10px; cursor:pointer; }
+.dash-mem .m-em { font-size:22px; }
+.dash-mem-body { font-size:12px; flex:1; line-height:1.5; }
+.dash-mem-body b { color:#8a6f43; font-weight:700; font-size:11px; letter-spacing:1px; }
+.dash-mem-body .m-preview { color:var(--text); display:block; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+.dash-mem-body small { color:var(--text-soft); font-size:10px; }
+.dash-mem-arrow { color:var(--text-soft); font-size:18px; }
+
+.dash-alerts-list { display:flex; flex-direction:column; gap:8px; }
+.dash-alert { display:flex; align-items:flex-start; gap:8px; padding:8px 10px; border-radius:8px; background:#f6efdb; border-left:3px solid var(--gold); font-size:13px; }
+.dash-alert.up { border-left-color:#c0392b; background:#fbe9e5; }
+.dash-alert .a-em { font-size:14px; }
+.dash-alert b { font-weight:700; }
+.dash-alert small { display:block; color:var(--text-soft); margin-top:2px; font-size:11px; }
+.dash-empty { font-size:12px; color:var(--text-soft); text-align:center; padding:6px 0; }
+
+/* ダーク系テーマ調整 */
+:root[data-theme="night"] .dash-mem, :root[data-theme="deepsea"] .dash-mem, :root[data-theme="forestnight"] .dash-mem, :root[data-theme="midnight"] .dash-mem, :root[data-theme="charcoal"] .dash-mem { background:linear-gradient(90deg, #2e2820, #221d15); border-color:#5c4d2e; }
+:root[data-theme="night"] .dash-mem-body b, :root[data-theme="deepsea"] .dash-mem-body b, :root[data-theme="forestnight"] .dash-mem-body b, :root[data-theme="midnight"] .dash-mem-body b, :root[data-theme="charcoal"] .dash-mem-body b { color:#d4b876; }
+:root[data-theme="night"] .dash-alert, :root[data-theme="deepsea"] .dash-alert, :root[data-theme="forestnight"] .dash-alert, :root[data-theme="midnight"] .dash-alert, :root[data-theme="charcoal"] .dash-alert { background:#38301e; }
+:root[data-theme="night"] .dash-tomorrow, :root[data-theme="deepsea"] .dash-tomorrow, :root[data-theme="forestnight"] .dash-tomorrow, :root[data-theme="midnight"] .dash-tomorrow, :root[data-theme="charcoal"] .dash-tomorrow { background:linear-gradient(135deg, #3a3220, #2e2618); border-color:#5c4d2e; }
 /* ── 1年前の今日 メモリーカード ── */
 #memory-card { margin-bottom:14px; }
 .memory-card { background:linear-gradient(180deg, #f5efe0 0%, #ede4cd 100%); border:1.5px solid #d6c39c; border-radius:16px; padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow-sm); position:relative; }
@@ -1631,6 +1703,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 <div id="app">
   <div class="app-content">
 
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="screen">
+      <div class="page-top">
+        <div><div class="page-title">ダッシュボード</div><div class="page-sub" id="dash-date">—</div></div>
+      </div>
+      <div id="dash-content"></div>
+    </div>
+
     <!-- CALENDAR -->
     <div id="tab-calendar" class="screen active">
       <div class="page-top">
@@ -2175,6 +2255,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
   </div>
 
   <nav class="bottom-nav">
+    <button class="nav-btn" id="nav-dashboard" onclick="showTab('dashboard')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      ダッシュ
+    </button>
     <button class="nav-btn" id="nav-memo" onclick="showTab('memo')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       メモ
@@ -2876,27 +2960,28 @@ function resetEmotion(pickerId) {
 }
 
 // ── 買い増しゾーン ──
+let buyZonesData = [];
 async function loadBuyZones() {
   const card = document.getElementById('buyzones-card');
   const list = document.getElementById('bz-list');
-  if (!card || !list) return;
   try {
     const r = await fetch(API_BASE+'/api/buy-zones');
     const d = await r.json();
-    const zones = d?.zones || [];
-    if (!zones.length) { card.style.display = 'none'; return; }
-    card.style.display = 'block';
-    list.innerHTML = zones.map(z => {
-      const who = NAMES[z.person] || '';
-      const nm = z.name || z.ticker;
-      const sym = z.ticker.endsWith('.T') ? '¥' : '$';
-      return `<div class="bz-item ${z.zone}">
-        <div class="bz-item-title">${escapeHtml(nm)} <span style="color:var(--text-soft);font-size:12px;font-weight:500">${escapeHtml(z.ticker)} · ${who}</span></div>
-        <div class="bz-item-reason">${escapeHtml(z.reason)}</div>
-        <div class="bz-item-meta">現在 ${sym}${z.price.toLocaleString()} / MA13 ${sym}${z.ma13.toLocaleString()} (${z.diffFromMa13Pct>=0?'+':''}${z.diffFromMa13Pct}%) / RSI ${z.rsi}</div>
-      </div>`;
-    }).join('');
-  } catch { card.style.display = 'none'; }
+    buyZonesData = d?.zones || [];
+  } catch { buyZonesData = []; }
+  if (!card || !list) return;
+  if (!buyZonesData.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  list.innerHTML = buyZonesData.map(z => {
+    const who = NAMES[z.person] || '';
+    const nm = z.name || z.ticker;
+    const sym = z.ticker.endsWith('.T') ? '¥' : '$';
+    return `<div class="bz-item ${z.zone}">
+      <div class="bz-item-title">${escapeHtml(nm)} <span style="color:var(--text-soft);font-size:12px;font-weight:500">${escapeHtml(z.ticker)} · ${who}</span></div>
+      <div class="bz-item-reason">${escapeHtml(z.reason)}</div>
+      <div class="bz-item-meta">現在 ${sym}${z.price.toLocaleString()} / MA13 ${sym}${z.ma13.toLocaleString()} (${z.diffFromMa13Pct>=0?'+':''}${z.diffFromMa13Pct}%) / RSI ${z.rsi}</div>
+    </div>`;
+  }).join('');
 }
 
 // ── 年末損益レポート ──
@@ -3638,10 +3723,11 @@ enterApp();
 
 // ── TABS ──
 function showTab(name) {
-  ['calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
+  ['dashboard','calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
+  if (name === 'dashboard') { renderDashboard(); window.scrollTo(0,0); return; }
   if (name === 'calendar') { setTimeout(scrollToToday, 50); return; }
   if (name === 'holdings') { loadNikkei(); loadHoldings(); window.scrollTo(0,0); return; }
   if (name === 'gridcal') {
@@ -4413,6 +4499,10 @@ function weatherCat(code) {
   if (code>=95) return 'thunder';
   if ((code>=51 && code<=67) || (code>=80 && code<=82)) return 'rain';
   return 'cloud';
+}
+function weatherEmoji(code) {
+  const cat = weatherCat(code);
+  return ({ sun: '☀', cloud: '☁', rain: '☂', snow: '❄', thunder: '⚡' })[cat] || '☀';
 }
 function weatherIcon(code, precip) {
   const cat = weatherCat(code);
@@ -6298,6 +6388,252 @@ function renderMemoryCard() {
     </div>`;
   }).join('');
   el.innerHTML = html;
+}
+
+// ── ダッシュボード ──
+function shiftLine(s) {
+  if (!s) return { txt: '未登録', off: true };
+  if (s.shift_type === 'work') return { txt: `${s.start_time||'—'} 〜 ${s.end_time||'—'}`, off: false };
+  return { txt: s.label || '休み', off: true };
+}
+function dashDayEvents(key) {
+  const evs = (eventsByDate?.[key] || []).map(e => ({ title: e.title, time: e.time }));
+  const gevs = (typeof gcalByDate !== 'undefined' ? gcalByDate[key] : []) || [];
+  gevs.forEach(g => evs.push({ title: g.title, time: g.time }));
+  return evs;
+}
+function findNextBothOff() {
+  // 明日から60日先まで探索
+  const start = new Date();
+  for (let i = 1; i <= 60; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const sd = shiftsByDate[k];
+    if (sd?.mine?.shift_type === 'off' && sd?.hers?.shift_type === 'off') return { key: k, daysAhead: i };
+  }
+  return null;
+}
+function countBothOffInMonth(year, month) {
+  let n = 0;
+  const dim = new Date(year, month, 0).getDate();
+  const todayNum = new Date();
+  const tYear = todayNum.getFullYear(), tMonth = todayNum.getMonth()+1, tDay = todayNum.getDate();
+  for (let d = 1; d <= dim; d++) {
+    if (year === tYear && month === tMonth && d < tDay) continue;
+    const k = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const sd = shiftsByDate[k];
+    if (sd?.mine?.shift_type === 'off' && sd?.hers?.shift_type === 'off') n++;
+  }
+  return n;
+}
+function diaryStreak() {
+  const today = new Date();
+  let streak = 0;
+  for (let i = 0; i < 60; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const e = allDiaries[k];
+    const has = e && (e.mine?.raw || e.hers?.raw);
+    if (has) streak++;
+    else if (i === 0) continue; // 今日未入力は許容
+    else break;
+  }
+  return streak;
+}
+function diaryCountThisMonth() {
+  const now = new Date();
+  const prefix = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-`;
+  let n = 0;
+  for (const k of Object.keys(allDiaries)) {
+    if (!k.startsWith(prefix)) continue;
+    const e = allDiaries[k];
+    if (e?.mine?.raw || e?.hers?.raw) n++;
+  }
+  return n;
+}
+function monthlyExpenseTotal(year, month) {
+  return (allExpenses || []).filter(e => e.year === year && e.month === month).reduce((s, e) => s + (Number(e.amount) || 0), 0);
+}
+function portfolioSnapshot() {
+  let jpy = 0, chg = 0;
+  for (const h of (holdings || [])) {
+    const q = quotes[h.ticker];
+    if (!q?.price) continue;
+    const fx = (q.currency === 'USD') ? (pnlUsdjpy || 157) : 1;
+    jpy += q.price * h.shares * fx;
+    if (q.change != null) chg += q.change * h.shares * fx;
+  }
+  return { total: Math.round(jpy), change: Math.round(chg) };
+}
+function upcomingEarnings() {
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const limit = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
+  const limitKey = `${limit.getFullYear()}-${String(limit.getMonth()+1).padStart(2,'0')}-${String(limit.getDate()).padStart(2,'0')}`;
+  return (holdings || []).filter(h => h.earningsDate && h.earningsDate >= todayKey && h.earningsDate <= limitKey)
+    .sort((a, b) => a.earningsDate.localeCompare(b.earningsDate));
+}
+function targetPriceAlerts() {
+  const list = [];
+  for (const h of (holdings || [])) {
+    const q = quotes[h.ticker];
+    if (!q?.price) continue;
+    if (h.takeProfit && h.takeProfit > 0 && q.price >= h.takeProfit) list.push({ h, kind: 'tp' });
+    else if (h.stopLoss && h.stopLoss > 0 && q.price <= h.stopLoss) list.push({ h, kind: 'sl' });
+  }
+  return list;
+}
+
+function renderDashboard() {
+  const content = document.getElementById('dash-content');
+  const dateEl = document.getElementById('dash-date');
+  if (!content) return;
+  const DOWS = ['日','月','火','水','木','金','土'];
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const tom = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const tomKey = `${tom.getFullYear()}-${String(tom.getMonth()+1).padStart(2,'0')}-${String(tom.getDate()).padStart(2,'0')}`;
+  if (dateEl) dateEl.textContent = `${now.getMonth()+1}月${now.getDate()}日 (${DOWS[now.getDay()]})`;
+
+  const parts = [];
+
+  // 今日
+  const sdT = shiftsByDate[todayKey] || {};
+  const wxTMine = weather?.mine?.[todayKey], wxTHers = weather?.hers?.[todayKey];
+  const mineShift = shiftLine(sdT.mine);
+  const hersShift = shiftLine(sdT.hers);
+  const todayEvs = dashDayEvents(todayKey);
+  parts.push(`<div class="dash-card">
+    <div class="dash-label">📆 TODAY</div>
+    <div class="dash-today-grid">
+      <div class="dash-pt mine">
+        <div class="dash-pt-head"><div class="dash-pt-name mine">ひろ</div><div class="dash-pt-wx">${wxTMine ? `${weatherEmoji(wxTMine.code)} ${Math.round(wxTMine.tmax||0)}°` : ''}</div></div>
+        <div class="dash-pt-shift ${mineShift.off ? 'off' : ''}">${escapeHtml(mineShift.txt)}</div>
+      </div>
+      <div class="dash-pt hers">
+        <div class="dash-pt-head"><div class="dash-pt-name hers">ちか</div><div class="dash-pt-wx">${wxTHers ? `${weatherEmoji(wxTHers.code)} ${Math.round(wxTHers.tmax||0)}°` : ''}</div></div>
+        <div class="dash-pt-shift ${hersShift.off ? 'off' : ''}">${escapeHtml(hersShift.txt)}</div>
+      </div>
+    </div>
+    ${todayEvs.length ? `<div class="dash-events">今日の予定: <b>${todayEvs.map(e => escapeHtml((e.time?e.time+' ':'')+e.title)).join(' / ')}</b></div>` : ''}
+  </div>`);
+
+  // 明日
+  const sdM = shiftsByDate[tomKey] || {};
+  const wxMMine = weather?.mine?.[tomKey], wxMHers = weather?.hers?.[tomKey];
+  const tomBothOff = sdM.mine?.shift_type === 'off' && sdM.hers?.shift_type === 'off';
+  const tomEvs = dashDayEvents(tomKey);
+  const tomHero = tomBothOff ? '<span class="em">🎉</span>ふたり休み' : (sdM.mine || sdM.hers ? '明日の予定' : 'まだ登録なし');
+  const tomShiftLine = (sdM.mine || sdM.hers)
+    ? `<div class="dash-tom-row"><div>ひろ ${escapeHtml(shiftLine(sdM.mine).txt)}</div><div>ちか ${escapeHtml(shiftLine(sdM.hers).txt)}</div></div>`
+    : '';
+  const tomWx = wxMMine ? `<div class="dash-tom-row"><div>${weatherEmoji(wxMMine.code)} 最高${Math.round(wxMMine.tmax||0)}°</div></div>` : '';
+  parts.push(`<div class="dash-card dash-tomorrow">
+    <div class="dash-label">🌤️ TOMORROW · ${tom.getMonth()+1}/${tom.getDate()}(${DOWS[tom.getDay()]})</div>
+    <div class="dash-tom-hero">${tomHero}</div>
+    ${tomWx}
+    ${tomShiftLine}
+    ${tomEvs.length ? `<div class="dash-tom-plan">予定: <b>${tomEvs.map(e => escapeHtml((e.time?e.time+' ':'')+e.title)).join(' / ')}</b></div>` : ''}
+  </div>`);
+
+  // ふたり休みカウントダウン
+  const nextBO = findNextBothOff();
+  const boThisMonth = countBothOffInMonth(now.getFullYear(), now.getMonth()+1);
+  if (nextBO) {
+    const boDate = parseKey(nextBO.key);
+    parts.push(`<div class="dash-card dash-bo">
+      <div>
+        <div class="dash-label">🎯 次のふたり休み</div>
+        <div class="dash-bo-count">あと ${nextBO.daysAhead}<small>日</small></div>
+      </div>
+      <div class="dash-bo-sub">${boDate.month}/${boDate.day} (${DOWS[new Date(boDate.year, boDate.month-1, boDate.day).getDay()]})<br>今月あと <b>${boThisMonth}</b> 日</div>
+    </div>`);
+  }
+
+  // 株 + 家計 (2列)
+  const pfSnap = portfolioSnapshot();
+  const bzCount = (buyZonesData || []).length;
+  const thisMonthExp = monthlyExpenseTotal(now.getFullYear(), now.getMonth()+1);
+  const prevMonthDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  const prevMonthExp = monthlyExpenseTotal(prevMonthDate.getFullYear(), prevMonthDate.getMonth()+1);
+  const expDiffPct = prevMonthExp ? Math.round((thisMonthExp - prevMonthExp) / prevMonthExp * 100) : null;
+  const chgSign = pfSnap.change >= 0 ? '▲ +' : '▼ ';
+  const chgCls = pfSnap.change >= 0 ? 'up' : 'down';
+  parts.push(`<div class="dash-duo">
+    <div class="dash-card">
+      <div class="dash-label">📈 PORTFOLIO</div>
+      <div class="dash-pf-val">¥${pfSnap.total.toLocaleString()}</div>
+      <div class="dash-pf-chg ${chgCls}">${chgSign}¥${Math.abs(pfSnap.change).toLocaleString()}</div>
+      ${bzCount ? `<div class="dash-pf-extra">🎯 買増ゾーン ${bzCount}件</div>` : ''}
+    </div>
+    <div class="dash-card">
+      <div class="dash-label">💳 THIS MONTH</div>
+      <div class="dash-exp-val">¥${thisMonthExp.toLocaleString()}</div>
+      ${expDiffPct !== null ? `<div class="dash-exp-vs ${expDiffPct > 0 ? 'up' : 'down'}">先月比 ${expDiffPct >= 0 ? '+' : ''}${expDiffPct}%</div>` : `<div class="dash-exp-vs">—</div>`}
+    </div>
+  </div>`);
+
+  // 日記
+  const streak = diaryStreak();
+  const monthCount = diaryCountThisMonth();
+  parts.push(`<div class="dash-card">
+    <div class="dash-label">📓 DIARY</div>
+    <div class="dash-streak-row">
+      <div class="dash-streak-hot"><span class="fire">🔥</span>${streak}日連続</div>
+      <div class="dash-streak-month">今月 <b>${monthCount}</b> 日書いた</div>
+    </div>
+  </div>`);
+
+  // 1年前の今日（コンパクト）
+  const mo = String(now.getMonth()+1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const memoryYear = now.getFullYear() - 1;
+  const memoryKey = `${memoryYear}-${mo}-${dd}`;
+  const memDiary = allDiaries[memoryKey];
+  const memPhotos = dayPhotos[memoryKey] || [];
+  if ((memDiary?.mine?.raw || memDiary?.hers?.raw) || memPhotos.length) {
+    let preview = memDiary?.hers?.raw || memDiary?.mine?.raw || '';
+    if (preview.length > 40) preview = preview.slice(0, 40) + '…';
+    const info = [];
+    if (memDiary?.hers?.raw || memDiary?.mine?.raw) info.push('日記');
+    if (memPhotos.length) info.push(`写真${memPhotos.length}枚`);
+    parts.push(`<div class="dash-card dash-mem" onclick="showTab('diary')">
+      <div class="m-em">🕰️</div>
+      <div class="dash-mem-body">
+        <b>1年前の今日</b> <small>${info.join(' · ')}</small>
+        <span class="m-preview">${escapeHtml(preview) || '（写真のみ）'}</span>
+      </div>
+      <div class="dash-mem-arrow">›</div>
+    </div>`);
+  }
+
+  // アラート
+  const alerts = [];
+  for (const a of targetPriceAlerts()) {
+    const nm = stockName(a.h);
+    const q = quotes[a.h.ticker];
+    const sym = a.h.ticker.endsWith('.T') ? '¥' : '$';
+    const line = a.kind === 'tp'
+      ? `<b>${escapeHtml(nm)}</b> 利確ライン ${sym}${Math.round(a.h.takeProfit).toLocaleString()} に到達<small>現在 ${sym}${Math.round(q.price).toLocaleString()}</small>`
+      : `<b>${escapeHtml(nm)}</b> 損切ライン ${sym}${Math.round(a.h.stopLoss).toLocaleString()} に到達<small>現在 ${sym}${Math.round(q.price).toLocaleString()}</small>`;
+    alerts.push(`<div class="dash-alert up"><div class="a-em">🎯</div><div>${line}</div></div>`);
+  }
+  for (const h of upcomingEarnings().slice(0, 3)) {
+    const nm = stockName(h);
+    const [ey, em, ed] = h.earningsDate.split('-');
+    const who = NAMES[h.person] || '';
+    alerts.push(`<div class="dash-alert"><div class="a-em">📊</div><div><b>${em}/${ed}</b> ${escapeHtml(nm)} 決算発表<small>${who} 保有銘柄</small></div></div>`);
+  }
+  for (const z of (buyZonesData || []).slice(0, 3)) {
+    const sym = z.ticker.endsWith('.T') ? '¥' : '$';
+    alerts.push(`<div class="dash-alert"><div class="a-em">💡</div><div><b>${escapeHtml(z.name || z.ticker)}</b> ${escapeHtml(z.reason)}<small>MA13 ${sym}${z.ma13.toLocaleString()} · RSI ${z.rsi}</small></div></div>`);
+  }
+  parts.push(`<div class="dash-card">
+    <div class="dash-label">🔔 ALERTS</div>
+    ${alerts.length ? `<div class="dash-alerts-list">${alerts.join('')}</div>` : `<div class="dash-empty">現在アラートなし</div>`}
+  </div>`);
+
+  content.innerHTML = parts.join('');
 }
 
 function renderDiary() {
