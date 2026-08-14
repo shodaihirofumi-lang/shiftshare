@@ -156,8 +156,10 @@
 
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 /* iOS Safari が狭い列(カレンダー等)の文字を勝手に拡大するのを防ぐ */
-html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
-body { font-family:'Hiragino Mincho ProN','Hiragino Sans','Yu Gothic',serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+html { -webkit-text-size-adjust:100%; text-size-adjust:100%; overflow-x:hidden; overscroll-behavior-x:none; }
+body { font-family:'Hiragino Mincho ProN','Hiragino Sans','Yu Gothic',serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-text-size-adjust:100%; text-size-adjust:100%; overflow-x:hidden; overscroll-behavior-x:none; }
+/* 縦スクロール専用エリアで横方向の余計なドラッグ挙動を禁止（本の横スクロールなど個別要素は独自にtouch-action指定してあるので影響なし） */
+.app-content { touch-action:pan-y; }
 body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 .screen { display:none; }
