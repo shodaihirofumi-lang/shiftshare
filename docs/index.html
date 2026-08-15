@@ -1309,58 +1309,58 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-pages.ref-combo { flex:1; overflow-x:auto; overflow-y:hidden; display:flex; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; overscroll-behavior:contain; touch-action:pan-x; }
 .book-pages.ref-combo::-webkit-scrollbar { display:none; }
 .book-pages.ref-combo { scrollbar-width:none; }
-.book-pages.ref-combo .r4-page { flex:0 0 100vw; width:100vw; max-width:100vw; height:100%; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; padding:34px 32px 50px; background:linear-gradient(180deg,#f8f4e6,#efe6cf); font-family:'Hiragino Sans','Yu Gothic',sans-serif; color:#2c1e10; box-shadow:inset -3px 0 8px -6px rgba(120,80,40,.18); box-sizing:border-box; position:relative; }
-.book-pages.ref-combo .r4-page::before { content:''; position:absolute; top:0; bottom:0; left:0; width:1px; background:linear-gradient(180deg, transparent, rgba(120,80,40,.15) 30%, rgba(120,80,40,.15) 70%, transparent); pointer-events:none; }
-.book-pages.ref-combo .r4-pagenum { position:absolute; bottom:14px; right:22px; font-size:13px; color:#2a5a3f; letter-spacing:2px; font-weight:600; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-page { flex:0 0 100vw; width:100vw; max-width:100vw; height:100%; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; padding:34px 32px 50px; background:linear-gradient(180deg,#f8f4e6,#efe6cf); font-family:'Hiragino Sans','Yu Gothic',sans-serif; color:#2c1e10; box-shadow:inset -3px 0 8px -6px rgba(120,80,40,.18); box-sizing:border-box; position:relative; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-page::before { content:''; position:absolute; top:0; bottom:0; left:0; width:1px; background:linear-gradient(180deg, transparent, rgba(120,80,40,.15) 30%, rgba(120,80,40,.15) 70%, transparent); pointer-events:none; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-pagenum { position:absolute; bottom:14px; right:22px; font-size:13px; color:#2a5a3f; letter-spacing:2px; font-weight:600; }
 
-.book-pages.ref-combo .r4-cover { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; }
-.book-pages.ref-combo .r4-cover h1 { font-size:36px; font-weight:800; letter-spacing:5px; color:#1e3a2e; margin-bottom:14px; }
-.book-pages.ref-combo .r4-cover-sub { font-size:22px; font-weight:600; color:#3f6b52; letter-spacing:3px; margin-bottom:24px; }
-.book-pages.ref-combo .r4-cover-tag { font-size:16px; color:#3f6b52; letter-spacing:3px; margin-bottom:40px; }
-.book-pages.ref-combo .r4-cover-border { width:60%; height:2px; background:#3f6b52; margin:0 auto 20px; }
-.book-pages.ref-combo .r4-cover-vol { font-size:16px; color:#3f6b52; letter-spacing:8px; font-weight:700; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-cover { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-cover h1 { font-size:36px; font-weight:800; letter-spacing:5px; color:#1e3a2e; margin-bottom:14px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-cover-sub { font-size:22px; font-weight:600; color:#3f6b52; letter-spacing:3px; margin-bottom:24px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-cover-tag { font-size:16px; color:#3f6b52; letter-spacing:3px; margin-bottom:40px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-cover-border { width:60%; height:2px; background:#3f6b52; margin:0 auto 20px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-cover-vol { font-size:16px; color:#3f6b52; letter-spacing:8px; font-weight:700; }
 
-.book-pages.ref-combo .r4-part { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; background:linear-gradient(180deg,#e6ddc0,#d8ccae); }
-.book-pages.ref-combo .r4-part-num { font-size:16px; color:#3f6b52; letter-spacing:8px; font-weight:700; margin-bottom:14px; }
-.book-pages.ref-combo .r4-part-title { font-size:30px; font-weight:800; color:#1e3a2e; letter-spacing:5px; margin-bottom:18px; }
-.book-pages.ref-combo .r4-part-desc { font-size:16px; color:#3a3020; line-height:2.2; max-width:320px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-part { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; background:linear-gradient(180deg,#e6ddc0,#d8ccae); }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-part-num { font-size:16px; color:#3f6b52; letter-spacing:8px; font-weight:700; margin-bottom:14px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-part-title { font-size:30px; font-weight:800; color:#1e3a2e; letter-spacing:5px; margin-bottom:18px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-part-desc { font-size:16px; color:#3a3020; line-height:2.2; max-width:320px; }
 
-.book-pages.ref-combo .r4-foreword h2, .book-pages.ref-combo .r4-toc h2 { font-size:24px; font-weight:800; color:#1e3a2e; margin-bottom:18px; letter-spacing:4px; border-bottom:2px solid #3f6b52; padding-bottom:10px; }
-.book-pages.ref-combo .r4-foreword p { font-size:17px; line-height:2.2; margin-bottom:14px; color:#2c1e10; }
-.book-pages.ref-combo .r4-toc-list { display:flex; flex-direction:column; gap:8px; }
-.book-pages.ref-combo .r4-toc-item { display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; border-bottom:1px dotted #8ba690; font-size:15px; }
-.book-pages.ref-combo .r4-toc-item span:first-child { flex-shrink:0; color:#3f6b52; font-weight:700; margin-right:8px; font-size:13px; min-width:40px; }
-.book-pages.ref-combo .r4-toc-item span:nth-child(2) { flex:1; color:#2c1e10; }
-.book-pages.ref-combo .r4-toc-item span:last-child { color:#3f6b52; font-weight:600; font-size:13px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-foreword h2, :where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-toc h2 { font-size:24px; font-weight:800; color:#1e3a2e; margin-bottom:18px; letter-spacing:4px; border-bottom:2px solid #3f6b52; padding-bottom:10px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-foreword p { font-size:17px; line-height:2.2; margin-bottom:14px; color:#2c1e10; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-toc-list { display:flex; flex-direction:column; gap:8px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-toc-item { display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; border-bottom:1px dotted #8ba690; font-size:15px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-toc-item span:first-child { flex-shrink:0; color:#3f6b52; font-weight:700; margin-right:8px; font-size:13px; min-width:40px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-toc-item span:nth-child(2) { flex:1; color:#2c1e10; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-toc-item span:last-child { color:#3f6b52; font-weight:600; font-size:13px; }
 
-.book-pages.ref-combo .r4-chap-header { padding:8px 0 14px; border-bottom:2px double #3f6b52; margin-bottom:18px; }
-.book-pages.ref-combo .r4-chap-num { font-size:13px; color:#3f6b52; letter-spacing:4px; font-weight:700; margin-bottom:5px; }
-.book-pages.ref-combo .r4-chap-title { font-size:24px; font-weight:800; color:#1e3a2e; letter-spacing:2px; line-height:1.4; }
-.book-pages.ref-combo .r4-lead { font-size:16px; color:#2c1e10; line-height:2.0; margin-bottom:18px; padding:12px 14px; background:#eae0c4; border-left:4px solid #3f6b52; border-radius:0 5px 5px 0; }
-.book-pages.ref-combo .r4-section-title { font-size:17px; font-weight:800; color:#1e3a2e; margin:14px 0 8px; padding:4px 10px; background:#dfd4b0; border-radius:4px; letter-spacing:1px; }
-.book-pages.ref-combo .r4-body { font-size:16px; line-height:2.1; color:#2c1e10; }
-.book-pages.ref-combo .r4-body p { margin-bottom:10px; }
-.book-pages.ref-combo .r4-body b { font-weight:700; color:#1e3a2e; }
-.book-pages.ref-combo .r4-body ul, .book-pages.ref-combo .r4-body ol { padding-left:24px; margin-bottom:10px; }
-.book-pages.ref-combo .r4-body li { margin-bottom:6px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-chap-header { padding:8px 0 14px; border-bottom:2px double #3f6b52; margin-bottom:18px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-chap-num { font-size:13px; color:#3f6b52; letter-spacing:4px; font-weight:700; margin-bottom:5px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-chap-title { font-size:24px; font-weight:800; color:#1e3a2e; letter-spacing:2px; line-height:1.4; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-lead { font-size:16px; color:#2c1e10; line-height:2.0; margin-bottom:18px; padding:12px 14px; background:#eae0c4; border-left:4px solid #3f6b52; border-radius:0 5px 5px 0; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-section-title { font-size:17px; font-weight:800; color:#1e3a2e; margin:14px 0 8px; padding:4px 10px; background:#dfd4b0; border-radius:4px; letter-spacing:1px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-body { font-size:16px; line-height:2.1; color:#2c1e10; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-body p { margin-bottom:10px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-body b { font-weight:700; color:#1e3a2e; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-body ul, :where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-body ol { padding-left:24px; margin-bottom:10px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-body li { margin-bottom:6px; }
 
-.book-pages.ref-combo .r4-when { background:#e0ecd8; border-left:4px solid #3f6b52; padding:12px 14px; margin:12px 0; border-radius:0 5px 5px 0; }
-.book-pages.ref-combo .r4-when-lbl { font-size:12px; font-weight:700; color:#2a5a3f; letter-spacing:2px; margin-bottom:5px; }
-.book-pages.ref-combo .r4-when-body { font-size:15px; line-height:2.0; color:#1e3a2e; }
-.book-pages.ref-combo .r4-recipe { background:#fff8e0; border:1.5px solid #b09068; border-radius:6px; padding:14px 16px; margin:12px 0; }
-.book-pages.ref-combo .r4-recipe-lbl { font-size:12px; font-weight:700; color:#8a6a2a; letter-spacing:2px; margin-bottom:8px; }
-.book-pages.ref-combo .r4-recipe ol { padding-left:24px; font-size:15px; line-height:1.9; }
-.book-pages.ref-combo .r4-recipe li { margin-bottom:5px; color:#2c1e10; }
-.book-pages.ref-combo .r4-recipe li b { color:#7a4a0a; }
-.book-pages.ref-combo .r4-warn { background:#f3dcd0; border-left:4px solid #a83c28; padding:11px 14px; margin:12px 0; font-size:14px; color:#4a1e10; line-height:1.9; border-radius:0 4px 4px 0; }
-.book-pages.ref-combo .r4-warn b { color:#7a1a08; }
-.book-pages.ref-combo .r4-tip { background:#dfe8d5; border-left:4px solid #3f6b52; padding:11px 14px; margin:12px 0; font-size:14px; color:#1e3a2e; line-height:1.9; border-radius:0 4px 4px 0; }
-.book-pages.ref-combo .r4-tip b { color:#1e3a2e; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-when { background:#e0ecd8; border-left:4px solid #3f6b52; padding:12px 14px; margin:12px 0; border-radius:0 5px 5px 0; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-when-lbl { font-size:12px; font-weight:700; color:#2a5a3f; letter-spacing:2px; margin-bottom:5px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-when-body { font-size:15px; line-height:2.0; color:#1e3a2e; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-recipe { background:#fff8e0; border:1.5px solid #b09068; border-radius:6px; padding:14px 16px; margin:12px 0; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-recipe-lbl { font-size:12px; font-weight:700; color:#8a6a2a; letter-spacing:2px; margin-bottom:8px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-recipe ol { padding-left:24px; font-size:15px; line-height:1.9; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-recipe li { margin-bottom:5px; color:#2c1e10; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-recipe li b { color:#7a4a0a; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-warn { background:#f3dcd0; border-left:4px solid #a83c28; padding:11px 14px; margin:12px 0; font-size:14px; color:#4a1e10; line-height:1.9; border-radius:0 4px 4px 0; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-warn b { color:#7a1a08; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-tip { background:#dfe8d5; border-left:4px solid #3f6b52; padding:11px 14px; margin:12px 0; font-size:14px; color:#1e3a2e; line-height:1.9; border-radius:0 4px 4px 0; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-tip b { color:#1e3a2e; }
 
-.book-pages.ref-combo .r4-end { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; }
-.book-pages.ref-combo .r4-end-title { font-size:22px; font-weight:800; letter-spacing:6px; color:#1e3a2e; margin-bottom:22px; }
-.book-pages.ref-combo .r4-end-body { font-size:16px; line-height:2.3; color:#2c1e10; max-width:340px; }
-.book-pages.ref-combo .r4-end-sig { margin-top:30px; font-size:13px; color:#3f6b52; letter-spacing:3px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-end { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-end-title { font-size:22px; font-weight:800; letter-spacing:6px; color:#1e3a2e; margin-bottom:22px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-end-body { font-size:16px; line-height:2.3; color:#2c1e10; max-width:340px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-end-sig { margin-top:30px; font-size:13px; color:#3f6b52; letter-spacing:3px; }
 
 /* ── 参考書の文字サイズ一段階アップ（全4冊統一） ── */
 
@@ -1433,33 +1433,103 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-pages.ref-fund .r3-end-body { font-size:16px; line-height:2.3; }
 
 /* 第4巻 組み合わせ実戦 (ref-combo / r4-) */
-.book-pages.ref-combo .r4-chap-title { font-size:27px; }
-.book-pages.ref-combo .r4-chap-num { font-size:15px; }
-.book-pages.ref-combo .r4-lead { font-size:18px; line-height:2.1; }
-.book-pages.ref-combo .r4-section-title { font-size:19px; }
-.book-pages.ref-combo .r4-body { font-size:17.5px; line-height:2.15; }
-.book-pages.ref-combo .r4-body li { font-size:17.5px; }
-.book-pages.ref-combo .r4-when-lbl { font-size:13px; }
-.book-pages.ref-combo .r4-when-body { font-size:16.5px; line-height:2.05; }
-.book-pages.ref-combo .r4-recipe-lbl { font-size:14px; }
-.book-pages.ref-combo .r4-recipe ol { font-size:17px; line-height:1.95; }
-.book-pages.ref-combo .r4-warn { font-size:15.5px; line-height:2.0; }
-.book-pages.ref-combo .r4-tip { font-size:15.5px; line-height:2.0; }
-.book-pages.ref-combo .r4-pagenum { font-size:14px; }
-.book-pages.ref-combo .r4-cover h1 { font-size:40px; }
-.book-pages.ref-combo .r4-cover-sub { font-size:24px; }
-.book-pages.ref-combo .r4-cover-tag { font-size:17px; }
-.book-pages.ref-combo .r4-cover-vol { font-size:17px; }
-.book-pages.ref-combo .r4-part-num { font-size:17px; }
-.book-pages.ref-combo .r4-part-title { font-size:32px; }
-.book-pages.ref-combo .r4-part-desc { font-size:17px; line-height:2.3; }
-.book-pages.ref-combo .r4-foreword h2, .book-pages.ref-combo .r4-toc h2 { font-size:26px; }
-.book-pages.ref-combo .r4-foreword p { font-size:18px; line-height:2.3; }
-.book-pages.ref-combo .r4-toc-item { font-size:17px; }
-.book-pages.ref-combo .r4-toc-item span:first-child { font-size:14px; }
-.book-pages.ref-combo .r4-toc-item span:last-child { font-size:14px; }
-.book-pages.ref-combo .r4-end-title { font-size:24px; }
-.book-pages.ref-combo .r4-end-body { font-size:17.5px; line-height:2.4; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-chap-title { font-size:27px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-chap-num { font-size:15px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-lead { font-size:18px; line-height:2.1; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-section-title { font-size:19px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-body { font-size:17.5px; line-height:2.15; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-body li { font-size:17.5px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-when-lbl { font-size:13px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-when-body { font-size:16.5px; line-height:2.05; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-recipe-lbl { font-size:14px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-recipe ol { font-size:17px; line-height:1.95; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-warn { font-size:15.5px; line-height:2.0; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-tip { font-size:15.5px; line-height:2.0; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-pagenum { font-size:14px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-cover h1 { font-size:40px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-cover-sub { font-size:24px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-cover-tag { font-size:17px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-cover-vol { font-size:17px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-part-num { font-size:17px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-part-title { font-size:32px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-part-desc { font-size:17px; line-height:2.3; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-foreword h2, :where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-toc h2 { font-size:26px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-foreword p { font-size:18px; line-height:2.3; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-toc-item { font-size:17px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-toc-item span:first-child { font-size:14px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-toc-item span:last-child { font-size:14px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-end-title { font-size:24px; }
+:where(.book-pages.ref-combo, .book-pages.ref-picks) .r4-end-body { font-size:17.5px; line-height:2.4; }
+
+/* ── 参考書1-3巻の文字をもう一段大きく（ユーザー要望） ── */
+.book-pages.ref-chart .ref-chap-title { font-size:28px; }
+.book-pages.ref-chart .ref-chap-num { font-size:15px; }
+.book-pages.ref-chart .ref-chap-lead { font-size:17.5px; line-height:2.1; }
+.book-pages.ref-chart .ref-body { font-size:16.5px; line-height:2.15; }
+.book-pages.ref-chart .ref-body li { font-size:16.5px; }
+.book-pages.ref-chart .ref-fig-name { font-size:18px; }
+.book-pages.ref-chart .ref-fig-caption { font-size:14px; }
+.book-pages.ref-chart .ref-tip { font-size:15px; line-height:2.0; }
+.book-pages.ref-chart .ref-toc-item { font-size:16px; }
+.book-pages.ref-chart-2 .r2-chap-title { font-size:28px; }
+.book-pages.ref-chart-2 .r2-lead { font-size:18px; line-height:2.1; }
+.book-pages.ref-chart-2 .r2-body { font-size:17px; line-height:2.2; }
+.book-pages.ref-chart-2 .r2-body li { font-size:17px; }
+.book-pages.ref-chart-2 .r2-fig-name { font-size:18px; }
+.book-pages.ref-chart-2 .r2-tip { font-size:15px; line-height:2.0; }
+.book-pages.ref-chart-2 .r2-toc-item { font-size:17px; }
+.book-pages.ref-chart-2 .r2-foreword p { font-size:17.5px; line-height:2.2; }
+.book-pages.ref-fund .r3-chap-title { font-size:25px; }
+.book-pages.ref-fund .r3-lead { font-size:17px; line-height:2.1; }
+.book-pages.ref-fund .r3-body { font-size:16.5px; line-height:2.15; }
+.book-pages.ref-fund .r3-body li { font-size:16.5px; }
+.book-pages.ref-fund .r3-formula { font-size:17px; }
+.book-pages.ref-fund .r3-formula .r3-eq { font-size:19px; }
+.book-pages.ref-fund .r3-note { font-size:15.5px; line-height:2.0; }
+.book-pages.ref-fund .r3-warn { font-size:15.5px; line-height:2.0; }
+.book-pages.ref-fund .r3-toc-item { font-size:16px; }
+.book-pages.ref-fund .r3-foreword p { font-size:17px; line-height:2.2; }
+
+/* ── 第5巻 買っていい株の選び方 (r4-クラス共有、独自カラー) ── */
+.book-spine.ref-book-5 { background:linear-gradient(90deg,#4a1a3a,#7f2e5a,#4a1a3a); }
+.book-spine.ref-book-5 .book-spine-label { color:#f8e0e8; letter-spacing:2px; font-size:13px; padding:10px 0; }
+.book-pages.ref-picks .r4-page { background:linear-gradient(180deg,#faf0f2,#f0e0e6); }
+.book-pages.ref-picks .r4-cover h1, .book-pages.ref-picks .r4-part-title, .book-pages.ref-picks .r4-chap-title, .book-pages.ref-picks .r4-foreword h2, .book-pages.ref-picks .r4-toc h2, .book-pages.ref-picks .r4-end-title { color:#4a1a3a; }
+.book-pages.ref-picks .r4-cover-sub, .book-pages.ref-picks .r4-cover-tag, .book-pages.ref-picks .r4-cover-vol, .book-pages.ref-picks .r4-chap-num, .book-pages.ref-picks .r4-part-num, .book-pages.ref-picks .r4-end-sig { color:#7f2e5a; }
+.book-pages.ref-picks .r4-cover-border { background:#7f2e5a; }
+.book-pages.ref-picks .r4-chap-header { border-bottom-color:#7f2e5a; }
+.book-pages.ref-picks .r4-lead { background:#f2dee6; border-left-color:#7f2e5a; }
+.book-pages.ref-picks .r4-when { background:#f2dee6; border-left-color:#7f2e5a; }
+.book-pages.ref-picks .r4-when-lbl { color:#4a1a3a; }
+.book-pages.ref-picks .r4-when-body { color:#4a1a3a; }
+.book-pages.ref-picks .r4-part { background:linear-gradient(180deg,#e6ccd6,#d8bcc8); }
+.book-pages.ref-picks .r4-toc h2 { border-bottom-color:#7f2e5a; }
+.book-pages.ref-picks .r4-toc-item { border-bottom-color:#c99ab0; }
+.book-pages.ref-picks .r4-toc-item span:first-child, .book-pages.ref-picks .r4-toc-item span:last-child { color:#7f2e5a; }
+.book-pages.ref-picks .r4-pagenum { color:#7f2e5a; }
+.book-pages.ref-picks .r4-section-title { background:#eecfd8; color:#4a1a3a; }
+.book-pages.ref-picks .r4-tip { background:#f2dee6; border-left-color:#7f2e5a; color:#4a1a3a; }
+.book-pages.ref-picks .r4-tip b { color:#4a1a3a; }
+
+/* ── しおり機能 ── */
+.ref-bm-btn { padding:5px 10px; border-radius:6px; border:1.5px solid rgba(255,255,255,.3); background:rgba(0,0,0,.15); color:inherit; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:1px; }
+.ref-bm-btn:hover, .ref-bm-btn:active { background:rgba(0,0,0,.28); }
+.ref-bm-popover { position:fixed; top:56px; right:16px; z-index:250; background:var(--card); border:1.5px solid var(--line); border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,.25); padding:14px 16px; min-width:250px; display:none; }
+.ref-bm-popover.active { display:block; }
+.ref-bm-title { font-size:12px; font-weight:700; color:var(--text-soft); letter-spacing:2px; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--line-soft); }
+.ref-bm-row { display:flex; flex-direction:column; gap:6px; padding:9px 0; border-bottom:1px dashed var(--line-soft); }
+.ref-bm-row:last-child { border-bottom:none; }
+.ref-bm-row-head { display:flex; justify-content:space-between; align-items:center; }
+.ref-bm-person { font-size:15px; font-weight:800; letter-spacing:1px; }
+.ref-bm-person.mine { color:var(--mine); }
+.ref-bm-person.hers { color:var(--hers); }
+.ref-bm-status { font-size:12px; color:var(--text-soft); }
+.ref-bm-status.set { color:var(--gold); font-weight:700; }
+.ref-bm-actions { display:flex; gap:5px; flex-wrap:wrap; }
+.ref-bm-act { padding:6px 10px; border-radius:6px; border:1.5px solid var(--line); background:var(--card); color:var(--text); font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:.5px; }
+.ref-bm-act.primary { background:var(--gold-bg); color:var(--gold); border-color:var(--gold); }
+.ref-bm-act.clear { color:#b5544f; }
+.ref-bm-act:hover, .ref-bm-act:active { opacity:.8; }
 
 /* 株ノートの背表紙 (バインダー風) */
 .book-spine.stock { border-radius:1px 3px 3px 1px; }
@@ -2713,6 +2783,17 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 <div id="diary-book-list"></div>
 <button class="book-nav-btn prev" id="book-nav-prev" onclick="bookNav(-1)" aria-label="前のページ">‹</button>
 <button class="book-nav-btn next" id="book-nav-next" onclick="bookNav(1)" aria-label="次のページ">›</button>
+<div class="ref-bm-popover" id="ref-bm-popover">
+  <div class="ref-bm-title">🔖 しおり</div>
+  <div class="ref-bm-row">
+    <div class="ref-bm-row-head"><span class="ref-bm-person mine">ひろ</span><span class="ref-bm-status" id="bm-status-mine">—</span></div>
+    <div class="ref-bm-actions" id="bm-actions-mine"></div>
+  </div>
+  <div class="ref-bm-row">
+    <div class="ref-bm-row-head"><span class="ref-bm-person hers">ちか</span><span class="ref-bm-status" id="bm-status-hers">—</span></div>
+    <div class="ref-bm-actions" id="bm-actions-hers"></div>
+  </div>
+</div>
 
 <div class="overlay" id="overlay"><div class="ring"></div><h3>AIがシフトを解析中…</h3><p>しばらくお待ちください</p></div>
 <div class="toast" id="toast"></div>
@@ -7770,6 +7851,10 @@ function renderDiaryShelf() {
       <div class="book-spine-label">組合せ実戦</div>
       <div class="book-spine-badge">大文字</div>
     </div>
+    <div class="book-spine ref-book ref-book-5" onclick="openDiaryBook('ref','ref-picks')">
+      <div class="book-spine-label">株の選び方</div>
+      <div class="book-spine-badge">実戦</div>
+    </div>
   </div><div class="shelf-board"></div>`;
 
   el.innerHTML = html;
@@ -7789,9 +7874,78 @@ function openDiaryBook(ym, lang = 'ja') {
 function closeDiaryBook() {
   const bookList = document.getElementById('diary-book-list');
   if (bookList) bookList.classList.remove('active');
+  const pop = document.getElementById('ref-bm-popover');
+  if (pop) pop.classList.remove('active');
   currentBookYm = null;
   detachBookNavigation();
   applyAppZoom();
+}
+
+// ── 参考書のしおり機能 ──
+function getRefBm(lang, person) {
+  try { const v = localStorage.getItem(`refbm_${lang}_${person}`); return v ? JSON.parse(v) : null; } catch { return null; }
+}
+function setRefBm(lang, person, data) { localStorage.setItem(`refbm_${lang}_${person}`, JSON.stringify(data)); }
+function clearRefBm(lang, person) { localStorage.removeItem(`refbm_${lang}_${person}`); }
+function getCurrentBookPosition() {
+  const pages = document.getElementById('book-pages');
+  if (!pages) return null;
+  const scrollType = getComputedStyle(pages).scrollSnapType || '';
+  const isHoriz = /x/i.test(scrollType);
+  if (isHoriz && pages.clientWidth > 0) {
+    const idx = Math.round(pages.scrollLeft / pages.clientWidth);
+    return { type:'page', value:idx, label:`p.${idx+1}` };
+  }
+  return { type:'scroll', value:pages.scrollTop, label:'現在地' };
+}
+function jumpToBookPosition(pos) {
+  const pages = document.getElementById('book-pages');
+  if (!pages || !pos) return;
+  if (pos.type === 'page') pages.scrollTo({ left: pos.value * pages.clientWidth, behavior:'smooth' });
+  else pages.scrollTo({ top: pos.value, behavior:'smooth' });
+}
+function toggleBookmarkPopover() {
+  const pop = document.getElementById('ref-bm-popover');
+  if (!pop) return;
+  if (pop.classList.contains('active')) { pop.classList.remove('active'); return; }
+  renderBookmarkPopover();
+  pop.classList.add('active');
+}
+function renderBookmarkPopover() {
+  const lang = currentBookLang;
+  for (const p of ['mine', 'hers']) {
+    const bm = getRefBm(lang, p);
+    const statusEl = document.getElementById('bm-status-' + p);
+    const actEl = document.getElementById('bm-actions-' + p);
+    if (!statusEl || !actEl) continue;
+    if (bm) {
+      statusEl.textContent = bm.label || '設定済';
+      statusEl.classList.add('set');
+      actEl.innerHTML = `<button class="ref-bm-act primary" onclick="bmJump('${p}')">続きから</button>
+        <button class="ref-bm-act" onclick="bmSetHere('${p}')">現ページに更新</button>
+        <button class="ref-bm-act clear" onclick="bmClear('${p}')">解除</button>`;
+    } else {
+      statusEl.textContent = '未設定';
+      statusEl.classList.remove('set');
+      actEl.innerHTML = `<button class="ref-bm-act primary" onclick="bmSetHere('${p}')">この頁にしおり</button>`;
+    }
+  }
+}
+function bmSetHere(person) {
+  const pos = getCurrentBookPosition();
+  if (!pos) return;
+  setRefBm(currentBookLang, person, pos);
+  renderBookmarkPopover();
+  showToast(`${NAMES[person]}のしおりを設定しました`);
+}
+function bmJump(person) {
+  const bm = getRefBm(currentBookLang, person);
+  if (bm) { jumpToBookPosition(bm); toggleBookmarkPopover(); }
+}
+function bmClear(person) {
+  clearRefBm(currentBookLang, person);
+  renderBookmarkPopover();
+  showToast(`${NAMES[person]}のしおりを解除しました`);
 }
 
 // PCでのページめくり: マウスホイールを横スクロールに変換 + 矢印キーでページ送り
@@ -7848,6 +8002,7 @@ function renderDiaryBook() {
   if (currentBookLang === 'ref-chart-2') return renderChartRef2Book();
   if (currentBookLang === 'ref-fund') return renderFundBook();
   if (currentBookLang === 'ref-combo') return renderComboBook();
+  if (currentBookLang === 'ref-picks') return renderPicksBook();
 
   const [yStr, mStr] = currentBookYm.split('-');
   const year = Number(yStr);
@@ -8341,6 +8496,7 @@ function renderChartRefBook() {
     <div class="book-title-bar western">チャート分析</div>
     <div style="display:flex; gap:6px;">
       <button onclick="scrollChartRefToTop()">目次</button>
+      <button class="ref-bm-btn" onclick="event.stopPropagation();toggleBookmarkPopover()" title="しおり">🔖</button>
     </div>
   </div>`;
 
@@ -8533,7 +8689,7 @@ function renderChartRef2Book() {
   const toolbar = `<div class="book-toolbar western">
     <button onclick="closeDiaryBook()">← 本棚へ</button>
     <div class="book-title-bar western" style="font-size:15px">チャート分析 II</div>
-    <div style="width:60px"></div>
+    <button class="ref-bm-btn" onclick="event.stopPropagation();toggleBookmarkPopover()" title="しおり">🔖</button>
   </div>`;
 
   const pages = [];
@@ -8976,7 +9132,7 @@ function renderFundBook() {
   const toolbar = `<div class="book-toolbar western">
     <button onclick="closeDiaryBook()">← 本棚へ</button>
     <div class="book-title-bar western" style="font-size:15px">ファンダメンタル分析</div>
-    <div style="width:60px"></div>
+    <button class="ref-bm-btn" onclick="event.stopPropagation();toggleBookmarkPopover()" title="しおり">🔖</button>
   </div>`;
 
   const pages = [];
@@ -9462,7 +9618,7 @@ function renderComboBook() {
   const toolbar = `<div class="book-toolbar western">
     <button onclick="closeDiaryBook()">← 本棚へ</button>
     <div class="book-title-bar western" style="font-size:15px">組み合わせ実戦編</div>
-    <div style="width:60px"></div>
+    <button class="ref-bm-btn" onclick="event.stopPropagation();toggleBookmarkPopover()" title="しおり">🔖</button>
   </div>`;
 
   const pages = [];
@@ -9588,6 +9744,391 @@ function renderComboBook() {
   el.innerHTML = `
     ${toolbar}
     <div class="book-pages ref-combo" id="book-pages">
+      ${pages.join('')}
+    </div>
+  `;
+  el.classList.add('active');
+  requestAnimationFrame(() => {
+    const p = document.getElementById('book-pages');
+    if (p) p.scrollLeft = 0;
+  });
+}
+
+// ── 第5巻 買っていい株の選び方 (r4-クラスを共有、コンテンツのみ独自) ──
+const PICK_PARTS = [
+  { part:'第 I 部', title:'買っていい株の全体像', desc:'まず"良い株"の定義から。銘柄選びに正解はない、目的次第で答えが変わる。', chapters:[
+    { num:'第1章', title:'「良い株」とは何か', pages:[
+      { lead:'"良い株"は主観的な概念。誰にとって、いつ、何の目的で「良い」のかで答えが変わる。',
+        body:'<p><b>投資家によって「良い株」の定義は違う：</b></p><ul><li>短期トレーダー：値動きが大きく流動性が高い株</li><li>長期投資家：業績が長期成長する優良企業</li><li>配当重視：安定して高配当を出す株</li><li>資産保全：ボラティリティが低い株</li></ul><p>まず自分の投資目的を明確にすること。目的が違えば選ぶ株も戦略も違う。</p>' },
+      { body:'<p><b>本書での「良い株」の定義：</b></p><p>ここでは中長期投資（1年以上保有）を前提に、以下を満たす銘柄を「買っていい株」と定義する：</p><ol><li>財務が健全（倒産リスクが低い）</li><li>継続的に利益を生み出せる事業モデル</li><li>成長 or 安定配当のいずれかを提供</li><li>現在の株価が適正 or 割安</li></ol><p>これら4つを"必要条件"として、以降の章で1つ1つ確認する。</p>',
+        tip:'この4条件を満たさない銘柄は、たとえチャートが上向きでも中長期投資には向かない。短期トレードなら別の基準で選ぶ。' } ]},
+    { num:'第2章', title:'投資目的別の銘柄選び', pages:[
+      { lead:'資産形成期、配当収入期、資産保全期。ライフステージによって最適な銘柄は異なる。',
+        body:'<p><b>資産形成期（20-40代）：グロース中心</b></p><ul><li>売上・利益が年10%以上成長する企業</li><li>PER高めでも許容（成長プレミアム）</li><li>配当は少なくてOK、内部留保で成長重視</li><li>時間を味方に付ける、長期保有前提</li></ul>' },
+      { body:'<p><b>配当収入期（50-60代）：配当・優待重視</b></p><ul><li>配当利回り3%以上の高配当株</li><li>連続増配実績のある企業</li><li>業績安定した成熟企業</li><li>キャッシュフローが読める</li></ul><p><b>資産保全期（70代〜）：低ボラ+分配</b></p><ul><li>REIT、電力、通信、食品等のディフェンシブ</li><li>個別株よりインデックス投資中心</li><li>元本保全を最優先</li></ul>',
+        warn:'ライフステージに合わないスタイルを選ぶと痛い目を見る。若い時に高配当ばかり、退職後に急成長株ばかり、はどちらも不適切。' } ]},
+    { num:'第3章', title:'銘柄選びの3つの視点', pages:[
+      { lead:'定量（数字）・定性（質）・タイミングの3つを組み合わせる。1つだけでは判断不可。',
+        body:'<p><b>3つの視点：</b></p><ol><li><b>定量分析</b>：財務諸表・指標を数値で評価<br>→ ROE、PER、成長率、負債比率 等</li><li><b>定性分析</b>：数字にならない企業の質を評価<br>→ 経営者、ビジネスモデル、経済的な堀 等</li><li><b>タイミング</b>：買う時点の株価水準・相場環境<br>→ チャート、市場心理、金利環境 等</li></ol>',
+        tip:'定量7割・定性2割・タイミング1割の重み付けが中長期投資の基本。短期トレードは逆になる。' },
+      { body:'<p><b>3つの視点の順序：</b></p><ol><li>まず<b>定量スクリーニング</b>で候補を絞る（数千銘柄→数十）</li><li>次に<b>定性評価</b>で本当に良い企業を選ぶ（数十→10-20）</li><li>最後に<b>タイミング</b>を計ってエントリー</li></ol><p>この順序を守ることで、感情的な"チャート飛びつき買い"を避けられる。</p>' } ]},
+    { num:'第4章', title:'買ってはいけない株の特徴', pages:[
+      { lead:'"買っていい株"を選ぶ前に、"買ってはいけない株"を除外する。これで大半の失敗を回避できる。',
+        body:'<p><b>買ってはいけない株 - 7つの特徴：</b></p><ol><li>過去3年で営業CFが2回以上マイナス</li><li>自己資本比率10%未満（金融業は除く）</li><li>粉飾決算や不祥事の履歴</li><li>大口顧客への依存度50%以上</li><li>のれん比率が純資産の30%超</li><li>売上減少が3年以上続く</li><li>経営陣の頻繁な交代・訴訟</li></ol><p>これらのどれか1つでも該当すれば、原則として投資対象から外す。</p>' },
+      { body:'<p><b>特に危険なパターン：</b></p><ul><li><b>ゾンビ企業</b>：営業利益ゼロ近辺で借入で延命</li><li><b>過剰なM&A依存</b>：オーガニック成長なくのれん膨張</li><li><b>一発屋</b>：1つの商品/サービスに依存</li><li><b>規制頼み</b>：規制変更で崩れる可能性</li><li><b>売り手優位</b>：仕入先1社に依存</li></ul>',
+        warn:'株価が上がっている＝良い企業、ではない。相場のマネーゲームで一時的に上がるだけの銘柄も多い。本質的な"質"を見抜く目を養う。' } ]},
+  ]},
+  { part:'第 II 部', title:'スクリーニング入門', desc:'膨大な銘柄から候補を絞る技術。証券会社のツールを使いこなす。', chapters:[
+    { num:'第5章', title:'スクリーニングとは何か', pages:[
+      { lead:'"数千の銘柄から機械的に候補を絞る"作業。感情を排し、条件に合う銘柄だけをリストアップ。',
+        body:'<p><b>スクリーニングの意義：</b></p><ul><li>日本株4000銘柄、米国株5000銘柄超</li><li>全て手動チェックは不可能</li><li>条件を設定して機械的に絞る</li><li>感情的な"好み"を排除できる</li></ul><p><b>スクリーニングツール：</b></p><ul><li>SBI証券：スーパースクリーナー（無料・高機能）</li><li>楽天証券：iSPEEDのスクリーナー</li><li>マネックス：銘柄スカウター</li><li>Trading View：グローバル対応</li></ul>' },
+      { body:'<p><b>スクリーニングの基本フロー：</b></p><ol><li>投資目的を明確化</li><li>絞込み条件を設定（5-10項目）</li><li>候補リストを取得（10-50銘柄）</li><li>1銘柄ずつ手動で精査</li><li>最終候補を3-5銘柄に絞る</li></ol><p>この作業を月1-2回行うのが理想。市場環境で候補も変わる。</p>' } ]},
+    { num:'第6章', title:'定量スクリーニング項目', pages:[
+      { lead:'"何を条件にするか"で結果が大きく変わる。目的別に代表的な条件セットを紹介。',
+        body:'<p><b>成長株スクリーニング条件例：</b></p><ul><li>時価総額300億円以上</li><li>売上成長率（3年平均）10%以上</li><li>営業利益成長率（3年平均）10%以上</li><li>ROE 12%以上</li><li>自己資本比率 40%以上</li><li>予想PER 30倍以下</li></ul>' },
+      { body:'<p><b>割安株スクリーニング条件例：</b></p><ul><li>時価総額500億円以上</li><li>PER 12倍以下</li><li>PBR 1.0倍以下</li><li>配当利回り 3%以上</li><li>ROE 8%以上</li><li>自己資本比率 50%以上</li><li>営業利益率 5%以上</li></ul>',
+        tip:'条件を厳しくしすぎると候補ゼロになる。5-30銘柄程度に絞れる強さが目安。緩すぎ・厳しすぎは調整で対応。' } ]},
+    { num:'第7章', title:'業種・規模での絞り込み', pages:[
+      { lead:'業種と時価総額での事前絞込みは、条件設定より前の重要ステップ。',
+        body:'<p><b>業種で絞る意味：</b></p><ul><li>詳しい業種に絞ることで、企業比較の精度が上がる</li><li>詳しくない業種は数字だけで判断できない</li><li>自分の得意分野で戦う</li></ul><p><b>時価総額で絞る意味：</b></p><ul><li>大型株（1兆円超）：安定、値動き穏やか、機関投資家対象</li><li>中型株（300億〜3000億）：成長性と安定性のバランス</li><li>小型株（300億未満）：値動き大、リスク大、リターン大</li></ul>' },
+      { body:'<p><b>初心者は大型株から</b>：</p><p>時価総額の大きい会社は、業績が安定し、情報開示も豊富、株価操縦もされにくい。まず大型株で数字を読む力を養い、慣れてから中小型に手を出すのが安全。</p><ul><li>TOPIX Core30：日本の代表30銘柄</li><li>日経平均225：中〜大型が中心</li><li>S&P500：米国の主要500銘柄</li></ul>' } ]},
+    { num:'第8章', title:'スクリーニング後の手動チェック', pages:[
+      { lead:'機械的な絞込みだけでは"良い株"は選べない。1銘柄ずつ、手動で精査する時間を惜しまない。',
+        body:'<p><b>手動チェック項目（1銘柄10分程度）：</b></p><ol><li>会社概要（何をしている会社か）</li><li>直近の決算短信（数字を確認）</li><li>過去5年の業績推移</li><li>大株主構成</li><li>直近の株価チャート（週足・月足）</li><li>ニュース検索（不祥事・重要イベント）</li></ol>',
+        recipe:{ lbl:'📋 銘柄精査の手順', steps:['会社四季報 or IR資料で事業内容を把握','決算短信で直近3期の業績を確認','株探・Yahoo!ファイナンスで株価動向を確認','有価証券報告書の"事業リスク"欄をチェック','GoogleでニュースをiPhone、決算スケジュール確認'] } },
+      { body:'<p><b>手動チェックで排除される典型例：</b></p><ul><li>数字は良いが、事業内容が理解できない</li><li>不祥事が発覚した直後</li><li>大口顧客への依存が異常に高い</li><li>創業者/経営者が最近売却している</li><li>アクティビスト投資家が絡んでいる（複雑な状況）</li></ul>',
+        warn:'"数字だけ"で判断して失敗した事例は無数にある。手動チェックは面倒でも省略しない。' } ]},
+  ]},
+  { part:'第 III 部', title:'財務健全性フィルター', desc:'"倒産しない会社"を選ぶ。守りの指標で振るい落とす。', chapters:[
+    { num:'第9章', title:'自己資本比率でふるい落とす', pages:[
+      { lead:'長期投資で最も重要な"生存可能性"。自己資本比率が低い会社は景気後退期に耐えられない。',
+        body:'<p><b>自己資本比率の目安（業種平均）：</b></p><ul><li>製造業：40%以上を目安</li><li>小売業：35%以上</li><li>IT業：50%以上（借入少なめが健全）</li><li>不動産・金融：業種特性で低い（別基準）</li></ul><p><b>要注意水準：</b></p><ul><li>20%未満：借入依存が高すぎ、景気後退リスク大</li><li>マイナス：債務超過、倒産寸前</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 自己資本比率チェック', steps:['決算短信の"貸借対照表"を開く','自己資本 ÷ 総資産 × 100 を計算','業種平均と比較','過去5年の推移を見る（下がり続けているなら危険）','20%未満なら投資対象から外す（金融・不動産は除く）'] },
+        warn:'自己資本比率が高すぎるのも問題（80%超）。資金を活用できていない可能性、成長性が乏しい場合がある。' } ]},
+    { num:'第10章', title:'D/Eレシオと有利子負債', pages:[
+      { lead:'自己資本比率と併せて見る。借入の"質"と"重さ"を測る。',
+        body:'<p><b>D/Eレシオの目安：</b></p><ul><li>0.5未満：財務保守的、安全</li><li>0.5-1.0：健全</li><li>1.0-2.0：やや借入依存、業種次第</li><li>2.0超：借入依存度高い（不動産・金融は許容）</li></ul><p><b>ネットD/Eレシオ</b>（現預金を差し引いた実質借入）：</p><ul><li>ゼロ以下：実質無借金、極めて健全</li><li>0.3以下：非常に良好</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 D/E分析の手順', steps:['有利子負債（短期借入+長期借入+社債）を集計','自己資本を確認','有利子負債 ÷ 自己資本 を計算','現預金を控除した"ネット"版も計算','過去5年推移で借入が増えているかチェック','ROE と組み合わせて"リスクの取り方"を評価'] },
+        tip:'借入が悪いとは限らない。低金利で借りて高収益投資に回せば株主利益は増える。ただしインタレストカバレッジも要確認。' } ]},
+    { num:'第11章', title:'営業CFの継続性', pages:[
+      { lead:'"利益"より"現金"を見る。営業CFがマイナス続きの会社は、どんな理由があれど危険。',
+        body:'<p><b>営業CFチェックの重要性：</b></p><ul><li>PLの利益は会計操作の余地がある</li><li>営業CFは実際の現金の動き、嘘をつきにくい</li><li>営業CFプラス継続 = 本業で稼げている証拠</li></ul><p><b>要注意パターン：</b></p><ul><li>PLは黒字だが営業CFがマイナス → 売掛金増、粉飾疑惑</li><li>過去5年で営業CFがマイナスの年が2回以上</li><li>営業CFが徐々に減少している</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 CFチェックの手順', steps:['キャッシュフロー計算書を開く','過去5年の営業CFを一覧化','安定してプラスか、変動があるか判定','投資CFとのバランス（過剰投資でないか）','フリーCF（営業CF+投資CF）を計算','FCFプラス継続の会社を優先'] },
+        warn:'"営業CFマイナス+財務CFプラス"の会社は、借入で延命している可能性。3年以上続けば投資対象から外す。' } ]},
+    { num:'第12章', title:'のれん比率の危険水域', pages:[
+      { lead:'M&Aで買収した企業の"見えない資産"。膨らみすぎると減損リスクが高まる。',
+        body:'<p><b>のれんとは：</b></p><ul><li>買収時の支払額と、買収先の純資産の差額</li><li>ブランド・顧客基盤等の"見えない価値"を計上</li><li>買収後、業績が悪化すると"減損"で一気に損失計上</li></ul><p><b>危険水域の目安：</b></p><ul><li>のれん ÷ 純資産 > 30% → 減損時の損失大</li><li>のれん ÷ 純資産 > 50% → 極めて危険</li><li>M&A多用企業（買収連発で成長）は特に注意</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 のれんチェック手順', steps:['貸借対照表の"のれん"項目を確認','純資産に対する比率を計算','過去のM&A履歴を調査','買収先の業績が順調か（減損リスク低いか）','M&Aで急成長企業は特に慎重に判断'] },
+        tip:'のれん比率30%超でも、買収先が順調なら問題ないケースも多い。数字だけで判断せず、事業内容を確認。' } ]},
+    { num:'第13章', title:'過去5年の推移で見る', pages:[
+      { lead:'1年の数字ではなく、5年トレンドで判断する。継続性が全て。',
+        body:'<p><b>5年トレンドで見るべき指標：</b></p><ul><li>売上高（年成長率、変動）</li><li>営業利益（成長率、利益率安定性）</li><li>営業CF（プラス継続、変動）</li><li>自己資本比率（改善 or 悪化）</li><li>有利子負債（増減、返済ペース）</li><li>ROE（安定 or 変動大）</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 5年推移分析', steps:['マネックス"銘柄スカウター"等で10年チャートを表示','売上・利益の推移を確認','リーマンショック(2008)・コロナ(2020)時の落ち込み度合い','回復力（危機時から3年後どこまで戻したか）','継続的な成長か、一過性か判定'] },
+        warn:'"直近1年好調"だけの企業は避ける。過去5年の中で、業績が乱高下している会社は本質的にリスクが高い。' } ]},
+  ]},
+  { part:'第 IV 部', title:'成長株の選び方', desc:'"これから伸びる会社"を探す。数字の裏にある成長性を評価する。', chapters:[
+    { num:'第14章', title:'売上成長率の見方', pages:[
+      { lead:'成長株の基本条件。ただし"どんな成長か"が重要。',
+        body:'<p><b>売上成長率の分類：</b></p><ul><li>0-5%：成熟企業、配当重視の対象</li><li>5-10%：安定成長、大型優良株</li><li>10-20%：成長企業</li><li>20-50%：高成長、ハイテク・新興系</li><li>50%以上：超高成長（持続性に疑問）</li></ul>' },
+      { body:'<p><b>成長の"質"を見分ける：</b></p><ul><li><b>オーガニック成長</b>：既存事業の拡大、質が高い</li><li><b>M&A成長</b>：買収による膨張、質は低め</li><li><b>一時的成長</b>：特需・キャンペーン等、持続しない</li><li><b>循環成長</b>：景気サイクルで変動、真の成長ではない</li></ul>',
+        recipe:{ lbl:'📋 売上成長分析', steps:['過去5年の売上高を年ごとに確認','CAGR（年平均成長率）を計算','会社発表の中期計画と照合','セグメント別の成長率も確認','業界全体の成長率と比較（業界内シェア変化）'] } },
+      { body:'',
+        warn:'M&Aによる成長を"実力"と誤解しない。「売上が10%成長」でも、買収先の売上が加わっただけなら実質ゼロ成長。',
+        tip:'IR資料の"オーガニック成長率"を必ず確認。会社側が意識的に開示している数字。開示ない場合は、既存事業の売上を追跡する。' } ]},
+    { num:'第15章', title:'EPS成長率とROE推移', pages:[
+      { lead:'"1株あたり利益"の成長こそ、株価上昇の源泉。ROE推移で"儲ける力"の変化を捉える。',
+        body:'<p><b>EPS成長率の重要性：</b></p><ul><li>売上成長より、EPS成長が株価に直結</li><li>売上成長するのに、EPSが伸びない企業も多い（希薄化、コスト増）</li><li>過去5年EPS CAGR 15%以上の企業は、株価も長期上昇の確率高い</li></ul>' },
+      { body:'<p><b>ROE推移で見るべきこと：</b></p><ul><li>過去5年でROEが上昇 → 経営効率化に成功</li><li>過去5年でROEが低下 → 資本効率悪化、警戒</li><li>ROE 15%以上を5年以上維持 → 優良企業の証</li></ul>',
+        recipe:{ lbl:'📋 EPS・ROE分析', steps:['過去5年のEPSを追跡','CAGRを計算','ROE推移を確認','デュポン分解でROE要因を分析','ROEが持続可能か（借入で下駄を履かせていないか）'] } },
+      { body:'',
+        tip:'"ROE高い + EPS成長 + 自己資本増加"の3拍子揃った企業は、投資家に高評価される優良企業。買い候補の最上位。',
+        warn:'ROEが極端に高い（30%超）企業は、自社株買いで見かけ上のROEを上げている可能性。純資産推移を必ず確認。' } ]},
+    { num:'第16章', title:'業界内シェアと市場の伸び', pages:[
+      { lead:'"どの業界の何位か"を把握。伸びる市場の勝ち組が最強のポジション。',
+        body:'<p><b>4象限マトリクス：</b></p><ul><li><b>①伸びる市場 × トップ企業</b>：最強、成長株の王道</li><li><b>②伸びる市場 × 追随企業</b>：シェア争いで勝てば大化け</li><li><b>③成熟市場 × トップ企業</b>：安定配当株</li><li><b>④成熟市場 × 追随企業</b>：厳しい、避けるべき</li></ul>',
+        body2:'<p>投資対象は①②が中心。③は配当目的。④は避ける。</p>' },
+      { body:'',
+        recipe:{ lbl:'📋 市場・シェア分析', steps:['業界の市場規模と成長率を調査（矢野経済、富士キメラ等）','会社の売上高から業界シェアを推定','競合企業とのシェア変動を比較','業界の"寡占度"を確認（上位3社で50%以上か等）','技術変化リスクをチェック（AI・EV等の影響）'] } },
+      { body:'<p><b>業界成長率のヒント：</b></p><ul><li>年10%超：AI、EV、SaaS、バイオ、宇宙</li><li>年5-10%：ヘルスケア、消費財、eコマース</li><li>年0-5%：食品、公益、既存製造業</li><li>年マイナス：新聞、固定電話、DVDレンタル</li></ul>',
+        tip:'業界成長率と個別企業の売上成長率を比較。企業成長率>業界成長率ならシェアを取っている優良企業。' } ]},
+    { num:'第17章', title:'経営者・創業者の資質', pages:[
+      { lead:'"人"で企業を見る。特に創業者経営の企業は、社長の資質がそのまま業績になる。',
+        body:'<p><b>優良経営者の特徴：</b></p><ul><li>長期ビジョンを明確に語れる</li><li>株主宛レター/決算説明会で誠実</li><li>自社株を保有している（インセンティブ一致）</li><li>過去の予想と実績の乖離が小さい（信頼できる）</li><li>失敗を認めて改善を語れる</li></ul>' },
+      { body:'<p><b>要注意のサイン：</b></p><ul><li>頻繁な経営陣交代</li><li>買収を連発（M&A中毒）</li><li>ストックオプションを大量発行して希薄化</li><li>不祥事後の説明が不明瞭</li><li>過去の予想が毎回大幅未達</li></ul>',
+        recipe:{ lbl:'📋 経営者評価', steps:['社長の経歴・就任年数を確認','決算説明会動画を1-2本視聴','株主宛レター（有価証券報告書）を読む','経営陣の自社株保有比率を確認','過去の中期計画達成率を評価'] } },
+      { body:'',
+        tip:'創業者経営の企業は、経営者の年齢と後継者計画を必ず確認。事業承継のリスクは大きい。',
+        warn:'カリスマ経営者依存の企業は、経営者退任で株価急落することが多い。分散投資でリスクヘッジ。' } ]},
+    { num:'第18章', title:'成長期のPER評価', pages:[
+      { lead:'成長株の割高判定は難しい。PER単独では判断せず、成長率と合わせて評価。',
+        body:'<p><b>PEG比率</b>（Price Earnings to Growth）：</p><ul><li>PEG = PER ÷ EPS成長率(%)</li><li>1.0未満：割安</li><li>1.0-1.5：適正</li><li>1.5-2.0：やや割高</li><li>2.0超：割高</li></ul><p>PER 30倍でも、EPS成長率30%ならPEG 1.0で割安と判定。</p>' },
+      { body:'<p><b>成長株PER評価の目安：</b></p><ul><li>成長率10%：PER 15-20倍が適正</li><li>成長率20%：PER 25-35倍が適正</li><li>成長率30%：PER 35-50倍が許容</li><li>成長率50%：PER 60-80倍でも許容（持続性次第）</li></ul>',
+        recipe:{ lbl:'📋 成長株PER評価', steps:['予想EPS成長率を確認（会社予想・アナリスト予想）','PEG比率を計算','業種平均PERと比較','過去3年のPERレンジと比較（今どのレベルか）','成長減速時のPER急落リスクを織り込む'] } },
+      { body:'',
+        warn:'"高成長=高PER正当化"は落とし穴。成長が失望すれば、PER 50倍 → 25倍で株価半減もありうる。持続性を吟味。',
+        tip:'PSR（時価総額÷売上）はまだ黒字化してない成長企業に有効。ただし PSR 10倍超は歴史的にバブル領域。' } ]},
+  ]},
+  { part:'第 V 部', title:'割安株の選び方', desc:'"市場が見落としている宝石"を探す。バリュートラップとの見分けが鍵。', chapters:[
+    { num:'第19章', title:'低PER基準', pages:[
+      { lead:'PERが業種平均より低い株を探す。ただし"なぜ低いか"を必ず確認。',
+        body:'<p><b>低PER銘柄の3つのパターン：</b></p><ul><li>① 本当に割安放置（買い候補）</li><li>② 業績悪化予想を織り込み済み（危険）</li><li>③ 業種特性で低め（銀行・鉄鋼等、正常）</li></ul><p>①だけが投資対象。②③を除外する目が重要。</p>',
+        recipe:{ lbl:'📋 低PER判定', steps:['予想PERが業種平均の80%以下','過去5年のPERレンジと比較','なぜ低いか理由を調査','来期予想が減益予想でないか','短期悪材料（決算失望等）で下げた直後でないか'] } },
+      { body:'<p><b>安全な低PER銘柄の特徴：</b></p><ul><li>業績は安定 or 微増</li><li>財務健全（自己資本比率高い）</li><li>配当利回り3%以上</li><li>時価総額100億円以上</li><li>大株主が安定（機関投資家が主要）</li></ul>',
+        tip:'PER 8倍以下の"超低PER"銘柄は、多くの場合"理由あり"。単純に安いから買うのではなく、必ず理由を吟味。',
+        warn:'業績下方修正直後の低PERは"来期は更に下がる"予想の可能性。指標だけで判断せず、四季報や決算資料で背景を確認。' } ]},
+    { num:'第20章', title:'低PBR基準', pages:[
+      { lead:'PBR 1倍未満は"解散価値以下"。しかし低PBRの多くは業績悪化の警戒シグナル。',
+        body:'<p><b>低PBR株の見方：</b></p><ul><li>PBR 1倍未満 = 理論上の割安</li><li>ROEが低い（5%以下）ためのケースが多い</li><li>ROE改善の兆しがあれば大化けする</li><li>東証は"PBR 1倍割れ企業"に改善要請</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 低PBR銘柄選別', steps:['PBR 1倍以下の銘柄をリストアップ','ROE 8%以上 かつ PBR 1倍以下（理想）','過去5年のROE推移を確認（改善傾向か）','自己資本比率高い（現預金潤沢）','会社の"資本効率改善策"の有無を確認'] },
+        body2:'<p>PBR 1倍未満 & ROE 10%以上の銘柄は、ほぼ間違いなく割安。市場の見落としで買える可能性大。</p>',
+        tip:'東証の要請を受けて、"資本効率改善"を発表した銘柄は買い候補になりやすい。自社株買い・増配等の株主還元策が動きの引き金。' } ]},
+    { num:'第21章', title:'割安の"理由"を探る', pages:[
+      { lead:'安いには理由がある。その理由が"一時的"か"構造的"かで、投資判断が180度変わる。',
+        body:'<p><b>一時的な理由（買い候補）：</b></p><ul><li>短期の業績悪化（一過性コスト等）</li><li>市場全体の下落に巻き込まれ</li><li>不祥事後の過剰反応</li><li>セクター全体の逆風で連れ安</li></ul>' },
+      { body:'<p><b>構造的な理由（避けるべき）：</b></p><ul><li>業界自体の衰退（新聞、DVD等）</li><li>技術革新で淘汰される可能性</li><li>需要の恒久的減少</li><li>規制強化による事業縮小</li></ul>',
+        recipe:{ lbl:'📋 割安理由の分析', steps:['過去1年の株価下落理由を調査','業界動向をチェック（縮小か横ばいか）','会社発表の中期計画を確認','アナリストレポート（可能なら）参照','技術・規制の破壊的変化リスク評価'] } },
+      { body:'',
+        warn:'"みんな知らない割安"は稀。プロも知っているのに買われない、それには構造的理由がある可能性を疑う。',
+        tip:'一時的悪材料なら3-6ヶ月で株価回復することが多い。構造的問題なら数年〜永久に戻らない。区別が最重要。' } ]},
+    { num:'第22章', title:'バリュートラップを避ける', pages:[
+      { lead:'"永遠の割安"に投資するとお金は増えない。割安を"割安のまま"にする罠を見抜く。',
+        body:'<p><b>バリュートラップとは：</b></p><ul><li>PERやPBRが割安なのに、株価が長期間上がらない銘柄</li><li>買っても機会損失（他銘柄なら儲かった）</li><li>配当利回りが高くて我慢するが、株価下落で相殺</li></ul>' },
+      { body:'<p><b>バリュートラップの典型：</b></p><ul><li>成長性ゼロで、配当だけ出す成熟企業</li><li>キャッシュ潤沢だが使途不明</li><li>大株主が動かない（親会社・創業家）</li><li>アクティビストが手を出さない</li></ul>',
+        recipe:{ lbl:'📋 トラップ回避チェック', steps:['過去5年の株価変動を確認（横ばいなら要警戒）','売上・利益の成長性を確認','自社株買い・増配等の株主還元姿勢','経営陣の資本効率意識（IR資料でチェック）','アクティビストの介入可能性'] } },
+      { body:'',
+        tip:'"カタリスト"（変化の触媒）がある割安株を選ぶ。経営者交代、事業売却、株主提案、東証改革要請等。',
+        warn:'"高配当・低PER"だけで長期保有すると、10年経っても株価が同じ、というケースは実際多い。配当再投資の効果はあるが、値上がり益は諦めが必要。' } ]},
+    { num:'第23章', title:'カタリストの見つけ方', pages:[
+      { lead:'割安放置の株を動かす"何か"。それを見極められれば、割安株投資の勝率は劇的に上がる。',
+        body:'<p><b>主なカタリスト：</b></p><ul><li><b>経営者交代</b>：新社長の改革期待</li><li><b>事業再編</b>：不採算事業売却で本業に集中</li><li><b>M&A</b>：買収 or 被買収</li><li><b>アクティビスト参加</b>：株主提案で改革圧力</li><li><b>自社株買い発表</b>：ROE改善、需給改善</li><li><b>増配・記念配当</b>：株主還元姿勢の変化</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 カタリスト探索', steps:['適時開示情報（TDnet）を定期チェック','経営陣人事のニュース','アクティビスト投資家の保有情報（大量保有報告書）','東証の"資本コスト改善"要請対象企業','決算説明会で経営陣が語る"改革"の具体性'] },
+        tip:'アクティビスト（例：オアシス、村上ファンド系）が保有する銘柄は、株主提案や自社株買い要求で株価が動く可能性大。' },
+      { body:'<p><b>カタリスト投資の期待値：</b></p><ul><li>1-3年で株価30-50%上昇が典型</li><li>M&Aなら数日で30-50%上昇</li><li>ただし空振りリスク（カタリスト来ない）もある</li><li>複数のカタリスト候補銘柄に分散投資</li></ul>',
+        warn:'"アクティビスト銘柄"は値動きが激しい。急騰後に急落するパターンもあるので、事前の売却ルール（目標株価到達で利確）を決めておく。' } ]},
+  ]},
+  { part:'第 VI 部', title:'高配当・優待株の選び方', desc:'配当と優待で"持っているだけで得する"銘柄選び。減配リスク回避が最重要。', chapters:[
+    { num:'第24章', title:'配当利回りの罠', pages:[
+      { lead:'高配当利回りには裏がある。単純に利回りが高い銘柄を選ぶと大失敗する。',
+        body:'<p><b>高配当ワナのメカニズム：</b></p><ol><li>業績悪化・悪材料で株価下落</li><li>配当据え置きで利回りが上昇（見かけの高配当）</li><li>投資家が「高利回りだ」と買う</li><li>その後、減配発表で株価さらに下落</li><li>減配後は普通の利回りに戻る</li></ol>',
+        body2:'<p>この流れで、多くの初心者が損する。</p>' },
+      { body:'',
+        recipe:{ lbl:'📋 高配当ワナ回避', steps:['過去1年の株価下落率を確認（20%超なら要警戒）','業績が悪化傾向でないか','配当性向が異常に高くないか（100%超は減配リスク）','過去5年の配当推移を確認（減配歴があれば警戒）','業界全体の環境（構造的問題ないか）'] },
+        warn:'配当利回り8-10%超の銘柄は、ほぼ確実に何か問題を抱えている。特別な理由（一時的な特別配当等）を確認せずに買わない。' } ]},
+    { num:'第25章', title:'配当性向と持続可能性', pages:[
+      { lead:'配当性向は"継続可能性"の目安。50%超は要注意、100%超は減配リスク大。',
+        body:'<p><b>配当性向の解釈：</b></p><ul><li>20%以下：内部留保重視（成長投資）</li><li>30-50%：バランス型（理想）</li><li>50-70%：株主還元重視</li><li>70-100%：やや高い、成熟企業</li><li>100%超：利益以上の配当、持続困難</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 配当持続性チェック', steps:['配当性向を過去5年で追跡','配当性向 = 配当総額 ÷ 純利益','業績悪化年に配当性向が急上昇していないか','フリーキャッシュフローで配当を賄えているか','経営陣が"累進配当"を宣言しているか'] },
+        tip:'"累進配当"（増配 or 現状維持、減配しない方針）を明示している企業は、配当継続の意志が強く信頼できる。三菱商事、伊藤忠、KDDI等が代表例。' } ]},
+    { num:'第26章', title:'連続増配株', pages:[
+      { lead:'連続増配は経営の質と株主還元姿勢を示す最強の指標。米国の"配当王"は50年超。',
+        body:'<p><b>連続増配銘柄の魅力：</b></p><ul><li>業績成長の証明（利益なくして増配なし）</li><li>経営陣の株主意識の高さ</li><li>景気後退期にも増配を続ける規律</li><li>長期保有で"配当利回りが上昇"（買値基準）</li></ul>' },
+      { body:'<p><b>日本の連続増配代表例（傾向）：</b></p><ul><li>花王：30年超の連続増配</li><li>KDDI：20年超</li><li>三菱HCキャピタル：20年超</li><li>NTTドコモ（NTT）：連続増配</li></ul><p><b>米国：</b></p><ul><li>Dividend Kings（50年以上）：Coca-Cola、Johnson & Johnson等</li><li>Dividend Aristocrats（25年以上）：S&P500の中で該当銘柄</li></ul>',
+        tip:'新NISA成長投資枠では、連続増配銘柄の長期保有が定番戦略。配当は非課税、複利効果最大。' } ]},
+    { num:'第27章', title:'株主優待の実質利回り', pages:[
+      { lead:'配当と優待を合わせた"実質利回り"で判断。優待は使わないと価値ゼロ。',
+        body:'<p><b>実質利回り計算：</b></p>',
+        body2:'<p>実質利回り = (年配当額 + 優待の実勢価値) ÷ 株価 × 100</p><p>例：100株保有で年配当2000円、年間3000円分の優待<br>株価 50万円なら、実質利回り = (2000+3000)/500000 = 1%</p><p><b>優待利回りだけで見ないこと。</b>配当も含めた総合利回りで判断。</p>' },
+      { body:'',
+        recipe:{ lbl:'📋 優待株選び', steps:['自分が使うor欲しい優待か（使わないなら価値ゼロ）','年配当と優待の合計で実質利回りを計算','業績・財務が健全か（減配・優待廃止リスク）','権利確定日を把握（配当・優待の権利日）','クロス取引で優待だけ狙う手もあるが、コストと手間を計算'] },
+        warn:'"優待改悪・廃止"は近年増えている。特に業績悪化した企業では優待から先に削られる。' } ]},
+  ]},
+  { part:'第 VII 部', title:'定性評価で最終判断', desc:'数字では見えない"質"を評価する。長期投資家の真骨頂。', chapters:[
+    { num:'第28章', title:'経済的な堀の見極め', pages:[
+      { lead:'"競合が真似できない持続的な優位性"。バフェットが最重視する概念。',
+        body:'<p><b>Morningstar流 5類型：</b></p><ol><li><b>ネットワーク効果</b>：ユーザー増でサービス価値上昇（SNS、決済網、フリマ）</li><li><b>スイッチングコスト</b>：他社に乗り換えると損失大（企業ソフト、証券口座）</li><li><b>無形資産</b>：ブランド、特許、規制（Coca-Cola、製薬）</li><li><b>コスト優位</b>：規模の経済、原料アクセス（Amazon、資源メジャー）</li><li><b>効率的な規模</b>：ニッチ市場でトップ独占（地方独占インフラ）</li></ol>' },
+      { body:'',
+        recipe:{ lbl:'📋 堀の分析', steps:['過去10年のROE水準（15%以上維持なら堀の可能性）','営業利益率が業界平均より明確に高い','5類型のどれに該当するか判定','新規参入・技術変化の脅威を評価','堀が広がっているか、狭まっているか'] },
+        tip:'"堀"は永遠ではない。技術革新やビジネスモデルの変化で堀が埋まる例は多い（コダック、ゼロックス等）。定期的な再評価が必要。' },
+      { body:'<p><b>日本企業の堀の例：</b></p><ul><li>信越化学（半導体シリコンウェハー圧倒シェア）</li><li>ダイキン（空調グローバル1位、技術力）</li><li>キーエンス（センサー高付加価値、直販モデル）</li><li>任天堂（IPとゲーム機のブランド）</li><li>ソニー（半導体イメージセンサー圧倒シェア）</li></ul>' } ]},
+    { num:'第29章', title:'経営陣を評価する視点', pages:[
+      { lead:'"企業=経営陣"。CEOの資質が企業価値を決める。',
+        body:'<p><b>優良CEO の特徴：</b></p><ul><li>長期ビジョンを明確に描ける</li><li>過去の目標達成率が高い（信頼性）</li><li>自社株を大量保有（利害一致）</li><li>失敗を認めて改善を語る</li><li>従業員から尊敬される</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 経営陣評価', steps:['CEO の在任期間（長すぎ or 短すぎに注意）','株主宛レターを読む（誠実さ・具体性）','決算説明会動画で語り口を確認','自社株保有比率（役員四季報等）','過去の中期経営計画の達成率'] },
+        tip:'創業者経営 vs サラリーマン経営の違い：<br>創業者は情熱と決断力、サラリーマンは安定と継続性。ビジネスモデルとフェーズで適材が違う。',
+        warn:'不祥事後の経営陣の対応は極めて重要。"言い訳・隠蔽"の会社は再発リスク大、"素直な謝罪+具体的改善"の会社は再生の可能性。' } ]},
+    { num:'第30章', title:'業界構造とESG', pages:[
+      { lead:'業界の"儲かる構造"を理解する。ポーターの5フォースが古典的だが有効。',
+        body:'<p><b>ポーターの5フォース：</b></p><ol><li>既存企業間の競争</li><li>新規参入の脅威</li><li>代替品の脅威</li><li>買い手の交渉力</li><li>売り手の交渉力</li></ol><p>5つの力すべてが"弱い"業界ほど収益性が高い。</p>' },
+      { body:'<p><b>ESG評価の重要性：</b></p><ul><li><b>E (環境)</b>：気候変動対応、資源効率</li><li><b>S (社会)</b>：労働環境、多様性、地域貢献</li><li><b>G (企業統治)</b>：取締役独立性、株主権利</li></ul><p>機関投資家はESGを重視する傾向強く、ESGスコアの高い企業に資金が流入。長期的にはESGが企業価値に反映されやすい。</p>',
+        recipe:{ lbl:'📋 業界とESG評価', steps:['業界の寡占度を確認（上位3社シェア）','新規参入障壁の高さ','ESGレーティング（MSCI, FTSE, Sustainalytics等）','TCFD 開示状況','女性役員比率、独立社外取締役比率'] } } ]},
+    { num:'第31章', title:'悪材料の検証', pages:[
+      { lead:'不祥事・逆風があった時、"投資対象から外す"か"買い増しチャンス"か。冷静な検証が必要。',
+        body:'<p><b>悪材料の分類：</b></p><ul><li><b>一時的</b>：訴訟和解、リコール、部門不振→ 半年〜1年で回復</li><li><b>構造的</b>：ビジネスモデル陳腐化、市場消滅→ 数年〜永久に回復せず</li><li><b>コンプライアンス</b>：粉飾、贈収賄→ 経営陣総入れ替えで再建の可能性</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 悪材料の検証', steps:['悪材料の内容を正確に把握','影響の範囲を評価（一部事業か全社か）','過去の類似事例の株価回復パターン','会社の対応の質（透明性、具体性）','株価下落幅と本源的価値との乖離'] },
+        tip:'"良い会社が一時的な悪材料で下がった時"が最高の買い場。ただし判定が難しく、多くの投資家は"悪材料の底"で売ってしまう。',
+        warn:'"落ちるナイフを掴む"のは危険。悪材料発表直後ではなく、"底が固まった"のを確認してからエントリー。3-6ヶ月待つ勇気が必要。' } ]},
+  ]},
+  { part:'第 VIII 部', title:'実戦：買い付けから管理', desc:'選んだ後の実務。買うタイミング、量、売る基準まで。', chapters:[
+    { num:'第32章', title:'エントリータイミング', pages:[
+      { lead:'"良い株を割安で買う"のがベスト。焦らず、待つ。相場に翻弄されない規律。',
+        body:'<p><b>タイミング戦略の選択肢：</b></p><ul><li><b>一括投資</b>：資金を一度に投入。相場読み前提</li><li><b>分割購入</b>：3-5回に分けて買う。リスク分散</li><li><b>積立投資</b>：毎月一定額。ドルコスト平均法</li><li><b>指値注文</b>：目標価格まで待つ</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 タイミング決定', steps:['適正株価を独自試算（DCF、PBR、PER等）','現在株価との乖離を確認','分割購入なら3-5回のエントリー価格を決定','押し目（-10%、-20%等）で追加購入','目標株価に達したら利確、更に下落なら再度買い増し'] },
+        tip:'"完璧なタイミング"は諦める。1株買ったら"買った気分"で心理的余裕が生まれ、その後の判断が冷静になる。少額から始めるのが吉。',
+        warn:'"上昇トレンド中に高値追い"は多くの投資家がやる失敗。押し目まで待つ規律を持てるか、これが長期成績を分ける。' } ]},
+    { num:'第33章', title:'分散とポジションサイズ', pages:[
+      { lead:'"卵は1つのカゴに盛るな"。分散の質とポジションサイズで、リスクは劇的に減らせる。',
+        body:'<p><b>分散の3つの軸：</b></p><ul><li><b>銘柄分散</b>：最低5-10銘柄、理想は15-20銘柄</li><li><b>業種分散</b>：異なる業種に配分（銀行、IT、消費財等）</li><li><b>地域分散</b>：日本株、米国株、新興国株</li><li><b>時間分散</b>：一括ではなく分割で買う</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'📋 ポジションサイズ決定', steps:['1銘柄の投資上限：総資産の5-10%','コア銘柄（自信あり）：8-10%','サテライト銘柄（試験的）：2-5%','業種偏り：1業種は総資産の30%以下','海外株：総資産の30-50%（グローバル分散）'] },
+        tip:'"確信が高い時ほど、ポジションを大きく"。ただし1銘柄で総資産の20%超は絶対禁物。倒産リスクをゼロにできない。',
+        warn:'分散のしすぎ（50銘柄以上）も問題。管理不能、リターンも平均に近づく。20銘柄前後が実務的な適正数。' } ]},
+    { num:'第34章', title:'売却基準の設定', pages:[
+      { lead:'"買うより売る方が難しい"。ルールを事前に決めておかないと、感情で売買を誤る。',
+        body:'<p><b>売却すべき5つのケース：</b></p><ol><li><b>投資仮説が崩れた</b>：想定と違う展開</li><li><b>目標株価到達</b>：計画通りの利確</li><li><b>より良い機会</b>：他銘柄への乗り換え</li><li><b>ポートフォリオ調整</b>：業種偏り是正</li><li><b>現金化必要</b>：生活資金等</li></ol>' },
+      { body:'',
+        recipe:{ lbl:'📋 売却ルール', steps:['買う前に"売却条件"を決めておく','損切りライン：買値から-20%（銘柄によっては-30%）','利確目標：+50%〜+100%（数年単位）','業績下方修正時は即再評価','四半期ごとに保有銘柄の"買い直したいか"チェック'] },
+        tip:'"買い直したくない銘柄はすぐ売る" — 保有継続バイアスを避ける最強の質問。感情なく機械的に判断できる。',
+        warn:'"含み損だから売れない"は最悪の思考。買値を忘れて、"今の株価が正しいか"だけで判断する習慣を。' } ]},
+    { num:'第35章', title:'記録と振り返り', pages:[
+      { lead:'記録なしで投資の腕は上がらない。売買日記が投資家を育てる。',
+        body:'<p><b>記録すべき項目：</b></p><ul><li>買った日と価格</li><li>買った理由（3-5行）</li><li>売却時の価格と理由</li><li>予想と結果の差異</li><li>反省点・次回への学び</li></ul><p><b>このアプリの機能を活用</b>：株ノート、感情トレード日記、AI売買振り返り、年末レポート等。</p>' },
+      { body:'',
+        recipe:{ lbl:'📋 振り返りルーティン', steps:['月1回：ポートフォリオの見直し','四半期1回：各銘柄の投資仮説を再確認','半年1回：勝ちパターン・負けパターンの分析','年1回：年間の総括、来年の戦略'] },
+        tip:'"感情"を書き残すことが超重要。「焦った」「怖くて売った」等の記録が、次の相場での判断を助ける。',
+        body:'<p><b>投資家として成長する人の共通点：</b></p><ul><li>失敗を素直に認める</li><li>同じ失敗を繰り返さない仕組み作り</li><li>他人の意見より自分の分析を信じる</li><li>相場の変化に応じて戦略を柔軟に変える</li></ul><p>10年続ければ、確実に上級者になれる。</p>' } ]},
+  ]},
+];
+
+function renderPicksBook() {
+  const el = document.getElementById('diary-book-list');
+  if (!el) return;
+
+  const toolbar = `<div class="book-toolbar western">
+    <button onclick="closeDiaryBook()">← 本棚へ</button>
+    <div class="book-title-bar western" style="font-size:15px">買っていい株の選び方</div>
+    <button class="ref-bm-btn" onclick="event.stopPropagation();toggleBookmarkPopover()" title="しおり">🔖</button>
+  </div>`;
+
+  const pages = [];
+  let pageNum = 0;
+  const totalContentPages = PICK_PARTS.reduce((s,pt)=>s+pt.chapters.reduce((ss,c)=>ss+c.pages.length,0),0);
+  const totalPages = 4 + PICK_PARTS.length + totalContentPages + 1;
+
+  // カバー
+  pageNum++;
+  pages.push(`<div class="r4-page">
+    <div class="r4-cover">
+      <div class="r4-cover-vol">実 戦 編</div>
+      <div class="r4-cover-border"></div>
+      <h1>買っていい株の選び方</h1>
+      <div class="r4-cover-sub">〜 ファンダメンタルで選ぶ 〜</div>
+      <div class="r4-cover-tag">全 ${totalPages} 頁 · 8部35章</div>
+      <div class="r4-cover-border"></div>
+      <div class="r4-cover-vol">第 V 巻</div>
+    </div>
+    <div class="r4-pagenum">${pageNum}</div>
+  </div>`);
+
+  // まえがき
+  pageNum++;
+  pages.push(`<div class="r4-page">
+    <div class="r4-foreword">
+      <h2>まえがき</h2>
+      <p>本書は、これまでの4冊（チャート分析I/II、ファンダメンタル分析、組み合わせ実戦編）を土台に、「実際にどうやって"買っていい株"を選ぶか」に絞った実戦書です。</p>
+      <p>教科書的な知識と、実際の銘柄選びには大きな溝があります。「知っている」から「選べる」へ。この橋渡しを目指しました。</p>
+      <p>本書の特徴は、各章に「📋 具体的な手順」を明示していること。読み終わったらすぐ、証券会社のスクリーナーを開いて実行できるレベルを目指しています。</p>
+      <p>投資は長期戦です。焦らず、一冊ずつ知識を積み重ね、1銘柄ずつ経験を積んでください。ふたりの投資旅の実り多きことを願っています。</p>
+    </div>
+    <div class="r4-pagenum">${pageNum}</div>
+  </div>`);
+
+  // 目次
+  const allChapters = PICK_PARTS.flatMap(p => p.chapters.map(c => ({...c, part: p.part})));
+  const half = Math.ceil(allChapters.length / 2);
+  pageNum++;
+  pages.push(`<div class="r4-page">
+    <div class="r4-toc">
+      <h2>目 次 (1/2)</h2>
+      <div class="r4-toc-list">
+        ${allChapters.slice(0, half).map(c => `<div class="r4-toc-item"><span>${escapeHtml(c.num)}</span><span>${escapeHtml(c.title)}</span><span>${c.pages.length}p</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="r4-pagenum">${pageNum}</div>
+  </div>`);
+  pageNum++;
+  pages.push(`<div class="r4-page">
+    <div class="r4-toc">
+      <h2>目 次 (2/2)</h2>
+      <div class="r4-toc-list">
+        ${allChapters.slice(half).map(c => `<div class="r4-toc-item"><span>${escapeHtml(c.num)}</span><span>${escapeHtml(c.title)}</span><span>${c.pages.length}p</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="r4-pagenum">${pageNum}</div>
+  </div>`);
+
+  // 各部と章
+  for (const pt of PICK_PARTS) {
+    // 部の扉
+    pageNum++;
+    pages.push(`<div class="r4-page">
+      <div class="r4-part">
+        <div class="r4-part-num">${escapeHtml(pt.part)}</div>
+        <div class="r4-part-title">${escapeHtml(pt.title)}</div>
+        <div class="r4-part-desc">${escapeHtml(pt.desc)}</div>
+      </div>
+      <div class="r4-pagenum">${pageNum}</div>
+    </div>`);
+    // 章の各ページ
+    for (const ch of pt.chapters) {
+      ch.pages.forEach((p, idx) => {
+        pageNum++;
+        const header = idx === 0
+          ? `<div class="r4-chap-header"><div class="r4-chap-num">${escapeHtml(ch.num)}</div><div class="r4-chap-title">${escapeHtml(ch.title)}</div></div>`
+          : `<div class="r4-chap-header" style="border-bottom-style:dashed"><div class="r4-chap-num">${escapeHtml(ch.num)} （続き）</div><div class="r4-chap-title" style="font-size:17px">${escapeHtml(ch.title)}</div></div>`;
+        const leadHtml = p.lead ? `<div class="r4-lead">${escapeHtml(p.lead)}</div>` : '';
+        const bodyHtml = p.body ? `<div class="r4-body">${p.body}</div>` : '';
+        const body2Html = p.body2 ? `<div class="r4-body">${p.body2}</div>` : '';
+        const whenHtml = p.when ? `<div class="r4-when"><div class="r4-when-lbl">${escapeHtml(p.when.lbl)}</div><div class="r4-when-body">${escapeHtml(p.when.body)}</div></div>` : '';
+        const recipeHtml = p.recipe ? `<div class="r4-recipe"><div class="r4-recipe-lbl">${escapeHtml(p.recipe.lbl)}</div><ol>${p.recipe.steps.map(s => `<li>${s}</li>`).join('')}</ol></div>` : '';
+        const warnHtml = p.warn ? `<div class="r4-warn"><b>⚠️ 注意：</b> ${escapeHtml(p.warn)}</div>` : '';
+        const tipHtml = p.tip ? `<div class="r4-tip"><b>💡 コツ：</b> ${escapeHtml(p.tip)}</div>` : '';
+        pages.push(`<div class="r4-page">
+          ${header}
+          ${leadHtml}
+          ${bodyHtml}
+          ${whenHtml}
+          ${recipeHtml}
+          ${body2Html}
+          ${warnHtml}
+          ${tipHtml}
+          <div class="r4-pagenum">${pageNum}</div>
+        </div>`);
+      });
+    }
+  }
+
+  // 奥付
+  pageNum++;
+  pages.push(`<div class="r4-page">
+    <div class="r4-end">
+      <div class="r4-end-title">お わ り に</div>
+      <div class="r4-end-body">
+        本書で学んだ手順を、実際の銘柄で試してください。<br><br>
+        1銘柄目は失敗するかもしれません。<br>
+        でも、その失敗は必ず次に活きます。<br><br>
+        <b>大事なのは、"考えて選び、記録し、振り返る"サイクル。</b><br><br>
+        10銘柄・3年続ければ、あなたは確実に投資家として成長しています。<br><br>
+        ふたりの投資旅が、豊かなものになりますように。
+      </div>
+      <div class="r4-end-sig">─ ふたりの投資旅 応援 V ─</div>
+    </div>
+    <div class="r4-pagenum">${pageNum}</div>
+  </div>`);
+
+  el.innerHTML = `
+    ${toolbar}
+    <div class="book-pages ref-picks" id="book-pages">
       ${pages.join('')}
     </div>
   `;
