@@ -1157,6 +1157,42 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-spine.memo-mine::after { content:''; position:absolute; top:4px; bottom:4px; left:5px; right:5px; border:1px dashed rgba(255,255,255,.3); pointer-events:none; }
 .book-spine.memo-mine .book-spine-label { color:#e6eef3; font-family:'Hiragino Maru Gothic ProN','Yu Gothic',sans-serif; font-size:16px; letter-spacing:5px; padding:16px 0; }
 
+/* 参考書 */
+.book-spine.ref-book { background:linear-gradient(90deg,#2a3e28,#4a6644,#2a3e28); border-radius:2px 5px 5px 2px; height:210px; width:60px; }
+.book-spine.ref-book::after { content:''; position:absolute; top:6px; bottom:6px; left:6px; right:6px; border:1.5px solid rgba(255,255,255,.25); border-radius:2px; pointer-events:none; }
+.book-spine.ref-book .book-spine-label { color:#f0e8c9; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; font-size:15px; letter-spacing:3px; padding:16px 0; }
+
+/* チャート参考書ページ */
+.book-pages.ref-chart { flex:1; overflow-y:auto; overflow-x:hidden; padding:30px 24px 40px; background:linear-gradient(180deg,#faf6ea,#f2eadc); display:block; scroll-snap-type:none; touch-action:pan-y; }
+.book-pages.ref-chart .ref-cover { text-align:center; padding:36px 20px 30px; border-bottom:2px double #b09068; margin-bottom:28px; }
+.book-pages.ref-chart .ref-cover h1 { font-size:32px; font-weight:800; color:#3a2814; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; letter-spacing:6px; margin-bottom:10px; }
+.book-pages.ref-chart .ref-cover .ref-cover-sub { font-size:13px; color:#7a5e3c; letter-spacing:3px; margin-bottom:20px; }
+.book-pages.ref-chart .ref-cover .ref-cover-tag { font-size:11px; color:#8a6f43; letter-spacing:2px; }
+.book-pages.ref-chart .ref-chapter { margin-bottom:36px; }
+.book-pages.ref-chart .ref-chap-num { font-size:11px; color:#8a6f43; letter-spacing:3px; font-weight:700; margin-bottom:4px; }
+.book-pages.ref-chart .ref-chap-title { font-size:22px; font-weight:800; color:#3a2814; font-family:'Hiragino Mincho ProN','Yu Mincho',serif; letter-spacing:2px; margin-bottom:8px; border-bottom:1px solid #c9a878; padding-bottom:6px; }
+.book-pages.ref-chart .ref-chap-lead { font-size:14px; color:#4a3020; line-height:1.9; margin-bottom:18px; }
+.book-pages.ref-chart .ref-fig { background:#fff8ea; border:1.5px solid #d8bd8a; border-radius:6px; padding:14px 12px; margin-bottom:14px; }
+.book-pages.ref-chart .ref-fig svg { width:100%; height:140px; display:block; margin-bottom:8px; background:#fbf7ed; border-radius:4px; }
+.book-pages.ref-chart .ref-fig-caption { font-size:11px; color:#7a5e3c; letter-spacing:1px; text-align:center; }
+.book-pages.ref-chart .ref-fig-name { font-size:15px; font-weight:800; color:#3a2814; margin-bottom:4px; letter-spacing:1px; }
+.book-pages.ref-chart .ref-fig-signal { font-size:12px; padding:2px 8px; border-radius:5px; display:inline-block; margin-bottom:8px; font-weight:700; letter-spacing:1px; }
+.book-pages.ref-chart .ref-fig-signal.buy { background:#eee1c9; color:#7a5024; }
+.book-pages.ref-chart .ref-fig-signal.sell { background:#e5d3d5; color:#7f3c42; }
+.book-pages.ref-chart .ref-fig-signal.neutral { background:#dfd8c1; color:#6a5e3a; }
+.book-pages.ref-chart .ref-body { font-size:13px; line-height:1.9; color:#3a2814; }
+.book-pages.ref-chart .ref-body p { margin-bottom:8px; }
+.book-pages.ref-chart .ref-body b { font-weight:700; color:#5a3a1a; }
+.book-pages.ref-chart .ref-body ul { padding-left:20px; margin-bottom:8px; }
+.book-pages.ref-chart .ref-body li { margin-bottom:4px; }
+.book-pages.ref-chart .ref-tip { background:#f0e6c9; border-left:3px solid #a4884f; padding:9px 12px; margin-top:10px; font-size:12px; color:#5a4a20; border-radius:0 4px 4px 0; }
+.book-pages.ref-chart .ref-tip b { color:#3a2814; }
+.book-pages.ref-chart .ref-toc { background:#fff8ea; border:1.5px solid #d8bd8a; border-radius:6px; padding:16px 20px; margin-bottom:28px; }
+.book-pages.ref-chart .ref-toc-title { font-size:13px; font-weight:700; color:#7a5e3c; letter-spacing:3px; margin-bottom:10px; }
+.book-pages.ref-chart .ref-toc-item { font-size:13px; color:#4a3020; padding:4px 0; border-bottom:1px dashed #d8bd8a; }
+.book-pages.ref-chart .ref-toc-item:last-child { border-bottom:none; }
+.book-pages.ref-chart .ref-toc-item span { color:#8a6f43; margin-right:8px; font-weight:700; }
+
 /* 株ノートの背表紙 (バインダー風) */
 .book-spine.stock { border-radius:1px 3px 3px 1px; }
 .book-spine.stock.s1 { background:linear-gradient(90deg,#1f2e2a,#2f4640,#1f2e2a); }
@@ -7447,6 +7483,15 @@ function renderDiaryShelf() {
     });
   }
 
+  // 参考書
+  html += '<div class="shelf-sub" style="margin-top:32px;">参考書</div>';
+  html += `<div class="shelf-rack">
+    <div class="book-spine ref-book" onclick="openDiaryBook('ref','ref-chart')">
+      <div class="book-spine-label">チャート分析</div>
+      <div class="book-spine-badge">図解</div>
+    </div>
+  </div><div class="shelf-board"></div>`;
+
   el.innerHTML = html;
 }
 
@@ -7519,6 +7564,7 @@ function renderDiaryBook() {
     return renderStockBook(filter);
   }
   if (currentBookLang === 'memo-hers' || currentBookLang === 'memo-mine') return renderMemoBook(currentBookLang === 'memo-hers' ? 'hers' : 'mine');
+  if (currentBookLang === 'ref-chart') return renderChartRefBook();
 
   const [yStr, mStr] = currentBookYm.split('-');
   const year = Number(yStr);
@@ -7780,6 +7826,288 @@ async function fetchChartData(symbol, tradeTs) {
 }
 
 // ── メモ帳の本 (縦書き、person毎) ──
+// ── チャート分析 参考書 ──
+const CHART_REF_CHAPTERS = [
+  {
+    num: '第1章',
+    title: 'ローソク足の読み方',
+    lead: 'チャートの最小単位。1本のローソクに始値・終値・高値・安値の4情報が凝縮されています。',
+    figs: [
+      { name: '陽線（ようせん）', signal: 'buy', signalTxt:'買い優勢',
+        svg: '<line x1="60" y1="20" x2="60" y2="120" stroke="#4a3020" stroke-width="1.5"/><rect x="50" y="45" width="20" height="55" fill="#c0392b" stroke="#7a1a10" stroke-width="1.5"/><text x="90" y="50" font-size="10" fill="#4a3020">高値</text><text x="90" y="102" font-size="10" fill="#4a3020">安値</text><text x="90" y="65" font-size="10" fill="#4a3020">終値</text><text x="90" y="85" font-size="10" fill="#4a3020">始値</text>',
+        caption: '実体が赤：始値より終値が高い（上昇）'
+      },
+      { name: '陰線（いんせん）', signal: 'sell', signalTxt:'売り優勢',
+        svg: '<line x1="60" y1="20" x2="60" y2="120" stroke="#4a3020" stroke-width="1.5"/><rect x="50" y="45" width="20" height="55" fill="#2e6da4" stroke="#183654" stroke-width="1.5"/><text x="90" y="50" font-size="10" fill="#4a3020">高値</text><text x="90" y="102" font-size="10" fill="#4a3020">安値</text><text x="90" y="65" font-size="10" fill="#4a3020">始値</text><text x="90" y="85" font-size="10" fill="#4a3020">終値</text>',
+        caption: '実体が青：始値より終値が低い（下降）'
+      },
+    ],
+    body: '<p>ローソク足の<b>実体</b>（四角部分）は始値と終値の間、<b>ヒゲ</b>（縦線部分）は高値/安値までを表します。</p><ul><li><b>陽線</b>：終値が始値を上回った日（買い方が強い）</li><li><b>陰線</b>：終値が始値を下回った日（売り方が強い）</li><li><b>長いヒゲ</b>：一度動いたが押し戻された（反転の兆候）</li><li><b>実体大きい</b>：勢いが強い、トレンド継続</li></ul>',
+    tip: '朝の始値付近で買い、夕方の終値で判断が定石。日足で流れを、週足で大局を見る。'
+  },
+  {
+    num: '第2章',
+    title: '主要ローソク足パターン',
+    lead: '複数のローソク足の組み合わせで反転や継続のサインが分かります。特に重要な7型。',
+    figs: [
+      { name: '大陽線 / 大陰線', signal: 'neutral', signalTxt:'勢いの表れ',
+        svg: '<line x1="50" y1="30" x2="50" y2="120" stroke="#4a3020" stroke-width="1.5"/><rect x="40" y="40" width="20" height="70" fill="#c0392b" stroke="#7a1a10" stroke-width="1.5"/><line x1="130" y1="30" x2="130" y2="120" stroke="#4a3020" stroke-width="1.5"/><rect x="120" y="40" width="20" height="70" fill="#2e6da4" stroke="#183654" stroke-width="1.5"/><text x="35" y="140" font-size="10" fill="#4a3020">大陽線</text><text x="115" y="140" font-size="10" fill="#4a3020">大陰線</text>',
+        caption: '実体が長い＝その日の方向に強く動いた'
+      },
+      { name: '十字線（同時線）', signal: 'neutral', signalTxt:'転換示唆',
+        svg: '<line x1="100" y1="20" x2="100" y2="120" stroke="#4a3020" stroke-width="1.5"/><line x1="80" y1="70" x2="120" y2="70" stroke="#4a3020" stroke-width="3"/>',
+        caption: '始値=終値。買いと売りが拮抗、方向感なし'
+      },
+      { name: '包み線（つつみ）', signal: 'buy', signalTxt:'反転サイン',
+        svg: '<line x1="60" y1="50" x2="60" y2="90" stroke="#4a3020" stroke-width="1.5"/><rect x="52" y="60" width="16" height="20" fill="#2e6da4" stroke="#183654" stroke-width="1.5"/><line x1="120" y1="30" x2="120" y2="110" stroke="#4a3020" stroke-width="1.5"/><rect x="108" y="45" width="24" height="55" fill="#c0392b" stroke="#7a1a10" stroke-width="1.5"/>',
+        caption: '前日を丸ごと包む陽線→強い反転'
+      },
+    ],
+    body: '<p>特に「安値圏で包み線」や「高値圏で十字線」は転換の重要サイン。</p><ul><li><b>大陽線後の高値圏の十字線</b> → 天井のサイン</li><li><b>大陰線後の安値圏の十字線</b> → 底のサイン</li><li><b>包み線</b> → 直前とは反対方向へ動きやすい</li></ul>',
+    tip: '単独のローソク足で判断せず、必ず「どの位置（高値圏か安値圏か）」で出たかを見る。'
+  },
+  {
+    num: '第3章',
+    title: '移動平均線（MA）の基礎',
+    lead: '過去N日の終値の平均をつないだ線。トレンドの方向・強さを見る最も基本的な指標。',
+    figs: [
+      { name: '短期・中期・長期MA', signal: 'neutral', signalTxt:'複数線で判断',
+        svg: '<polyline points="10,110 50,90 90,80 130,60 170,45 210,30" fill="none" stroke="#c0392b" stroke-width="2"/><polyline points="10,120 50,105 90,95 130,80 170,65 210,50" fill="none" stroke="#a4884f" stroke-width="2"/><polyline points="10,130 50,120 90,110 130,100 170,90 210,80" fill="none" stroke="#2e6da4" stroke-width="2"/><text x="215" y="35" font-size="9" fill="#c0392b">短期</text><text x="215" y="55" font-size="9" fill="#a4884f">中期</text><text x="215" y="85" font-size="9" fill="#2e6da4">長期</text>',
+        caption: '短期MA(赤)>中期>長期の順で上向き＝完全な上昇トレンド'
+      },
+    ],
+    body: '<p>期間の使い分け：</p><ul><li><b>日足5日</b>：週内のトレンド</li><li><b>日足25日</b>：1ヶ月の流れ（日本の代表）</li><li><b>日足75日</b>：3ヶ月の中期</li><li><b>日足200日</b>：長期トレンドの目安（米国の代表）</li><li><b>週足13週/26週</b>：中長期投資の基準</li></ul><p>MAより<b>株価が上</b>=強気、<b>下</b>=弱気。MAが上向きなら上昇トレンド、下向きなら下降トレンド。</p>',
+    tip: '「株価がMAで反発する」現象を利用した押し目買い（上昇トレンド中に一時的にMAまで下げた所を買う）は王道戦略。'
+  },
+  {
+    num: '第4章',
+    title: 'ゴールデンクロス / デッドクロス',
+    lead: '短期MAと長期MAの交差はトレンド転換のシグナル。特に週足クロスは中長期投資家必見。',
+    figs: [
+      { name: 'ゴールデンクロス', signal: 'buy', signalTxt:'買いサイン',
+        svg: '<polyline points="10,90 50,80 100,60 150,40 210,25" fill="none" stroke="#c0392b" stroke-width="2"/><polyline points="10,50 50,55 100,60 150,70 210,85" fill="none" stroke="#2e6da4" stroke-width="2"/><circle cx="100" cy="60" r="6" fill="none" stroke="#a4884f" stroke-width="2.5"/><text x="70" y="130" font-size="10" fill="#4a3020">交差点＝クロス発生</text>',
+        caption: '短期MA(赤)が長期MA(青)を下から上へ抜ける'
+      },
+      { name: 'デッドクロス', signal: 'sell', signalTxt:'売りサイン',
+        svg: '<polyline points="10,25 50,40 100,60 150,80 210,90" fill="none" stroke="#c0392b" stroke-width="2"/><polyline points="10,85 50,70 100,60 150,55 210,50" fill="none" stroke="#2e6da4" stroke-width="2"/><circle cx="100" cy="60" r="6" fill="none" stroke="#a4884f" stroke-width="2.5"/>',
+        caption: '短期MA(赤)が長期MA(青)を上から下へ抜ける'
+      },
+    ],
+    body: '<p><b>ゴールデンクロス発生の条件（有効性が高いもの）：</b></p><ul><li>長期MA自体が上向きに転じている</li><li>クロス時の出来高が増加</li><li>クロス後に株価がMAで支持されて上昇継続</li></ul><p>これらが揃うと信頼度が高い。逆に長期MAが下向きの中でのクロスは"だまし"になりやすい。</p>',
+    tip: '週足のゴールデンクロスは強力。中長期投資では週足で判断するのが基本。日足クロスは短期トレード向き。'
+  },
+  {
+    num: '第5章',
+    title: 'サポート & レジスタンス',
+    lead: '過去に何度も反発した価格帯。相場参加者の心理が集まる"見えない壁"。',
+    figs: [
+      { name: 'サポート＆レジスタンス', signal: 'neutral', signalTxt:'反発or突破',
+        svg: '<line x1="10" y1="30" x2="220" y2="30" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5,3"/><line x1="10" y1="110" x2="220" y2="110" stroke="#2e6da4" stroke-width="1.5" stroke-dasharray="5,3"/><polyline points="10,80 30,30 50,55 75,110 100,60 125,30 150,55 175,110 200,80 220,30" fill="none" stroke="#4a3020" stroke-width="2"/><text x="10" y="20" font-size="10" fill="#c0392b">レジスタンス</text><text x="10" y="130" font-size="10" fill="#2e6da4">サポート</text>',
+        caption: '上下の壁で価格が跳ね返される'
+      },
+    ],
+    body: '<p><b>サポート</b>：下値支持線。買い手が集中して価格を支える。<br><b>レジスタンス</b>：上値抵抗線。売り手が集中して上昇を止める。</p><p>ブレイク（突破）すると：</p><ul><li>レジスタンスを上抜け → その後はサポートに変わる</li><li>サポートを下抜け → その後はレジスタンスに変わる</li></ul><p>これを<b>ロール・リバーサル</b>という。抜けた壁に戻ってから買う（戻り売り）が高勝率。</p>',
+    tip: 'キリのいい価格（1000円、10000円等）や過去の高値/安値は特に強いS&Rになりやすい。'
+  },
+  {
+    num: '第6章',
+    title: 'ダブルボトム / ダブルトップ',
+    lead: '2回同じ価格で反発or反落する型。天井と底の判定に最も使われるパターン。',
+    figs: [
+      { name: 'ダブルボトム (W字)', signal: 'buy', signalTxt:'上昇転換',
+        svg: '<polyline points="10,40 40,80 65,50 100,110 130,60 170,110 200,50 220,20" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="65" y1="50" x2="200" y2="50" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,3"/><text x="205" y="45" font-size="9" fill="#c0392b">ネックライン</text>',
+        caption: '2つ目の底が1つ目と同水準、ネックライン突破で成立'
+      },
+      { name: 'ダブルトップ (M字)', signal: 'sell', signalTxt:'下降転換',
+        svg: '<polyline points="10,110 40,60 65,100 100,20 130,90 170,20 200,100 220,130" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="65" y1="100" x2="200" y2="100" stroke="#2e6da4" stroke-width="1.5" stroke-dasharray="4,3"/>',
+        caption: '2つ目の天井が1つ目と同水準、ネックライン割れで成立'
+      },
+    ],
+    body: '<p>成立の条件：</p><ul><li>2つの底/天井の間に明確な戻り/押しがある</li><li>ネックライン（間の高値/安値）をブレイクする</li><li>ブレイク時の出来高が増加している</li></ul><p><b>目標値の測り方</b>：2つの底/天井とネックラインの差だけ、ネックライン突破後に動くと言われる。</p>',
+    tip: 'ダブルボトムは長期チャートで出ると特に強力。日足より週足の方が信頼度高い。'
+  },
+  {
+    num: '第7章',
+    title: 'ヘッド & ショルダー',
+    lead: '天井圏で3つの山（左肩・頭・右肩）を作る、最も有名な天井転換パターン。',
+    figs: [
+      { name: 'ヘッド&ショルダー', signal: 'sell', signalTxt:'長期下落転換',
+        svg: '<polyline points="10,110 35,60 60,90 90,20 130,90 155,60 185,110 220,130" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="60" y1="90" x2="185" y2="90" stroke="#2e6da4" stroke-width="1.5" stroke-dasharray="4,3"/><text x="30" y="55" font-size="9" fill="#4a3020">左肩</text><text x="85" y="15" font-size="9" fill="#4a3020">頭</text><text x="150" y="55" font-size="9" fill="#4a3020">右肩</text><text x="190" y="88" font-size="9" fill="#2e6da4">ネック</text>',
+        caption: '長期上昇の最終局面、ネック割れで確定'
+      },
+      { name: '逆ヘッド&ショルダー', signal: 'buy', signalTxt:'長期上昇転換',
+        svg: '<polyline points="10,40 35,90 60,60 90,130 130,60 155,90 185,40 220,20" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="60" y1="60" x2="185" y2="60" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,3"/>',
+        caption: '長期下落の最終局面、ネック突破で確定'
+      },
+    ],
+    body: '<p>ヘッド&ショルダーは<b>最強クラスの反転サイン</b>。ネックラインを割った後の戻りで売る/買うのが定石。</p><p>目標値：頭とネックラインの差だけ、ネックラインからさらに下/上に動く。</p><ul><li>形が対称的なほど信頼度高い</li><li>週足レベルで出ると数ヶ月〜1年のトレンド転換になり得る</li><li>右肩形成中の出来高減少も重要な確認要素</li></ul>',
+    tip: 'ネック割れ直後に売り、戻ってきた所でさらに売り増しが典型パターン。'
+  },
+  {
+    num: '第8章',
+    title: 'カップ&ハンドル',
+    lead: '長期上昇トレンド中に出現する押し目パターン。U字（カップ）+小下げ（ハンドル）で構成。',
+    figs: [
+      { name: 'カップ&ハンドル', signal: 'buy', signalTxt:'上昇継続',
+        svg: '<path d="M10,30 Q30,30 50,80 Q100,120 150,120 Q195,120 210,80 Q215,30 230,30" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="230,30 240,45 250,60 260,40 270,25" fill="none" stroke="#4a3020" stroke-width="2" transform="translate(-30,0)"/><line x1="10" y1="30" x2="230" y2="30" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,3"/>',
+        caption: '深いU字＋浅い下げ＋レジスタンス突破'
+      },
+    ],
+    body: '<p>成立ポイント：</p><ul><li><b>カップ</b>：数週間〜数ヶ月かけて深く緩やかなU字を描く</li><li><b>ハンドル</b>：カップの右上端から浅く1-2週間下げる（-15%以内）</li><li><b>ブレイク</b>：カップの縁の高値（レジスタンス）を上抜け</li></ul><p>米国株の成長株でよく出るパターン。長期投資家が仕込む間にできる。</p>',
+    tip: 'ブレイク時の出来高急増が絶対条件。出来高なしのブレイクは"だまし"。'
+  },
+  {
+    num: '第9章',
+    title: '三角持ち合い',
+    lead: '高値切り下げ・安値切り上げで収束する型。エネルギー蓄積→大放出の典型。',
+    figs: [
+      { name: '三角持ち合い', signal: 'neutral', signalTxt:'ブレイク方向へ',
+        svg: '<polyline points="10,20 40,80 60,30 90,80 110,45 140,80 160,55 190,75 210,65 220,70" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="10" y1="20" x2="220" y2="70" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="10" y1="90" x2="220" y2="70" stroke="#2e6da4" stroke-width="1.5" stroke-dasharray="4,3"/>',
+        caption: '3種類：対称、上昇三角、下降三角'
+      },
+    ],
+    body: '<ul><li><b>対称三角</b>：高値切り下げ+安値切り上げ。方向不明</li><li><b>上昇三角</b>：高値水平+安値切り上げ。上抜け期待</li><li><b>下降三角</b>：高値切り下げ+安値水平。下抜け期待</li></ul><p>収束の2/3の地点でブレイクすることが多い。ブレイク方向へ、三角の"高さ"分だけ動くと言われる。</p>',
+    tip: 'ブレイク直前は出来高が枯れ、ブレイク時に爆発的に増加するのが理想。だましも多いので"ブレイク→戻し→再突破"を待って入る手もあり。'
+  },
+  {
+    num: '第10章',
+    title: 'RSI（相対力指数）',
+    lead: '過去N日間の"買われ度"を0-100で示す。買われすぎ・売られすぎを見る代表指標。',
+    figs: [
+      { name: 'RSI 14日', signal: 'neutral', signalTxt:'70超/30以下に注目',
+        svg: '<line x1="10" y1="30" x2="220" y2="30" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="90" x2="220" y2="90" stroke="#2e6da4" stroke-width="1" stroke-dasharray="3,2"/><polyline points="10,80 30,60 55,40 80,20 105,45 130,70 155,95 180,100 205,80 220,55" fill="none" stroke="#4a3020" stroke-width="2"/><text x="5" y="28" font-size="9" fill="#c0392b">70</text><text x="5" y="93" font-size="9" fill="#2e6da4">30</text>',
+        caption: '70超＝買われすぎ、30以下＝売られすぎ'
+      },
+    ],
+    body: '<p>基本の使い方：</p><ul><li><b>70以上</b>：買われすぎ、利確や戻り売り候補</li><li><b>30以下</b>：売られすぎ、押し目買い候補</li><li><b>50付近</b>：中立、トレンドの向きに従う</li></ul><p><b>ダイバージェンス</b>（逆行現象）：株価が新高値を更新してもRSIが更新しない → 上昇の勢い低下、天井のサイン。株価が新安値を更新してもRSIが更新しない → 下落の勢い低下、底のサイン。</p>',
+    tip: '強いトレンド相場ではRSI70以上や30以下が続く。単独判断せず、トレンドと組み合わせて。'
+  },
+  {
+    num: '第11章',
+    title: 'MACD',
+    lead: '短期EMAと長期EMAの差で作る指標。トレンド転換の初動を捉える。',
+    figs: [
+      { name: 'MACDとシグナル線', signal: 'buy', signalTxt:'0ライン上抜けで強気',
+        svg: '<line x1="10" y1="70" x2="220" y2="70" stroke="#4a3020" stroke-width="1"/><polyline points="10,110 30,100 55,90 80,75 105,60 130,50 155,45 180,55 205,70 220,80" fill="none" stroke="#c0392b" stroke-width="2"/><polyline points="10,100 30,95 55,90 80,80 105,70 130,60 155,55 180,60 205,68 220,72" fill="none" stroke="#2e6da4" stroke-width="2"/><text x="222" y="45" font-size="9" fill="#c0392b">MACD</text><text x="222" y="60" font-size="9" fill="#2e6da4">シグナル</text>',
+        caption: 'MACDがシグナルを上抜けたら買いサイン'
+      },
+    ],
+    body: '<p>3つの要素：</p><ul><li><b>MACD線</b>：短期EMA(12日) - 長期EMA(26日)</li><li><b>シグナル線</b>：MACD線の9日平均</li><li><b>ヒストグラム</b>：MACDとシグナルの差</li></ul><p>売買サイン：</p><ul><li>MACDがシグナルを<b>上抜け</b>（ゴールデンクロス）→ 買い</li><li>MACDがシグナルを<b>下抜け</b>（デッドクロス）→ 売り</li><li>MACDが<b>0ラインより上</b>→ 上昇トレンド、下→下降トレンド</li></ul>',
+    tip: 'MACDの単独ではだましも多い。RSIやMAと組み合わせて。特に0ライン上でのGCは信頼度高い。'
+  },
+  {
+    num: '第12章',
+    title: 'ボリンジャーバンド',
+    lead: '移動平均線を中心に、標準偏差でバンドを描く。価格の変動範囲を可視化する指標。',
+    figs: [
+      { name: '±2σバンド', signal: 'neutral', signalTxt:'収束→拡散に注目',
+        svg: '<polyline points="10,20 40,25 70,30 100,40 130,45 160,40 190,35 220,25" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/><polyline points="10,110 40,105 70,100 100,90 130,85 160,90 190,95 220,105" fill="none" stroke="#2e6da4" stroke-width="1.5" stroke-dasharray="3,2"/><polyline points="10,65 40,65 70,65 100,65 130,65 160,65 190,65 220,65" fill="none" stroke="#a4884f" stroke-width="1.5"/><polyline points="10,60 40,50 70,80 100,55 130,90 160,50 190,70 220,40" fill="none" stroke="#4a3020" stroke-width="2"/><text x="222" y="25" font-size="9" fill="#c0392b">+2σ</text><text x="222" y="70" font-size="9" fill="#a4884f">MA</text><text x="222" y="110" font-size="9" fill="#2e6da4">-2σ</text>',
+        caption: '価格が±2σ内に収まる確率95%'
+      },
+    ],
+    body: '<p>使い方2パターン：</p><p><b>① 逆張り（レンジ相場）</b><br>+2σタッチ → 売り、-2σタッチ → 買い。相場が横ばいの時に有効。</p><p><b>② 順張り（トレンド相場）</b><br>バンドが収束（スクイーズ）→拡散（エクスパンション）でトレンド発生。バンドウォーク（+2σに沿って上昇）は強い上昇トレンド。</p><ul><li><b>スクイーズ</b>：バンド幅が狭くなる → 大きな動きの前兆</li><li><b>エクスパンション</b>：バンド幅が急拡大 → トレンド発生中</li></ul>',
+    tip: 'バンドウォーク中は逆張り厳禁。順張りで乗る。バンドから離れたら利確サイン。'
+  },
+  {
+    num: '第13章',
+    title: '出来高で流れを掴む',
+    lead: '価格だけでなく"出来高"を見ることで、動きの本気度が分かる。',
+    figs: [
+      { name: '価格上昇+出来高増加', signal: 'buy', signalTxt:'本物の上昇',
+        svg: '<polyline points="10,110 40,100 70,80 100,65 130,45 160,30 190,20 220,15" fill="none" stroke="#c0392b" stroke-width="2"/><rect x="10" y="130" width="20" height="10" fill="#8a7a5c"/><rect x="40" y="128" width="20" height="12" fill="#8a7a5c"/><rect x="70" y="120" width="20" height="20" fill="#8a7a5c"/><rect x="100" y="115" width="20" height="25" fill="#8a7a5c"/><rect x="130" y="105" width="20" height="35" fill="#8a7a5c"/><rect x="160" y="95" width="20" height="45" fill="#8a7a5c"/><rect x="190" y="85" width="20" height="55" fill="#8a7a5c"/>',
+        caption: '出来高を伴う上昇は継続性が高い'
+      },
+    ],
+    body: '<ul><li><b>価格上昇+出来高増加</b> → 本物の上昇、継続の可能性大</li><li><b>価格上昇+出来高減少</b> → 上昇の勢いが弱い、失速の兆し</li><li><b>価格下落+出来高増加</b> → 本格的な売り、下落継続の可能性</li><li><b>価格下落+出来高減少</b> → 底が近い可能性、様子見</li><li><b>普段の2-3倍の出来高急増</b> → 何かニュースがあった可能性、要チェック</li></ul>',
+    tip: 'ブレイク（重要な価格帯突破）は必ず出来高を伴うのが理想。出来高なしのブレイクはだまし率が高い。'
+  },
+  {
+    num: '第14章',
+    title: 'トレンドラインの引き方',
+    lead: '安値/高値を結んだラインで、トレンドの方向と勢いを見る。',
+    figs: [
+      { name: '上昇トレンドライン', signal: 'buy', signalTxt:'ライン反発で買い',
+        svg: '<polyline points="10,120 30,100 55,110 80,80 105,90 135,60 160,70 190,40 215,50" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="10" y1="130" x2="220" y2="30" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,3"/>',
+        caption: '安値を結んだ線。3点以上で信頼度アップ'
+      },
+    ],
+    body: '<p>引き方のルール：</p><ul><li><b>上昇トレンドライン</b>：安値と安値を結ぶ（右上がり）</li><li><b>下降トレンドライン</b>：高値と高値を結ぶ（右下がり）</li><li>接点は最低2つ、<b>3つ以上あると信頼度高い</b></li></ul><p>使い方：</p><ul><li>ラインで反発 → トレンド継続、その方向へ順張り</li><li>ライン割れ → トレンド転換の可能性、ポジション見直し</li></ul>',
+    tip: '長期のトレンドライン（月足・週足）ほど強力。日足の細かい線に振り回されないこと。'
+  },
+  {
+    num: '第15章',
+    title: '実戦での組み合わせ方',
+    lead: '単独の指標では"だまし"に遭う。複数を組み合わせて確度を上げるのがプロの流儀。',
+    figs: [
+      { name: '複合判断の例', signal: 'buy', signalTxt:'高確度の買いポイント',
+        svg: '<polyline points="10,110 40,90 70,100 100,70 130,80 160,50 190,60 220,30" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,120 40,115 70,105 100,95 130,85 160,75 190,65 220,55" fill="none" stroke="#a4884f" stroke-width="1.5"/><circle cx="130" cy="80" r="6" fill="none" stroke="#c0392b" stroke-width="2"/><text x="80" y="30" font-size="10" fill="#c0392b">押し目でMA反発</text>',
+        caption: 'トレンド+MA+反発+出来高、複数条件が揃った所を狙う'
+      },
+    ],
+    body: '<p><b>買いエントリーの理想的組み合わせ：</b></p><ul><li>週足で上昇トレンド（MA13>MA26）</li><li>日足でMA25に接近して反発</li><li>RSI 30-50 に来ている</li><li>直近の安値サポート付近</li><li>出来高が反発時に増加</li></ul><p>これら3-4個が同時に揃った時が高確率エントリー。1つだけでは危険。</p><p><b>売り（利確）の判断：</b></p><ul><li>目標株価に到達</li><li>RSI 70以上で買われすぎ</li><li>移動平均線から乖離しすぎ</li><li>上値抵抗線に到達</li><li>出来高の減少（勢いの衰え）</li></ul>',
+    tip: 'テクニカル分析はあくまで確率論。100%当たる手法は存在しない。損切りルールを守るのが最重要。'
+  },
+];
+
+function renderChartRefBook() {
+  const el = document.getElementById('diary-book-list');
+  if (!el) return;
+
+  const toolbar = `<div class="book-toolbar western">
+    <button onclick="closeDiaryBook()">← 本棚へ</button>
+    <div class="book-title-bar western">チャート分析</div>
+    <div style="display:flex; gap:6px;">
+      <button onclick="scrollChartRefToTop()">目次</button>
+    </div>
+  </div>`;
+
+  const toc = `<div class="ref-toc">
+    <div class="ref-toc-title">目次</div>
+    ${CHART_REF_CHAPTERS.map((c, i) => `<div class="ref-toc-item" onclick="scrollToChapter(${i})"><span>${c.num}</span>${escapeHtml(c.title)}</div>`).join('')}
+  </div>`;
+
+  const cover = `<div class="ref-cover">
+    <h1>チャート分析</h1>
+    <div class="ref-cover-sub">〜 中長期投資のための図解読本 〜</div>
+    <div class="ref-cover-tag">全 ${CHART_REF_CHAPTERS.length} 章 · SVG図解付き</div>
+  </div>`;
+
+  const chapters = CHART_REF_CHAPTERS.map((c, i) => {
+    const figs = c.figs.map(f => `<div class="ref-fig">
+      <svg viewBox="0 0 250 140" preserveAspectRatio="xMidYMid meet">${f.svg}</svg>
+      <div class="ref-fig-name">${escapeHtml(f.name)}</div>
+      <div class="ref-fig-signal ${f.signal}">${escapeHtml(f.signalTxt)}</div>
+      <div class="ref-fig-caption">${escapeHtml(f.caption)}</div>
+    </div>`).join('');
+    return `<div class="ref-chapter" id="ref-chap-${i}">
+      <div class="ref-chap-num">${escapeHtml(c.num)}</div>
+      <div class="ref-chap-title">${escapeHtml(c.title)}</div>
+      <div class="ref-chap-lead">${escapeHtml(c.lead)}</div>
+      ${figs}
+      <div class="ref-body">${c.body}</div>
+      ${c.tip ? `<div class="ref-tip"><b>💡 コツ：</b> ${escapeHtml(c.tip)}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    ${toolbar}
+    <div class="book-pages ref-chart" id="book-pages">
+      ${cover}
+      ${toc}
+      ${chapters}
+    </div>
+  `;
+  el.classList.add('active');
+}
+function scrollChartRefToTop() {
+  const pages = document.getElementById('book-pages');
+  if (pages) pages.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function scrollToChapter(i) {
+  const el = document.getElementById('ref-chap-' + i);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function renderMemoBook(person) {
   const el = document.getElementById('diary-book-list');
   if (!el || !currentBookYm) return;
