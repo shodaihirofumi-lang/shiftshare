@@ -1303,6 +1303,65 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-pages.ref-fund .r3-end-body { font-size:14px; line-height:2.2; color:#4a3020; max-width:340px; }
 .book-pages.ref-fund .r3-end-sig { margin-top:30px; font-size:12px; color:#8a4a30; letter-spacing:3px; }
 
+/* 参考書4巻 - 組み合わせ実戦編（緑の背表紙・大きい文字） */
+.book-spine.ref-book-4 { background:linear-gradient(90deg,#1e3a2e,#3f6b52,#1e3a2e); }
+.book-spine.ref-book-4 .book-spine-label { color:#e8f0d8; letter-spacing:3px; font-size:13px; padding:12px 0; }
+.book-pages.ref-combo { flex:1; overflow-x:auto; overflow-y:hidden; display:flex; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; overscroll-behavior:contain; touch-action:pan-x; }
+.book-pages.ref-combo::-webkit-scrollbar { display:none; }
+.book-pages.ref-combo { scrollbar-width:none; }
+.book-pages.ref-combo .r4-page { flex:0 0 100vw; width:100vw; max-width:100vw; height:100%; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; padding:34px 32px 50px; background:linear-gradient(180deg,#f8f4e6,#efe6cf); font-family:'Hiragino Sans','Yu Gothic',sans-serif; color:#2c1e10; box-shadow:inset -3px 0 8px -6px rgba(120,80,40,.18); box-sizing:border-box; position:relative; }
+.book-pages.ref-combo .r4-page::before { content:''; position:absolute; top:0; bottom:0; left:0; width:1px; background:linear-gradient(180deg, transparent, rgba(120,80,40,.15) 30%, rgba(120,80,40,.15) 70%, transparent); pointer-events:none; }
+.book-pages.ref-combo .r4-pagenum { position:absolute; bottom:14px; right:22px; font-size:13px; color:#2a5a3f; letter-spacing:2px; font-weight:600; }
+
+.book-pages.ref-combo .r4-cover { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; }
+.book-pages.ref-combo .r4-cover h1 { font-size:36px; font-weight:800; letter-spacing:5px; color:#1e3a2e; margin-bottom:14px; }
+.book-pages.ref-combo .r4-cover-sub { font-size:22px; font-weight:600; color:#3f6b52; letter-spacing:3px; margin-bottom:24px; }
+.book-pages.ref-combo .r4-cover-tag { font-size:16px; color:#3f6b52; letter-spacing:3px; margin-bottom:40px; }
+.book-pages.ref-combo .r4-cover-border { width:60%; height:2px; background:#3f6b52; margin:0 auto 20px; }
+.book-pages.ref-combo .r4-cover-vol { font-size:16px; color:#3f6b52; letter-spacing:8px; font-weight:700; }
+
+.book-pages.ref-combo .r4-part { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; background:linear-gradient(180deg,#e6ddc0,#d8ccae); }
+.book-pages.ref-combo .r4-part-num { font-size:16px; color:#3f6b52; letter-spacing:8px; font-weight:700; margin-bottom:14px; }
+.book-pages.ref-combo .r4-part-title { font-size:30px; font-weight:800; color:#1e3a2e; letter-spacing:5px; margin-bottom:18px; }
+.book-pages.ref-combo .r4-part-desc { font-size:16px; color:#3a3020; line-height:2.2; max-width:320px; }
+
+.book-pages.ref-combo .r4-foreword h2, .book-pages.ref-combo .r4-toc h2 { font-size:24px; font-weight:800; color:#1e3a2e; margin-bottom:18px; letter-spacing:4px; border-bottom:2px solid #3f6b52; padding-bottom:10px; }
+.book-pages.ref-combo .r4-foreword p { font-size:17px; line-height:2.2; margin-bottom:14px; color:#2c1e10; }
+.book-pages.ref-combo .r4-toc-list { display:flex; flex-direction:column; gap:8px; }
+.book-pages.ref-combo .r4-toc-item { display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; border-bottom:1px dotted #8ba690; font-size:15px; }
+.book-pages.ref-combo .r4-toc-item span:first-child { flex-shrink:0; color:#3f6b52; font-weight:700; margin-right:8px; font-size:13px; min-width:40px; }
+.book-pages.ref-combo .r4-toc-item span:nth-child(2) { flex:1; color:#2c1e10; }
+.book-pages.ref-combo .r4-toc-item span:last-child { color:#3f6b52; font-weight:600; font-size:13px; }
+
+.book-pages.ref-combo .r4-chap-header { padding:8px 0 14px; border-bottom:2px double #3f6b52; margin-bottom:18px; }
+.book-pages.ref-combo .r4-chap-num { font-size:13px; color:#3f6b52; letter-spacing:4px; font-weight:700; margin-bottom:5px; }
+.book-pages.ref-combo .r4-chap-title { font-size:24px; font-weight:800; color:#1e3a2e; letter-spacing:2px; line-height:1.4; }
+.book-pages.ref-combo .r4-lead { font-size:16px; color:#2c1e10; line-height:2.0; margin-bottom:18px; padding:12px 14px; background:#eae0c4; border-left:4px solid #3f6b52; border-radius:0 5px 5px 0; }
+.book-pages.ref-combo .r4-section-title { font-size:17px; font-weight:800; color:#1e3a2e; margin:14px 0 8px; padding:4px 10px; background:#dfd4b0; border-radius:4px; letter-spacing:1px; }
+.book-pages.ref-combo .r4-body { font-size:16px; line-height:2.1; color:#2c1e10; }
+.book-pages.ref-combo .r4-body p { margin-bottom:10px; }
+.book-pages.ref-combo .r4-body b { font-weight:700; color:#1e3a2e; }
+.book-pages.ref-combo .r4-body ul, .book-pages.ref-combo .r4-body ol { padding-left:24px; margin-bottom:10px; }
+.book-pages.ref-combo .r4-body li { margin-bottom:6px; }
+
+.book-pages.ref-combo .r4-when { background:#e0ecd8; border-left:4px solid #3f6b52; padding:12px 14px; margin:12px 0; border-radius:0 5px 5px 0; }
+.book-pages.ref-combo .r4-when-lbl { font-size:12px; font-weight:700; color:#2a5a3f; letter-spacing:2px; margin-bottom:5px; }
+.book-pages.ref-combo .r4-when-body { font-size:15px; line-height:2.0; color:#1e3a2e; }
+.book-pages.ref-combo .r4-recipe { background:#fff8e0; border:1.5px solid #b09068; border-radius:6px; padding:14px 16px; margin:12px 0; }
+.book-pages.ref-combo .r4-recipe-lbl { font-size:12px; font-weight:700; color:#8a6a2a; letter-spacing:2px; margin-bottom:8px; }
+.book-pages.ref-combo .r4-recipe ol { padding-left:24px; font-size:15px; line-height:1.9; }
+.book-pages.ref-combo .r4-recipe li { margin-bottom:5px; color:#2c1e10; }
+.book-pages.ref-combo .r4-recipe li b { color:#7a4a0a; }
+.book-pages.ref-combo .r4-warn { background:#f3dcd0; border-left:4px solid #a83c28; padding:11px 14px; margin:12px 0; font-size:14px; color:#4a1e10; line-height:1.9; border-radius:0 4px 4px 0; }
+.book-pages.ref-combo .r4-warn b { color:#7a1a08; }
+.book-pages.ref-combo .r4-tip { background:#dfe8d5; border-left:4px solid #3f6b52; padding:11px 14px; margin:12px 0; font-size:14px; color:#1e3a2e; line-height:1.9; border-radius:0 4px 4px 0; }
+.book-pages.ref-combo .r4-tip b { color:#1e3a2e; }
+
+.book-pages.ref-combo .r4-end { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; }
+.book-pages.ref-combo .r4-end-title { font-size:22px; font-weight:800; letter-spacing:6px; color:#1e3a2e; margin-bottom:22px; }
+.book-pages.ref-combo .r4-end-body { font-size:16px; line-height:2.3; color:#2c1e10; max-width:340px; }
+.book-pages.ref-combo .r4-end-sig { margin-top:30px; font-size:13px; color:#3f6b52; letter-spacing:3px; }
+
 /* 株ノートの背表紙 (バインダー風) */
 .book-spine.stock { border-radius:1px 3px 3px 1px; }
 .book-spine.stock.s1 { background:linear-gradient(90deg,#1f2e2a,#2f4640,#1f2e2a); }
@@ -7608,6 +7667,10 @@ function renderDiaryShelf() {
       <div class="book-spine-label">ファンダメンタル</div>
       <div class="book-spine-badge">全100頁</div>
     </div>
+    <div class="book-spine ref-book ref-book-4" onclick="openDiaryBook('ref','ref-combo')">
+      <div class="book-spine-label">組合せ実戦</div>
+      <div class="book-spine-badge">大文字</div>
+    </div>
   </div><div class="shelf-board"></div>`;
 
   el.innerHTML = html;
@@ -7685,6 +7748,7 @@ function renderDiaryBook() {
   if (currentBookLang === 'ref-chart') return renderChartRefBook();
   if (currentBookLang === 'ref-chart-2') return renderChartRef2Book();
   if (currentBookLang === 'ref-fund') return renderFundBook();
+  if (currentBookLang === 'ref-combo') return renderComboBook();
 
   const [yStr, mStr] = currentBookYm.split('-');
   const year = Number(yStr);
@@ -8929,6 +8993,502 @@ function renderFundBook() {
   el.innerHTML = `
     ${toolbar}
     <div class="book-pages ref-fund" id="book-pages">
+      ${pages.join('')}
+    </div>
+  `;
+  el.classList.add('active');
+  requestAnimationFrame(() => {
+    const p = document.getElementById('book-pages');
+    if (p) p.scrollLeft = 0;
+  });
+}
+
+// ── チャート組み合わせ実戦編 第4巻 約100頁・大文字 ──
+// 各ページは {lead?, sections:[{title,body}], when?, recipe?, warn?, tip?} の構造
+const COMBO_PARTS = [
+  { part:'第 I 部', title:'組み合わせの基本原則', desc:'なぜ複数指標を組み合わせるのか。基礎中の基礎を5章で。', chapters:[
+    { num:'第1章', title:'なぜ指標を組み合わせるのか', pages:[
+      { lead:'単独の指標には必ず"だまし"がある。複数を組み合わせて確率を上げるのがプロの流儀。',
+        body:'<p><b>どんな指標も万能ではない。</b></p><ul><li>RSIだけで買う → 強いトレンド相場では"売られすぎ"のまま下がり続ける</li><li>MAだけで買う → レンジ相場では小さな損切りを繰り返す</li><li>MACDだけで買う → だまし転換で振り回される</li></ul><p>2-3個の指標を組み合わせ、<b>すべて同じ方向を示した時だけエントリー</b>することで、精度は劇的に上がる。</p>',
+        tip:'「多ければ多いほど良い」わけではない。5個以上組み合わせると、逆にサインが出なくなる。2-3個が最適。' },
+      { body:'<p><b>組み合わせで得られる3つの効果：</b></p><ol><li><b>だましの減少</b>：1個の指標が誤ったサインを出しても、他が確認しないので回避できる</li><li><b>エントリー精度向上</b>：全指標一致=高確率</li><li><b>相場観の言語化</b>：「上昇トレンド中でRSI30台反発、出来高増加」等、明確な理由で売買できる</li></ol>',
+        warn:'組み合わせの落とし穴：似た性質の指標を重ねても意味がない。RSI+ストキャス+MACDは全部オシレーター系で同じ動きになりがち。' } ]},
+    { num:'第2章', title:'トレンド系 vs オシレーター系', pages:[
+      { lead:'指標には大きく2種類。役割が異なるので"組み合わせる意味"が出る。',
+        body:'<p><b>トレンド系指標</b>（順張り向き）：</p><ul><li>移動平均線（MA/EMA）</li><li>MACD</li><li>一目均衡表</li><li>パラボリック SAR</li><li>ADX / DMI</li></ul><p><b>オシレーター系指標</b>（逆張り・タイミング向き）：</p><ul><li>RSI</li><li>ストキャスティクス</li><li>ボリンジャーバンド %B</li><li>Rate of Change (ROC)</li><li>Williams %R</li></ul>' },
+      { body:'<p><b>使い分けの原則：</b></p><ul><li><b>大局を掴む</b>：トレンド系（週足MAで方向を確認）</li><li><b>タイミングを計る</b>：オシレーター系（日足RSIで押し目確認）</li></ul><p>この"大局×タイミング"の組み合わせが、実戦の王道パターン。</p>',
+        tip:'まず"今どっちの相場か"を判定。トレンド相場ならトレンド系優先、レンジ相場ならオシレーター系優先。' } ]},
+    { num:'第3章', title:'時間軸を揃える vs ズラす', pages:[
+      { lead:'同じ時間軸で組み合わせるか、異なる時間軸を組み合わせるか。それぞれ意味が違う。',
+        body:'<p><b>同じ時間軸で組み合わせ：</b></p><ul><li>日足MA + 日足RSI</li><li>同じ日のサインを重ねて精度を上げる</li><li>短期売買に向く</li></ul><p><b>異なる時間軸で組み合わせ（マルチタイムフレーム）：</b></p><ul><li>週足MA（大局） + 日足RSI（タイミング）</li><li>上位時間軸のトレンドに沿って下位時間軸でエントリー</li><li>中長期投資に向く</li></ul>' },
+      { body:'<p><b>マルチタイムフレーム分析の黄金律：</b></p><p>「<b>上位時間軸のトレンドに逆らわない</b>」</p><ul><li>週足が上昇トレンド → 日足で買いサインだけ狙う（売りは無視）</li><li>週足が下降トレンド → 日足で売りサインだけ狙う（買いは無視）</li></ul><p>これだけで勝率が20-30%上がると言われる。</p>',
+        recipe:{ lbl:'標準的な3時間軸分析', steps:['<b>週足</b>で大局トレンドを判定（上昇/下降/レンジ）','<b>日足</b>で押し目/戻りの形を確認','<b>時間足</b>でエントリーサインを待つ'] } } ]},
+    { num:'第4章', title:'だましを減らす3つの工夫', pages:[
+      { lead:'どんなに完璧な組み合わせでも、だましは0にできない。減らす工夫を持つ。',
+        body:'<p><b>①「終値」を確認する</b><br>ローソク足の途中でサインが出ても信じない。<b>その日の終値</b>で成立したかを確認してからエントリー。日中の一時的な値動きに騙されない。</p><p><b>② 出来高を必ず併用</b><br>価格が動いても、出来高が伴わなければ"本物"ではないことが多い。ブレイクや反転には出来高の増加が必須。</p><p><b>③ 上位時間軸で確認</b><br>日足でサインが出たら、必ず週足も確認。両者が同じ方向を示すなら信頼度大。</p>' },
+      { body:'<p><b>だまし多発パターン（要注意）：</b></p><ul><li>祝日前、月末、権利落ち日等の特殊日</li><li>決算発表直前・直後</li><li>出来高が枯れた時間帯（昼休憩前後）</li><li>重要指標発表前後（FOMC等）</li><li>年末年始の閑散相場</li></ul><p>これらの日は、通常時のサインより信頼度が落ちる。</p>',
+        warn:'"サインが出ればすぐエントリー"は初心者の失敗。1-2本待って、確定するのを見てから動くのがプロ。' } ]},
+    { num:'第5章', title:'相場局面の見分け方', pages:[
+      { lead:'どんな戦略を選ぶか。まず"今どんな相場か"を判定するのが全て。',
+        body:'<p><b>相場は大きく3つの局面：</b></p><ol><li><b>トレンド相場</b>（上昇 or 下降）：一方向に動き続ける</li><li><b>レンジ相場</b>（横ばい）：一定範囲で往復</li><li><b>転換期</b>（トレンドの変わり目）：不安定</li></ol><p><b>局面によって最適な戦略が違う：</b></p><ul><li>トレンド相場 → 順張り（MA + MACD等）</li><li>レンジ相場 → 逆張り（RSI + Bollinger等）</li><li>転換期 → 待つ or 少額試し玉</li></ul>' },
+      { body:'<p><b>局面判定の実務的方法：</b></p>',
+        recipe:{ lbl:'3ステップ判定法', steps:['<b>週足MA25</b>の傾き：明確に上/下向き → トレンド、横 → レンジ','<b>ADX</b>の水準：25以上 → トレンド、20以下 → レンジ','<b>ボリンジャーバンド</b>：拡散中 → トレンド、収束中 → レンジ'] },
+        body2:'<p>3つのうち2つ以上が同じ判定なら、その局面と判断。矛盾する場合は"転換期"として様子見。</p>',
+        tip:'ADX 25はトレンド発生の目安。ADXが低い時は、どんな順張り指標も機能しにくい。' } ]},
+  ]},
+  { part:'第 II 部', title:'トレンドフォロー戦略', desc:'一番稼げるのは順張り。トレンドに乗る組み合わせを詳しく。', chapters:[
+    { num:'第6章', title:'MA + RSI - 押し目買いの王道', pages:[
+      { lead:'最もシンプルで最も効果的な組み合わせ。中長期投資家の基本セット。',
+        body:'<p><b>2つの役割：</b></p><ul><li><b>MA</b>：大局トレンドを判定（上昇か下降か）</li><li><b>RSI</b>：買いタイミングを計る（押し目かどうか）</li></ul><p>上昇トレンド中に、RSIが一時的に売られすぎゾーンに来た瞬間が"押し目買い"のチャンス。</p>',
+        when:{ lbl:'⭕ 使うべき場面', body:'週足or日足で上昇トレンドが明確な銘柄。特に配当株や優良株の中長期買い増しに最適。' } },
+      { body:'',
+        recipe:{ lbl:'エントリー条件', steps:['週足MA13 > MA26 で上昇トレンド確認','日足株価が MA25 より上','日足RSI が 30-45 まで下がった（押し目）','翌日、日足で陽線が出たら買い'] },
+        body2:'<p><b>損切り</b>：買値からATR×1.5下 or MA25を明確に割った時<br><b>利確</b>：RSIが70以上に到達 or 目標株価到達</p>' },
+      { body:'',
+        warn:'下降トレンド中にこれを使うと、"下げ止まらないナイフをつかむ"失敗になる。週足の方向確認を必ず。',
+        tip:'RSIが30以下まで下がる強い調整の場合は、より深い押し目でエントリーできる。ただし調整の理由を必ず確認（決算失望等の実質的悪材料なら見送り）。',
+        body:'<p><b>この組み合わせが機能する銘柄タイプ：</b></p><ul><li>時価総額の大きい安定株</li><li>継続的に増配してきた高配当株</li><li>業績が長期的に成長している優良企業</li></ul><p>逆に小型グロース株や仕手株では、値動きが激しくRSIサインが機能しにくい。</p>' } ]},
+    { num:'第7章', title:'MA + MACD - トレンドの確認と加速', pages:[
+      { lead:'MAで大局、MACDで加速度を見る。トレンドの初動を捉える組み合わせ。',
+        body:'<p><b>MACDが強い理由：</b></p><ul><li>短期EMA - 長期EMAの差なので、"勢いの変化"を早く捉える</li><li>0ライン超えでトレンドの本格化を示す</li><li>ヒストグラムで勢いの強弱が可視化</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'底値圏からの上昇初動を捉えたい時。長期下落からの反発局面。' } },
+      { body:'',
+        recipe:{ lbl:'エントリー条件（買い）', steps:['日足MA25が下向きから水平→上向きに変化','MACDがシグナル線を上抜け（ゴールデンクロス）','MACDが0ラインを上抜け（本格的トレンド化）','株価がMA25の上で推移'] },
+        body2:'<p>MACD の 0 ライン上抜けは、単なるシグナルクロスより強力なサイン。この条件を待つと発注は減るが精度は高い。</p>' },
+      { body:'<p><b>MACDヒストグラム活用：</b></p><ul><li>ヒストグラムが徐々に大きくなる → トレンド加速中</li><li>ヒストグラムが最大値から縮小 → 勢いのピーク、利確候補</li><li>ヒストグラム反転（0を越える） → シグナルクロスより早い反応</li></ul>',
+        warn:'MACDは"遅行指標"。急変動する銘柄では反応が遅れる。デイトレより数日〜数週間のスイングに向く。',
+        tip:'週足MACDで大局、日足MACDでタイミング、という2軸活用が上級者テク。' } ]},
+    { num:'第8章', title:'移動平均線トリプル', pages:[
+      { lead:'3本のMAで、大局・中期・短期を1枚で把握する。パーフェクトオーダーが最強サイン。',
+        body:'<p><b>3本のMA配置：</b></p><ul><li>短期MA（例：5日 or 10日）</li><li>中期MA（例：25日 or 50日）</li><li>長期MA（例：75日 or 200日）</li></ul><p><b>パーフェクトオーダー</b>：株価 > 短期 > 中期 > 長期 の順に並ぶ状態。上昇トレンドの最強状態。</p>',
+        when:{ lbl:'⭕ 使うべき場面', body:'大型優良株の長期買い保有戦略。押し目買いの水準を判断する時。' } },
+      { body:'',
+        recipe:{ lbl:'買いエントリー', steps:['パーフェクトオーダーが成立していること','株価が短期MAに達するまで下げる（浅い押し目）','短期MAで反発する陽線を確認','出来高が反発時に増えていれば理想'] },
+        body2:'<p><b>ホールド判断</b>：中期MAを割らない限り継続保有。中期MAを明確に割ったら一部利確 or 全部売却。</p>',
+        body3:'<p><b>逆パーフェクトオーダー</b>（下降トレンド）：株価 < 短期 < 中期 < 長期。この状態では買わない。信用売り or 空売り候補。</p>' },
+      { body:'<p><b>時間軸の選び方：</b></p><ul><li>デイトレ：5分足の 5/25/75MA</li><li>スイング：日足の 5/25/75MA</li><li>スイング〜中期：日足の 25/75/200MA</li><li>長期投資：週足の 13/26/52MA</li></ul>',
+        tip:'日本でよく使われるのは 5/25/75。米国では 20/50/200。どちらも本質は同じ、慣れた方でOK。' } ]},
+    { num:'第9章', title:'一目均衡表 完全戦略', pages:[
+      { lead:'日本発、5本の線+雲+遅行スパン。単独で総合判断ができる稀有な指標。',
+        body:'<p><b>一目均衡表の5要素：</b></p><ul><li>転換線（9日）：短期のバランス</li><li>基準線（26日）：中期のバランス</li><li>先行スパン1・2（雲）：将来の支持/抵抗</li><li>遅行スパン：過去との比較</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'週足・月足レベルの中長期投資判断。他指標との併用より、単独で完結させたい時。' } },
+      { body:'',
+        recipe:{ lbl:'三役好転（最強の買いサイン）', steps:['転換線が基準線を上抜け（好転）','株価が雲を上抜け','遅行スパンが26日前の株価を上抜け','この3つが揃った時が本格買い'] },
+        body2:'<p>三役好転は年に数回しか出ないが、機能すれば数ヶ月〜1年の上昇トレンドの入り口となることが多い。</p>' },
+      { body:'<p><b>雲の見方：</b></p><ul><li>厚い雲 → 強力な抵抗/支持</li><li>薄い雲 → 抜けやすい</li><li>雲の"ねじれ"（先行スパン1と2のクロス） → トレンド転換の可能性</li></ul><p><b>雲抜けの威力：</b></p><ul><li>厚い雲を上抜けたら本格上昇トレンド入り</li><li>逆に厚い雲を下抜けたら本格下降トレンド入り</li><li>雲の中は"迷い"の相場、様子見が無難</li></ul>',
+        warn:'一目均衡表は日本市場向きに調整された指標。米国株では機能が落ちるという意見もあるが、S&P500等の主要指数では十分機能する。',
+        tip:'一目単独で判断するもよし、MA + RSI と組み合わせて3-4指標一致でエントリーするもよし。自分に合った使い方で。' } ]},
+    { num:'第10章', title:'ADX + DMI - トレンドの強さ確認', pages:[
+      { lead:'"順張りすべき相場か"を数値で判定。ADX 25 以上がトレンド発生のライン。',
+        body:'<p><b>ADXの役割：</b></p><ul><li>トレンドの"強さ"を0-100で表示</li><li>方向は問わない（上でも下でも強さだけ）</li><li>25以下 → レンジ相場、順張り指標は機能しにくい</li><li>25以上 → 明確なトレンド発生中</li></ul><p><b>DMIの役割：</b></p><ul><li>+DI と -DI の2本の線で方向を示す</li><li>+DI > -DI → 買い方優勢</li><li>-DI > +DI → 売り方優勢</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'順張り戦略を実行する前の"環境チェック"。あらゆる順張り指標との併用に有効。' } },
+      { body:'',
+        recipe:{ lbl:'順張り前の確認手順', steps:['ADXが25以上か（トレンド発生中）','ADXが上昇中か（トレンドが強まっている）','+DI と -DI どちらが上か（方向）','ADXが低下し始めたら勢い衰え、利確検討'] },
+        body2:'<p>ADX = 25 は絶対的な数字ではないが、多くのプロが基準にする水準。20 でも良いという意見もある。</p>' },
+      { body:'<p><b>組み合わせパターン：</b></p><ul><li><b>MA + ADX</b>：MA でトレンド方向、ADX で強さ確認</li><li><b>MACD + ADX</b>：MACD でサイン、ADX で環境確認</li><li><b>ブレイクアウト + ADX</b>：ブレイク時にADXが急上昇していれば本物</li></ul>',
+        tip:'ADXが40を超えると"過熱"のサイン。この水準は長続きしないので、利確を意識し始める。',
+        warn:'ADXは遅行指標。トレンドが終わりかけてもまだ高い数字を維持していることがある。他指標との併用必須。' } ]},
+    { num:'第11章', title:'パラボリック + MA', pages:[
+      { lead:'パラボリック（放物線）はトレイリングストップ（追随損切り）に最強。MAと組み合わせて確実性を高める。',
+        body:'<p><b>パラボリックSARの特徴：</b></p><ul><li>放物線状の点線が株価の下 or 上に描かれる</li><li>株価の下 → 上昇トレンド</li><li>株価の上 → 下降トレンド</li><li>点線が反対側に移った時がトレンド転換</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'明確なトレンド相場での順張り。利益を最大化したい時のトレイリングストップとして。' } },
+      { body:'',
+        recipe:{ lbl:'買いエントリー + トレイリング運用', steps:['日足MA25が上向き','日足パラボリック SAR が株価の下にある','MA25で押し目確認','買いエントリー、損切りは初期SAR位置に設定','株価上昇と共にSARも上がる → 損切りラインを追随して上げる','SARに達したら自動的に利確'] },
+        body2:'<p>この運用で、"利益を伸ばしつつ、反転時は必ず利益を確保できる"仕組みが完成する。</p>' },
+      { body:'',
+        warn:'パラボリックはレンジ相場で頻繁に反転する。ADX 25以上のトレンド相場でしか使わないのが鉄則。',
+        tip:'パラボリック単独ではだましが多いので、必ずMAでトレンド確認してから使う。この組み合わせは"トレンドフォロー派"必須の戦略。' } ]},
+    { num:'第12章', title:'Volume + MA - 出来高でトレンドを裏付ける', pages:[
+      { lead:'価格の動きに"本気度"を与えるのが出来高。MAだけでは見えない相場心理が読める。',
+        body:'<p><b>出来高が示す情報：</b></p><ul><li>取引参加者の数と資金量</li><li>市場の"意思"の強さ</li><li>短期・長期の思惑の交錯</li></ul><p><b>基本原則：</b></p><ul><li>上昇 + 出来高増加 → 本物の上昇</li><li>上昇 + 出来高減少 → 疑わしい上昇、失速の可能性</li><li>下落 + 出来高増加 → 本格的な売り圧力</li><li>下落 + 出来高減少 → 売り一巡、底の可能性</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'ブレイクアウト時の確認、押し目/戻り目の判定、トレンド継続力の見極め。' } },
+      { body:'',
+        recipe:{ lbl:'MAブレイク + 出来高確認', steps:['日足MA25を上抜けるローソク足','その日の出来高が20日平均の1.5倍以上','翌日、上抜けが維持されているか確認','出来高減少に転じたら利確検討'] },
+        body2:'<p><b>出来高急増の解釈：</b></p><ul><li>通常の1.5-2倍：健全な関心の高まり</li><li>通常の3-5倍：大きなニュース or 大口の動き</li><li>通常の10倍以上：仕手戦 or 材料出尽くしの可能性、要警戒</li></ul>' },
+      { body:'',
+        tip:'"出来高は嘘をつかない" — 価格は演出できても、実際に取引されたお金は隠せない。あらゆる指標の裏付けとして出来高を確認する習慣を。',
+        warn:'"出来高急増=買い"ではない。急増後に急落することも多い。方向は他指標で判定、出来高は"本気度"の確認に使う。' } ]},
+    { num:'第13章', title:'ゴールデンクロス + 出来高', pages:[
+      { lead:'GC単独ではだましが多いが、出来高を伴えば信頼度が飛躍的に上がる。中長期投資の定番エントリー。',
+        body:'<p><b>ゴールデンクロス（GC）：</b>短期MAが長期MAを下から上へ抜ける。上昇トレンド入りのサイン。</p><p><b>だましが多い理由：</b></p><ul><li>横ばい相場ではMAが交差するだけで方向が続かない</li><li>下降トレンド中の一時的反発でも交差する</li></ul><p><b>信頼度が上がる条件：</b></p><ul><li>長期MAが上向いていること（下向きなら"だまし"率高い）</li><li>GC時の出来高が急増していること</li><li>その後も出来高を維持していること</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'長期底値圏からの反転を狙う中長期投資。特に週足GCは強力。' } },
+      { body:'',
+        recipe:{ lbl:'信頼度の高いGCの判定', steps:['GC発生日の出来高が20日平均の2倍以上','長期MA（75日 or 200日）が横ばいから上向きに転じている','GC後の株価が長期MAより上を維持','GC後の押し目でMA25まで下げても割らずに反発'] },
+        body2:'<p>これらの条件を満たすGCは"本物"の可能性が高い。数ヶ月〜1年の上昇トレンドの入り口となる。</p>' },
+      { body:'',
+        warn:'GC発生の"当日"にすぐ買うのではなく、翌日以降の出来高継続を1-2日確認してから入るのが賢明。焦って買うとだましに巻き込まれる。',
+        tip:'週足GCは日足GCの数倍強力。中長期投資家は週足のみ見ることも多い。日足GCで焦らず、週足GCまで待つ手もある。' } ]},
+  ]},
+  { part:'第 III 部', title:'逆張り・反転戦略', desc:'底/天井を当てる。難易度は高いがハマれば大きく取れる。', chapters:[
+    { num:'第14章', title:'RSI + Bollinger Bands - 平均回帰', pages:[
+      { lead:'"行き過ぎた値動きは元に戻る"という平均回帰の考え方。レンジ相場で威力を発揮。',
+        body:'<p><b>2つの指標の役割：</b></p><ul><li><b>RSI</b>：買われすぎ/売られすぎを0-100で判定</li><li><b>Bollinger Bands</b>：MA±2σで価格の"通常範囲"を可視化</li></ul><p>両者が同時に"行き過ぎ"を示した時が逆張りのチャンス。</p>',
+        when:{ lbl:'⭕ 使うべき場面', body:'ADXが低いレンジ相場。値動きが一定範囲で往復している銘柄。' } },
+      { body:'',
+        recipe:{ lbl:'逆張り買い（底狙い）', steps:['ADX が 20 以下（レンジ相場確認）','株価がボリンジャー -2σ にタッチ or 下抜け','同時にRSI が 30 以下','翌日、陽線 or 十字線で反転確認','エントリー、損切りは-2σ の少し下'] },
+        body2:'<p><b>利確目標</b>：ボリンジャー中央のMA or +2σタッチ。RSIが50を超えたら一部利確。</p>' },
+      { body:'',
+        warn:'強いトレンド相場では、ボリンジャー -2σを割ってもRSI 30以下でもさらに下がる（バンドウォーク）。ADXを必ず確認、トレンド相場では絶対使わない。',
+        tip:'この戦略は"レンジ相場専用"。トレンド発生を早期に察知（ADX上昇、ボリンジャー拡散）したら即撤退する規律が大事。',
+        body:'<p><b>この戦略の勝率と期待値：</b></p><ul><li>勝率：60-70%（レンジ相場では）</li><li>1回の利益：小さい（数%）</li><li>負けは大きくなりやすい（トレンド化）</li><li>そのため損切りを厳格に</li></ul>' } ]},
+    { num:'第15章', title:'Stochastic + Support/Resistance', pages:[
+      { lead:'ストキャスは短期の反転タイミングに強い。過去に何度も反発した価格帯（S/R）と組み合わせるとエントリー精度が上がる。',
+        body:'<p><b>ストキャスティクスの特徴：</b></p><ul><li>RSIより短期に反応（過剰反応するとも言える）</li><li>%K と %D の2本線</li><li>80以上：買われすぎ、20以下：売られすぎ</li><li>%K と %D のクロスも売買サイン</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'デイトレ・スイングトレードでの短期反発狙い。特に強いサポートで反発を狙う時。' } },
+      { body:'',
+        recipe:{ lbl:'サポート反発の買い', steps:['過去3ヶ月で2回以上反発している価格帯を確認','株価がその価格帯に接近','ストキャス %K・%D 両方が20以下','%K が %D を上抜けたら買い','損切りはサポートの直下'] },
+        body2:'<p><b>目標</b>：直近のレジスタンスまで。RSI が 60-70 に達したら利確候補。</p>' },
+      { body:'',
+        tip:'"サポートは何度も試されるほど信頼度が上がるが、抜けたら強い抵抗になる"。何度も試された後の突破は下方向への強いシグナル。',
+        warn:'ストキャスは短期指標。1日で反転→逆行、というだましが多い。必ずS/R水準と組み合わせて。単独では危険。' } ]},
+    { num:'第16章', title:'RSIダイバージェンス + ローソク足', pages:[
+      { lead:'RSIダイバージェンスは反転の"予兆"。ローソク足の反転パターンで"確定"を捉える。',
+        body:'<p><b>RSIダイバージェンス（強気）：</b></p><ul><li>株価が新安値を更新</li><li>しかしRSIは前回の底より高い</li><li>下降の勢いが衰えている証拠</li></ul><p>この状態で、翌日以降にローソク足の反転パターンが出れば、底の可能性大。</p>',
+        when:{ lbl:'⭕ 使うべき場面', body:'下落トレンドの終盤で底を捉えたい時。急落後の反発局面。' } },
+      { body:'',
+        recipe:{ lbl:'底値エントリー', steps:['株価が新安値、RSIが前回底より高い（ダイバージェンス）','翌日以降、ハンマー・十字線・包み線等の反転パターン出現','その次の日、陽線で反転確定','買いエントリー、損切りは直近安値の下'] },
+        body2:'<p><b>反転パターンの強さ順：</b></p><ul><li>包み線（前日を包む陽線）：強い</li><li>ハンマー（長い下ヒゲ）：中</li><li>十字線：弱い（迷い）</li></ul>' },
+      { body:'',
+        warn:'ダイバージェンスは"強い予兆"ではあるが、100%当たるサインではない。損切りラインを厳格に。',
+        tip:'弱気ダイバージェンス（株価は新高値、RSIは更新せず）は天井のサイン。買いポジションの利確判断に使える。',
+        body:'<p><b>この組み合わせが機能しやすいのは：</b></p><ul><li>時価総額の大きい安定株（人為的操作が難しい）</li><li>過度な悪材料がない、需給主導の下落</li><li>週足・日足レベル（時間足以下はノイズ多い）</li></ul>' } ]},
+    { num:'第17章', title:'MACD ダイバージェンス + Volume', pages:[
+      { lead:'MACDダイバージェンスは中長期の反転を告げる。出来高の推移で信頼度を判定。',
+        body:'<p><b>MACDダイバージェンスは"より遅く、より強い"サイン：</b></p><ul><li>RSIより反応が遅いが、その分だましが少ない</li><li>週足で出れば数ヶ月〜1年の反転のサイン</li><li>MACDヒストグラムの形も併用すると精度アップ</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'中長期投資での大底/大天井狙い。週足・月足で判定。' } },
+      { body:'',
+        recipe:{ lbl:'週足MACDダイバージェンス + 出来高減少', steps:['週足で株価が新安値、MACD ヒストグラム が前回より浅い','下落局面での出来高が徐々に減少（売り疲れ）','週足で陽線が出て、MACD ヒストグラムが反転','買いエントリー（数週間かけて分割購入）'] },
+        body2:'<p>週足での分析は、目先の値動きに惑わされず本質を捉えられる。中長期投資家の必須スキル。</p>' },
+      { body:'',
+        tip:'"出来高減少"は"売りが枯れた"証拠。売り手も買い手も動かない静けさが、次のトレンド発生前の特徴。',
+        warn:'週足MACDでの判断は最低1年、できれば3-5年のチャートを見て判断する。短期チャートの範囲でMACDを解釈すると誤読しやすい。' } ]},
+    { num:'第18章', title:'Bollinger %B + RSI - 過熱感の判定', pages:[
+      { lead:'%B は "バンドのどこにいるか" を数値化。RSI と組み合わせて過熱感を客観的に測る。',
+        body:'<p><b>Bollinger %B とは：</b></p><ul><li>-2σ = 0、+2σ = 1 として、株価の位置を計算</li><li>0.5 = ちょうどMA上</li><li>1.0 超 = +2σ突破</li><li>0.0 未満 = -2σ突破</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'短期の過熱感を数値で判定したい時。デイトレ・スイングでの利確/エントリー判断。' } },
+      { body:'',
+        recipe:{ lbl:'買いエントリー（レンジ相場）', steps:['%B が 0 以下（-2σ突破）','同時にRSI が 25 以下','ADX が 25 以下（レンジ相場）','翌日反発を確認して買い'] },
+        body2:'<p><b>利確条件</b>：%B が 0.5 を超え、RSI が 60 に達した時。両方の条件で機械的に利確。</p>' },
+      { body:'',
+        warn:'%B と RSI は似た性質の指標。組み合わせるとサインが重複しやすいが、逆に"だまし"は増えない。相互確認として使う。',
+        tip:'Bollinger の期間設定（デフォルト20）を変えると感度が変わる。短期売買なら10、長期なら50も試す価値あり。' } ]},
+    { num:'第19章', title:'Fibonacci + RSI - 押し目狙い', pages:[
+      { lead:'フィボナッチ水準は世界中のプロが意識する価格帯。RSIの反発サインと重ねて狙い撃ちする。',
+        body:'<p><b>フィボナッチの主要水準：</b></p><ul><li>38.2%：浅い押し（強いトレンド）</li><li>50%：半値押し（一般的）</li><li>61.8%：深い押し（黄金比）</li></ul><p>これらの水準はサポート/レジスタンスとして機能しやすい。</p>',
+        when:{ lbl:'⭕ 使うべき場面', body:'明確な上昇トレンド中の押し目買い。急落後の反発ポイント予測。' } },
+      { body:'',
+        recipe:{ lbl:'黄金比押し目買い', steps:['直近の明確な底→天井にフィボを引く','株価がフィボ61.8%まで下げてくる','その水準でRSI が 30-40 まで下がる','ローソク足で反発確認（陽線 or ハンマー）','買いエントリー、損切りはフィボ78.6%の下'] },
+        body2:'<p>この組み合わせは"数字が意識される場所での実際の反発"を捉えるので、極めて論理的な戦略。</p>' },
+      { body:'',
+        tip:'フィボ水準は"1点"ではなく"ゾーン"として捉える。61.8%を中心に前後2-3%の範囲で機能することが多い。',
+        warn:'フィボは"自己成就的予言"の要素あり（みんなが意識するから機能する）。ただし相場全体の流れに逆らう水準では機能しない。上位時間軸のトレンドを確認。',
+        body:'<p><b>フィボと相性の良い他指標：</b></p><ul><li>MA25/75（同時に接近すれば強力サポート）</li><li>直近のサポート/レジスタンス</li><li>キリのいい価格（1000円、10000円等）</li></ul>' } ]},
+    { num:'第20章', title:'ローソク足反転パターン + 出来高', pages:[
+      { lead:'ローソク足の反転パターンは強いサインだが、出来高の裏付けで確信度が変わる。',
+        body:'<p><b>主要な底値反転ローソク足：</b></p><ul><li>ハンマー（長い下ヒゲ）</li><li>包み線（前日を包む陽線）</li><li>明けの明星（3日構成）</li><li>たすき線・切り込み線</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'急落後の底値判定、短期の反発を捉えたい時、既存ポジションのナンピン判断。' } },
+      { body:'',
+        recipe:{ lbl:'底値反転の確認手順', steps:['安値圏でハンマー or 包み線が出現','その日の出来高が急増（20日平均の2倍以上）','翌日、下ヒゲ安値を割らずに陽線','買いエントリー、損切りは反転パターンの安値の下'] },
+        body2:'<p>出来高急増を伴う反転パターンは"投げ売り一巡"の可能性が高い。ここが底となることが多い。</p>' },
+      { body:'',
+        warn:'ローソク足の反転パターンは"時間軸で強さが違う"。時間足のハンマーはノイズが多い。日足以上、できれば週足で判断。',
+        tip:'反転パターンだけで飛びつかず、翌日1本待って"反転が続いている"のを確認してから入るのが安全。' } ]},
+  ]},
+  { part:'第 IV 部', title:'ブレイクアウト・レンジ戦略', desc:'エネルギー蓄積→大放出を狙う。ブレイクアウトは投資の醍醐味。', chapters:[
+    { num:'第21章', title:'三角持ち合い + Volume', pages:[
+      { lead:'収束型パターン最強の組み合わせ。ブレイク方向は事前に予測不能だが、出来高で確定を掴む。',
+        body:'<p><b>三角持ち合いの3種類：</b></p><ul><li>対称三角：高値切り下げ+安値切り上げ、方向不明</li><li>上昇三角：高値水平+安値切り上げ、上抜け期待</li><li>下降三角：高値切り下げ+安値水平、下抜け期待</li></ul><p>収束の2/3の地点でブレイクすることが多い。</p>',
+        when:{ lbl:'⭕ 使うべき場面', body:'長期のもみ合いが続いた銘柄。決算前後や重要イベント前後の様子見期間の後。' } },
+      { body:'',
+        recipe:{ lbl:'ブレイクアウト戦略', steps:['三角持ち合いが形成されているのを確認（3-8週間）','ブレイク直前は出来高が枯れる','ブレイク時の出来高が20日平均の2倍以上','ブレイク方向にエントリー、損切りは反対側の三角の頂点'] },
+        body2:'<p><b>目標値</b>：三角の"高さ"（最大幅）分だけ、ブレイク方向へ動くと言われる。この幅を利確目標にする。</p>' },
+      { body:'',
+        warn:'"だまし抜け"は非常に多いパターン。ブレイクした日の終値を確認、翌日も同じ方向に動くのを見てからエントリーする"確認買い"が賢明。',
+        tip:'ブレイクせずに反対側に抜けた（フェイクブレイク）場合、"戻し"で入る手法もある。フェイク→戻し→本ブレイクは強力なサイン。' } ]},
+    { num:'第22章', title:'Bollinger Squeeze + ADX', pages:[
+      { lead:'"静けさの後に嵐が来る"。ボリンジャーバンドの収束は大きな動きの前兆。ADXでブレイク方向を判定。',
+        body:'<p><b>Bollinger Squeeze とは：</b></p><ul><li>ボリンジャーバンドの幅が過去数ヶ月で最も狭くなる状態</li><li>ボラティリティが極端に低下している</li><li>次に大きな動き（Expansion）が来る予兆</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'長期のレンジ相場で、次のトレンド方向を捉えたい時。決算前後や重要イベント前後。' } },
+      { body:'',
+        recipe:{ lbl:'Squeeze + ADX でブレイク方向確認', steps:['ボリンジャーバンド幅が過去60日で最狭','株価が MA20 に張り付き、ADX は 20 以下','ボリンジャー拡散開始（Expansion）+ ADX 上昇','拡散方向にエントリー、損切りは MA20 の反対側'] },
+        body2:'<p>ADX の急上昇は"トレンドの発生"を示す。単なるバンド拡散より確度が高いサイン。</p>' },
+      { body:'',
+        tip:'Squeeze の後の Expansion は数日〜数週間続くことが多い。トレンドフォロー戦略に切り替えるタイミング。',
+        warn:'Squeeze 期間中は特に何もしないのが正解。無理にレンジ内で売買するとコストがかさむ。動き出しを待つ忍耐が必要。' } ]},
+    { num:'第23章', title:'サポート/レジスタンス突破 + Volume', pages:[
+      { lead:'S/R突破は最もシンプルなブレイクアウト戦略。出来高が伴わない突破は"だまし"の可能性大。',
+        body:'<p><b>S/R突破の意味：</b></p><ul><li>過去何度も反発した価格帯を突破 → 需給バランスが変化</li><li>突破後、その価格帯は逆の役割になる（元レジスタンス→サポート）</li><li>これを"ロール・リバーサル"と呼ぶ</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'長期のレジスタンスに接近した銘柄、キリのいい価格（1000円、10000円等）を突破する時。' } },
+      { body:'',
+        recipe:{ lbl:'ブレイクアウト買い', steps:['過去半年以上機能してきた強いレジスタンスに接近','ブレイク時の出来高が急増（20日平均の3倍以上）','終値でレジスタンスを明確に上抜け（陽線）','翌日以降、レジスタンスまで戻ってきても割らずに反発（ロール・リバーサル確認）','買いエントリー、損切りはレジスタンスの少し下'] },
+        body2:'<p>戻り確認買いは"確信度の高いエントリー"。ただしタイミングを逃すと、そのまま上昇して入れなくなる。</p>' },
+      { body:'',
+        warn:'"だまし抜け"は本当に多い。特に節目の価格帯を意識した機関投資家の売り仕掛けがある。出来高なしのブレイクは無視。',
+        tip:'月足レベルでのS/R突破は歴史的な意味を持つ。長期チャートで大きな抵抗を破った銘柄は、その後数年の上昇が期待できることも。' } ]},
+    { num:'第24章', title:'カップ&ハンドル + 出来高', pages:[
+      { lead:'カップ&ハンドルは長期投資家の押し目買いパターン。出来高分析で本物を見極める。',
+        body:'<p><b>カップ&ハンドル とは：</b></p><ul><li><b>カップ</b>：U字型の緩やかな押し目（数週間〜数ヶ月）</li><li><b>ハンドル</b>：カップ右上端からの小さな下げ（1-3週間）</li><li>ハンドルからのブレイクで急上昇</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'上昇トレンド中の中期押し目買い。米国グロース株で頻出。' } },
+      { body:'',
+        recipe:{ lbl:'カップ&ハンドル買い', steps:['深く緩やかなU字（カップ）を確認','カップ形成中の出来高は減少傾向','カップ右上端で浅い調整（ハンドル）','ハンドル最安値からの反発時に出来高急増','カップ縁のレジスタンス突破で買い'] },
+        body2:'<p><b>目標値</b>：カップの深さ分、ブレイク後に上昇すると言われる。数ヶ月かけて達成することが多い。</p>' },
+      { body:'',
+        tip:'ハンドル部分の調整は"深すぎない"のが理想。カップ深さの1/3以内が健全。それ以上深いと"パターン崩れ"の可能性。',
+        warn:'カップの左右対称性が悪い、時間軸が短すぎる、出来高が伴わない、これらは"偽カップ"のサイン。厳密に判定すること。' } ]},
+    { num:'第25章', title:'フラッグ/ペナント + 短期MA', pages:[
+      { lead:'急上昇後の"休息"パターン。短期MAで押し目の底を確認、次の一段上げを狙う。',
+        body:'<p><b>フラッグとペナントの違い：</b></p><ul><li>フラッグ：長方形の下向き平行チャネル調整</li><li>ペナント：三角形に収束する調整</li><li>両方とも"継続パターン"、上昇トレンド中に出現</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'急上昇（10-30%）後の調整局面。短期スイングトレードの好機。' } },
+      { body:'',
+        recipe:{ lbl:'フラッグ/ペナントブレイク買い', steps:['直近1-3週間で急上昇（"ポール"）を確認','その後の緩やかな調整（フラッグ or ペナント）','調整中に日足5日MA を割らない or 割ってもすぐ戻る','パターン上限突破 + 出来高増加','買いエントリー、損切りはフラッグ/ペナントの下限'] },
+        body2:'<p><b>目標値</b>：ポール（急上昇部分）の長さ分、ブレイク後に上昇するとされる。</p>' },
+      { body:'',
+        tip:'フラッグ/ペナントは"1-3週間"程度の短い調整が理想。1ヶ月以上続くと"疲れ"のサイン、パターン崩れの可能性。',
+        warn:'ポールが小さすぎる or 急激すぎる場合、"上ヒゲ天井"の可能性も。ポール前の出来高推移を確認。' } ]},
+    { num:'第26章', title:'レンジ相場での RSI + Stochastic', pages:[
+      { lead:'ADXが低い横ばい相場では、オシレーターの逆張りが最強。RSIとストキャスの二重確認で精度アップ。',
+        body:'<p><b>レンジ相場の特徴：</b></p><ul><li>ADX < 20</li><li>ボリンジャーバンドが横ばい</li><li>MA25 が水平</li><li>株価が一定範囲を往復</li></ul><p>この相場では、順張り指標は機能しない。オシレーター系で"上限で売り、下限で買い"を繰り返す。</p>',
+        when:{ lbl:'⭕ 使うべき場面', body:'決算後の様子見期間、悪材料消化後の膠着相場、大型優良株の長期横ばい。' } },
+      { body:'',
+        recipe:{ lbl:'レンジ内スイング', steps:['ADX 20以下、レンジの上限/下限を明確化','株価がレンジ下限に接近','RSI 30以下、ストキャス %K・%D 両方20以下','翌日反発を確認して買い','レンジ上限接近 + RSI 70以上で利確'] },
+        body2:'<p>この手法は勝率は高い（60-70%）が、1回の利益は小さい。回転数で稼ぐ戦略。</p>' },
+      { body:'',
+        warn:'"レンジ突破"がいつ来るか分からない。トレンド発生の初動を見逃すと、大きな逆行を食らう。ADXの上昇を常にチェック。',
+        tip:'長期投資家はレンジ相場ではポジション調整しない、というのも1つの戦略。無理に売買しない、待つのも投資。' } ]},
+    { num:'第27章', title:'ダブルボトム/トップ + ネックライン確認', pages:[
+      { lead:'反転パターンの王道。ネックライン確認で"確信度"を担保する。',
+        body:'<p><b>ダブルボトム（W字）の成立条件：</b></p><ol><li>1回目の底</li><li>間の戻り（ネックライン形成）</li><li>2回目の底（1回目と同水準）</li><li>ネックラインを突破 → 成立</li></ol><p><b>ダブルトップ</b>はこの逆。天井を2度作り、間の安値（ネック）を割ったら成立。</p>',
+        when:{ lbl:'⭕ 使うべき場面', body:'中長期の下落トレンドから反転する底値、または上昇トレンドの天井判定。' } },
+      { body:'',
+        recipe:{ lbl:'ダブルボトム買い', steps:['2つの底が同水準、間の戻り（ネックライン）がある','2つ目の底で反発、ネックラインに接近','ネックラインを終値で突破 + 出来高増加','ネックライン戻り確認 or 直接エントリー','損切りはネックラインの少し下'] },
+        body2:'<p><b>目標値</b>：ボトムからネックラインまでの高さ分、ネックライン突破後に上昇する。</p>' },
+      { body:'',
+        tip:'長期チャート（週足以上）でのダブルボトムは特に強力。数ヶ月〜1年の上昇トレンドの始まりとなることが多い。',
+        warn:'"だまし抜け"に注意。ネックライン突破直後に戻ってきて再度割ると、逆に下方向へのブレイクとなる。突破後1-2日の確認が大事。' } ]},
+  ]},
+  { part:'第 V 部', title:'中長期投資戦略', desc:'長期で資産を築く。週足・月足を主体にした戦略群。', chapters:[
+    { num:'第28章', title:'週足MA + 週足RSI - 長期押し目投資', pages:[
+      { lead:'デイトレの喧騒から離れ、週足で判断する。中長期投資の基本セット。',
+        body:'<p><b>なぜ週足か：</b></p><ul><li>ノイズが少なく、大局が見える</li><li>売買回数が減り、手数料と税金が抑えられる</li><li>感情に振り回されにくい</li><li>働きながらでも判断できる</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'NISA枠での長期買い付け、定年後の資産運用、忙しい人の投資。' } },
+      { body:'',
+        recipe:{ lbl:'週足押し目買い', steps:['週足MA13 > MA26 で上昇トレンド確認','週足株価が MA13 まで下げてくる','週足RSI が 40-50 の水準','押し目確認後、月をまたぐレベルでゆっくり買い増し'] },
+        body2:'<p>この手法は"底ドンピシャ"を狙わない。押し目のゾーンで分割して買うのがコツ。3-4回に分けてOK。</p>' },
+      { body:'',
+        tip:'週足での判断は、日常のニュースに影響されにくい。金曜日の終値だけ確認する習慣で十分。',
+        warn:'週足のサインを日足レベルで待つと"押し目が浅すぎ"に感じることがある。焦って早めに買うと、その後さらに深い押し目が来て後悔することも。分割購入で対処。' } ]},
+    { num:'第29章', title:'月足一目均衡表 + PER', pages:[
+      { lead:'月足の一目均衡表は"大局の中の大局"を示す。PERで割安性を確認、5-10年投資の判断に。',
+        body:'<p><b>月足一目均衡表の見方：</b></p><ul><li>月足なので、値動きは数年単位で解釈</li><li>雲を上抜けたら本格上昇局面</li><li>三役好転が出るのは数年に1回程度</li></ul><p><b>PER の役割：</b></p><ul><li>技術的に強気でも、割高なら見送り</li><li>業界平均比較で判定</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'iDeCo・NISA での長期投資、10年以上保有前提の銘柄選定。' } },
+      { body:'',
+        recipe:{ lbl:'超長期投資エントリー', steps:['月足で長期下落トレンド → 底値圏で長期横ばい','月足の雲を上抜け','予想PER が業界平均以下 or 過去5年平均以下','数年単位で分割購入'] },
+        body2:'<p>この戦略で買った銘柄は、5-10年の長期保有が前提。目先の値動きに一切反応しない。</p>' },
+      { body:'',
+        tip:'月足チャートは通常、証券会社の分析ツールで10年以上表示できる。歴史的な高安値・雲の位置を把握しておく。',
+        warn:'月足サインは"忍耐"が必要。買った後、1-2年動かないこともある。長期資金でのみ実行、短期資金では絶対にやらない。' } ]},
+    { num:'第30章', title:'200日MA + PER + 配当利回り', pages:[
+      { lead:'米国機関投資家が重視する200日MA。PER と配当利回りを合わせた"優良銘柄選び"のクラシック手法。',
+        body:'<p><b>200日MAの意味：</b></p><ul><li>米国の機関投資家が最重視する長期トレンド線</li><li>200日MAより上 → 長期強気</li><li>200日MAより下 → 長期弱気</li><li>ヘッジファンド等の巨額資金は200日MAを意識して動く</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'S&P500構成銘柄の投資、米国大型株、日本の時価総額上位株。' } },
+      { body:'',
+        recipe:{ lbl:'優良株長期エントリー', steps:['株価が200日MAより上（長期上昇トレンド）','200日MAが上向き','予想PER が20倍以下（グロース株なら30倍）','配当利回りが1.5%以上（成長株なら不要）','押し目で200日MA接近時に買い'] },
+        body2:'<p>この基準で選んだ銘柄は、長期保有で"インデックスに勝てる可能性が高い"優良株となる。</p>' },
+      { body:'',
+        tip:'S&P500全体の200日MA突破/割れは"米国株全体のトレンド"のサイン。個別銘柄より先にこちらをチェックする習慣を。',
+        warn:'PERは業種で大きく違う（IT は高め、銀行は低め）。単純比較ではなく、"業界内での順位"で判定する。' } ]},
+    { num:'第31章', title:'週足GC + セクター確認', pages:[
+      { lead:'週足GC は最強の中長期買いサイン。ただし所属セクター全体の強さも見て、より確実に。',
+        body:'<p><b>個別銘柄と業種の関係：</b></p><ul><li>個別銘柄の動きの60-70%は、業種全体の動きで決まる（統計研究）</li><li>強い業種内の銘柄は、業績が並でも上がりやすい</li><li>弱い業種内の銘柄は、業績が良くても上がりにくい</li></ul><p><b>セクターローテーション</b>：景気循環に応じて、資金が業種間を動く。</p>',
+        when:{ lbl:'⭕ 使うべき場面', body:'週足GC が出た銘柄で、更に確度を高めたい時。' } },
+      { body:'',
+        recipe:{ lbl:'セクター確認付き週足GC買い', steps:['個別銘柄で週足GC 発生','所属セクター（例：TOPIX-17 業種）指数もGC 中か上昇中','セクター全体のPER が業界平均以下','個別銘柄の予想EPS 成長率がプラス','エントリー、損切りは週足MA26 の下'] },
+        body2:'<p>セクター強気×個別銘柄強気 = 二重の強気サイン。単独より遥かに信頼度が高い。</p>' },
+      { body:'',
+        tip:'日本株なら TOPIX-17 業種指数、米国株なら SPDR セクター ETF（XLF, XLK 等）で業種の強さを確認。',
+        warn:'"逆張り"で弱いセクターの銘柄を買うのは高難度。中長期投資では強いセクターを選ぶ方が確率的に有利。' } ]},
+    { num:'第32章', title:'VIX + S&P500 200MA - 米国長期エントリー', pages:[
+      { lead:'VIX（恐怖指数）と200日MA の組み合わせは、米国株の絶好の買い場を教える。過去のクラッシュで機能。',
+        body:'<p><b>VIX とは：</b></p><ul><li>S&P500のオプション取引から算出</li><li>市場の"予想変動率"を示す</li><li>15-20：平常時</li><li>30以上：警戒</li><li>40以上：パニック相場</li><li>50以上：歴史的クラッシュ</li></ul>',
+        when:{ lbl:'⭕ 使うべき場面', body:'米国株の大幅下落局面、リーマンショックやコロナショック級の暴落時。' } },
+      { body:'',
+        recipe:{ lbl:'パニック買い戦略', steps:['S&P500 が200日MA より20%以上下','VIX が40以上に急上昇','数週間かけて分割購入（一度に全部入らない）','VIX が25以下に落ち着いてきたら安定局面','長期保有（3-5年以上）'] },
+        body2:'<p>この戦略はリーマンショック（2008-2009）、コロナショック（2020）等で強く機能。ただし歴史的な安値を狙うので、頻繁には使えない。</p>' },
+      { body:'',
+        tip:'"人が恐れている時に貪欲になれ"（バフェット）。VIX が40超え時こそ、資金を投入するチャンス。ただし冷静さと余裕資金が必須。',
+        warn:'"落ちてくるナイフを掴む"リスクあり。VIX 40 でもさらに下がることはある（2008は 80 超え）。分割購入で対処。' } ]},
+  ]},
+  { part:'第 VI 部', title:'相場局面別の使い分け', desc:'相場は変わる。局面ごとの戦略選択と切り替えが上級者への道。', chapters:[
+    { num:'第33章', title:'上昇トレンド相場での戦略', pages:[
+      { lead:'一番稼ぎやすい相場。ただし"高値づかみ"の危険も最大。押し目買いに徹する。',
+        body:'<p><b>上昇トレンド相場の特徴：</b></p><ul><li>MA25 が明確に上向き、ADX 25以上</li><li>高値・安値ともに切り上がる</li><li>下落は"押し目"で終わり、下降トレンドに転換しない</li></ul><p><b>最適な戦略：</b></p><ul><li>MA25 押し目買い + RSI 30-45 タイミング</li><li>ゴールデンクロス継続銘柄の追随</li><li>3本MAパーフェクトオーダー銘柄</li></ul>',
+        when:{ lbl:'⭕ 使うべき戦略', body:'順張り。逆張りは"取り逃がし"のリスクが大きい。' } },
+      { body:'',
+        recipe:{ lbl:'上昇相場での基本ルーティン', steps:['MA25 上向きの銘柄をリストアップ','その中で押し目に来たものをチェック','RSI 30-45 の銘柄をエントリー候補に','分散して複数銘柄で運用','MA25 を明確に割った銘柄はすぐ切る'] },
+        warn:'"高値追い"は絶対禁止。RSI 70超で買うと、その後の調整で大きく損する。押し目まで我慢する規律が全て。' } ]},
+    { num:'第34章', title:'下降トレンド相場での対処法', pages:[
+      { lead:'"最大の敵は自分の欲"。下降トレンドでは無理に買わない、それだけで生き残れる。',
+        body:'<p><b>下降トレンド相場の特徴：</b></p><ul><li>MA25 が明確に下向き</li><li>高値・安値ともに切り下がる</li><li>上昇は"戻り"で終わり、上昇トレンドに転換しない</li></ul><p><b>取れる戦略：</b></p><ul><li>信用売り（空売り）：戻り売りが有効</li><li>現物では現金比率を高める</li><li>反転サイン待ち（週足RSI ダイバージェンス等）</li></ul>',
+        when:{ lbl:'⭕ 使うべき戦略', body:'空売りできるなら順張り（戻り売り）、できないなら"待つ"。' } },
+      { body:'',
+        recipe:{ lbl:'下降相場での現物戦略', steps:['既存の含み損銘柄：MA75 を割ったら損切り検討','新規買いは原則しない','現金比率50%以上を維持','週足RSI ダイバージェンス出現を待つ','出現後、月足MA26 上抜けまで待つ忍耐'] },
+        tip:'"下降トレンドに逆らって買う"は最も難しい。統計的に負ける確率が高い。無理に売買せず、次の上昇トレンド発生まで待つのが賢明。',
+        warn:'"ナンピン買い"は下降トレンドで最も危険な行為。含み損を拡大する典型パターン。' } ]},
+    { num:'第35章', title:'レンジ相場での戦略', pages:[
+      { lead:'方向感がない相場では、逆張りオシレーターが主役。ただし"レンジ突破"の初動を見逃さないこと。',
+        body:'<p><b>レンジ相場の特徴：</b></p><ul><li>ADX < 20</li><li>MA25 が水平</li><li>ボリンジャーバンドが収束気味</li><li>株価が一定範囲を往復</li></ul><p><b>最適な戦略：</b></p><ul><li>RSI + ボリンジャー -2σ 逆張り</li><li>ストキャス + サポート/レジスタンス</li><li>レンジ上限で利確、下限で買い直し</li></ul>',
+        when:{ lbl:'⭕ 使うべき戦略', body:'逆張り、ただし損切りは厳格に。' } },
+      { body:'',
+        recipe:{ lbl:'レンジ内スイング', steps:['ADX 20以下、レンジの上下限を明確化','下限接近 + RSI 30以下 + ストキャス20以下 → 買い','上限接近 + RSI 70以上 → 利確','ボリンジャー拡散 + ADX 上昇 → レンジ抜けの兆し、様子見'] },
+        warn:'レンジ突破は突然来る。特にニュース・決算発表で一気に抜けることが多い。突破後は戦略を切り替える柔軟性が必要。' } ]},
+    { num:'第36章', title:'天井/底の見分け方 - 転換期の戦略', pages:[
+      { lead:'転換期は最もリスクとリターンが大きい。慎重に、しかし機会を逃さない技術。',
+        body:'<p><b>天井のサイン（複数一致で確度アップ）：</b></p><ul><li>週足RSI 70以上で維持</li><li>ダブルトップ or ヘッド&ショルダー形成</li><li>MACD ダイバージェンス（弱気）</li><li>出来高が減少しながら株価上昇（勢い衰え）</li><li>ADX 40以上での高原状態</li></ul>' },
+      { body:'<p><b>底のサイン（複数一致で確度アップ）：</b></p><ul><li>週足RSI 30以下で維持</li><li>ダブルボトム or 逆ヘッド&ショルダー形成</li><li>MACD ダイバージェンス（強気）</li><li>投げ売り的な出来高急増後の反発</li><li>マーケット全体の恐怖感（VIX 40超）</li></ul>',
+        recipe:{ lbl:'転換期の分割戦略', steps:['複数のサインが揃うまで待つ','試し玉（総資金の10%）で入る','数週間の推移を観察','転換確認後、追加購入（分割で3-5回）','逆行が続いたら潔く撤退'] } } ]},
+    { num:'第37章', title:'危機・急落時の心得と指標', pages:[
+      { lead:'年に1-2回、月次-5%以上の急落が来る。パニックにならず、機械的に対処する準備が全て。',
+        body:'<p><b>過去の主要クラッシュ（記録用）：</b></p><ul><li>2008 リーマンショック（-50%超）</li><li>2015 チャイナショック（-20%）</li><li>2020 コロナショック（-30%、1ヶ月で）</li><li>2022 米金利急上昇（-25%）</li></ul><p><b>クラッシュ時の値動きの特徴：</b></p><ul><li>数日〜数週間で急落</li><li>VIX 30以上、時に50超</li><li>あらゆる銘柄が売られる（"投げ売り"）</li><li>ニュースが極端にネガティブ</li></ul>' },
+      { body:'',
+        recipe:{ lbl:'急落時の対処ルーティン', steps:['ポジションを見直す：損切りルール通り執行','余裕資金の確認：追加投入可能な額','急落2-3週間目：分割で優良銘柄買い始め','VIX 40超のパニック時：買いのチャンス','数ヶ月かけて分割購入'] },
+        tip:'クラッシュは"5年に1度のバーゲンセール"。恐怖に負けて売るのではなく、冷静に買い増しできれば長期リターンは大幅に増える。',
+        warn:'ただし"生活資金""緊急資金"には絶対に手を出さない。あくまで余裕資金の範囲で。心の余裕がないと、冷静な判断はできない。' } ]},
+  ]},
+];
+
+function renderComboBook() {
+  const el = document.getElementById('diary-book-list');
+  if (!el) return;
+
+  const toolbar = `<div class="book-toolbar western">
+    <button onclick="closeDiaryBook()">← 本棚へ</button>
+    <div class="book-title-bar western" style="font-size:15px">組み合わせ実戦編</div>
+    <div style="width:60px"></div>
+  </div>`;
+
+  const pages = [];
+  let pageNum = 0;
+  const totalContentPages = COMBO_PARTS.reduce((s,pt)=>s+pt.chapters.reduce((ss,c)=>ss+c.pages.length,0),0);
+  const totalPages = 4 + COMBO_PARTS.length + totalContentPages + 1;
+
+  // カバー
+  pageNum++;
+  pages.push(`<div class="r4-page">
+    <div class="r4-cover">
+      <div class="r4-cover-vol">実 戦 編</div>
+      <div class="r4-cover-border"></div>
+      <h1>組み合わせ実戦</h1>
+      <div class="r4-cover-sub">〜 指標を掛け合わせて勝つ 〜</div>
+      <div class="r4-cover-tag">全 ${totalPages} 頁 · 大文字仕様</div>
+      <div class="r4-cover-border"></div>
+      <div class="r4-cover-vol">第 IV 巻</div>
+    </div>
+    <div class="r4-pagenum">${pageNum}</div>
+  </div>`);
+
+  // まえがき
+  pageNum++;
+  pages.push(`<div class="r4-page">
+    <div class="r4-foreword">
+      <h2>まえがき</h2>
+      <p>本書は、第I巻・第II巻のチャート分析の集大成として、"指標の組み合わせ実戦"を扱います。</p>
+      <p>単独の指標を並べても、実際の売買では役に立ちません。どの指標とどの指標を、どんな相場局面で組み合わせるか。これが実戦での勝敗を分けます。</p>
+      <p>本書では、37の代表的な組み合わせを取り上げ、それぞれの「使うべき場面」「エントリーレシピ」「注意点」「コツ」を明示しました。</p>
+      <p>文字は前巻より大きく、行間も広く取っています。じっくり腰を据えて、繰り返し読める本を目指しました。</p>
+    </div>
+    <div class="r4-pagenum">${pageNum}</div>
+  </div>`);
+
+  // 目次
+  const allChapters = COMBO_PARTS.flatMap(p => p.chapters.map(c => ({...c, part: p.part})));
+  const half = Math.ceil(allChapters.length / 2);
+  pageNum++;
+  pages.push(`<div class="r4-page">
+    <div class="r4-toc">
+      <h2>目 次 (1/2)</h2>
+      <div class="r4-toc-list">
+        ${allChapters.slice(0, half).map(c => `<div class="r4-toc-item"><span>${escapeHtml(c.num)}</span><span>${escapeHtml(c.title)}</span><span>${c.pages.length}p</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="r4-pagenum">${pageNum}</div>
+  </div>`);
+  pageNum++;
+  pages.push(`<div class="r4-page">
+    <div class="r4-toc">
+      <h2>目 次 (2/2)</h2>
+      <div class="r4-toc-list">
+        ${allChapters.slice(half).map(c => `<div class="r4-toc-item"><span>${escapeHtml(c.num)}</span><span>${escapeHtml(c.title)}</span><span>${c.pages.length}p</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="r4-pagenum">${pageNum}</div>
+  </div>`);
+
+  // 各部と章
+  for (const pt of COMBO_PARTS) {
+    // 部の扉
+    pageNum++;
+    pages.push(`<div class="r4-page">
+      <div class="r4-part">
+        <div class="r4-part-num">${escapeHtml(pt.part)}</div>
+        <div class="r4-part-title">${escapeHtml(pt.title)}</div>
+        <div class="r4-part-desc">${escapeHtml(pt.desc)}</div>
+      </div>
+      <div class="r4-pagenum">${pageNum}</div>
+    </div>`);
+    // 章の各ページ
+    for (const ch of pt.chapters) {
+      ch.pages.forEach((p, idx) => {
+        pageNum++;
+        const header = idx === 0
+          ? `<div class="r4-chap-header"><div class="r4-chap-num">${escapeHtml(ch.num)}</div><div class="r4-chap-title">${escapeHtml(ch.title)}</div></div>`
+          : `<div class="r4-chap-header" style="border-bottom-style:dashed"><div class="r4-chap-num">${escapeHtml(ch.num)} （続き）</div><div class="r4-chap-title" style="font-size:17px">${escapeHtml(ch.title)}</div></div>`;
+        const leadHtml = p.lead ? `<div class="r4-lead">${escapeHtml(p.lead)}</div>` : '';
+        const bodyHtml = p.body ? `<div class="r4-body">${p.body}</div>` : '';
+        const body2Html = p.body2 ? `<div class="r4-body">${p.body2}</div>` : '';
+        const body3Html = p.body3 ? `<div class="r4-body">${p.body3}</div>` : '';
+        const whenHtml = p.when ? `<div class="r4-when"><div class="r4-when-lbl">${escapeHtml(p.when.lbl)}</div><div class="r4-when-body">${escapeHtml(p.when.body)}</div></div>` : '';
+        const recipeHtml = p.recipe ? `<div class="r4-recipe"><div class="r4-recipe-lbl">📋 ${escapeHtml(p.recipe.lbl)}</div><ol>${p.recipe.steps.map(s => `<li>${s}</li>`).join('')}</ol></div>` : '';
+        const warnHtml = p.warn ? `<div class="r4-warn"><b>⚠️ 注意：</b> ${escapeHtml(p.warn)}</div>` : '';
+        const tipHtml = p.tip ? `<div class="r4-tip"><b>💡 コツ：</b> ${escapeHtml(p.tip)}</div>` : '';
+        pages.push(`<div class="r4-page">
+          ${header}
+          ${leadHtml}
+          ${bodyHtml}
+          ${whenHtml}
+          ${recipeHtml}
+          ${body2Html}
+          ${body3Html}
+          ${warnHtml}
+          ${tipHtml}
+          <div class="r4-pagenum">${pageNum}</div>
+        </div>`);
+      });
+    }
+  }
+
+  // 奥付
+  pageNum++;
+  pages.push(`<div class="r4-page">
+    <div class="r4-end">
+      <div class="r4-end-title">お わ り に</div>
+      <div class="r4-end-body">
+        37の組み合わせを紹介しましたが、全てを使う必要はありません。<br><br>
+        自分の性格・投資スタイルに合った3-5個を選び、繰り返し使うことで<br>
+        "自分の武器"になります。<br><br>
+        <b>組み合わせを使いこなす鍵は、"やらない相場"を見極めること。</b><br><br>
+        機能しない局面では手を出さない。<br>
+        機能する局面まで待つ。<br><br>
+        この規律を守れる投資家が、長期的に生き残ります。<br><br>
+        ふたりの投資旅が、豊かなものになりますように。
+      </div>
+      <div class="r4-end-sig">─ ふたりの投資旅 応援 IV ─</div>
+    </div>
+    <div class="r4-pagenum">${pageNum}</div>
+  </div>`);
+
+  el.innerHTML = `
+    ${toolbar}
+    <div class="book-pages ref-combo" id="book-pages">
       ${pages.join('')}
     </div>
   `;
