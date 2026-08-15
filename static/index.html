@@ -1247,6 +1247,62 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-pages.ref-chart-2 .r2-end-body { font-size:14px; line-height:2.2; color:#4a3020; max-width:340px; }
 .book-pages.ref-chart-2 .r2-end-sig { margin-top:30px; font-size:12px; color:#8a6f43; letter-spacing:3px; }
 
+/* 参考書3巻 - ファンダメンタル分析（ダークレッドの学術書調） */
+.book-spine.ref-book-3 { background:linear-gradient(90deg,#4a1e18,#7a3a2e,#4a1e18); }
+.book-spine.ref-book-3 .book-spine-label { color:#f0e4d0; letter-spacing:2px; font-size:12px; padding:10px 0; }
+.book-pages.ref-fund { flex:1; overflow-x:auto; overflow-y:hidden; display:flex; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; overscroll-behavior:contain; touch-action:pan-x; }
+.book-pages.ref-fund::-webkit-scrollbar { display:none; }
+.book-pages.ref-fund { scrollbar-width:none; }
+.book-pages.ref-fund .r3-page { flex:0 0 100vw; width:100vw; max-width:100vw; height:100%; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; padding:30px 28px 40px; background:linear-gradient(180deg,#faf5e8,#f0e6cf); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; color:#2c1e10; box-shadow:inset -3px 0 8px -6px rgba(120,80,40,.18); box-sizing:border-box; position:relative; }
+.book-pages.ref-fund .r3-page::before { content:''; position:absolute; top:0; bottom:0; left:0; width:1px; background:linear-gradient(180deg, transparent, rgba(120,80,40,.15) 30%, rgba(120,80,40,.15) 70%, transparent); pointer-events:none; }
+.book-pages.ref-fund .r3-pagenum { position:absolute; bottom:12px; right:20px; font-size:11px; color:#8a4a30; letter-spacing:2px; }
+
+.book-pages.ref-fund .r3-cover { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; }
+.book-pages.ref-fund .r3-cover h1 { font-size:32px; font-weight:800; letter-spacing:5px; color:#4a1e18; margin-bottom:10px; }
+.book-pages.ref-fund .r3-cover-sub { font-size:18px; font-weight:600; color:#7a3a2e; letter-spacing:3px; margin-bottom:24px; }
+.book-pages.ref-fund .r3-cover-tag { font-size:13px; color:#8a4a30; letter-spacing:3px; margin-bottom:40px; }
+.book-pages.ref-fund .r3-cover-border { width:60%; height:2px; background:#8a4a30; margin:0 auto 20px; }
+.book-pages.ref-fund .r3-cover-vol { font-size:14px; color:#8a4a30; letter-spacing:8px; font-weight:700; }
+
+.book-pages.ref-fund .r3-part { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; background:linear-gradient(180deg,#efe0c8,#e5d4b6); }
+.book-pages.ref-fund .r3-part-num { font-size:14px; color:#8a4a30; letter-spacing:8px; font-weight:700; margin-bottom:12px; }
+.book-pages.ref-fund .r3-part-title { font-size:28px; font-weight:800; color:#4a1e18; letter-spacing:5px; margin-bottom:16px; }
+.book-pages.ref-fund .r3-part-desc { font-size:14px; color:#4a3020; line-height:2; max-width:300px; }
+
+.book-pages.ref-fund .r3-foreword h2, .book-pages.ref-fund .r3-toc h2 { font-size:20px; font-weight:800; color:#4a1e18; margin-bottom:14px; letter-spacing:4px; border-bottom:1.5px solid #8a4a30; padding-bottom:8px; }
+.book-pages.ref-fund .r3-foreword p { font-size:14px; line-height:2; margin-bottom:10px; color:#2c1e10; }
+.book-pages.ref-fund .r3-toc-list { display:flex; flex-direction:column; gap:5px; }
+.book-pages.ref-fund .r3-toc-item { display:flex; justify-content:space-between; align-items:baseline; padding:3px 0; border-bottom:1px dotted #b58a68; font-size:13px; }
+.book-pages.ref-fund .r3-toc-item span:first-child { flex-shrink:0; color:#8a4a30; font-weight:700; margin-right:6px; font-size:11px; min-width:36px; }
+.book-pages.ref-fund .r3-toc-item span:nth-child(2) { flex:1; color:#2c1e10; }
+.book-pages.ref-fund .r3-toc-item span:last-child { color:#8a4a30; font-weight:600; font-size:11px; }
+
+.book-pages.ref-fund .r3-chap-header { padding:6px 0 12px; border-bottom:2px double #8a4a30; margin-bottom:14px; }
+.book-pages.ref-fund .r3-chap-num { font-size:11px; color:#8a4a30; letter-spacing:4px; font-weight:700; margin-bottom:3px; }
+.book-pages.ref-fund .r3-chap-title { font-size:20px; font-weight:800; color:#4a1e18; letter-spacing:2px; line-height:1.3; }
+.book-pages.ref-fund .r3-lead { font-size:13.5px; color:#4a3020; line-height:1.9; margin-bottom:14px; padding:10px 12px; background:#f5ead0; border-left:3px solid #8a4a30; border-radius:0 4px 4px 0; }
+.book-pages.ref-fund .r3-formula { background:#fff8e8; border:1.5px solid #b58a68; border-radius:5px; padding:10px 12px; margin:8px 0 12px; font-size:14px; color:#2c1e10; }
+.book-pages.ref-fund .r3-formula b { display:block; font-size:11px; color:#8a4a30; letter-spacing:2px; margin-bottom:4px; font-weight:700; }
+.book-pages.ref-fund .r3-formula .r3-eq { font-family:'Georgia', serif; font-size:15px; text-align:center; padding:4px 0; }
+.book-pages.ref-fund .r3-body { font-size:13px; line-height:1.9; color:#2c1e10; }
+.book-pages.ref-fund .r3-body p { margin-bottom:8px; }
+.book-pages.ref-fund .r3-body b { font-weight:700; color:#4a1e18; }
+.book-pages.ref-fund .r3-body ul, .book-pages.ref-fund .r3-body ol { padding-left:20px; margin-bottom:8px; }
+.book-pages.ref-fund .r3-body li { margin-bottom:3px; }
+.book-pages.ref-fund .r3-note { background:#efe2b8; border-left:3px solid #8a4a30; padding:8px 12px; margin-top:10px; font-size:12px; color:#4a3010; line-height:1.7; border-radius:0 4px 4px 0; }
+.book-pages.ref-fund .r3-note b { color:#4a1e18; }
+.book-pages.ref-fund .r3-warn { background:#f3d9d0; border-left:3px solid #a83c28; padding:8px 12px; margin-top:10px; font-size:12px; color:#4a1e10; line-height:1.7; border-radius:0 4px 4px 0; }
+.book-pages.ref-fund .r3-warn b { color:#7a1a08; }
+.book-pages.ref-fund .r3-table { width:100%; border-collapse:collapse; margin:8px 0 12px; font-size:12px; }
+.book-pages.ref-fund .r3-table th, .book-pages.ref-fund .r3-table td { border:1px solid #b58a68; padding:5px 8px; text-align:left; }
+.book-pages.ref-fund .r3-table th { background:#f0dfba; color:#4a1e18; font-weight:700; }
+.book-pages.ref-fund .r3-table td { background:#fbf5e8; }
+
+.book-pages.ref-fund .r3-end { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; }
+.book-pages.ref-fund .r3-end-title { font-size:20px; font-weight:800; letter-spacing:6px; color:#4a1e18; margin-bottom:20px; }
+.book-pages.ref-fund .r3-end-body { font-size:14px; line-height:2.2; color:#4a3020; max-width:340px; }
+.book-pages.ref-fund .r3-end-sig { margin-top:30px; font-size:12px; color:#8a4a30; letter-spacing:3px; }
+
 /* 株ノートの背表紙 (バインダー風) */
 .book-spine.stock { border-radius:1px 3px 3px 1px; }
 .book-spine.stock.s1 { background:linear-gradient(90deg,#1f2e2a,#2f4640,#1f2e2a); }
@@ -7548,6 +7604,10 @@ function renderDiaryShelf() {
       <div class="book-spine-label">チャート分析 II</div>
       <div class="book-spine-badge">応用編</div>
     </div>
+    <div class="book-spine ref-book ref-book-3" onclick="openDiaryBook('ref','ref-fund')">
+      <div class="book-spine-label">ファンダメンタル</div>
+      <div class="book-spine-badge">全100頁</div>
+    </div>
   </div><div class="shelf-board"></div>`;
 
   el.innerHTML = html;
@@ -7624,6 +7684,7 @@ function renderDiaryBook() {
   if (currentBookLang === 'memo-hers' || currentBookLang === 'memo-mine') return renderMemoBook(currentBookLang === 'memo-hers' ? 'hers' : 'mine');
   if (currentBookLang === 'ref-chart') return renderChartRefBook();
   if (currentBookLang === 'ref-chart-2') return renderChartRef2Book();
+  if (currentBookLang === 'ref-fund') return renderFundBook();
 
   const [yStr, mStr] = currentBookYm.split('-');
   const year = Number(yStr);
@@ -8417,6 +8478,461 @@ function renderChartRef2Book() {
   `;
   el.classList.add('active');
 
+  requestAnimationFrame(() => {
+    const p = document.getElementById('book-pages');
+    if (p) p.scrollLeft = 0;
+  });
+}
+
+// ── ファンダメンタル分析 第3巻（教科書） 約100ページ ──
+// 数値目安は業種・国により大きく異なるため、日本上場企業の一般的傾向として記述
+const FUND_PARTS = [
+  { part:'第 I 部', title:'財務諸表の基本', desc:'会社の実態を数字で把握する土台。3つの表を読めれば投資判断の8割は済む。', chapters:[
+    { num:'第1章', title:'財務諸表とは何か', pages:[
+      { body:'<p><b>財務諸表</b>とは、会社の経営状態を数字で示した公式書類。上場企業は3ヶ月ごとに公開が義務付けられている。</p><p><b>3つの主要な表：</b></p><ul><li><b>損益計算書（PL / Profit and Loss）</b>：一定期間の売上と利益</li><li><b>貸借対照表（BS / Balance Sheet）</b>：ある時点の資産と負債</li><li><b>キャッシュフロー計算書（CF）</b>：一定期間の現金の流れ</li></ul><p>PLは"儲け"、BSは"財産"、CFは"現金"を示す。同じ会社を3つの角度から見た写真のような関係。</p>',
+        note:'決算書はTDnet（適時開示情報閲覧サービス）や、EDINET、各社IRサイトで無料で誰でも閲覧できる。' },
+      { body:'<p>投資家が最初に開くのは<b>「決算短信」</b>という要約版。1-2ページ目に3表の要点がまとまっている。</p><p><b>3表を読む順序（推奨）：</b></p><ol><li>まずPLで"稼ぐ力"を見る</li><li>次にBSで"財務の健全性"を見る</li><li>最後にCFで"利益が本物か"を確認する</li></ol><p>特にCFは重要。会計上は黒字でもキャッシュが回っていない会社は要注意。</p>',
+        warn:'「PLだけ見て判断」は初心者に多い失敗。利益は会計操作の余地があるが、キャッシュは嘘をつきにくい。' } ]},
+    { num:'第2章', title:'損益計算書（PL）の読み方', pages:[
+      { body:'<p><b>損益計算書</b>は上から下へ、売上から始まって様々な費用を引いていく構造。</p>',
+        formula:{ label:'PLの基本構造', eq:'売上高 − 費用 = 利益' },
+        body2:'<p><b>5つの利益：</b></p><ul><li><b>売上総利益</b>（粗利）：売上高 − 売上原価</li><li><b>営業利益</b>：売上総利益 − 販管費</li><li><b>経常利益</b>：営業利益 ± 営業外損益</li><li><b>税引前当期純利益</b>：経常利益 ± 特別損益</li><li><b>当期純利益</b>：税引前 − 法人税等</li></ul><p>本業の実力を測るなら<b>営業利益</b>、株主が最終的に受け取る利益は<b>当期純利益</b>。</p>' },
+      { body:'<p><b>各項目の意味：</b></p><ul><li><b>売上原価</b>：商品の仕入れや製造コスト</li><li><b>販管費</b>（販売費及び一般管理費）：人件費、広告費、賃料、減価償却費等</li><li><b>営業外損益</b>：利息、為替差損益、持分法投資損益など本業以外の継続的な損益</li><li><b>特別損益</b>：固定資産売却益、災害損失、リストラ費用など一時的なもの</li></ul>',
+        note:'"経常利益"は日本独自の概念で、米国基準やIFRSには存在しない。日本企業を分析する際の重要指標。' },
+      { body:'<p><b>PL分析のチェックポイント：</b></p><ol><li>売上高は成長しているか（前年比・進捗率）</li><li>粗利率は安定しているか（原材料高騰の影響等）</li><li>営業利益率が業種平均と比べてどうか</li><li>特別損失で当期純利益が歪んでいないか</li><li>営業利益と経常利益の乖離（為替差損益等）</li></ol>',
+        warn:'特別利益で当期純利益が大きく見えることがある。実力は営業利益で判断すべし。' } ]},
+    { num:'第3章', title:'貸借対照表（BS）の読み方', pages:[
+      { body:'<p><b>貸借対照表</b>は「決算日時点」の会社の財産状況を示す。左右に分かれた表で、左右の合計は必ず一致する。</p>',
+        formula:{ label:'BSの基本恒等式', eq:'資産 = 負債 + 純資産' },
+        body2:'<p><b>左側（借方）：資産</b>＝会社が持っているもの<br><b>右側（貸方）：負債＋純資産</b>＝資産の調達源</p><ul><li><b>負債</b>：他人から借りたお金（返す義務あり）</li><li><b>純資産</b>：株主が出したお金＋会社が稼いだ利益の蓄積（返す義務なし）</li></ul>' },
+      { body:'<p><b>資産の内訳：</b></p><ul><li><b>流動資産</b>（1年以内に現金化）：現預金、売掛金、棚卸資産</li><li><b>固定資産</b>（1年超保有）：土地、建物、機械、投資有価証券、のれん</li></ul><p><b>負債の内訳：</b></p><ul><li><b>流動負債</b>（1年以内に返済）：買掛金、短期借入金、未払金</li><li><b>固定負債</b>（1年超）：長期借入金、社債、退職給付引当金</li></ul>',
+        note:'"のれん"は買収時に支払った金額と、買収先の純資産との差額。M&Aの多い会社では膨らみがち。減損リスクあり。' },
+      { body:'<p><b>BS分析のチェックポイント：</b></p><ol><li>純資産（自己資本）は増えているか（利益の蓄積）</li><li>負債と純資産のバランス（自己資本比率）</li><li>流動資産 > 流動負債か（短期支払能力）</li><li>のれんが純資産に占める割合（減損リスク）</li><li>投資有価証券の含み損益（時価との差）</li></ol>',
+        warn:'BSは"ある1日のスナップショット"。決算日直前に負債を返済して数字を良く見せる操作（ウィンドウドレッシング）もあるので注意。' } ]},
+    { num:'第4章', title:'キャッシュフロー計算書（CF）', pages:[
+      { body:'<p><b>キャッシュフロー計算書</b>は、期間中に現金がどれだけ増減したかを3つの区分で示す。</p><p><b>3つのキャッシュフロー：</b></p><ul><li><b>営業活動CF</b>：本業から生まれた現金</li><li><b>投資活動CF</b>：設備投資や有価証券取引による現金の動き</li><li><b>財務活動CF</b>：借入・返済・配当・自社株買いによる現金の動き</li></ul>',
+        formula:{ label:'現金の増減', eq:'期末現金 − 期首現金 = 営業CF + 投資CF + 財務CF' } },
+      { body:'<p><b>健全な会社の理想パターン：</b></p><ul><li><b>営業CF</b>：プラス（本業で稼げている）</li><li><b>投資CF</b>：マイナス（将来のために投資している）</li><li><b>財務CF</b>：マイナス（借金返済や株主還元をしている）</li></ul><p><b>要注意パターン：</b></p><ul><li>営業CFがマイナス → 本業で現金を生み出せていない</li><li>投資CFがプラス → 資産を売却して現金化（衰退期の可能性）</li><li>財務CFが大きくプラス → 借金や増資で延命している可能性</li></ul>' },
+      { body:'<p><b>フリーキャッシュフロー（FCF）</b>は最重要指標：</p>',
+        formula:{ label:'フリーCF', eq:'FCF = 営業CF + 投資CF' },
+        body2:'<p>FCFは"会社が自由に使える現金"。配当や自社株買い、借入返済、M&Aの原資となる。</p><p><b>継続的にFCFがプラスの会社</b>は、財務の自由度が高い優良企業と言える。</p><ul><li>投資CFの中身も要確認（本業への設備投資か、余剰資金の運用か）</li><li>単年のFCF変動より、3-5年の傾向を見る</li></ul>',
+        note:'ウォーレン・バフェットは"オーナーズ・アーニングス"という独自のFCF計算法を提唱している。' } ]},
+    { num:'第5章', title:'3表のつながり', pages:[
+      { body:'<p>PL、BS、CFは独立していない。互いに数字が連動している。</p><p><b>主なつながり：</b></p><ul><li>PLの<b>当期純利益</b> → BSの<b>純資産</b>に蓄積（利益剰余金の増加）</li><li>BSの<b>期末現預金</b> = CFの計算結果と一致</li><li>PLの<b>減価償却費</b> → CFの営業CFにプラス調整（現金支出を伴わない費用のため）</li><li>BSの<b>売掛金/棚卸資産の増加</b> → CFの営業CFからマイナス（現金化されていない）</li></ul>' },
+      { body:'<p><b>3表を統合して読む例：</b></p><p>「PLでは増益、BSでは売掛金が急増、CFでは営業CFがマイナス」→ 売上を計上しても実際にお金が入っていない<b>危険信号</b>。粉飾決算の兆候かもしれない。</p><p>「PLは減益、CFは営業CFプラス、BSは自己資本増加」→ 一時的な費用増による減益。財務は健全で、投資機会の可能性あり。</p>',
+        warn:'3表を独立に見ると誤読する。特に「利益が出ているのにキャッシュがない」会社は要警戒。黒字倒産の典型パターン。' } ]},
+  ]},
+  { part:'第 II 部', title:'収益性分析', desc:'会社がどれだけ効率的に稼いでいるかを測る。数字だけでなく業種特性も踏まえて。', chapters:[
+    { num:'第6章', title:'売上高と売上総利益率', pages:[
+      { body:'<p><b>売上高</b>は会社の規模を示す最も基本的な数字。ただし単独では意味を持たない。</p><p><b>売上総利益率（粗利率）</b>は最も重要な収益性指標の1つ：</p>',
+        formula:{ label:'粗利率（Gross Margin）', eq:'売上総利益 ÷ 売上高 × 100 (%)' },
+        body2:'<p>粗利率は<b>商品/サービスの付加価値の高さ</b>を示す。同業他社と比較することで競争力が見える。</p>' },
+      { body:'<p><b>業種別の粗利率の典型的な傾向（日本企業）：</b></p><ul><li>ソフトウェア/SaaS：60-90%（原価が少ない）</li><li>製薬：60-80%（特許保護）</li><li>コンサルティング：40-60%</li><li>製造業：15-40%（材料費が多い）</li><li>商社：10-20%（薄利多売）</li><li>スーパー・小売：15-30%</li></ul>',
+        note:'粗利率が業種平均より高い会社は、ブランド力・差別化・独占的地位のいずれかを持つ可能性。同業他社と必ず比較を。',
+        warn:'粗利率だけで判断せず、"何が原価か"の内訳確認も重要。原材料高騰の影響を受けやすい業種は要注意。' } ]},
+    { num:'第7章', title:'営業利益率', pages:[
+      { body:'<p><b>営業利益率</b>は本業の稼ぐ力を示す代表指標：</p>',
+        formula:{ label:'営業利益率', eq:'営業利益 ÷ 売上高 × 100 (%)' },
+        body2:'<p>粗利から販管費（人件費・広告費・研究開発費等）を引いた後の利益率。<b>ビジネスモデルの効率性</b>が数字に現れる。</p><p>粗利率が高くても販管費が膨大なら営業利益率は低くなる。両方セットで見る。</p>' },
+      { body:'<p><b>解釈の目安（日本企業）：</b></p><ul><li>5%未満：低収益、コスト構造要改善</li><li>5-10%：一般的水準</li><li>10-20%：優良水準</li><li>20%超：高収益、参入障壁がある可能性</li></ul>',
+        note:'業種で大きく異なる。同一業種内で比較するのが大原則。装置産業（鉄鋼・造船）は5%あれば良い方、ソフトウェアは20%以下だと物足りない。',
+        warn:'販管費に「研究開発費」を大きく計上している成長企業は、営業利益率が低く見えることがある。将来投資として理解すべし。' } ]},
+    { num:'第8章', title:'ROE（自己資本利益率）', pages:[
+      { body:'<p><b>ROE (Return on Equity)</b>は「株主が投じた資本でどれだけ稼いだか」を示す指標。<b>最も重視される収益性指標</b>と言える。</p>',
+        formula:{ label:'ROE', eq:'当期純利益 ÷ 自己資本 × 100 (%)' },
+        body2:'<p>株主目線での投資効率。自己資本を100万円出して10万円稼げばROE 10%。銀行預金に例えれば"金利"のようなもの。</p><p><b>日本企業の目安</b>（業種で異なる）：</p><ul><li>5%未満：低収益</li><li>5-10%：平均的</li><li>10-15%：優良</li><li>15%超：非常に優良</li></ul>' },
+      { body:'<p><b>ROEはデュポン分解で3要素に分けられる：</b></p>',
+        formula:{ label:'デュポン分解', eq:'ROE = 純利益率 × 総資産回転率 × 財務レバレッジ' },
+        body2:'<p>この分解により、高ROEの<b>源泉</b>が分かる：</p><ul><li><b>純利益率が高い</b>：収益性が高い（花王・ソフトウェア企業等）</li><li><b>総資産回転率が高い</b>：資産効率が良い（小売・商社等）</li><li><b>財務レバレッジが高い</b>：借入が多い（金融・不動産等）</li></ul><p>財務レバレッジで見せかけの高ROEになっている会社は要注意。</p>',
+        warn:'ROEが高くても借金だらけで達成している場合、リスクも高い。ROEとD/Eレシオはセットで見る。' },
+      { body:'<p><b>ROE分析のポイント：</b></p><ol><li>単年ではなく3-5年の推移を見る</li><li>同業他社と比較する</li><li>デュポン分解で源泉を確認する</li><li>自社株買いによる"見かけ上のROE上昇"に注意</li><li>のれん減損等の一時損失で歪んでいないか確認</li></ol>',
+        note:'東証プライムでROE 8%以上を目指す動き（伊藤レポート）があるが、業種特性を無視した目標には批判もある。' } ]},
+    { num:'第9章', title:'ROA と ROIC', pages:[
+      { body:'<p><b>ROA (Return on Assets)</b>は「総資産でどれだけ稼いだか」。ROEが株主目線なら、ROAは会社全体の資産効率。</p>',
+        formula:{ label:'ROA', eq:'当期純利益 ÷ 総資産 × 100 (%)' },
+        body2:'<p>ROEと違い、借入で下駄を履かせられない。<b>純粋な事業効率</b>を測る指標。</p><p>日本企業の目安：3%以上で平均、5%超で優良、8%超で高水準。</p>',
+        note:'金融業（銀行等）は他業種と比べROAが極端に低いのが構造。単純比較は不可。' },
+      { body:'<p><b>ROIC (Return on Invested Capital)</b>は「投下資本利益率」。近年、ROEと並んで重視されている：</p>',
+        formula:{ label:'ROIC', eq:'税引後営業利益(NOPAT) ÷ 投下資本 × 100 (%)' },
+        body2:'<p>投下資本 = 有利子負債 + 自己資本（本業に使われている資金）</p><p><b>ROICの利点：</b></p><ul><li>資本コスト（WACC）と比較して超過利益を判定できる</li><li>ROIC > WACC なら価値創造している</li><li>財務構成の違いを排除して事業性を評価</li></ul>',
+        warn:'WACC計算には多くの前提があり、算出者により結果が異なる。数字を鵜呑みにせず、意味を理解して使う。' } ]},
+  ]},
+  { part:'第 III 部', title:'成長性分析', desc:'"どれだけ成長しているか"は将来のリターンに直結。単年でなく複数年で判断する。', chapters:[
+    { num:'第10章', title:'売上成長率とCAGR', pages:[
+      { body:'<p><b>売上成長率</b>は最もシンプルな成長性指標。</p>',
+        formula:{ label:'年成長率', eq:'(当期売上 − 前期売上) ÷ 前期売上 × 100 (%)' },
+        body2:'<p><b>CAGR (Compound Annual Growth Rate)</b> は複利ベースの年平均成長率：</p>',
+        formula2:{ label:'CAGR', eq:'(終値 ÷ 始値) ^ (1/年数) − 1' },
+        body3:'<p>単年の成長率は変動が大きいため、3-5年のCAGRで見るのが基本。景気循環や一時的な特需の影響を平均化できる。</p>' },
+      { body:'<p><b>売上成長率の解釈：</b></p><ul><li>マイナス：衰退期、要注意</li><li>0-5%：成熟企業、配当重視</li><li>5-15%：健全な成長</li><li>15-30%：高成長株</li><li>30%超：新興・急成長（持続性を確認）</li></ul>',
+        note:'成長率が高い会社ほど株価はPER高めで評価される（成長プレミアム）。ただし持続性が最重要。',
+        warn:'M&Aによる売上増加は"見かけの成長"。オーガニック成長率（既存事業の成長）と分けて考える。' } ]},
+    { num:'第11章', title:'利益成長率', pages:[
+      { body:'<p>売上成長より重要なのが<b>利益成長</b>。</p><p>売上が10%増えても利益が減っていたら、規模拡大で疲弊しているだけの可能性。</p><p><b>チェックすべき利益：</b></p><ul><li>営業利益成長率（本業の実力）</li><li>当期純利益成長率（最終的な株主リターン）</li><li>EPS成長率（株数変動考慮）</li></ul>',
+        formula:{ label:'営業利益成長率', eq:'(当期営業利益 − 前期営業利益) ÷ 前期営業利益 × 100 (%)' } },
+      { body:'<p><b>売上成長 vs 利益成長の関係：</b></p><table class="r3-table"><tr><th>売上</th><th>営業利益</th><th>意味</th></tr><tr><td>↑</td><td>↑↑</td><td>理想（レバレッジ効き）</td></tr><tr><td>↑</td><td>↑</td><td>健全成長</td></tr><tr><td>↑</td><td>→</td><td>コスト増、要注意</td></tr><tr><td>↑</td><td>↓</td><td>危険（無理な拡大）</td></tr><tr><td>→</td><td>↑</td><td>コスト削減成功</td></tr></table>',
+        note:'"営業レバレッジ"：固定費比率が高い会社ほど、売上増加が利益増加に大きく効く。半導体・鉄鋼などが典型。' } ]},
+    { num:'第12章', title:'EPS成長率', pages:[
+      { body:'<p><b>EPS (Earnings Per Share) = 1株あたり純利益</b></p>',
+        formula:{ label:'EPS', eq:'当期純利益 ÷ 期中平均発行済株式数' },
+        body2:'<p><b>EPS成長率</b>は投資家にとって最重要の成長指標。株価はEPSの成長に連動する傾向が強い。</p>',
+        formula2:{ label:'EPS成長率', eq:'(当期EPS − 前期EPS) ÷ 前期EPS × 100 (%)' },
+        body3:'<p>純利益が同じでも、増資で株数が増えればEPSは減少（希薄化）。自社株買いで株数が減ればEPSは上昇。</p>' },
+      { body:'<p><b>EPS成長の3つの源泉：</b></p><ol><li>売上成長 → 利益成長</li><li>利益率改善（コスト削減、粗利上昇）</li><li>株数減少（自社株買い）</li></ol><p>1と2による成長は"本物"。3は数字上の効果だが、株主還元として有効。</p>',
+        note:'長期投資家は EPS CAGR（5年、10年） を最重視する。年+10%以上を10年続けられる会社は稀。',
+        warn:'IFRS採用企業や特別損益の大きい期は、EPSが歪む。継続事業EPSや調整後EPSも参照する。' } ]},
+  ]},
+  { part:'第 IV 部', title:'安全性分析', desc:'倒産リスク、財務の健全性を測る。攻めより守りの指標。', chapters:[
+    { num:'第13章', title:'自己資本比率', pages:[
+      { body:'<p><b>自己資本比率</b>は最も基本的な財務健全性指標。</p>',
+        formula:{ label:'自己資本比率', eq:'自己資本 ÷ 総資産 × 100 (%)' },
+        body2:'<p>会社の総資産のうち、返済不要の資金（株主資本＋利益剰余金）が占める割合。高いほど倒産リスクが低い。</p>',
+        note:'"純資産"と"自己資本"は厳密には異なる（純資産には少数株主持分や新株予約権を含む）。指標計算では自己資本を使うのが原則。' },
+      { body:'<p><b>業種別の目安：</b></p><ul><li>製造業：40-60%が健全ライン</li><li>小売・サービス：30-50%</li><li>不動産：20-40%（借入前提のビジネス）</li><li>銀行：8-10%（自己資本比率規制あり）</li><li>電力・鉄道：20-40%（大規模設備投資）</li></ul><p>単純な高低ではなく、業種特性で判断する。</p>',
+        warn:'自己資本比率が低くても、事業が安定していれば問題ないケースも多い（電力、通信など）。数字だけでなく事業の性質も見る。' } ]},
+    { num:'第14章', title:'流動比率と当座比率', pages:[
+      { body:'<p><b>流動比率</b>は短期の支払能力を示す：</p>',
+        formula:{ label:'流動比率', eq:'流動資産 ÷ 流動負債 × 100 (%)' },
+        body2:'<p>1年以内に現金化できる資産が、1年以内に返す負債の何倍あるか。100%未満は要注意、200%以上あれば安全とされる。</p>',
+        formula2:{ label:'当座比率', eq:'(現預金+売掛金+有価証券) ÷ 流動負債 × 100 (%)' },
+        body3:'<p><b>当座比率</b>は流動比率からさらに厳しく、"棚卸資産を除いた"すぐ現金化できる資産だけで計算。100%以上が理想。</p>' },
+      { body:'<p><b>使い分け：</b></p><ul><li>棚卸資産の多い製造業・小売業 → 当座比率も重視</li><li>棚卸資産の少ないサービス業・IT業 → 流動比率で十分</li></ul>',
+        note:'ドラッグストアやコンビニは在庫の回転が非常に速いので、当座比率が低くても問題ない場合が多い。',
+        warn:'流動比率が高すぎるのも問題（現金を活用できていない）。300%以上ある会社は、投資機会がないor経営が保守的すぎる可能性。' } ]},
+    { num:'第15章', title:'有利子負債とD/Eレシオ', pages:[
+      { body:'<p><b>有利子負債</b>は利息を伴う負債（借入金、社債等）。買掛金など無利息の負債は含まない。</p><p><b>D/Eレシオ（負債資本倍率）</b>：</p>',
+        formula:{ label:'D/E Ratio', eq:'有利子負債 ÷ 自己資本' },
+        body2:'<p>1倍以下：健全、1-2倍：一般的、2倍以上：借入依存度高い。</p><p>業種で許容範囲が大きく異なる（不動産・金融は高く、IT・製薬は低い傾向）。</p>' },
+      { body:'<p><b>ネットD/Eレシオ</b>：</p>',
+        formula:{ label:'ネットD/E', eq:'(有利子負債 − 現預金) ÷ 自己資本' },
+        body2:'<p>手元現金を差し引いた"実質的な借入"を見る。ゼロ以下（実質無借金）の会社は財務が非常に強い。</p><p><b>借入は必ずしも悪ではない：</b></p><ul><li>低金利で借りて高収益投資に回せば、株主利益は増える</li><li>成長期の会社は積極的な借入で規模拡大するのが合理的</li><li>ただし景気後退時のリスクは大きくなる</li></ul>',
+        note:'配当・自社株買いの原資として、あえて借入する会社もある（フィナンシャル・エンジニアリング）。ROEが高くてもリスクが積み上がる。' } ]},
+    { num:'第16章', title:'インタレスト・カバレッジ・レシオ', pages:[
+      { body:'<p><b>インタレスト・カバレッジ</b>は「利息の何倍稼いでいるか」を示す：</p>',
+        formula:{ label:'Interest Coverage Ratio', eq:'営業利益 ÷ 支払利息' },
+        body2:'<p>営業利益が支払利息の何倍あるか。倍率が高いほど利息負担に余裕がある。</p><ul><li>1倍未満：営業利益で利息が払えない、極めて危険</li><li>3倍未満：やや不安</li><li>5倍以上：安全圏</li><li>10倍以上：非常に健全</li></ul>' },
+      { body:'<p><b>使い方：</b></p><p>D/Eレシオと組み合わせて見る。D/Eが高くても、インタレストカバレッジが十分高ければ問題ない（大きな借入で大きく稼いでいる）。</p><p>D/Eが低くてもインタレストカバレッジが低い → 収益力が弱く、少ない借入でも重荷になっている。</p>',
+        warn:'金利上昇局面ではインタレストカバレッジが急悪化する会社が出る。金利敏感度も要確認。',
+        note:'"EBITDA / 支払利息" で計算する場合もある（EBITDAの方が実キャッシュに近い）。' } ]},
+  ]},
+  { part:'第 V 部', title:'効率性分析', desc:'資産や資本をどれだけ効率よく使っているか。回転率で測る。', chapters:[
+    { num:'第17章', title:'総資産回転率', pages:[
+      { body:'<p><b>総資産回転率</b>は「資産を使ってどれだけ売上を上げたか」：</p>',
+        formula:{ label:'総資産回転率', eq:'売上高 ÷ 総資産 （倍）' },
+        body2:'<p>1倍なら、総資産と同額の売上を1年で稼いだ意味。高いほど資産効率が良い。</p><p>ROEのデュポン分解の3要素の1つ。</p>' },
+      { body:'<p><b>業種別の傾向：</b></p><ul><li>商社・小売：1.5-3倍（薄利多売型）</li><li>製造業：0.8-1.2倍</li><li>不動産・電力：0.2-0.4倍（大規模資産型）</li><li>ソフトウェア：1.0-2.0倍（資産が少ない）</li><li>銀行：0.03-0.05倍（資産規模が桁違い）</li></ul>',
+        note:'低いから悪いわけではない。装置産業は構造的に低い。同業比較で判断。',
+        warn:'総資産回転率が急に高くなった場合は、事業縮小や資産売却の可能性もある。単純に喜ばず内訳確認を。' } ]},
+    { num:'第18章', title:'在庫回転率と売上債権回転率', pages:[
+      { body:'<p><b>在庫回転率</b>：在庫がどれだけ早く売れているか</p>',
+        formula:{ label:'在庫回転率', eq:'売上原価 ÷ 平均在庫 （倍/年）' },
+        body2:'<p>回転率が高いほど、在庫が積み上がらず健全。急に低下したら売れ残りリスク。</p>',
+        formula2:{ label:'在庫回転日数', eq:'365 ÷ 在庫回転率 （日）' },
+        body3:'<p>1年で在庫が何日分あるかも重要。ファストファッションは20-40日、家電量販は60-90日など業種で異なる。</p>' },
+      { body:'<p><b>売上債権回転率</b>：売掛金の回収スピード</p>',
+        formula:{ label:'売上債権回転日数', eq:'売上債権 ÷ 売上高 × 365 （日）' },
+        body2:'<p>売上を計上してから現金が入るまでの平均日数。この数字が悪化している = 回収が遅れている = キャッシュフロー悪化の兆候。</p>',
+        warn:'売上急増と同時に売上債権回転日数が悪化 → 押し込み販売や粉飾の可能性。CF計算書と併せて要確認。',
+        note:'B2Bビジネスは30-90日、小売店・現金商売は数日以内が普通。' } ]},
+  ]},
+  { part:'第 VI 部', title:'株価バリュエーション', desc:'株価が割安/割高かを判断する指標群。単独ではなく複数指標で見る。', chapters:[
+    { num:'第19章', title:'PER（株価収益率）', pages:[
+      { body:'<p><b>PER (Price Earnings Ratio) = 株価収益率</b></p>',
+        formula:{ label:'PER', eq:'株価 ÷ 1株利益(EPS) （倍）' },
+        body2:'<p>投資した金額を利益で何年で回収できるかの目安。PER 15倍なら、現在の利益水準が続けば15年で元が取れる計算。</p><p>最も広く使われるバリュエーション指標。ただし業種・成長率で"適正水準"が大きく異なる。</p>' },
+      { body:'<p><b>PERの適正水準：</b></p><p>実は"適正水準"に絶対的な答えはない。以下は日本企業の傾向：</p><ul><li>低成長：8-15倍</li><li>安定成長：12-20倍</li><li>高成長：20-40倍</li><li>超高成長：40倍以上（持続性重要）</li></ul>',
+        note:'日経平均のPERは概ね12-20倍のレンジで推移してきた。S&P500は15-25倍が多い。',
+        warn:'PERが極端に低い（5倍以下）は"割安"ではなく"業績悪化予想"のサインの場合が多い。理由を必ず確認。' },
+      { body:'<p><b>予想PER vs 実績PER：</b></p><ul><li><b>実績PER</b>：直近12ヶ月の実績利益で計算</li><li><b>予想PER (Forward PER)</b>：来期予想利益で計算</li></ul><p>投資判断では通常、予想PERを使う（株価は将来を織り込むため）。</p><p><b>PEG比率</b>：PERを利益成長率で割った指標。1倍未満で割安、1倍前後で妥当とされる。</p>',
+        formula:{ label:'PEG', eq:'予想PER ÷ 予想EPS成長率(%)' } } ]},
+    { num:'第20章', title:'PBR（株価純資産倍率）', pages:[
+      { body:'<p><b>PBR (Price Book-value Ratio) = 株価純資産倍率</b></p>',
+        formula:{ label:'PBR', eq:'株価 ÷ 1株純資産(BPS) （倍）' },
+        body2:'<p>会社の"解散価値"に対して株価がどれだけ高いかを示す。PBR 1倍は、株価と1株純資産が同じ意味。</p><p><b>PBR 1倍未満</b>は"解散価値以下"で理論上は割安。ただし業績悪化予想を反映している場合も。</p>' },
+      { body:'<p><b>ROEとPBRの関係：</b></p><p>PBRは単独では"割安/割高"を判断できない。<b>ROEとセット</b>で見るのが原則。</p>',
+        formula:{ label:'PBRの意味', eq:'PBR = PER × ROE' },
+        body2:'<p>ROEが高い会社は、PBRも高いのが自然。逆にROE 10%あるのにPBR 1倍未満は割安の可能性。</p><p>ROE 5%以下でPBR 1倍未満は"割安"ではなく"低収益のため妥当"の可能性が高い。</p>',
+        note:'東証プライム市場は「PBR 1倍割れ企業への改善要請」を出した経緯があり、PBR意識が高まった。' },
+      { body:'<p><b>PBR活用のコツ：</b></p><ol><li>ROEと組み合わせて判断（高ROE×低PBRが理想）</li><li>同業他社と比較（業種平均を意識）</li><li>のれん・無形資産の多寡を確認（BPSが歪んでいないか）</li><li>時価と乖離した資産（不動産等）の含み益を考慮</li></ol>',
+        warn:'銀行や不動産のように資産が膨大な業種は元々PBR低め。テック企業のように資産少ない業種は元々PBR高め。単純比較不可。' } ]},
+    { num:'第21章', title:'配当利回り', pages:[
+      { body:'<p><b>配当利回り</b>は「株価に対する年配当の割合」：</p>',
+        formula:{ label:'配当利回り', eq:'1株配当 ÷ 株価 × 100 (%)' },
+        body2:'<p>株を持っているだけで年間に得られる配当収入の率。</p><ul><li>1%未満：低配当（成長株が多い）</li><li>1-2%：一般的</li><li>3-4%：高配当</li><li>4%以上：非常に高配当（要リスク確認）</li></ul>',
+        note:'日経平均全体の配当利回りは2-3%程度、S&P500は1-2%程度で推移することが多い。' },
+      { body:'<p><b>配当利回りの注意点：</b></p><ul><li>株価下落で見かけ上の利回りが上昇することがある（"見かけの高配当"）</li><li>業績悪化で減配リスク</li><li>配当性向が異常に高い（100%超）会社は要注意</li></ul>',
+        warn:'"高配当ワナ"：株価が急落した銘柄の利回りは高く見えるが、業績悪化で減配→株価さらに下落のリスク。',
+        note:'長期投資家は"連続増配銘柄"を重視する。米国の"配当王"（50年以上連続増配）は特に有名。日本でも花王・KDDI・伊藤忠等が高い連続増配実績を持つ。' } ]},
+    { num:'第22章', title:'配当性向', pages:[
+      { body:'<p><b>配当性向</b>は「利益のうち何%を配当に回しているか」：</p>',
+        formula:{ label:'配当性向', eq:'配当総額 ÷ 当期純利益 × 100 (%)' },
+        body2:'<p>会社の配当政策を示す。日本企業は30-40%が一般的、米国は30-50%が多い。</p><ul><li>20%未満：内部留保重視（成長投資型）</li><li>30-50%：バランス型</li><li>50-70%：株主還元重視</li><li>100%超：利益以上の配当（持続困難）</li></ul>' },
+      { body:'<p><b>配当性向の見方：</b></p><p>低い＝悪いではない。成長投資に回してROEを高められる会社は、無理に配当を出さない方が株主のためになる（バフェット流）。</p><p>高い＝良いでもない。成長機会がないため利益を返しているだけの可能性も（成熟企業）。</p><p><b>望ましいパターン：</b></p><ul><li>成長企業：低い配当性向＋高いROIC</li><li>成熟企業：高い配当性向＋安定利益</li><li>累進配当（減配しない方針）を明示している会社は信頼性高い</li></ul>',
+        note:'"総還元性向"：配当＋自社株買いの合計÷純利益。近年、自社株買いが増えており重要な指標。' } ]},
+    { num:'第23章', title:'PSR（株価売上高倍率）', pages:[
+      { body:'<p><b>PSR (Price Sales Ratio)</b>は「時価総額が売上の何倍か」：</p>',
+        formula:{ label:'PSR', eq:'時価総額 ÷ 年間売上高 （倍）' },
+        body2:'<p><b>PERが使えないケース</b>で用いる：</p><ul><li>赤字企業（PERが計算できない）</li><li>先行投資期のスタートアップ</li><li>景気敏感で利益変動が大きい業種</li></ul><p>成長企業の暫定的な評価指標として、特に米国のグロース株分析で多用される。</p>' },
+      { body:'<p><b>目安：</b></p><ul><li>PSR 1倍未満：割安（低成長・低収益率企業に多い）</li><li>PSR 1-3倍：一般的</li><li>PSR 3-10倍：成長期待あり</li><li>PSR 10倍超：極めて高い成長期待（バブル警戒領域）</li></ul>',
+        warn:'PSRは利益率を無視するので、単独判断は危険。"高いPSR＝高い成長"であるべきで、実際成長しなければ株価急落。',
+        note:'ドットコムバブル時には、赤字企業でPSR 20-50倍がザラだった。全て後にクラッシュ。歴史に学ぶべし。' } ]},
+    { num:'第24章', title:'EV/EBITDA', pages:[
+      { body:'<p><b>EV (Enterprise Value / 企業価値)</b>：</p>',
+        formula:{ label:'EV', eq:'時価総額 + 有利子負債 − 現預金' },
+        body2:'<p>会社を"丸ごと買収する"ときの理論価格。株主資本だけでなく債権者価値も加味した"事業の値段"。</p>',
+        formula2:{ label:'EBITDA', eq:'営業利益 + 減価償却費' },
+        body3:'<p><b>EBITDA</b>：金利・税・減価償却前利益。実キャッシュに近い"稼ぐ力"を示す。' },
+      { body:'<p><b>EV/EBITDA</b>は「事業の値段が何年分のキャッシュに相当するか」：</p>',
+        formula:{ label:'EV/EBITDA', eq:'EV ÷ EBITDA （倍）' },
+        body2:'<p>M&A実務や国際比較で多用される指標。<b>PERよりも純粋な事業価値を測れる</b>：</p><ul><li>財務構成（借入割合）の影響を排除</li><li>減価償却方針の違いを排除</li><li>税制の違いを排除</li></ul>' },
+      { body:'<p><b>目安：</b></p><ul><li>8倍未満：割安</li><li>8-12倍：一般的</li><li>12-20倍：成長期待</li><li>20倍超：高評価</li></ul><p><b>使い方：</b></p><ul><li>異なる国の同業他社比較</li><li>設備投資が大きい業種（電力・通信）の適正評価</li><li>M&Aの買収価格妥当性判断</li></ul>',
+        note:'EBITDAは非現金費用（減価償却）を戻すため、実際に必要な設備投資額を無視する欠点あり。バフェットは「EBITDA厨」を批判している。',
+        warn:'EBITDAが高くても、常に大規模設備投資が必要な業種では実キャッシュは残らない。CF計算書との併用が必須。' } ]},
+  ]},
+  { part:'第 VII 部', title:'内在価値の算定', desc:'株価とは別に、"この会社の本来の価値"を計算する手法。長期投資家の必須スキル。', chapters:[
+    { num:'第25章', title:'配当割引モデル（DDM）', pages:[
+      { body:'<p><b>配当割引モデル (Dividend Discount Model)</b>は最もシンプルな内在価値算定法：</p><p>「株の価値 = 将来受け取る配当の現在価値の合計」という考え方。</p>',
+        formula:{ label:'ゴードン成長モデル', eq:'株価 = D1 ÷ (r − g)' },
+        body2:'<p>D1: 来期配当、r: 期待収益率、g: 配当成長率</p><p>例：来期配当30円、期待収益率6%、配当成長率2%<br>株価 = 30 ÷ (0.06 − 0.02) = 750円</p>' },
+      { body:'<p><b>DDMの前提：</b></p><ul><li>配当を継続的に出す会社が対象</li><li>成長率が期待収益率より小さいことが必要（g < r）</li><li>配当政策が安定していること</li></ul><p><b>適用に向く企業：</b></p><ul><li>成熟した高配当企業</li><li>公益企業（電力・通信・鉄道等）</li><li>連続増配銘柄</li></ul>',
+        warn:'成長率と期待収益率のわずかな変化で計算結果が大きく変わる。感度分析（前提を変えて複数計算）が必須。',
+        note:'配当を出さない企業や、成長率が非常に高い企業には向かない。DCFなど他の手法が必要。' } ]},
+    { num:'第26章', title:'DCF法の基礎', pages:[
+      { body:'<p><b>DCF (Discounted Cash Flow) 法</b>は最も本格的な内在価値算定法。</p><p>「株の価値 = 将来生み出すフリーキャッシュフローを現在価値に割り引いた合計」</p>',
+        formula:{ label:'現在価値の計算', eq:'PV = FCF ÷ (1 + WACC)^n' },
+        body2:'<p>将来のFCFを予測し、WACC（加重平均資本コスト）で現在価値に割り引く。全ての年のPVを合計して"事業価値"を算出する。</p>' },
+      { body:'<p><b>DCFの手順（簡略化）：</b></p><ol><li>将来5-10年のFCFを予測</li><li>それ以降の"継続価値"を計算（永続的な安定成長を仮定）</li><li>WACCで割り引いて現在価値化</li><li>合計＝事業価値</li><li>事業価値 − 有利子負債 + 現預金 = 株主価値</li><li>÷ 発行済株式数 = 1株あたり理論株価</li></ol>' },
+      { body:'<p><b>DCFの限界：</b></p><ul><li>将来予測に大きく依存する（5年後10年後のFCFは誰にも分からない）</li><li>WACCの前提（β、リスクプレミアム）で結果が大きく変わる</li><li>継続価値が全体の50-80%を占めることが多く、そこの前提が超重要</li></ul>',
+        warn:'DCFは"精緻な計算"ではなく"仮説の可視化"。結果の数字を信じるより、仮定の妥当性を吟味することの方が重要。',
+        note:'バフェットは「DCFを紙とペンで正確に計算した投資家は見たことがない」と述べた。厳密計算より概念理解が大事。' } ]},
+    { num:'第27章', title:'相対評価法', pages:[
+      { body:'<p><b>相対評価法（マルチプル法）</b>：類似企業のバリュエーション倍率から対象企業の適正価値を推定する手法。</p><p><b>使う指標：</b></p><ul><li>PER（利益ベース）</li><li>PBR（純資産ベース）</li><li>PSR（売上ベース）</li><li>EV/EBITDA（事業価値ベース）</li></ul><p>「類似A社のPER 15倍、B社のPER 18倍 → 平均16.5倍を対象企業に適用」といった単純な方法。</p>' },
+      { body:'<p><b>相対評価の利点と限界：</b></p><p><b>利点：</b></p><ul><li>計算が簡単、直感的</li><li>相場感を捉えやすい</li><li>M&A実務で多用される</li></ul><p><b>限界：</b></p><ul><li>市場全体が過熱している時は割高な評価に</li><li>類似企業選定が主観的</li><li>成長率・利益率の違いを反映しにくい</li></ul>',
+        note:'DCF法と相対評価法を併用し、"レンジ"で理論株価を掴むのがプロの実務。1つの数字を信じず幅で捉える。' } ]},
+  ]},
+  { part:'第 VIII 部', title:'決算書実践読解', desc:'公開資料から実際に情報を抜き出す技術。実践力の中核。', chapters:[
+    { num:'第28章', title:'決算短信のポイント', pages:[
+      { body:'<p><b>決算短信</b>は上場企業が四半期ごとに公開する速報版レポート。TDnetで開示され、株価が最も動くタイミング。</p><p><b>1ページ目のサマリー</b>を最初に見る：</p><ul><li>売上高（前期比）</li><li>営業利益・経常利益・当期純利益（前期比）</li><li>1株情報（EPS、配当）</li><li>通期予想と進捗率</li></ul>',
+        note:'決算発表は基本的に15:00以降。翌営業日以降の株価に反映される。' },
+      { body:'<p><b>数字だけでなく"文章"を読む：</b></p><ul><li>経営成績の説明（なぜ増減したか）</li><li>セグメント別の状況</li><li>次期の見通しの根拠</li></ul><p>好決算でも会社側のコメントが慎重なら株価は伸びにくい。逆も然り。</p>',
+        note:'"上方修正"や"下方修正"は決算短信の直前に単独で発表されることも多い（"適時開示"の義務）。' },
+      { body:'<p><b>チェックすべき指標変化：</b></p><ol><li>売上高の前年比、通期予想進捗率</li><li>営業利益率の変動（原価率・販管費率の変化）</li><li>営業CFの動向（PLと同方向に動いているか）</li><li>在庫・売掛金の増減（急増は要注意）</li><li>設備投資額と減価償却費のバランス</li></ol>',
+        warn:'"進捗率"の判断は季節性を考慮する。1Qで25%あれば順調な会社と、4Qに偏る会社では意味が違う。' } ]},
+    { num:'第29章', title:'有価証券報告書のポイント', pages:[
+      { body:'<p><b>有価証券報告書（有報）</b>は年1回、決算後3ヶ月以内に提出される公式書類。<b>決算短信より詳細で正確</b>。</p><p><b>投資家が特に見る項目：</b></p><ul><li>事業等のリスク</li><li>経営者による財務状況の分析</li><li>従業員の平均年収・平均年齢</li><li>役員の報酬</li><li>大株主リスト</li><li>関連当事者取引</li></ul>' },
+      { body:'<p><b>"事業等のリスク"は必読</b>：会社自身が認識するリスクを列挙している。将来の下方修正の"予告編"になっていることも。</p><p><b>大株主の変化</b>：機関投資家の保有比率上昇 → 注目度上昇。減少 → 見放されつつある可能性。</p><p><b>従業員データ</b>：平均年収が業界平均より低い → 人材確保に苦戦する可能性。平均年齢が高すぎる → 人材構造リスク。</p>',
+        note:'EDINET（金融庁の開示システム）で全ての有報が無料で閲覧できる。' } ]},
+    { num:'第30章', title:'業績予想と進捗率', pages:[
+      { body:'<p>日本企業は通期業績予想を出す慣行がある（義務ではない）。<b>四半期ごとの進捗率</b>は投資判断の重要材料。</p>',
+        formula:{ label:'進捗率', eq:'当該四半期までの累計 ÷ 通期予想 × 100 (%)' },
+        body2:'<p>売上・営業利益・経常利益・純利益それぞれで計算。<b>季節性を考慮</b>して判断：</p><ul><li>売上均等な業種：1Q 25%、2Q 50%、3Q 75%が目安</li><li>年末商戦依存：3Q末で50-60%、4Qに集中</li><li>年度末納品型：4Qに大きく偏る</li></ul>' },
+      { body:'<p><b>予想修正の種類：</b></p><ul><li><b>上方修正</b>：業績予想を上に修正 → 株価上昇要因</li><li><b>下方修正</b>：業績予想を下に修正 → 株価下落要因</li><li><b>据え置き</b>：進捗が順調でも修正しないことも（保守的な会社に多い）</li></ul><p><b>修正のタイミング：</b></p><ul><li>2Q決算前後（半期経過で見通し立つ）</li><li>3Q決算前後（通期の見通しが固まる）</li><li>1Q終了後の早い修正は、大きな変化があった証拠</li></ul>',
+        warn:'"減益計画への上方修正"は喜ばれない。過去との比較も重要。' } ]},
+    { num:'第31章', title:'決算説明会資料', pages:[
+      { body:'<p><b>決算説明会資料</b>は決算短信より視覚的で分かりやすい補足資料。多くの上場企業がIRサイトで公開。</p><p><b>特徴：</b></p><ul><li>グラフ・図表で業績推移が可視化</li><li>セグメント別の詳細</li><li>中期経営計画の進捗</li><li>戦略の説明</li><li>Q&Aセッション議事録</li></ul>' },
+      { body:'<p><b>説明会資料で特に見るべきスライド：</b></p><ol><li>売上・利益の四半期推移グラフ</li><li>セグメント別売上・利益の変化</li><li>KPI（顧客数、契約数、稼働率等）の推移</li><li>設備投資計画</li><li>株主還元方針</li></ol><p><b>SaaS企業なら</b>：ARR、churn rate、LTV/CAC等の指標も開示されることがある。ビジネスの質を測る重要指標。</p>',
+        note:'決算説明会は動画やライブストリーミングで公開されることも多い。経営陣の"生の声"は文書以上に情報量が大きい。' } ]},
+  ]},
+  { part:'第 IX 部', title:'業種別特性', desc:'業種によって"良い数字"は大きく異なる。同業比較の基準となる特性を理解する。', chapters:[
+    { num:'第32章', title:'製造業の見方', pages:[
+      { body:'<p><b>製造業の特徴：</b></p><ul><li>大規模な設備投資が必要</li><li>減価償却費が大きい</li><li>在庫を持つ（棚卸資産管理が重要）</li><li>営業レバレッジが高い（固定費が大きい）</li></ul><p><b>特有の重要指標：</b></p><ul><li>売上高 vs 設備投資額のバランス</li><li>減価償却費の水準</li><li>棚卸資産回転率</li><li>営業利益率（10%あれば優良）</li></ul>' },
+      { body:'<p><b>景気変動の影響：</b></p><ul><li>好況期：営業レバレッジで利益急拡大</li><li>不況期：固定費が重荷となり赤字転落しやすい</li></ul><p>景気敏感業種（鉄鋼、化学、機械等）は PER単独では判断困難。景気サイクルで見る必要がある。</p>',
+        warn:'"シクリカル・トラップ"：業績好調時にPERが低く見えて買い、その後の業績悪化で急落するパターン。景気敏感業種はPER高い時が買い場、低い時が売り場という逆説がある。',
+        note:'半導体・工作機械などは"サイクル"を意識。3-5年周期で好不況を繰り返す。' } ]},
+    { num:'第33章', title:'小売・サービス業の見方', pages:[
+      { body:'<p><b>小売業の特徴：</b></p><ul><li>粗利率が低い（10-30%が多い）</li><li>薄利多売、規模の経済が効く</li><li>在庫回転率が命</li><li>季節性の影響大（3Q・4Qが繁忙期）</li></ul><p><b>重要指標：</b></p><ul><li><b>既存店売上高前年比</b>：新店効果を排除した実力</li><li>1店舗あたり売上高</li><li>坪効率</li><li>在庫回転日数</li></ul>' },
+      { body:'<p><b>サービス業（人材集約型）：</b></p><ul><li>人件費が最大コスト</li><li>1人あたり売上・利益が重要</li><li>離職率、採用状況も影響大</li></ul><p><b>チェックポイント：</b></p><ul><li>店舗数の増加ペース（無理な出店は要注意）</li><li>既存店成長率（新規出店に頼らない実力）</li><li>顧客単価×客数の分解</li></ul>',
+        note:'コンビニ・ドラッグストアは在庫回転が速く、当座比率が低くても健全。ファストファッションも同様。' } ]},
+    { num:'第34章', title:'金融業の見方', pages:[
+      { body:'<p><b>金融業（銀行・保険・証券）の特徴：</b></p><ul><li>他業種と全く異なる会計・指標</li><li>負債（預金・保険準備金）が"事業の原資"</li><li>自己資本比率が極端に低い（構造的）</li><li>金利・株価変動の影響を大きく受ける</li></ul><p><b>銀行の重要指標：</b></p><ul><li>不良債権比率</li><li>自己資本比率（BIS規制8-10%）</li><li>与信コスト</li><li>NIM（純利ざや）</li></ul>' },
+      { body:'<p><b>保険会社の重要指標：</b></p><ul><li>コンバインド・レシオ（100%未満で保険引受で黒字）</li><li>ソルベンシー・マージン比率</li><li>運用利回り</li></ul><p><b>証券会社の重要指標：</b></p><ul><li>営業員1人あたり収益</li><li>手数料収入 vs トレーディング収益の比率</li><li>顧客資産残高</li></ul>',
+        warn:'金融業は"レバレッジのビジネス"。景気後退時のリスクは非常に大きい。バフェットも金融株投資には慎重。',
+        note:'金融業のROEはレバレッジが効いて見かけ上高い。ROAで判断するのが本来。' } ]},
+    { num:'第35章', title:'IT・SaaS業の見方', pages:[
+      { body:'<p><b>SaaS (Software as a Service) の特徴：</b></p><ul><li>売上=継続的なサブスクリプション課金</li><li>初期投資が大きく、初期数年は赤字</li><li>顧客が増えるほどコストが逆に下がる（スケール効果）</li><li>従来のPER・PBRでは評価困難</li></ul><p><b>SaaS特有の重要指標：</b></p><ul><li><b>ARR</b> (Annual Recurring Revenue)：年間経常収益</li><li><b>MRR</b> (Monthly Recurring Revenue)：月次経常収益</li><li><b>ARR成長率</b>：SaaSの評価の中核</li></ul>' },
+      { body:'<p><b>SaaSの品質指標：</b></p><ul><li><b>Churn Rate（解約率）</b>：低いほど良い。月次1%未満が優良</li><li><b>LTV (Life Time Value)</b>：顧客の生涯価値</li><li><b>CAC (Customer Acquisition Cost)</b>：顧客獲得コスト</li><li><b>LTV/CAC比率</b>：3以上が健全とされる</li><li><b>Rule of 40</b>：売上成長率+営業利益率 ≥ 40%で優良</li></ul>',
+        note:'SaaSは黒字化に時間がかかるため、PERで評価すると割高に見える。PSRやEV/ARRで見るのが実務的。',
+        warn:'SaaS指標は開示が任意。過大に見せる操作の余地もあるので、定義を確認する必要がある。' } ]},
+    { num:'第36章', title:'不動産・REITの見方', pages:[
+      { body:'<p><b>不動産デベロッパーの特徴：</b></p><ul><li>大規模な借入前提のビジネス</li><li>D/Eレシオが高い（2-4倍が普通）</li><li>金利上昇に弱い</li><li>不動産市況で業績が大きく変動</li></ul><p><b>重要指標：</b></p><ul><li>販売用不動産の在庫と回転</li><li>賃貸事業の収益（安定収益源）</li><li>NAV（純資産価値）</li></ul>' },
+      { body:'<p><b>REIT (Real Estate Investment Trust) の特徴：</b></p><ul><li>利益の90%以上を分配する義務（税制優遇の条件）</li><li>安定した分配金が魅力</li><li>NAVと投資口価格の乖離が投資判断に</li></ul><p><b>REIT重要指標：</b></p><ul><li>分配金利回り（3-5%が一般的）</li><li>NAV倍率（1倍前後が妥当）</li><li>稼働率</li><li>LTV（有利子負債比率、40-50%が目安）</li></ul>',
+        note:'REITは実物不動産と似た値動きだが、株式市場でも売買される。金利上昇局面では価格下落しやすい。' } ]},
+  ]},
+  { part:'第 X 部', title:'競争優位性', desc:'長期投資で最も重要な観点。数字の裏にある"なぜ稼ぎ続けられるか"を見る。', chapters:[
+    { num:'第37章', title:'経済的な堀（Moat）の考え方', pages:[
+      { body:'<p><b>経済的な堀 (Economic Moat)</b>：ウォーレン・バフェットが広めた概念。<b>持続的な競争優位</b>を意味する。</p><p>普通の会社は、儲かる事業を始めても競合が参入して利益率が下がる。しかし"堀"のある会社は、競合が参入してこない or 参入しても勝てない構造を持つ。</p><p>結果、長期的に高いROIC・ROEを維持できる。</p>' },
+      { body:'<p><b>堀のある会社の見分け方（財務面）：</b></p><ul><li>10年以上、業界平均を超えるROE・ROICを維持</li><li>営業利益率が同業より明確に高い</li><li>売上成長率が業界平均を上回る</li><li>景気後退期でも利益が大きく落ちない</li></ul><p>これらが同時に成立する会社は、何らかの堀を持っている可能性が高い。</p>',
+        note:'長期投資家（バフェット、モーニングスター等）は、財務分析より"堀の質"を重視する。堀が持続する限り、多少高PERでも報われることが多い。' } ]},
+    { num:'第38章', title:'5類型の堀（Morningstar流）', pages:[
+      { body:'<p>Morningstar社が提唱する<b>5類型の堀</b>：</p><ol><li><b>ネットワーク効果</b>：ユーザーが増えるほど価値が増す</li><li><b>スイッチングコスト</b>：他社に乗り換えると損失・手間が大きい</li><li><b>無形資産</b>：ブランド、特許、規制ライセンス</li><li><b>コスト優位</b>：規模の経済、独占的な資源</li><li><b>効率的な規模</b>：市場が小さくて新規参入する動機がない</li></ol><p>これらのどれか（できれば複数）を持つ会社が、長期投資の候補。</p>' },
+      { body:'<p><b>ネットワーク効果の例：</b></p><ul><li>SNS（Facebook、Twitter/X等）</li><li>クレジットカード決済網</li><li>OS（Windows、iOS）</li><li>フリマ・オークション（メルカリ、ヤフオク）</li></ul><p><b>スイッチングコストの例：</b></p><ul><li>企業向けソフトウェア（一度導入すると変更が困難）</li><li>銀行口座・給与振込</li><li>証券口座（NISA枠移管の手間）</li></ul>' },
+      { body:'<p><b>無形資産の例：</b></p><ul><li>ブランド（コカコーラ、ルイヴィトン等）</li><li>特許（製薬会社）</li><li>規制ライセンス（銀行、電力等）</li></ul><p><b>コスト優位の例：</b></p><ul><li>大規模EC（Amazon）</li><li>安価な原料アクセス（資源メジャー）</li></ul><p><b>効率的な規模の例：</b></p><ul><li>地方独占インフラ（ローカル鉄道、ガス）</li><li>ニッチ市場のトップ企業</li></ul>',
+        note:'堀は"永遠"ではない。技術変化・規制変更で消えることも。定期的に"まだ堀は健在か"を確認する必要がある。' } ]},
+    { num:'第39章', title:'ポーターの5フォース分析', pages:[
+      { body:'<p><b>ポーターの5フォース</b>：業界の競争構造を5つの力で分析する古典的フレームワーク。</p><ol><li><b>既存企業間の競争</b>：業界内の競合の激しさ</li><li><b>新規参入の脅威</b>：新規参入の容易さ</li><li><b>代替品の脅威</b>：他の商品カテゴリで代替される可能性</li><li><b>買い手の交渉力</b>：顧客が値下げを要求する力</li><li><b>売り手の交渉力</b>：仕入先の価格支配力</li></ol><p>5つの力すべてが"弱い"業界ほど、収益性が高い。</p>' },
+      { body:'<p><b>5フォース分析の使い方：</b></p><p>例：ソフトウェア業界</p><ul><li>既存競争：激しい（多数のプレイヤー）</li><li>新規参入：容易（開発コスト低下）</li><li>代替品：多い（Excel等の汎用ツール）</li><li>買い手の力：中程度</li><li>売り手の力：弱い（人材以外に大きな仕入なし）</li></ul><p>→ ニッチに特化するか、ネットワーク効果を作る必要がある</p>',
+        note:'5フォースは"業界構造"を見るツール。個別企業の分析には5類型の堀と組み合わせて使うと効果的。' } ]},
+    { num:'第40章', title:'ビジネスの持続性を見抜く', pages:[
+      { body:'<p><b>持続性チェックリスト：</b></p><ol><li>今後10年、この会社の商品/サービスは必要とされるか？</li><li>その分野で、この会社は"1番"か？（1番になれる潜在力があるか）</li><li>新技術・新規参入で駆逐されるリスクは？</li><li>経営者のビジョンと実行力は？</li><li>従業員の質と組織文化は？</li></ol><p>これらは数字では測れない要素。しかし長期投資では最重要。</p>' },
+      { body:'<p><b>持続性を疑うサイン：</b></p><ul><li>売上は伸びているが、粗利率が徐々に下がっている</li><li>大口顧客への依存度が高い</li><li>特定技術への依存（技術変化のリスク）</li><li>規制頼みのビジネス</li><li>経営陣の頻繁な変更・離職</li></ul>',
+        warn:'"かつての優良企業"の凋落例は多い。コダック、シアーズ、ノキア等。過去の栄光と現在の持続性は別。',
+        note:'バフェットの言葉「10年間持ちたくない株なら、10分も持つべきではない」。長期視点で持続性を吟味することが、短期売買のリスクを減らす。' } ]},
+  ]},
+  { part:'第 XI 部', title:'マクロと投資戦略', desc:'個別企業だけでなく、経済全体の環境を踏まえた投資判断。', chapters:[
+    { num:'第41章', title:'金利と株価', pages:[
+      { body:'<p><b>金利は株価に大きな影響を与える</b>：</p><p>一般的な関係：</p><ul><li>金利上昇 → 株価下落圧力</li><li>金利低下 → 株価上昇圧力</li></ul><p><b>理由：</b></p><ol><li>企業の借入コスト増減</li><li>債券利回りとの相対比較</li><li>DCF計算での割引率変化</li></ol>' },
+      { body:'<p><b>金利感度が高い業種：</b></p><ul><li>不動産・REIT（借入依存）</li><li>成長株（DCF影響大）</li><li>公益（安定配当が魅力減退）</li></ul><p><b>金利上昇で恩恵を受ける業種：</b></p><ul><li>銀行（貸出金利上昇 → 利ざや拡大）</li><li>保険（運用利回り上昇）</li></ul>',
+        note:'日銀の政策金利、米FRBのFF金利、10年国債利回りが特に注目される。決算・株価判断の基準として。',
+        warn:'金利政策の急変（引き締めペース）は市場に大きな影響。中央銀行の発言・議事録は要チェック。' } ]},
+    { num:'第42章', title:'為替と企業業績', pages:[
+      { body:'<p><b>円安（例：1ドル=140円→160円）の影響：</b></p><ul><li><b>輸出企業</b>（トヨタ、ソニー、村田製作所等）→ プラス<br>海外で稼いだドルを円に換えると多く手に入る</li><li><b>輸入依存企業</b>（電力、航空、食品加工、ニトリ等）→ マイナス<br>仕入コストが上昇</li></ul><p><b>円高</b>は逆のパターン。輸出企業に逆風、輸入企業に追い風。</p>' },
+      { body:'<p><b>企業の為替感応度：</b></p><p>決算資料に「1円円安で営業利益○億円のプラス影響」といった記載がある。これで感応度を把握できる。</p><p><b>為替ヘッジ：</b></p><ul><li>先物・オプション取引で為替リスクを軽減する</li><li>ヘッジ比率は会社により異なる（完全ヘッジ〜無ヘッジ）</li><li>ヘッジ有無で決算のインパクトが大きく変わる</li></ul>',
+        note:'グローバル企業は現地生産で為替影響を軽減している（トヨタも米国生産比率が高い）。単純に「輸出=円安メリット」ではない。' } ]},
+    { num:'第43章', title:'インフレと株式', pages:[
+      { body:'<p><b>インフレの株式への影響</b>は複雑：</p><p><b>プラス面：</b></p><ul><li>企業の値上げ余地（売上・利益に反映）</li><li>実物資産（不動産、資源）の価値上昇</li><li>実質金利は低いことが多い</li></ul><p><b>マイナス面：</b></p><ul><li>コスト上昇の転嫁が遅れると利益圧迫</li><li>インフレ抑制のための金利上昇</li><li>PER倍率の低下傾向</li></ul>' },
+      { body:'<p><b>インフレに強い企業の特徴：</b></p><ul><li>値上げしやすいブランド力・独占的地位</li><li>変動費比率が低い（コスト固定化）</li><li>実物資産が多い</li></ul><p><b>インフレに弱い企業：</b></p><ul><li>薄利多売の小売業（値上げしにくい）</li><li>長期契約が多く価格改定困難な業種</li><li>原材料高騰を転嫁できない下請け企業</li></ul>',
+        note:'株式は長期ではインフレヘッジに機能するとされる（実物資産＋成長性）。ただし短期の値上がり保証はない。' } ]},
+    { num:'第44章', title:'バリュー・グロース・クオリティ投資', pages:[
+      { body:'<p>投資スタイルは大きく3つに分類される：</p><p><b>① バリュー投資</b></p><ul><li>割安放置の株を買う</li><li>指標：低PER、低PBR、高配当利回り</li><li>代表：バフェット、グラハム</li><li>逆風期を耐える忍耐が必要</li></ul>' },
+      { body:'<p><b>② グロース投資</b></p><ul><li>高成長企業に投資</li><li>指標：高EPS成長率、高売上成長率</li><li>代表：ピーター・リンチ、フィッシャー</li><li>PER高めでもリターンを狙う</li><li>成長鈍化時の急落リスク</li></ul>',
+        note:'2010年代はグロース優位、2022年以降はバリュー復活と、時代でトレンドが変わる。単一スタイルに固執しない柔軟性が有効。' },
+      { body:'<p><b>③ クオリティ投資</b></p><ul><li>財務が強く、堀のある優良企業に投資</li><li>指標：高ROE・ROIC、低負債、堀の存在</li><li>代表：モーニングスター、ワイドモート戦略</li><li>長期保有前提</li></ul><p><b>ハイブリッド：GARP</b><br>(Growth At a Reasonable Price)：成長株をPEG 1倍前後で買う中庸戦略。多くのファンドマネージャーが採用。</p>',
+        warn:'"自分のスタイル"を決めることが大事。バリューとグロースは相場の局面で強弱が変わるため、両方に手を出すと相場に振り回されがち。' } ]},
+    { num:'第45章', title:'投資判断チェックリスト', pages:[
+      { body:'<p><b>買う前の最終チェック（財務面）：</b></p><ul><li>□ 過去3-5年、営業CFがプラス継続か</li><li>□ ROEが5%以上、できれば10%以上</li><li>□ 自己資本比率30%以上（業種平均）</li><li>□ 有利子負債は営業CFの5年分以内</li><li>□ 売上成長率がプラス</li><li>□ 利益率が同業平均以上</li><li>□ 決算短信の"事業リスク"に致命的な要素なし</li></ul>' },
+      { body:'<p><b>買う前の最終チェック（バリュエーション）：</b></p><ul><li>□ 予想PERが業種平均以下 or 成長率に対して妥当</li><li>□ PBRとROEのバランス</li><li>□ 配当利回りが期待収益率以上（配当重視の場合）</li><li>□ EV/EBITDAで見ても割安</li></ul><p><b>買う前の最終チェック（定性）：</b></p><ul><li>□ ビジネスモデルを説明できる</li><li>□ 10年後もこの会社は必要とされるか</li><li>□ 経営陣を信頼できる</li><li>□ 大株主構成が安定</li></ul>' },
+      { body:'<p><b>買った後のチェック（継続監視）：</b></p><ul><li>□ 四半期決算のたびに数値変化を確認</li><li>□ 業績予想の修正発表</li><li>□ 大口投資家の売買動向</li><li>□ 経営者の交代・不祥事</li><li>□ 業界内での競争環境の変化</li></ul><p><b>売却判断：</b></p><ul><li>□ 買った時の投資仮説が崩れた</li><li>□ より良い投資機会が現れた</li><li>□ ポートフォリオのリバランス必要</li><li>□ 現金化が必要（生活資金等）</li></ul>',
+        note:'定期的なチェックリスト運用が、感情的な売買を防ぐ最善策。書き出して、実行することが大事。' } ]},
+  ]},
+];
+
+function renderFundBook() {
+  const el = document.getElementById('diary-book-list');
+  if (!el) return;
+
+  const toolbar = `<div class="book-toolbar western">
+    <button onclick="closeDiaryBook()">← 本棚へ</button>
+    <div class="book-title-bar western" style="font-size:15px">ファンダメンタル分析</div>
+    <div style="width:60px"></div>
+  </div>`;
+
+  const pages = [];
+  let pageNum = 0;
+  const totalContentPages = FUND_PARTS.reduce((s,pt)=>s+pt.chapters.reduce((ss,c)=>ss+c.pages.length,0),0);
+  const totalPages = 4 + FUND_PARTS.length + totalContentPages + 1;
+
+  // カバー
+  pageNum++;
+  pages.push(`<div class="r3-page">
+    <div class="r3-cover">
+      <div class="r3-cover-vol">教 科 書</div>
+      <div class="r3-cover-border"></div>
+      <h1>ファンダメンタル分析</h1>
+      <div class="r3-cover-sub">〜 企業価値を数字で読み解く 〜</div>
+      <div class="r3-cover-tag">全 ${totalPages} 頁 · 11部45章</div>
+      <div class="r3-cover-border"></div>
+      <div class="r3-cover-vol">第 III 巻</div>
+    </div>
+    <div class="r3-pagenum">${pageNum}</div>
+  </div>`);
+
+  // まえがき
+  pageNum++;
+  pages.push(`<div class="r3-page">
+    <div class="r3-foreword">
+      <h2>まえがき</h2>
+      <p>本書はテクニカル分析の第I巻・第II巻に続く、企業のファンダメンタル分析の入門書兼リファレンスです。</p>
+      <p>ファンダメンタル分析は「企業の実態を数字で理解する」技術。決算書を読み、指標を計算し、業種特性を踏まえ、最終的に"この会社は今の株価に見合う価値があるか"を判断します。</p>
+      <p>本書の記述は、公認会計士協会、CFA協会、証券アナリスト協会等が採用する標準的な定義・公式に基づいています。業種・国により大きく異なる数値目安については、日本上場企業の一般的な傾向として記載し、必ずその旨を注記しています。</p>
+      <p>数字は嘘をつきませんが、数字だけでは真実は見えません。本書を通じて、数字の裏にあるビジネスの本質を掴む力を養ってください。</p>
+    </div>
+    <div class="r3-pagenum">${pageNum}</div>
+  </div>`);
+
+  // 目次
+  const allChapters = FUND_PARTS.flatMap(p => p.chapters.map(c => ({...c, part: p.part})));
+  const tocHalf = Math.ceil(allChapters.length / 2);
+  pageNum++;
+  pages.push(`<div class="r3-page">
+    <div class="r3-toc">
+      <h2>目 次 (1/2)</h2>
+      <div class="r3-toc-list">
+        ${allChapters.slice(0, tocHalf).map(c => `<div class="r3-toc-item"><span>${escapeHtml(c.num)}</span><span>${escapeHtml(c.title)}</span><span>${c.pages.length}p</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="r3-pagenum">${pageNum}</div>
+  </div>`);
+  pageNum++;
+  pages.push(`<div class="r3-page">
+    <div class="r3-toc">
+      <h2>目 次 (2/2)</h2>
+      <div class="r3-toc-list">
+        ${allChapters.slice(tocHalf).map(c => `<div class="r3-toc-item"><span>${escapeHtml(c.num)}</span><span>${escapeHtml(c.title)}</span><span>${c.pages.length}p</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="r3-pagenum">${pageNum}</div>
+  </div>`);
+
+  // 各部＋章
+  for (const pt of FUND_PARTS) {
+    // 部の扉ページ
+    pageNum++;
+    pages.push(`<div class="r3-page">
+      <div class="r3-part">
+        <div class="r3-part-num">${escapeHtml(pt.part)}</div>
+        <div class="r3-part-title">${escapeHtml(pt.title)}</div>
+        <div class="r3-part-desc">${escapeHtml(pt.desc)}</div>
+      </div>
+      <div class="r3-pagenum">${pageNum}</div>
+    </div>`);
+    // 章の各ページ
+    for (const ch of pt.chapters) {
+      ch.pages.forEach((p, idx) => {
+        pageNum++;
+        const header = idx === 0
+          ? `<div class="r3-chap-header"><div class="r3-chap-num">${escapeHtml(ch.num)}</div><div class="r3-chap-title">${escapeHtml(ch.title)}</div></div>`
+          : `<div class="r3-chap-header" style="border-bottom-style:dashed"><div class="r3-chap-num">${escapeHtml(ch.num)} （続き）</div><div class="r3-chap-title" style="font-size:14px">${escapeHtml(ch.title)}</div></div>`;
+        const formulaHtml = (f) => f ? `<div class="r3-formula"><b>${escapeHtml(f.label)}</b><div class="r3-eq">${escapeHtml(f.eq)}</div></div>` : '';
+        pages.push(`<div class="r3-page">
+          ${header}
+          <div class="r3-body">${p.body || ''}</div>
+          ${formulaHtml(p.formula)}
+          <div class="r3-body">${p.body2 || ''}</div>
+          ${formulaHtml(p.formula2)}
+          <div class="r3-body">${p.body3 || ''}</div>
+          ${p.note ? `<div class="r3-note"><b>💡 補足：</b> ${escapeHtml(p.note)}</div>` : ''}
+          ${p.warn ? `<div class="r3-warn"><b>⚠️ 注意：</b> ${escapeHtml(p.warn)}</div>` : ''}
+          <div class="r3-pagenum">${pageNum}</div>
+        </div>`);
+      });
+    }
+  }
+
+  // 奥付
+  pageNum++;
+  pages.push(`<div class="r3-page">
+    <div class="r3-end">
+      <div class="r3-end-title">お わ り に</div>
+      <div class="r3-end-body">
+        ここまで読了、お疲れさまでした。<br><br>
+        本書の内容を1度で全て身につけることはできません。<br><br>
+        実際に興味のある会社の決算書を開き、本書を辞書として引きながら分析してみてください。<br><br>
+        3-5社を継続的に分析すれば、指標や業種の"感覚"が身につき始めます。<br><br>
+        <b>数字が読めるようになると、株式投資は"予測ゲーム"から"理解ゲーム"に変わります。</b><br><br>
+        ふたりの学びと投資の旅が、実り多いものになりますように。
+      </div>
+      <div class="r3-end-sig">─ ふたりの投資旅 応援 III ─</div>
+    </div>
+    <div class="r3-pagenum">${pageNum}</div>
+  </div>`);
+
+  el.innerHTML = `
+    ${toolbar}
+    <div class="book-pages ref-fund" id="book-pages">
+      ${pages.join('')}
+    </div>
+  `;
+  el.classList.add('active');
   requestAnimationFrame(() => {
     const p = document.getElementById('book-pages');
     if (p) p.scrollLeft = 0;
