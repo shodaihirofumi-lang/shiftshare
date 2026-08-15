@@ -1193,6 +1193,60 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .book-pages.ref-chart .ref-toc-item:last-child { border-bottom:none; }
 .book-pages.ref-chart .ref-toc-item span { color:#8a6f43; margin-right:8px; font-weight:700; }
 
+/* 参考書2巻 - 横開き本 */
+.book-spine.ref-book-2 { background:linear-gradient(90deg,#2a3040,#4a5680,#2a3040); }
+.book-spine.ref-book-2 .book-spine-label { color:#f0e8c9; }
+.book-pages.ref-chart-2 { flex:1; overflow-x:auto; overflow-y:hidden; display:flex; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; overscroll-behavior:contain; touch-action:pan-x; }
+.book-pages.ref-chart-2::-webkit-scrollbar { display:none; }
+.book-pages.ref-chart-2 { scrollbar-width:none; }
+.book-pages.ref-chart-2 .r2-page { flex:0 0 100vw; width:100vw; max-width:100vw; height:100%; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; overflow-x:hidden; padding:32px 30px 40px; background:linear-gradient(180deg,#fbf5e5,#f0e6cd); font-family:'Hiragino Mincho ProN','Yu Mincho',serif; color:#2c1e10; box-shadow:inset -3px 0 8px -6px rgba(120,80,40,.18); box-sizing:border-box; position:relative; }
+.book-pages.ref-chart-2 .r2-page::before { content:''; position:absolute; top:0; bottom:0; left:0; width:1px; background:linear-gradient(180deg, transparent, rgba(120,80,40,.15) 30%, rgba(120,80,40,.15) 70%, transparent); pointer-events:none; }
+.book-pages.ref-chart-2 .r2-pagenum { position:absolute; bottom:12px; right:20px; font-size:11px; color:#8a6f43; letter-spacing:2px; }
+
+.book-pages.ref-chart-2 .r2-cover { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; }
+.book-pages.ref-chart-2 .r2-cover h1 { font-size:38px; font-weight:800; letter-spacing:8px; color:#2a1a08; margin-bottom:12px; }
+.book-pages.ref-chart-2 .r2-cover-sub { font-size:22px; font-weight:600; color:#4a3020; letter-spacing:4px; margin-bottom:24px; }
+.book-pages.ref-chart-2 .r2-cover-tag { font-size:14px; color:#7a5e3c; letter-spacing:3px; margin-bottom:40px; }
+.book-pages.ref-chart-2 .r2-cover-border { width:60%; height:2px; background:#b09068; margin:0 auto 20px; }
+.book-pages.ref-chart-2 .r2-cover-vol { font-size:16px; color:#8a6f43; letter-spacing:8px; font-weight:700; }
+
+.book-pages.ref-chart-2 .r2-foreword { padding:20px 4px; }
+.book-pages.ref-chart-2 .r2-foreword h2 { font-size:22px; font-weight:800; color:#2a1a08; margin-bottom:14px; letter-spacing:3px; border-bottom:1px solid #b09068; padding-bottom:8px; }
+.book-pages.ref-chart-2 .r2-foreword p { font-size:15px; line-height:2; margin-bottom:12px; }
+
+.book-pages.ref-chart-2 .r2-toc { padding:20px 4px; }
+.book-pages.ref-chart-2 .r2-toc h2 { font-size:22px; font-weight:800; color:#2a1a08; margin-bottom:16px; letter-spacing:6px; border-bottom:1px solid #b09068; padding-bottom:8px; }
+.book-pages.ref-chart-2 .r2-toc-list { display:flex; flex-direction:column; gap:6px; }
+.book-pages.ref-chart-2 .r2-toc-item { display:flex; justify-content:space-between; align-items:baseline; padding:4px 0; border-bottom:1px dotted #c9a878; font-size:14px; cursor:pointer; }
+.book-pages.ref-chart-2 .r2-toc-item span:first-child { flex-shrink:0; color:#8a6f43; font-weight:700; margin-right:6px; font-size:12px; }
+.book-pages.ref-chart-2 .r2-toc-item span:nth-child(2) { flex:1; color:#2c1e10; }
+.book-pages.ref-chart-2 .r2-toc-item span:last-child { color:#8a6f43; font-weight:600; font-size:12px; }
+
+.book-pages.ref-chart-2 .r2-chap-header { padding:8px 0 14px; border-bottom:2px double #b09068; margin-bottom:16px; }
+.book-pages.ref-chart-2 .r2-chap-num { font-size:12px; color:#8a6f43; letter-spacing:4px; font-weight:700; margin-bottom:4px; }
+.book-pages.ref-chart-2 .r2-chap-title { font-size:22px; font-weight:800; color:#2a1a08; letter-spacing:3px; line-height:1.3; }
+.book-pages.ref-chart-2 .r2-lead { font-size:14px; color:#4a3020; line-height:1.9; margin-bottom:16px; padding:10px 14px; background:#f5ead0; border-left:3px solid #a4884f; border-radius:0 5px 5px 0; }
+.book-pages.ref-chart-2 .r2-fig { background:#fff8ea; border:1.5px solid #d8bd8a; border-radius:6px; padding:10px 10px 12px; margin-bottom:14px; }
+.book-pages.ref-chart-2 .r2-fig svg { width:100%; height:120px; display:block; background:#fbf7ed; border-radius:4px; margin-bottom:8px; }
+.book-pages.ref-chart-2 .r2-fig-name { font-size:14px; font-weight:800; color:#2c1e10; margin-bottom:3px; letter-spacing:1px; }
+.book-pages.ref-chart-2 .r2-fig-signal { display:inline-block; font-size:10px; padding:2px 7px; border-radius:5px; margin-bottom:6px; font-weight:700; letter-spacing:1px; }
+.book-pages.ref-chart-2 .r2-fig-signal.buy { background:#eee1c9; color:#7a5024; }
+.book-pages.ref-chart-2 .r2-fig-signal.sell { background:#e5d3d5; color:#7f3c42; }
+.book-pages.ref-chart-2 .r2-fig-signal.neutral { background:#dfd8c1; color:#6a5e3a; }
+.book-pages.ref-chart-2 .r2-fig-caption { font-size:11px; color:#7a5e3c; line-height:1.5; }
+.book-pages.ref-chart-2 .r2-body { font-size:13.5px; line-height:1.95; color:#2c1e10; }
+.book-pages.ref-chart-2 .r2-body p { margin-bottom:8px; }
+.book-pages.ref-chart-2 .r2-body b { font-weight:700; color:#4a2810; }
+.book-pages.ref-chart-2 .r2-body ul { padding-left:20px; margin-bottom:8px; }
+.book-pages.ref-chart-2 .r2-body li { margin-bottom:4px; }
+.book-pages.ref-chart-2 .r2-tip { background:#efe2b8; border-left:3px solid #8a6a2a; padding:9px 12px; margin-top:12px; font-size:12px; color:#4a3010; line-height:1.7; border-radius:0 4px 4px 0; }
+.book-pages.ref-chart-2 .r2-tip b { color:#2c1e10; }
+
+.book-pages.ref-chart-2 .r2-end { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:40px 20px; }
+.book-pages.ref-chart-2 .r2-end-title { font-size:20px; font-weight:800; letter-spacing:6px; color:#2a1a08; margin-bottom:20px; }
+.book-pages.ref-chart-2 .r2-end-body { font-size:14px; line-height:2.2; color:#4a3020; max-width:340px; }
+.book-pages.ref-chart-2 .r2-end-sig { margin-top:30px; font-size:12px; color:#8a6f43; letter-spacing:3px; }
+
 /* 株ノートの背表紙 (バインダー風) */
 .book-spine.stock { border-radius:1px 3px 3px 1px; }
 .book-spine.stock.s1 { background:linear-gradient(90deg,#1f2e2a,#2f4640,#1f2e2a); }
@@ -7490,6 +7544,10 @@ function renderDiaryShelf() {
       <div class="book-spine-label">チャート分析</div>
       <div class="book-spine-badge">図解</div>
     </div>
+    <div class="book-spine ref-book ref-book-2" onclick="openDiaryBook('ref','ref-chart-2')">
+      <div class="book-spine-label">チャート分析 II</div>
+      <div class="book-spine-badge">応用編</div>
+    </div>
   </div><div class="shelf-board"></div>`;
 
   el.innerHTML = html;
@@ -7565,6 +7623,7 @@ function renderDiaryBook() {
   }
   if (currentBookLang === 'memo-hers' || currentBookLang === 'memo-mine') return renderMemoBook(currentBookLang === 'memo-hers' ? 'hers' : 'mine');
   if (currentBookLang === 'ref-chart') return renderChartRefBook();
+  if (currentBookLang === 'ref-chart-2') return renderChartRef2Book();
 
   const [yStr, mStr] = currentBookYm.split('-');
   const year = Number(yStr);
@@ -8106,6 +8165,262 @@ function scrollChartRefToTop() {
 function scrollToChapter(i) {
   const el = document.getElementById('ref-chap-' + i);
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── チャート分析 第2巻（応用編）横開き50ページ ──
+// 各章は 1〜3 ページ、章1〜20で本編。前後にカバー・まえがき・目次(2p)・奥付を配置。
+const CHART_REF2_CHAPTERS = [
+  { num:'第1章', title:'高度なローソク足パターン ①', lead:'天井圏で現れる反転シグナル。1本だけでなく前後の並びで判定するのがコツ。', pages:[
+    { figs:[{ name:'首吊り線（Hanging Man）', signal:'sell', signalTxt:'天井転換', caption:'高値圏で長い下ヒゲ+短い実体。売り一巡示唆',
+      svg:'<line x1="120" y1="30" x2="120" y2="105" stroke="#4a3020" stroke-width="1.5"/><rect x="110" y="35" width="20" height="12" fill="#c0392b" stroke="#7a1a10" stroke-width="1.5"/><text x="10" y="20" font-size="10" fill="#4a3020">上昇後の高値圏</text>' }], body:'<p><b>首吊り線</b>は上昇トレンドの<b>末期</b>に出現。下ヒゲが実体の2〜3倍以上長く、上ヒゲはほぼなし。買い方が一度売り込まれた後に押し戻したが、翌日の陰線で確定する。</p><ul><li>単独では弱いサイン、翌日の下げで確定</li><li>出来高が増えていると信頼度アップ</li></ul>' },
+    { figs:[{ name:'宵の明星（Evening Star）', signal:'sell', signalTxt:'強い天井転換', caption:'大陽線→小さい線→大陰線の3連。天井のパターン',
+      svg:'<line x1="40" y1="60" x2="40" y2="120" stroke="#4a3020" stroke-width="1.5"/><rect x="30" y="70" width="20" height="45" fill="#c0392b" stroke="#7a1a10" stroke-width="1.5"/><line x1="100" y1="35" x2="100" y2="65" stroke="#4a3020" stroke-width="1.5"/><rect x="93" y="45" width="14" height="10" fill="#c0392b" stroke="#7a1a10" stroke-width="1.5"/><line x1="180" y1="55" x2="180" y2="130" stroke="#4a3020" stroke-width="1.5"/><rect x="170" y="65" width="20" height="55" fill="#2e6da4" stroke="#183654" stroke-width="1.5"/>' }], body:'<p><b>宵の明星</b>は3日の並びで判断する強力なサイン。</p><ul><li>1日目：大陽線（上昇継続）</li><li>2日目：小さいコマ/十字線（迷い）</li><li>3日目：大陰線（1日目の実体の半分以上を割る）</li></ul><p>この並びが高値圏で出れば、中期的な天井転換の確率が高い。</p>', tip:'2日目のギャップアップが理想。ローソク足の"孤立感"が売りサインを強める。' },
+  ]},
+  { num:'第2章', title:'高度なローソク足パターン ②', lead:'底値圏で現れる反転シグナル。買い場を掴む極めて実践的なパターン。', pages:[
+    { figs:[{ name:'カラカサ（Hammer）', signal:'buy', signalTxt:'底値転換', caption:'安値圏で長い下ヒゲ。売り一巡→反発示唆',
+      svg:'<line x1="120" y1="30" x2="120" y2="105" stroke="#4a3020" stroke-width="1.5"/><rect x="110" y="35" width="20" height="12" fill="#c0392b" stroke="#7a1a10" stroke-width="1.5"/><text x="10" y="115" font-size="10" fill="#4a3020">下降後の安値圏</text>' }], body:'<p><b>カラカサ（ハンマー）</b>は下降トレンドの<b>末期</b>に出現。下ヒゲが長く、実体は小さい。一度大きく売られたが買い戻された動きを示す。</p><ul><li>安値圏で出るのが条件</li><li>実体の色は問わない（陽線の方がやや強い）</li><li>翌日の陽線で反転確定</li></ul>' },
+    { figs:[{ name:'明けの明星（Morning Star）', signal:'buy', signalTxt:'強い底転換', caption:'大陰線→小さい線→大陽線。買いの狼煙',
+      svg:'<line x1="40" y1="30" x2="40" y2="100" stroke="#4a3020" stroke-width="1.5"/><rect x="30" y="40" width="20" height="50" fill="#2e6da4" stroke="#183654" stroke-width="1.5"/><line x1="100" y1="90" x2="100" y2="115" stroke="#4a3020" stroke-width="1.5"/><rect x="93" y="97" width="14" height="10" fill="#c0392b" stroke="#7a1a10" stroke-width="1.5"/><line x1="180" y1="25" x2="180" y2="95" stroke="#4a3020" stroke-width="1.5"/><rect x="170" y="35" width="20" height="55" fill="#c0392b" stroke="#7a1a10" stroke-width="1.5"/>' }], body:'<p><b>明けの明星</b>は宵の明星の対称形。3日で買いへの転換を示す。</p><ul><li>1日目：大陰線（下落継続）</li><li>2日目：小さいコマ/十字線（迷い、底の兆し）</li><li>3日目：大陽線（1日目の実体の半分以上を回復）</li></ul>', tip:'2日目にギャップダウンで小さい線が出ると"迷いから反転"の物語が完成、強力。' },
+  ]},
+  { num:'第3章', title:'一目均衡表 基礎編', lead:'日本発、世界的に評価される総合テクニカル指標。時間・価格・波動を1枚で。', pages:[
+    { figs:[{ name:'5本の線', signal:'neutral', signalTxt:'総合判断', caption:'転換線・基準線・雲(先行スパン)・遅行スパン',
+      svg:'<polyline points="10,80 60,60 110,50 160,55 210,45" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,90 60,80 110,72 160,60 210,50" fill="none" stroke="#c0392b" stroke-width="1.5"/><polyline points="10,100 60,95 110,88 160,80 210,72" fill="none" stroke="#2e6da4" stroke-width="1.5"/><polygon points="120,40 220,30 220,45 120,55" fill="#e8d99a" fill-opacity="0.6" stroke="#a4884f" stroke-width="1"/><text x="215" y="20" font-size="9" fill="#a4884f">雲</text>' }], body:'<p><b>一目均衡表</b>は5本の線で構成される日本発祥の指標。</p><ul><li><b>転換線</b>：過去9日の(高値+安値)/2</li><li><b>基準線</b>：過去26日の(高値+安値)/2</li><li><b>先行スパン1</b>：(転換線+基準線)/2 を26日先行</li><li><b>先行スパン2</b>：過去52日の(高値+安値)/2 を26日先行</li><li><b>遅行スパン</b>：現在の終値を26日遅行</li></ul>' },
+    { figs:[{ name:'雲の見方', signal:'neutral', signalTxt:'厚さ=強さ', caption:'株価が雲の上=強気、雲の下=弱気、雲の中=方向感なし',
+      svg:'<polyline points="10,25 60,30 110,25 160,20 210,15" fill="none" stroke="#4a3020" stroke-width="2"/><polygon points="10,60 60,55 110,50 160,45 210,40 210,80 160,85 110,80 60,85 10,90" fill="#e8d99a" fill-opacity="0.6" stroke="#a4884f" stroke-width="1"/><text x="10" y="18" font-size="10" fill="#c0392b">株価が雲の上=強気</text>' }], body:'<p><b>雲（先行スパン1と2の間）</b>は将来の抵抗/支持帯を示す。</p><ul><li><b>厚い雲</b>：強い抵抗/支持</li><li><b>薄い雲</b>：抜けやすい</li><li><b>雲のねじれ</b>：トレンド転換のポイント</li><li><b>株価が雲の上</b>：上昇トレンド、雲がサポート</li><li><b>株価が雲の下</b>：下降トレンド、雲がレジスタンス</li></ul>' },
+    { figs:[{ name:'遅行スパン', signal:'neutral', signalTxt:'26日前との比較', caption:'現在価格を26日前にプロットし当時のチャートと比べる',
+      svg:'<polyline points="10,60 40,80 70,50 100,70 130,45 160,55 190,35 220,45" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,70 40,60 70,90 100,55 130,65 160,40 190,50 220,25" fill="none" stroke="#a4884f" stroke-width="2" stroke-dasharray="4,3"/><text x="140" y="20" font-size="9" fill="#a4884f">遅行スパン(点線)</text>' }], body:'<p><b>遅行スパン</b>は現在の終値を26日前の位置に描く線。26日前のローソク足と比較して、</p><ul><li><b>遅行が26日前の株価より上</b>→ 買いサイン</li><li><b>遅行が26日前の株価より下</b>→ 売りサイン</li></ul><p>他の指標に比べシンプルだが、意外に精度が高い。</p>', tip:'一目均衡表は"時間"の概念が特徴。9・26・52は変化日として重要視される。' },
+  ]},
+  { num:'第4章', title:'一目均衡表 実戦編', lead:'三役好転・三役逆転で本格的なトレンド転換を捉える。', pages:[
+    { figs:[{ name:'三役好転', signal:'buy', signalTxt:'強力な買いサイン', caption:'転換線>基準線 + 遅行>26日前 + 株価>雲',
+      svg:'<polyline points="10,80 60,60 110,50 160,40 210,30" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,100 60,90 110,80 160,70 210,60" fill="none" stroke="#c0392b" stroke-width="1.5"/><polygon points="10,120 60,115 110,110 160,105 210,100 210,140 160,135 110,140 60,135 10,140" fill="#e8d99a" fill-opacity="0.6"/>' }], body:'<p><b>三役好転</b>は一目均衡表で最も強い買いサイン。3つの条件が同時に成立：</p><ul><li>① 転換線が基準線を上抜け（好転）</li><li>② 遅行スパンが26日前の株価を上抜け</li><li>③ 株価が雲を上抜け</li></ul><p>この3つが揃うと、数ヶ月〜1年の上昇トレンド入りが期待できる。</p>', tip:'週足での三役好転は特に強力。中長期投資では見逃せないサイン。' },
+    { figs:[{ name:'三役逆転', signal:'sell', signalTxt:'強力な売りサイン', caption:'三役好転の反対。長期下落入りのサイン',
+      svg:'<polyline points="10,30 60,40 110,50 160,60 210,80" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,50 60,60 110,70 160,80 210,100" fill="none" stroke="#c0392b" stroke-width="1.5"/><polygon points="10,10 60,15 110,20 160,25 210,30 210,50 160,45 110,50 60,45 10,50" fill="#e8d99a" fill-opacity="0.6"/>' }], body:'<p><b>三役逆転</b>は三役好転の逆パターン：</p><ul><li>① 転換線が基準線を下抜け</li><li>② 遅行スパンが26日前の株価を下抜け</li><li>③ 株価が雲を下抜け</li></ul><p>3条件揃うと本格的下落入り。特に週足で出た場合はホールドしていた含み益銘柄も一旦利確を検討すべき。</p>' },
+  ]},
+  { num:'第5章', title:'フィボナッチ・リトレースメント', lead:'自然界の黄金比を株価の押し目/戻り予測に応用。世界の機関投資家が意識する数字。', pages:[
+    { figs:[{ name:'主要な比率', signal:'neutral', signalTxt:'押し目/戻り予測', caption:'23.6% / 38.2% / 50% / 61.8% / 78.6%',
+      svg:'<polyline points="10,120 50,90 100,50 150,20 200,80" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="10" y1="20" x2="230" y2="20" stroke="#a4884f" stroke-width="1"/><line x1="10" y1="35" x2="230" y2="35" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="55" x2="230" y2="55" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="70" x2="230" y2="70" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="95" x2="230" y2="95" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="120" x2="230" y2="120" stroke="#a4884f" stroke-width="1"/><text x="232" y="24" font-size="9" fill="#a4884f">100</text><text x="232" y="39" font-size="9" fill="#a4884f">78.6</text><text x="232" y="59" font-size="9" fill="#a4884f">61.8</text><text x="232" y="74" font-size="9" fill="#a4884f">50</text><text x="232" y="99" font-size="9" fill="#a4884f">38.2</text><text x="232" y="123" font-size="9" fill="#a4884f">0</text>' }], body:'<p><b>フィボナッチ数列</b>から導かれる黄金比を、株価の押し/戻りの目安に使う。</p><p>直近の底（0%）と天井（100%）の間に線を引くと、押し目候補が視覚化される：</p><ul><li><b>23.6%</b>：浅い押し（強いトレンド）</li><li><b>38.2%</b>：一般的な押し目</li><li><b>50%</b>：半値押し（中程度）</li><li><b>61.8%</b>：深い押し（黄金比）</li><li><b>78.6%</b>：最後の砦</li></ul>' },
+    { figs:[{ name:'実戦の引き方', signal:'buy', signalTxt:'押し目買い', caption:'直近の明確な底→天井へ線を引き、各水準で反応を待つ',
+      svg:'<polyline points="10,110 30,80 50,90 80,50 110,60 140,25 170,80 210,60" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="10" y1="25" x2="220" y2="25" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="52" x2="220" y2="52" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="68" x2="220" y2="68" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="82" x2="220" y2="82" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="110" x2="220" y2="110" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><circle cx="170" cy="80" r="4" fill="none" stroke="#c0392b" stroke-width="2"/>' }], body:'<p>引き方の手順：</p><ol style="padding-left:20px"><li>直近の明確な安値（底）を見つける</li><li>そこから最新の高値（天井）まで線を引く</li><li>各フィボ水準に横線が引かれる</li><li>押し目が水準に来て反発すれば買い候補</li></ol><p><b>反応の見方</b>：38.2%で反発 → 強いトレンド、61.8%まで押す → やや弱め、78.6%割れ → 上昇終了の可能性。</p>', tip:'複数の指標が同じ水準を示すと信頼度倍増。例：フィボ61.8% と 25日MA が重なる価格は超強力な支持線になる。' },
+    { figs:[{ name:'フィボナッチ拡張', signal:'neutral', signalTxt:'目標値予測', caption:'127.2% / 161.8% / 261.8% の水準で利確候補',
+      svg:'<polyline points="10,110 40,60 70,80 100,30 130,50 170,20 200,10" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="10" y1="60" x2="230" y2="60" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="30" x2="230" y2="30" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="10" x2="230" y2="10" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><text x="232" y="33" font-size="9" fill="#c0392b">161.8</text><text x="232" y="13" font-size="9" fill="#c0392b">261.8</text>' }], body:'<p><b>フィボナッチ拡張</b>は目標値の予測に使う。</p><p>「底→天井→押し目」の3点で計算し、押し目からの目標値を出す：</p><ul><li><b>127.2%</b>：小さな上昇の目標</li><li><b>161.8%</b>：黄金比目標（利確候補）</li><li><b>261.8%</b>：大幅上昇時の目標</li></ul><p>下落時も同様に応用可能。</p>' },
+  ]},
+  { num:'第6章', title:'エリオット波動理論', lead:'相場は5波の上昇+3波の下落で動くという波動論。長期トレンド分析の王道。', pages:[
+    { figs:[{ name:'8波の構造', signal:'neutral', signalTxt:'相場の周期', caption:'推進5波(1-5)+修正3波(A-C)の合計8波',
+      svg:'<polyline points="10,120 30,90 50,100 80,60 100,80 130,40 150,60 180,20 200,50 220,70 235,40" fill="none" stroke="#4a3020" stroke-width="2"/><text x="26" y="85" font-size="10" fill="#c0392b">1</text><text x="46" y="115" font-size="10" fill="#c0392b">2</text><text x="76" y="55" font-size="10" fill="#c0392b">3</text><text x="96" y="95" font-size="10" fill="#c0392b">4</text><text x="146" y="15" font-size="10" fill="#c0392b">5</text><text x="176" y="15" font-size="10" fill="#2e6da4">A</text><text x="196" y="65" font-size="10" fill="#2e6da4">B</text><text x="216" y="85" font-size="10" fill="#2e6da4">C</text>' }], body:'<p><b>エリオット波動</b>は相場の値動きを"波"として捉える。基本は8波で構成：</p><p><b>推進波（1〜5）：上昇局面</b></p><ul><li>1波：初動、多くが気付かない</li><li>2波：調整、1波の38.2〜61.8%押し</li><li>3波：最も長く力強い上昇（メインディッシュ）</li><li>4波：再度の調整</li><li>5波：最後の上昇、出来高減少しがち</li></ul><p><b>修正波（A・B・C）：下降局面</b></p>' },
+    { figs:[{ name:'第3波を捉える', signal:'buy', signalTxt:'最大の稼ぎ時', caption:'第1波を上抜けたら第3波の始まり',
+      svg:'<polyline points="10,120 40,90 70,105 110,50 140,70 180,20 210,55 235,90" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="40" y1="90" x2="235" y2="90" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><text x="15" y="115" font-size="10" fill="#c0392b">底</text><text x="70" y="130" font-size="10" fill="#a4884f">エントリー点</text><circle cx="65" cy="105" r="5" fill="none" stroke="#a4884f" stroke-width="2"/>' }], body:'<p>実戦での最重要点は<b>第3波を捉えること</b>：</p><ul><li>第1波の高値を第2波が割らずに反発</li><li>第1波の高値を上抜けた瞬間が第3波のスタート</li><li>第3波は多くの場合、第1波の1.618倍以上に伸びる</li></ul><p>「エリオットが読めれば全てわかる」わけではないが、大局を掴む道具として優秀。</p>', tip:'エリオット波動はカウントに主観が入りやすい。1つの銘柄で確信持てなくても、日経平均等で大枠を把握するのが実用的。' },
+    { figs:[{ name:'調整波のパターン', signal:'neutral', signalTxt:'A-B-Cの見極め', caption:'ジグザグ・フラット・トライアングルの3型',
+      svg:'<polyline points="10,20 40,60 70,40 100,80" fill="none" stroke="#2e6da4" stroke-width="2"/><text x="40" y="15" font-size="9" fill="#2e6da4">ジグザグ</text><polyline points="120,25 145,55 170,30 195,60" fill="none" stroke="#4a3020" stroke-width="2"/><text x="140" y="15" font-size="9" fill="#4a3020">フラット</text>' }], body:'<p>調整波（A-B-C）にも型がある：</p><ul><li><b>ジグザグ</b>：急な下落→短い戻し→再度下落（5-3-5構造）</li><li><b>フラット</b>：横ばい調整、Bが100%近くまで戻る</li><li><b>トライアングル</b>：収束型、時間をかけて調整</li></ul><p>調整の型で次の第5波の勢いも予測できる。</p>' },
+  ]},
+  { num:'第7章', title:'VWAP（出来高加重平均）', lead:'その日の平均取引価格。機関投資家が売買判断に使う実務的指標。', pages:[
+    { figs:[{ name:'VWAPライン', signal:'neutral', signalTxt:'当日の重心', caption:'その日の(価格×出来高)を累積した平均',
+      svg:'<polyline points="10,70 40,50 70,65 100,45 130,55 160,40 190,50 220,35" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,80 40,75 70,70 100,68 130,65 160,60 190,58 220,55" fill="none" stroke="#c0392b" stroke-width="2"/><text x="222" y="55" font-size="9" fill="#c0392b">VWAP</text>' }], body:'<p><b>VWAP (Volume Weighted Average Price)</b>は「その日、実際に取引された平均価格」。</p><p>計算式：Σ(価格×出来高) ÷ Σ出来高</p><ul><li>単純平均と違い、大口取引が反映される</li><li>機関投資家の"実勢価格"</li><li>この価格より上で買えたら"高値づかみ"、下で買えたら"平均以下で買えた"</li></ul>' },
+    { figs:[{ name:'VWAPを使った売買', signal:'buy', signalTxt:'サポート/レジスタンス', caption:'株価がVWAP付近で反発することが多い',
+      svg:'<polyline points="10,55 30,70 55,55 80,35 105,55 130,30 155,55 180,45 210,55 230,30" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,55 40,53 70,52 100,50 130,48 160,46 190,44 220,42" fill="none" stroke="#c0392b" stroke-width="2" stroke-dasharray="4,2"/>' }], body:'<p>使い方：</p><ul><li><b>デイトレ</b>：VWAP付近で押し目買い、VWAPから離れたら利確</li><li><b>スイング</b>：日足のVWAP（週/月換算）を意識</li><li><b>大口の動き</b>：VWAP下で買われ続けている銘柄は買い集められている可能性</li></ul><p>VWAPは<b>ザラ場中しか意味を持たない</b>指標。翌日には引き継がれない。</p>', tip:'デイトレ主流のプロは「VWAP以下では絶対買わない」というルールを持つ人も。長期投資でも"高すぎ買い"の目安に使える。' },
+  ]},
+  { num:'第8章', title:'ボリューム・プロファイル', lead:'価格帯ごとの出来高を横棒で表示。"人気の価格帯"が一目でわかる。', pages:[
+    { figs:[{ name:'価格帯別出来高', signal:'neutral', signalTxt:'重要価格帯', caption:'横棒が長いほど取引が集中',
+      svg:'<polyline points="120,20 150,40 130,60 160,80 140,100 170,120" fill="none" stroke="#4a3020" stroke-width="2"/><rect x="10" y="55" width="80" height="10" fill="#a4884f" opacity="0.4"/><rect x="10" y="70" width="50" height="10" fill="#a4884f" opacity="0.4"/><rect x="10" y="85" width="100" height="10" fill="#a4884f" opacity="0.6"/><rect x="10" y="100" width="60" height="10" fill="#a4884f" opacity="0.4"/><rect x="10" y="115" width="30" height="10" fill="#a4884f" opacity="0.3"/><text x="115" y="93" font-size="9" fill="#c0392b">POC</text>' }], body:'<p><b>ボリューム・プロファイル</b>は縦軸=価格、横軸=その価格帯の合計出来高を示すヒストグラム。</p><ul><li><b>POC (Point of Control)</b>：最大出来高の価格帯。最も"意識されている"価格</li><li><b>VAH/VAL (Value Area)</b>：全出来高の70%が集中する範囲</li></ul><p>大量取引された価格帯は"合意価格"であり、次に来た時に強い反応が出やすい。</p>' },
+    { figs:[{ name:'実戦での活用', signal:'buy', signalTxt:'POC支持で買い', caption:'POCで反発 or VAL割れで下落加速',
+      svg:'<polyline points="120,20 155,40 130,55 160,75 140,90 175,110" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="10" y1="55" x2="230" y2="55" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,2"/><line x1="10" y1="90" x2="230" y2="90" stroke="#2e6da4" stroke-width="1.5" stroke-dasharray="4,2"/><text x="10" y="52" font-size="9" fill="#c0392b">VAH(上端)</text><text x="10" y="100" font-size="9" fill="#2e6da4">VAL(下端)</text>' }], body:'<ul><li><b>POC付近で反発</b>：買いエントリー候補</li><li><b>VAL(バリューエリア下端)割れ</b>：下落加速の可能性</li><li><b>VAH(バリューエリア上端)突破</b>：新たな上昇局面へ</li><li><b>スカスカな価格帯</b>：抵抗が薄く、通過しやすい</li></ul><p>特に長期のプロファイル（月足〜年足）は、大きな節目の把握に有効。</p>' },
+  ]},
+  { num:'第9章', title:'ストキャスティクス', lead:'RSIと並ぶオシレーター系の代表格。短期の売買タイミングに強い。', pages:[
+    { figs:[{ name:'%K と %D', signal:'neutral', signalTxt:'クロスでシグナル', caption:'%K(赤)と%D(青)のクロスで売買判断',
+      svg:'<line x1="10" y1="30" x2="230" y2="30" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><line x1="10" y1="100" x2="230" y2="100" stroke="#2e6da4" stroke-width="1" stroke-dasharray="3,2"/><polyline points="10,110 40,90 70,50 100,20 130,40 160,90 190,110 220,80" fill="none" stroke="#c0392b" stroke-width="2"/><polyline points="10,100 40,95 70,70 100,45 130,55 160,80 190,105 220,90" fill="none" stroke="#2e6da4" stroke-width="2"/><text x="5" y="28" font-size="9" fill="#c0392b">80</text><text x="5" y="103" font-size="9" fill="#2e6da4">20</text>' }], body:'<p><b>ストキャスティクス</b>は0-100の範囲で"現在価格が過去N日の中でどの位置か"を示す。</p><p><b>2つの線：</b></p><ul><li>%K：計算値そのまま（敏感、ノイジー）</li><li>%D：%Kの平均（滑らか）</li></ul><p><b>基本サイン：</b></p><ul><li>80以上：買われすぎ、天井近い</li><li>20以下：売られすぎ、底近い</li><li>%K が %D を上抜け → 買い</li><li>%K が %D を下抜け → 売り</li></ul>' },
+    { figs:[{ name:'ダイバージェンス', signal:'sell', signalTxt:'反転の前兆', caption:'株価が高値更新でストキャス更新せず',
+      svg:'<polyline points="10,80 50,50 90,60 130,30 170,45 210,20" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,110 50,80 90,90 130,60 170,80 210,70" fill="none" stroke="#c0392b" stroke-width="2"/><text x="10" y="20" font-size="9" fill="#4a3020">株価↑</text><text x="10" y="140" font-size="9" fill="#c0392b">ストキャス↓</text>' }], body:'<p><b>ダイバージェンス</b>は最強のサイン。株価は新高値を更新しているのに、ストキャスは高値更新しない→上昇の勢い低下、天井のサイン。</p><p>逆も同様（底の場合）。</p><ul><li>強いトレンド中は80/20の帯に張り付き続けることも</li><li>短期売買では2-3日サイクルで判断</li><li>スロー・ストキャス（さらに平滑化）はノイズ減で使いやすい</li></ul>', tip:'RSIより短期に反応する。デイトレ・スイングでの利確判断に強い。中長期にはRSIやMACDの方が向く。' },
+  ]},
+  { num:'第10章', title:'パラボリック・SAR', lead:'放物線状に描かれる点線。トレイリングストップ（追随損切り）に最適。', pages:[
+    { figs:[{ name:'SAR点', signal:'neutral', signalTxt:'トレンド方向', caption:'株価の下=強気、株価の上=弱気',
+      svg:'<polyline points="10,110 40,90 70,80 100,60 130,50 160,40 190,35 220,30" fill="none" stroke="#4a3020" stroke-width="2"/><circle cx="20" cy="130" r="2" fill="#c0392b"/><circle cx="50" cy="125" r="2" fill="#c0392b"/><circle cx="80" cy="120" r="2" fill="#c0392b"/><circle cx="110" cy="110" r="2" fill="#c0392b"/><circle cx="140" cy="95" r="2" fill="#c0392b"/><circle cx="170" cy="80" r="2" fill="#c0392b"/><circle cx="200" cy="70" r="2" fill="#c0392b"/>' }], body:'<p><b>Parabolic SAR</b> (Stop And Reverse)：J.W.Wilderが考案した放物線状の点線。</p><ul><li><b>点が株価の下</b>：強気トレンド継続</li><li><b>点が株価の上</b>：弱気トレンド継続</li><li><b>点の位置が反対側に移る</b>：トレンド転換</li></ul><p>時間が経つほど点が株価に接近する仕組みで、"自動的に損切り位置を上げてくれる"機能を持つ。</p>' },
+    { figs:[{ name:'トレイリング活用', signal:'buy', signalTxt:'利益を最大化', caption:'買った後、SARを損切り水準として追随',
+      svg:'<polyline points="10,110 40,80 70,90 100,50 130,60 160,30 190,45 220,20" fill="none" stroke="#4a3020" stroke-width="2"/><circle cx="20" cy="130" r="2" fill="#c0392b"/><circle cx="50" cy="120" r="2" fill="#c0392b"/><circle cx="80" cy="115" r="2" fill="#c0392b"/><circle cx="110" cy="105" r="2" fill="#c0392b"/><circle cx="140" cy="90" r="2" fill="#c0392b"/><circle cx="170" cy="75" r="2" fill="#c0392b"/><circle cx="200" cy="60" r="2" fill="#c0392b"/>' }], body:'<p><b>トレイリングストップ</b>とは：株価上昇に合わせて損切りラインも上げていく手法。</p><p>SARを損切りラインに使えば、機械的に判断できる：</p><ul><li>買った時点のSAR＝初期損切り</li><li>SARが株価と共に切り上がる</li><li>株価がSARに達したら売却→利確</li></ul><p>トレンドを最後まで取りきる戦略に最適。</p>', tip:'レンジ相場では頻繁に反転してだましが多い。強いトレンド相場で真価を発揮する指標。' },
+  ]},
+  { num:'第11章', title:'ADX / DMI', lead:'トレンドの"強さ"を数値化する指標。0-100で表示、25以上でトレンド発生と判定。', pages:[
+    { figs:[{ name:'ADX の見方', signal:'neutral', signalTxt:'25以上でトレンド', caption:'方向は問わず、勢いの強さだけを測る',
+      svg:'<line x1="10" y1="80" x2="230" y2="80" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,2"/><polyline points="10,120 40,110 70,90 100,60 130,40 160,30 190,50 220,70" fill="none" stroke="#4a3020" stroke-width="2"/><text x="5" y="83" font-size="9" fill="#a4884f">25</text><text x="130" y="35" font-size="9" fill="#c0392b">強いトレンド</text>' }], body:'<p><b>ADX (Average Directional Index)</b>：トレンドの強さを0-100で示す。方向は関係なく"勢い"だけを見る。</p><ul><li>0-20：トレンドなし（レンジ相場）</li><li>20-25：弱いトレンド発生の芽</li><li>25-50：明確なトレンド発生中</li><li>50以上：強力なトレンド</li></ul><p>方向は+DI / -DI で判断：</p><ul><li>+DI が -DI より上 → 上昇トレンド</li><li>-DI が +DI より上 → 下降トレンド</li></ul>' },
+    { figs:[{ name:'ADX の使い方', signal:'buy', signalTxt:'順張り戦略', caption:'ADX上昇 + +DI優勢 = 強い買い',
+      svg:'<polyline points="10,100 40,80 70,60 100,45 130,30 160,25 190,30 220,40" fill="none" stroke="#c0392b" stroke-width="2"/><polyline points="10,60 40,70 70,80 100,90 130,100 160,110 190,105 220,95" fill="none" stroke="#2e6da4" stroke-width="2"/><polyline points="10,110 40,100 70,90 100,80 130,70 160,55 190,50 220,45" fill="none" stroke="#4a3020" stroke-width="2"/><text x="222" y="45" font-size="9" fill="#c0392b">+DI</text><text x="222" y="97" font-size="9" fill="#2e6da4">-DI</text><text x="222" y="60" font-size="9" fill="#4a3020">ADX</text>' }], body:'<p>実戦での使い方：</p><ul><li><b>ADXが25を上抜けた瞬間</b>：トレンド発生の初動、順張り準備</li><li><b>ADXが上昇中</b>：トレンド継続、ポジション維持</li><li><b>ADXが低下し始めた</b>：勢い衰え、利確検討</li><li><b>ADXが20以下</b>：レンジ相場、逆張りの世界</li></ul><p>トレンド発生の"数値的確認"としてMAやRSIと組み合わせると強力。</p>' },
+  ]},
+  { num:'第12章', title:'ATR（アベレージ・トゥルー・レンジ）', lead:'ボラティリティ（値動きの大きさ）を測る指標。損切り幅の設定に必須。', pages:[
+    { figs:[{ name:'ATR の意味', signal:'neutral', signalTxt:'値動きの大きさ', caption:'過去N日の平均的な1日の値幅',
+      svg:'<line x1="30" y1="30" x2="30" y2="110" stroke="#4a3020" stroke-width="1.5"/><rect x="20" y="50" width="20" height="40" fill="#c0392b"/><line x1="70" y1="20" x2="70" y2="130" stroke="#4a3020" stroke-width="1.5"/><rect x="60" y="40" width="20" height="60" fill="#2e6da4"/><line x1="110" y1="35" x2="110" y2="115" stroke="#4a3020" stroke-width="1.5"/><rect x="100" y="55" width="20" height="30" fill="#c0392b"/><line x1="150" y1="25" x2="150" y2="125" stroke="#4a3020" stroke-width="1.5"/><rect x="140" y="45" width="20" height="50" fill="#2e6da4"/><path d="M 190,60 Q 210,55 220,60" fill="none" stroke="#a4884f" stroke-width="2"/><text x="180" y="80" font-size="9" fill="#a4884f">ATR=平均値幅</text>' }], body:'<p><b>ATR (Average True Range)</b>は過去14日の"1日の値幅"の平均値を示す。</p><p>True Range = max( 高値-安値、|高値-前日終値|、|安値-前日終値| )</p><p>特徴：</p><ul><li>方向は示さない、"どれだけ動いたか"だけ</li><li>低いATR：静か、レンジ相場</li><li>高いATR：荒い、トレンドや急変局面</li></ul>' },
+    { figs:[{ name:'損切り幅の設定', signal:'neutral', signalTxt:'ATR×係数で決定', caption:'損切り=買値-ATR×1.5、利確=買値+ATR×3',
+      svg:'<polyline points="10,110 40,90 70,100 100,60 130,80 160,40 190,50 220,20" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="70" y1="100" x2="230" y2="100" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="70" y1="20" x2="230" y2="20" stroke="#2e6da4" stroke-width="1.5" stroke-dasharray="4,3"/><text x="235" y="25" font-size="9" fill="#2e6da4">TP</text><text x="235" y="105" font-size="9" fill="#c0392b">SL</text>' }], body:'<p><b>ATR活用の王道：損切り幅の自動化</b></p><ul><li><b>損切り幅 = ATR × 1.5</b>（保守的なら1.0）</li><li><b>利確幅 = ATR × 3</b>（リスクリワード比1:2）</li></ul><p>これでボラの大きい銘柄は損切りも広く、ボラの小さい銘柄は狭く自動的に調整される。</p><p><b>ポジションサイズも決まる</b>：<br>資金の2%リスク ÷ ATR×1.5 = 買える株数</p>', tip:'このアプリの「株ノート」の利確/損切目安は、まさにATR×3, ATR×1.5で計算されている。第2巻の理論通り。' },
+  ]},
+  { num:'第13章', title:'OBV（オンバランス・ボリューム）', lead:'出来高の累積で株価トレンドの信頼性を確認。"賢い金"の動きを見る。', pages:[
+    { figs:[{ name:'OBV の計算', signal:'neutral', signalTxt:'累積出来高', caption:'株価上昇日は+、下落日は-で累積',
+      svg:'<polyline points="10,80 40,70 70,75 100,60 130,50 160,55 190,40 220,35" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,110 40,95 70,100 100,80 130,65 160,72 190,55 220,45" fill="none" stroke="#c0392b" stroke-width="2"/><text x="10" y="20" font-size="9" fill="#4a3020">価格</text><text x="10" y="140" font-size="9" fill="#c0392b">OBV</text>' }], body:'<p><b>OBV (On-Balance Volume)</b>：出来高を"符号付きで"累積した値。</p><p>計算ルール：</p><ul><li>前日より終値上昇 → OBV に当日出来高を<b>加算</b></li><li>前日より終値下落 → OBV から当日出来高を<b>減算</b></li><li>同じ → 変化なし</li></ul><p>「株価が上がった日は買いに勢いがあった、下がった日は売りに勢いがあった」という前提。</p>' },
+    { figs:[{ name:'ダイバージェンスの威力', signal:'buy', signalTxt:'真の反転サイン', caption:'株価は下落続くもOBVは上昇→底のサイン',
+      svg:'<polyline points="10,50 40,70 70,80 100,100 130,110" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,110 40,105 70,95 100,85 130,70" fill="none" stroke="#c0392b" stroke-width="2"/><text x="140" y="115" font-size="9" fill="#4a3020">価格↓</text><text x="140" y="75" font-size="9" fill="#c0392b">OBV↑</text>' }], body:'<p>OBVの最大の武器は<b>ダイバージェンス</b>：</p><ul><li>株価が新安値でもOBVが新安値を更新しない → 売りが弱まり、底のサイン</li><li>株価が新高値でもOBVが更新しない → 買いが弱まり、天井のサイン</li></ul><p>これは"表面上の値動き"と"実際の売買圧力"のギャップを見る手法。<b>大口投資家の仕込み・利確</b>を察知できる可能性がある。</p>', tip:'長期チャートで見ると特に威力を発揮。日足より週足で判断するのが有効。' },
+  ]},
+  { num:'第14章', title:'フラッグ / ペナント', lead:'急騰・急落の後の"一時的な休息"パターン。トレンド継続を示す。', pages:[
+    { figs:[{ name:'フラッグ', signal:'buy', signalTxt:'上昇継続', caption:'急上昇→平行チャネルで休息→再度上昇',
+      svg:'<polyline points="10,120 30,80 50,50 70,20" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="70,20 90,45 110,25 130,50 150,30 170,55" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="70" y1="20" x2="170" y2="45" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><line x1="90" y1="45" x2="170" y2="70" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><polyline points="170,55 190,25 210,15" fill="none" stroke="#4a3020" stroke-width="2"/>' }], body:'<p><b>フラッグ</b>は急騰後の平行四辺形の調整。旗のような形状が特徴。</p><ul><li>急激な"旗竿"（ポール）</li><li>その後の緩やかな下降平行チャネル</li><li>ブレイクで再度急上昇</li></ul><p><b>目標値</b>：ポールと同じ長さ分、ブレイク後に伸びると言われる。</p>' },
+    { figs:[{ name:'ペナント', signal:'buy', signalTxt:'上昇継続', caption:'急上昇→三角形に収束→再度上昇',
+      svg:'<polyline points="10,120 30,80 50,50 70,20" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="70,20 90,45 110,25 130,50 150,35 170,45 180,40" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="70" y1="20" x2="180" y2="42" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><line x1="90" y1="45" x2="180" y2="42" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><polyline points="180,40 200,20 220,10" fill="none" stroke="#4a3020" stroke-width="2"/>' }], body:'<p><b>ペナント</b>はフラッグと似ているが、調整部分が三角形（収束型）。</p><ul><li>ポール(急上昇)</li><li>収束型ペナント形成（1-3週間）</li><li>ブレイクで再度上昇</li></ul><p>両者ともに<b>継続パターン</b>。ブレイク時の出来高増加を確認できれば信頼度大。下降版もあり（ベアフラッグ、ベアペナント）。</p>', tip:'ブレイクせずに逆方向に抜けたら"だまし"。ポール発生前の水準まで戻ったら諦める。' },
+  ]},
+  { num:'第15章', title:'ウェッジ / ダイヤモンド', lead:'収束型でも三角持ち合いとは異なる特殊パターン。反転を示唆することが多い。', pages:[
+    { figs:[{ name:'上昇ウェッジ', signal:'sell', signalTxt:'下降転換', caption:'高値・安値ともに切り上げ+収束→下抜け',
+      svg:'<polyline points="10,80 40,50 70,70 100,35 130,55 160,25 190,45 220,20" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="10" y1="80" x2="230" y2="10" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,2"/><line x1="10" y1="100" x2="230" y2="35" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,2"/>' }], body:'<p><b>上昇ウェッジ (Rising Wedge)</b>：上向きの2本のトレンドラインが収束する型。</p><ul><li>高値・安値ともに切り上がる</li><li>ただし切り上げ幅が徐々に狭まる</li><li>下辺（支持線）割れで<b>下降転換</b>の可能性大</li></ul><p>一見上昇に見えるが、実は上昇の勢いが徐々に弱まっている状態。長期上昇後に出ると天井のサイン。</p>' },
+    { figs:[{ name:'下降ウェッジ / ダイヤモンド', signal:'buy', signalTxt:'反転/転換', caption:'下降ウェッジは上昇転換、ダイヤは反転示唆',
+      svg:'<polyline points="10,20 40,50 70,30 100,55 130,35 160,50 190,40 220,55" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="10" y1="20" x2="220" y2="55" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,2"/><line x1="10" y1="60" x2="220" y2="65" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4,2"/>' }], body:'<p><b>下降ウェッジ</b>：上昇ウェッジの逆。高値・安値ともに切り下がるが幅は狭まる。上辺突破で<b>上昇転換</b>。</p><p><b>ダイヤモンド</b>：拡大→収束の複合型。高値圏で出ると天井、安値圏で出ると底の可能性。実戦ではあまり頻繁には出ないが、出た時は強力。</p><ul><li>ウェッジ：徐々に収束、方向性のヒント有り</li><li>ダイヤモンド：拡大後に収束、大きな転換示唆</li></ul>', tip:'ウェッジもダイヤモンドも"だまし"が多い。ブレイク後に戻ってきて再度抜けるかを見てから入る手法（戻し確認）が有効。' },
+  ]},
+  { num:'第16章', title:'マーケット・ストラクチャー', lead:'HH/HL/LH/LLでトレンドを客観的に判定。プロトレーダーの基礎中の基礎。', pages:[
+    { figs:[{ name:'HH / HL の上昇', signal:'buy', signalTxt:'上昇トレンド', caption:'高値切り上げ(HH)+安値切り上げ(HL)',
+      svg:'<polyline points="10,120 40,80 65,100 95,50 125,80 160,30 195,60 225,10" fill="none" stroke="#4a3020" stroke-width="2"/><circle cx="40" cy="80" r="4" fill="#c0392b"/><circle cx="95" cy="50" r="4" fill="#c0392b"/><circle cx="160" cy="30" r="4" fill="#c0392b"/><circle cx="65" cy="100" r="4" fill="#2e6da4"/><circle cx="125" cy="80" r="4" fill="#2e6da4"/><circle cx="195" cy="60" r="4" fill="#2e6da4"/><text x="30" y="70" font-size="9" fill="#c0392b">H</text><text x="155" y="20" font-size="9" fill="#c0392b">HH</text>' }], body:'<p>相場の構造を"スイングポイント"で把握する：</p><ul><li><b>HH</b> (Higher High)：直前の高値より高い高値</li><li><b>HL</b> (Higher Low)：直前の安値より高い安値</li><li><b>LH</b> (Lower High)：直前の高値より低い高値</li><li><b>LL</b> (Lower Low)：直前の安値より低い安値</li></ul><p><b>上昇トレンド</b>：HH と HL の連続<br><b>下降トレンド</b>：LH と LL の連続</p>' },
+    { figs:[{ name:'転換の見極め', signal:'neutral', signalTxt:'構造の崩壊', caption:'HHが更新されず、直近のHLを割ったら転換',
+      svg:'<polyline points="10,120 40,70 65,90 100,40 130,60 160,45 195,80 225,110" fill="none" stroke="#4a3020" stroke-width="2"/><circle cx="100" cy="40" r="4" fill="#c0392b"/><circle cx="160" cy="45" r="4" fill="#c0392b"/><circle cx="130" cy="60" r="4" fill="#2e6da4"/><line x1="130" y1="60" x2="225" y2="60" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><text x="130" y="55" font-size="9" fill="#c0392b">HL割れ=転換</text>' }], body:'<p><b>トレンド転換の判定：</b></p><ul><li>上昇トレンド中に <b>HH が更新されず</b> LH ができる</li><li>その後 <b>直近の HL を割る</b> と上昇トレンド終了</li><li>逆も同様（下降トレンド→上昇転換）</li></ul><p>この単純なルールが最も信頼できる転換判定法。派手な指標より、この構造分析の方がプロは重視する。</p>' },
+    { figs:[{ name:'BOS と CHoCH', signal:'buy', signalTxt:'プロ用語', caption:'BOS=構造破壊で継続、CHoCH=構造変化で転換',
+      svg:'<polyline points="10,110 40,80 60,90 90,40 120,70 150,20 180,60 210,15" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="90" y1="40" x2="180" y2="40" stroke="#a4884f" stroke-width="1" stroke-dasharray="3,2"/><line x1="150" y1="20" x2="210" y2="20" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,2"/><text x="145" y="15" font-size="9" fill="#c0392b">BOS</text>' }], body:'<p>近年、SMC (Smart Money Concept) 系トレーダーが使う用語：</p><ul><li><b>BOS (Break of Structure)</b>：既存の高値/安値を突破 → トレンド継続確認</li><li><b>CHoCH (Change of Character)</b>：構造の変化 → 転換の初期サイン</li></ul><p>マーケット構造の"言語化"により、直感ではなく論理で判断できる。</p>', tip:'この構造分析はTradingViewやTOSでの分析が主流。まず日足でスイングポイントに丸をつけて練習を。' },
+  ]},
+  { num:'第17章', title:'ダイバージェンス完全解説', lead:'株価とオシレーターの"ずれ"を見る最強シグナル。3つの型を使い分ける。', pages:[
+    { figs:[{ name:'クラシック・ダイバージェンス', signal:'buy', signalTxt:'反転サイン', caption:'株価↑ + RSI↓ = 上昇の勢い低下',
+      svg:'<polyline points="10,100 50,80 90,90 130,60 170,75 210,50" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,125 50,105 90,120 130,110 170,125 210,140" fill="none" stroke="#c0392b" stroke-width="2"/><text x="10" y="15" font-size="9" fill="#4a3020">価格↑</text><text x="10" y="150" font-size="9" fill="#c0392b">RSI↓</text>' }], body:'<p><b>クラシック・ダイバージェンス（レギュラー）</b>：反転を示唆</p><ul><li><b>強気ダイバージェンス</b>：株価は新安値、RSI/MACDは前回の底より高い → 底のサイン</li><li><b>弱気ダイバージェンス</b>：株価は新高値、RSI/MACDは前回の天井より低い → 天井のサイン</li></ul><p>特に高値圏/安値圏で出た時に強力。トレンド末期の"最後の一伸び"に潜む。</p>' },
+    { figs:[{ name:'ヒドゥン・ダイバージェンス', signal:'buy', signalTxt:'トレンド継続', caption:'株価は前より高い底 + RSIは前より低い → 継続',
+      svg:'<polyline points="10,50 50,80 90,60 130,90 170,70 210,100" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,120 50,110 90,140 130,105 170,135 210,100" fill="none" stroke="#c0392b" stroke-width="2"/>' }], body:'<p><b>ヒドゥン・ダイバージェンス（隠れ）</b>：トレンド継続を示唆</p><ul><li><b>強気ヒドゥン</b>：上昇トレンド中、株価は前より高い安値、RSIは前より低い底 → 上昇継続</li><li><b>弱気ヒドゥン</b>：下降トレンド中、株価は前より低い戻り高値、RSIは前より高い → 下降継続</li></ul><p>逆張りに使うクラシックと違い、順張りエントリーに使える。押し目買い/戻り売りのタイミングとして。</p>', tip:'クラシックは"反転を狙う"、ヒドゥンは"継続で乗る"。使い分けが重要。組み合わせるとエントリー精度が飛躍的に上がる。' },
+  ]},
+  { num:'第18章', title:'ギャップ（窓開け）分析', lead:'始値が前日終値から飛んだ状態。3つの型を見分けると値動きの読みが深まる。', pages:[
+    { figs:[{ name:'コモン・ブレイクアウェイ', signal:'buy', signalTxt:'長期トレンドの始まり', caption:'レンジ抜けの窓は本物のトレンド発生',
+      svg:'<polyline points="10,90 40,80 70,85 100,75" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="100" y1="75" x2="120" y2="75" stroke="#4a3020" stroke-width="2" stroke-dasharray="3,3"/><polyline points="120,40 150,30 180,50 210,20" fill="none" stroke="#4a3020" stroke-width="2"/><rect x="105" y="42" width="14" height="32" fill="#c0392b" fill-opacity="0.3" stroke="#c0392b" stroke-width="1"/>' }], body:'<p>ギャップ（窓）には4種類ある：</p><p><b>① コモンギャップ</b>：レンジ相場中の小さな窓。すぐ埋まる（"窓埋め"）ことが多い。</p><p><b>② ブレイクアウェイギャップ</b>：長期レンジや底からの本格ブレイク時に発生。<b>埋まらないことが多い</b>強いサイン。</p><ul><li>出来高急増を伴う</li><li>トレンドの初動を示す</li><li>買いエントリーの好機</li></ul>' },
+    { figs:[{ name:'ランナウェイ・エグゾースション', signal:'neutral', signalTxt:'継続 or 天井', caption:'トレンド中盤=継続、末期=天井の可能性',
+      svg:'<polyline points="10,110 40,90 70,70 100,50" fill="none" stroke="#4a3020" stroke-width="2"/><line x1="100" y1="50" x2="120" y2="50" stroke="#4a3020" stroke-width="2" stroke-dasharray="3,3"/><polyline points="120,25 150,15 180,20 210,50" fill="none" stroke="#4a3020" stroke-width="2"/><rect x="105" y="27" width="14" height="22" fill="#c0392b" fill-opacity="0.3" stroke="#c0392b" stroke-width="1"/>' }], body:'<p><b>③ ランナウェイ（メジャリング）ギャップ</b>：トレンドの中盤で発生。トレンドの<b>継続</b>を示す。<br>ギャップまでの値幅と同じだけ、さらに伸びると言われる（メジャリング）。</p><p><b>④ エグゾースション（消尽）ギャップ</b>：トレンドの末期で発生。<b>反転の兆候</b>。</p><ul><li>大きなギャップの後、勢いが続かない</li><li>翌日反落したら要警戒</li><li>利確検討のタイミング</li></ul>', tip:'ギャップ後の1-3本のローソク足の挙動が超重要。埋めに来たら弱気サイン、逆に強く伸びたら継続サイン。' },
+  ]},
+  { num:'第19章', title:'マルチタイムフレーム分析', lead:'月足→週足→日足→時間足の順に見るのがプロの基本。大局と細部を両立する。', pages:[
+    { figs:[{ name:'3つの時間軸', signal:'neutral', signalTxt:'重ね合わせで確度up', caption:'週足=大局、日足=戦略、時間足=エントリー',
+      svg:'<line x1="10" y1="30" x2="230" y2="30" stroke="#4a3020" stroke-width="1"/><line x1="10" y1="80" x2="230" y2="80" stroke="#4a3020" stroke-width="1"/><polyline points="10,50 90,30 170,10 220,15" fill="none" stroke="#c0392b" stroke-width="2"/><polyline points="10,100 60,80 90,90 130,70 170,50 200,60 220,40" fill="none" stroke="#4a3020" stroke-width="2"/><polyline points="10,140 30,130 50,145 70,120 90,135 110,110 130,125 150,115 170,130 190,105 210,115 230,100" fill="none" stroke="#2e6da4" stroke-width="1.5"/><text x="10" y="20" font-size="9" fill="#c0392b">週足</text><text x="10" y="72" font-size="9" fill="#4a3020">日足</text><text x="10" y="130" font-size="9" fill="#2e6da4">時間足</text>' }], body:'<p><b>マルチタイムフレーム分析</b>：異なる時間軸を組み合わせる手法。</p><p><b>階層構造：</b></p><ul><li><b>週足</b>：数ヶ月〜1年の大局トレンド</li><li><b>日足</b>：数週間の中期トレンド、戦略立案</li><li><b>時間足</b>：数日の短期トレンド、エントリー精度</li></ul><p>ルール：<b>上位時間軸のトレンドに逆らわない</b>。日足が下降中なら、時間足で買いサインが出ても慎重に。</p>' },
+    { figs:[{ name:'絞り込み手順', signal:'buy', signalTxt:'高確度エントリー', caption:'週足=上昇 & 日足=押し目 & 時間足=買いサイン',
+      svg:'<polyline points="10,90 40,70 70,80 100,50 130,70 160,40 190,55 220,25" fill="none" stroke="#4a3020" stroke-width="2"/><circle cx="130" cy="70" r="6" fill="none" stroke="#c0392b" stroke-width="2.5"/><text x="140" y="90" font-size="10" fill="#c0392b">3拍子揃った</text><text x="140" y="105" font-size="10" fill="#c0392b">エントリー点</text>' }], body:'<p><b>実践手順：</b></p><ol style="padding-left:20px"><li><b>週足を見る</b>：上昇トレンドか？MA13>MA26？</li><li><b>日足に落とす</b>：週足上昇中に日足で押し目形成中か？25MAまで下げたか？</li><li><b>時間足で確定</b>：時間足でRSI30台からの反発、陽線出現でエントリー</li></ol><p>3つの時間軸が"買い"を示した瞬間が最高勝率のエントリーポイント。逆に1つでも弱いと"待ち"。</p>', tip:'中長期投資家なら週足→日足の2軸で十分。時間足はデイトレ・スイング向け。時間軸を絞ることで判断がぶれない。' },
+  ]},
+  { num:'第20章', title:'リスク管理と資金管理', lead:'テクニカルより100倍大事。勝つ人はここが違う。', pages:[
+    { figs:[{ name:'2%ルール', signal:'neutral', signalTxt:'資金保護の基本', caption:'1回のトレードで失う金額は資金の2%まで',
+      svg:'<rect x="10" y="30" width="220" height="80" fill="#f5ead0" stroke="#a4884f"/><rect x="10" y="30" width="4" height="80" fill="#c0392b"/><text x="30" y="50" font-size="12" fill="#4a3020">資金 100万円</text><text x="30" y="70" font-size="11" fill="#c0392b">1回の最大損失 = 2万円</text><text x="30" y="90" font-size="10" fill="#7a5e3c">→ 50連敗しても資金が尽きない</text>' }], body:'<p><b>2%ルール</b>：投資の生存の鉄則。</p><p>1回のトレードで許容する損失を、総資産の<b>2%以内</b>に抑える。</p><p><b>計算例：</b>資金100万円 → 1回の最大損失=2万円</p><ul><li>買値1000円、損切り900円設定なら、100円が損失幅</li><li>2万円 ÷ 100円 = 200株まで買える</li></ul><p>この計算をせず"感覚で"買う量を決めるのが最大の失敗パターン。</p>' },
+    { figs:[{ name:'リスクリワード比', signal:'buy', signalTxt:'期待値プラス', caption:'損切り幅 : 利益幅 = 1 : 2 以上を狙う',
+      svg:'<line x1="10" y1="70" x2="230" y2="70" stroke="#4a3020" stroke-width="1"/><rect x="80" y="70" width="20" height="30" fill="#c0392b" fill-opacity="0.5"/><rect x="120" y="10" width="20" height="60" fill="#2e6da4" fill-opacity="0.5"/><text x="60" y="115" font-size="10" fill="#c0392b">損 1</text><text x="120" y="130" font-size="10" fill="#2e6da4">利 2 以上</text>' }], body:'<p><b>リスクリワード比 (RR比)</b>：損失幅 対 利益幅の比率。</p><p>理想は<b>1:2以上</b>。つまり100円損切りするなら、200円以上の利益を狙う。</p><p><b>なぜ？</b>：</p><ul><li>RR比1:2なら、勝率33%で収支トントン</li><li>勝率40%あれば十分プラス</li><li>逆にRR比1:1だと勝率50%必要</li></ul><p>「勝率」より「RR比」を意識するのが勝つ人の思考。</p>' },
+    { figs:[{ name:'ケリー基準の応用', signal:'neutral', signalTxt:'最適投資額', caption:'勝率と平均損益から最適な投資比率を導出',
+      svg:'<text x="10" y="30" font-size="13" fill="#4a3020">f = (bp - q) ÷ b</text><text x="10" y="55" font-size="11" fill="#7a5e3c">b = 利益率, p = 勝率, q = 1-p</text><text x="10" y="90" font-size="11" fill="#c0392b">例) 勝率60%、平均利益/損失=2:1</text><text x="10" y="110" font-size="11" fill="#c0392b">f = (2×0.6 - 0.4) ÷ 2 = 40%</text><text x="10" y="130" font-size="10" fill="#7a5e3c">→ 資金の40%を1トレードに投入</text>' }], body:'<p><b>ケリー基準</b>：数学的に最適な投資額を導く公式。</p><p>f = (bp - q) ÷ b<br>b: 利益/損失比、p: 勝率、q: 1-p</p><p>ただし実戦では<b>ハーフケリー</b>（計算値の半分）が推奨される：</p><ul><li>過大なリスクを避ける</li><li>心理的にラク</li><li>勝率・RR比の推定誤差を吸収</li></ul><p>いずれにせよ、"感覚"ではなく"数値"で判断するのがプロの流儀。</p>', tip:'このアプリの「AI売買振り返り」で勝率と平均利益/損失を出せる。そこからケリー計算で"次の1回にいくら投じるか"を決めるのが理想的な運用。' },
+  ]},
+];
+
+function renderChartRef2Book() {
+  const el = document.getElementById('diary-book-list');
+  if (!el) return;
+
+  const toolbar = `<div class="book-toolbar western">
+    <button onclick="closeDiaryBook()">← 本棚へ</button>
+    <div class="book-title-bar western" style="font-size:15px">チャート分析 II</div>
+    <div style="width:60px"></div>
+  </div>`;
+
+  const pages = [];
+  let pageNum = 0;
+
+  // カバーページ
+  pageNum++;
+  pages.push(`<div class="r2-page">
+    <div class="r2-cover">
+      <div class="r2-cover-vol">応 用 編</div>
+      <div class="r2-cover-border"></div>
+      <h1>チャート分析</h1>
+      <div class="r2-cover-sub">第 II 巻</div>
+      <div class="r2-cover-tag">〜 20の指標と実戦戦略 〜</div>
+      <div class="r2-cover-border"></div>
+      <div class="r2-cover-vol">全 ${1 + 1 + 2 + CHART_REF2_CHAPTERS.reduce((s,c)=>s+c.pages.length,0) + 1} 頁</div>
+    </div>
+    <div class="r2-pagenum">${pageNum}</div>
+  </div>`);
+
+  // まえがき
+  pageNum++;
+  pages.push(`<div class="r2-page">
+    <div class="r2-foreword">
+      <h2>まえがき</h2>
+      <p>本書は第1巻『チャート分析』で学んだ基礎を土台に、より深く実戦的な内容を扱います。</p>
+      <p>単なる指標の紹介ではなく、実際の相場でどう使うか、どう組み合わせるかを重視しました。</p>
+      <p>各章で紹介する指標は、すべて世界中のプロトレーダーが日常的に使うものです。全てを完璧に使いこなす必要はありません。自分に合ったものを2-3個選び、深く使いこなすのが上達の秘訣。</p>
+      <p>最終章の「リスク管理」は、投資で最も大事な要素です。テクニカル分析より100倍重要。ぜひ何度も読み返してください。</p>
+      <p>健闘を祈ります。</p>
+    </div>
+    <div class="r2-pagenum">${pageNum}</div>
+  </div>`);
+
+  // 目次 前半
+  pageNum++;
+  pages.push(`<div class="r2-page">
+    <div class="r2-toc">
+      <h2>目 次 (1/2)</h2>
+      <div class="r2-toc-list">
+        ${CHART_REF2_CHAPTERS.slice(0, 10).map(c => `<div class="r2-toc-item"><span>${escapeHtml(c.num)}</span><span>${escapeHtml(c.title)}</span><span>${c.pages.length}p</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="r2-pagenum">${pageNum}</div>
+  </div>`);
+  // 目次 後半
+  pageNum++;
+  pages.push(`<div class="r2-page">
+    <div class="r2-toc">
+      <h2>目 次 (2/2)</h2>
+      <div class="r2-toc-list">
+        ${CHART_REF2_CHAPTERS.slice(10).map(c => `<div class="r2-toc-item"><span>${escapeHtml(c.num)}</span><span>${escapeHtml(c.title)}</span><span>${c.pages.length}p</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="r2-pagenum">${pageNum}</div>
+  </div>`);
+
+  // 各章のページ
+  for (const ch of CHART_REF2_CHAPTERS) {
+    ch.pages.forEach((p, idx) => {
+      pageNum++;
+      const header = idx === 0
+        ? `<div class="r2-chap-header"><div class="r2-chap-num">${escapeHtml(ch.num)}</div><div class="r2-chap-title">${escapeHtml(ch.title)}</div></div><div class="r2-lead">${escapeHtml(ch.lead)}</div>`
+        : `<div class="r2-chap-header" style="border-bottom-style:dashed"><div class="r2-chap-num">${escapeHtml(ch.num)} （続き）</div><div class="r2-chap-title" style="font-size:15px">${escapeHtml(ch.title)}</div></div>`;
+      const figs = (p.figs || []).map(f => `<div class="r2-fig">
+        <svg viewBox="0 0 240 140" preserveAspectRatio="xMidYMid meet">${f.svg}</svg>
+        <div class="r2-fig-name">${escapeHtml(f.name)}</div>
+        <div class="r2-fig-signal ${f.signal}">${escapeHtml(f.signalTxt)}</div>
+        <div class="r2-fig-caption">${escapeHtml(f.caption)}</div>
+      </div>`).join('');
+      pages.push(`<div class="r2-page">
+        ${header}
+        ${figs}
+        <div class="r2-body">${p.body}</div>
+        ${p.tip ? `<div class="r2-tip"><b>💡 コツ：</b> ${escapeHtml(p.tip)}</div>` : ''}
+        <div class="r2-pagenum">${pageNum}</div>
+      </div>`);
+    });
+  }
+
+  // 奥付
+  pageNum++;
+  pages.push(`<div class="r2-page">
+    <div class="r2-end">
+      <div class="r2-end-title">お わ り に</div>
+      <div class="r2-end-body">
+        本書の内容を全て頭に入れる必要はありません。<br><br>
+        大事なのは、実際のチャートを開いた時に「あ、これはあの本に書いてあった三角持ち合いだ」と気付けること。<br><br>
+        気付けた回数だけ、あなたの投資判断は洗練されていきます。<br><br>
+        テクニカル分析はあくまで「確率を上げる道具」。<br>
+        100%当たる魔法ではありません。<br><br>
+        <b>損切りを守り、生き残ること。</b><br>
+        これが最も大事な原則です。
+      </div>
+      <div class="r2-end-sig">─ ふたりの投資旅 応援 ─</div>
+    </div>
+    <div class="r2-pagenum">${pageNum}</div>
+  </div>`);
+
+  el.innerHTML = `
+    ${toolbar}
+    <div class="book-pages ref-chart-2" id="book-pages">
+      ${pages.join('')}
+    </div>
+  `;
+  el.classList.add('active');
+
+  requestAnimationFrame(() => {
+    const p = document.getElementById('book-pages');
+    if (p) p.scrollLeft = 0;
+  });
 }
 
 function renderMemoBook(person) {
