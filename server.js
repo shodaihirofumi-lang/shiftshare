@@ -1928,6 +1928,190 @@ app.get('/api/screener/run', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── ファンダメンタル スクリーナー ──
+// 本Vol3(ファンダメンタル分析)・Vol5(買っていい株の選び方) の条件で日経225を絞る
+let fundCache = { ts: 0, data: [] };
+const FUND_CACHE_TTL = 12 * 60 * 60 * 1000; // 12時間（ファンダは日々ほぼ変わらない）
+
+async function fetchOneFundamentals(sym) {
+  const modules = 'summaryDetail,defaultKeyStatistics,financialData';
+  const doFetch = async (force) => {
+    const { cookie, crumb } = await getYahooAuth(force);
+    const r = await fetch(
+      `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=${modules}&crumb=${encodeURIComponent(crumb)}`,
+      { headers: { 'User-Agent': 'Mozilla/5.0', 'Cookie': cookie }, signal: AbortSignal.timeout(8000) }
+    );
+    return r.json();
+  };
+  try {
+    let j = await doFetch(false);
+    if (j.finance?.error?.code === 'Unauthorized' || j.quoteSummary?.error?.code === 'Unauthorized') {
+      j = await doFetch(true);
+    }
+    const rs = j.quoteSummary?.result?.[0];
+    if (!rs) return null;
+    const sd = rs.summaryDetail || {}, ks = rs.defaultKeyStatistics || {}, fd = rs.financialData || {};
+    const raw = (obj, k) => obj?.[k]?.raw ?? null;
+    return {
+      price: raw(sd, 'regularMarketPrice') || raw(fd, 'currentPrice'),
+      marketCap: raw(sd, 'marketCap'),
+      trailingPE: raw(sd, 'trailingPE'),
+      forwardPE: raw(sd, 'forwardPE'),
+      priceToBook: raw(ks, 'priceToBook'),
+      pegRatio: raw(ks, 'pegRatio'),
+      enterpriseToEbitda: raw(ks, 'enterpriseToEbitda'),
+      priceToSalesTTM: raw(ks, 'priceToSalesTrailing12Months'),
+      dividendYield: raw(sd, 'dividendYield'),
+      payoutRatio: raw(sd, 'payoutRatio'),
+      roe: raw(fd, 'returnOnEquity'),
+      roa: raw(fd, 'returnOnAssets'),
+      debtToEquity: raw(fd, 'debtToEquity'),
+      currentRatio: raw(fd, 'currentRatio'),
+      revenueGrowth: raw(fd, 'revenueGrowth'),
+      earningsGrowth: raw(fd, 'earningsGrowth'),
+      operatingMargins: raw(fd, 'operatingMargins'),
+      profitMargins: raw(fd, 'profitMargins'),
+    };
+  } catch { return null; }
+}
+
+async function fetchN225Fundamentals() {
+  const now = Date.now();
+  if (fundCache.data.length && (now - fundCache.ts) < FUND_CACHE_TTL) return fundCache.data;
+  const BATCH = 8, out = [];
+  for (let i = 0; i < NIKKEI225.length; i += BATCH) {
+    await Promise.all(NIKKEI225.slice(i, i+BATCH).map(async code => {
+      const sym = `${code}.T`;
+      const f = await fetchOneFundamentals(sym);
+      if (!f || !f.price) return;
+      // 銘柄名も一緒に取得（chart API のメタから）
+      let name = code;
+      try {
+        const cr = await fetch(
+          `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`,
+          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) }
+        ).then(r => r.json());
+        name = cr?.chart?.result?.[0]?.meta?.shortName || cr?.chart?.result?.[0]?.meta?.longName || code;
+      } catch {}
+      out.push({ code, symbol: sym, name, ...f });
+    }));
+    if (i + BATCH < NIKKEI225.length) await new Promise(r => setTimeout(r, 250));
+  }
+  fundCache = { ts: now, data: out };
+  return out;
+}
+
+// パーセント表示ヘルパー
+const fmtPct = (v) => v != null ? (v * 100).toFixed(1) + '%' : '-';
+const fmtNum = (v, d=1) => v != null ? v.toFixed(d) : '-';
+const fmtMcap = (v) => v != null ? (v >= 1e12 ? (v/1e12).toFixed(1)+'兆' : v >= 1e8 ? (v/1e8).toFixed(0)+'億' : v.toLocaleString()) : '-';
+
+// 各コンボ: {label, book('picks'|'fund'), chapter, check(f)=>bool, detail(f)=>str}
+const FUND_COMBOS = {
+  low_per: {
+    label: '低PER 割安株', book: 'picks', chapter: '第19章',
+    check: f => f.trailingPE != null && f.trailingPE > 0 && f.trailingPE < 12,
+    detail: f => `PER ${fmtNum(f.trailingPE,1)} / PBR ${fmtNum(f.priceToBook,2)} / 配当${fmtPct(f.dividendYield)}`,
+  },
+  low_pbr: {
+    label: '低PBR 割安株', book: 'picks', chapter: '第20章',
+    check: f => f.priceToBook != null && f.priceToBook > 0 && f.priceToBook < 1.0,
+    detail: f => `PBR ${fmtNum(f.priceToBook,2)} / PER ${fmtNum(f.trailingPE,1)} / ROE${fmtPct(f.roe)}`,
+  },
+  deep_value: {
+    label: '超割安 (PER<10 & PBR<1)', book: 'picks', chapter: '第19章',
+    check: f => f.trailingPE != null && f.trailingPE > 0 && f.trailingPE < 10 && f.priceToBook != null && f.priceToBook < 1.0,
+    detail: f => `PER ${fmtNum(f.trailingPE,1)} / PBR ${fmtNum(f.priceToBook,2)}`,
+  },
+  high_div: {
+    label: '高配当 (3-6%)', book: 'picks', chapter: '第24章',
+    check: f => f.dividendYield != null && f.dividendYield >= 0.03 && f.dividendYield <= 0.06,
+    detail: f => `配当${fmtPct(f.dividendYield)} / PER ${fmtNum(f.trailingPE,1)} / 配当性向${fmtPct(f.payoutRatio)}`,
+  },
+  div_value: {
+    label: '配当バリュー (PER<15 & 配当>3%)', book: 'picks', chapter: '第19章',
+    check: f => f.trailingPE != null && f.trailingPE > 0 && f.trailingPE < 15 && f.dividendYield != null && f.dividendYield >= 0.03,
+    detail: f => `PER ${fmtNum(f.trailingPE,1)} / 配当${fmtPct(f.dividendYield)}`,
+  },
+  high_roe: {
+    label: '高ROE (>15%)', book: 'fund', chapter: '第8章',
+    check: f => f.roe != null && f.roe >= 0.15,
+    detail: f => `ROE ${fmtPct(f.roe)} / PBR ${fmtNum(f.priceToBook,2)} / 営業利益率${fmtPct(f.operatingMargins)}`,
+  },
+  quality_roe_low_debt: {
+    label: 'クオリティ (ROE>12% & D/E<50%)', book: 'picks', chapter: '第15章',
+    check: f => f.roe != null && f.roe >= 0.12 && f.debtToEquity != null && f.debtToEquity < 50,
+    detail: f => `ROE ${fmtPct(f.roe)} / D/E ${fmtNum(f.debtToEquity,0)}%`,
+  },
+  growth: {
+    label: '成長株 (売上+利益 二桁成長)', book: 'picks', chapter: '第14章',
+    check: f => f.revenueGrowth != null && f.revenueGrowth >= 0.10 && f.earningsGrowth != null && f.earningsGrowth >= 0.10,
+    detail: f => `売上成長${fmtPct(f.revenueGrowth)} / 利益成長${fmtPct(f.earningsGrowth)}`,
+  },
+  peg_growth_value: {
+    label: 'PEG割安 (成長株PER評価)', book: 'picks', chapter: '第18章',
+    check: f => f.pegRatio != null && f.pegRatio > 0 && f.pegRatio < 1.0 && f.earningsGrowth != null && f.earningsGrowth > 0.10,
+    detail: f => `PEG ${fmtNum(f.pegRatio,2)} / 利益成長${fmtPct(f.earningsGrowth)}`,
+  },
+  ev_ebitda_low: {
+    label: '低EV/EBITDA (8倍未満)', book: 'fund', chapter: '第24章',
+    check: f => f.enterpriseToEbitda != null && f.enterpriseToEbitda > 0 && f.enterpriseToEbitda < 8,
+    detail: f => `EV/EBITDA ${fmtNum(f.enterpriseToEbitda,1)}`,
+  },
+  low_psr: {
+    label: '低PSR (1倍未満)', book: 'fund', chapter: '第23章',
+    check: f => f.priceToSalesTTM != null && f.priceToSalesTTM > 0 && f.priceToSalesTTM < 1.0,
+    detail: f => `PSR ${fmtNum(f.priceToSalesTTM,2)}`,
+  },
+  safe_finance: {
+    label: '財務健全 (D/E<30% & 流動比率>1.5)', book: 'picks', chapter: '第10章',
+    check: f => f.debtToEquity != null && f.debtToEquity < 30 && f.currentRatio != null && f.currentRatio > 1.5,
+    detail: f => `D/E ${fmtNum(f.debtToEquity,0)}% / 流動比率 ${fmtNum(f.currentRatio,2)}`,
+  },
+  large_quality: {
+    label: '大型優良株 (時価総額>5000億+PER<20+配当>2%)', book: 'picks', chapter: '第5章',
+    check: f => f.marketCap != null && f.marketCap >= 5e11 && f.trailingPE != null && f.trailingPE > 0 && f.trailingPE < 20 && f.dividendYield != null && f.dividendYield >= 0.02,
+    detail: f => `時価総額 ${fmtMcap(f.marketCap)} / PER ${fmtNum(f.trailingPE,1)} / 配当${fmtPct(f.dividendYield)}`,
+  },
+  payout_sustainable: {
+    label: '配当持続可能 (性向30-70%)', book: 'picks', chapter: '第25章',
+    check: f => f.payoutRatio != null && f.payoutRatio >= 0.30 && f.payoutRatio <= 0.70 && f.dividendYield != null && f.dividendYield >= 0.02,
+    detail: f => `配当性向${fmtPct(f.payoutRatio)} / 利回り${fmtPct(f.dividendYield)}`,
+  },
+  high_margin: {
+    label: '高利益率 (営業20%超)', book: 'fund', chapter: '第7章',
+    check: f => f.operatingMargins != null && f.operatingMargins >= 0.20,
+    detail: f => `営業利益率${fmtPct(f.operatingMargins)} / ROE${fmtPct(f.roe)}`,
+  },
+};
+
+app.get('/api/fund-screener/combos', (_req, res) => {
+  const combos = Object.entries(FUND_COMBOS).map(([id, c]) => ({
+    id, label: c.label, book: c.book, chapter: c.chapter,
+  }));
+  res.json({ combos });
+});
+
+app.get('/api/fund-screener/run', async (req, res) => {
+  const id = String(req.query.id || '');
+  const combo = FUND_COMBOS[id];
+  if (!combo) return res.status(400).json({ error: '不明な組み合わせID' });
+  try {
+    const stocks = await fetchN225Fundamentals();
+    const hits = [];
+    for (const s of stocks) {
+      try {
+        if (combo.check(s)) hits.push({
+          code: s.code, symbol: s.symbol, name: s.name, price: s.price,
+          detail: combo.detail(s),
+        });
+      } catch {}
+    }
+    hits.sort((a, b) => a.code.localeCompare(b.code));
+    res.json({ id, label: combo.label, book: combo.book, chapter: combo.chapter, total: stocks.length, count: hits.length, hits: hits.slice(0, 50) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 async function runScreening(date) {
   const BATCH = 12, candidates = [];
   for (let i = 0; i < NIKKEI225.length; i += BATCH) {

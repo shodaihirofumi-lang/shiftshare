@@ -2216,10 +2216,19 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <!-- SCREENER -->
     <div id="tab-screener" class="screen">
       <div class="page-top">
-        <div><div class="page-title">スクリーナー</div><div class="page-sub">組み合わせ実戦編の全条件を日経225に適用</div></div>
+        <div><div class="page-title">チャート探し</div><div class="page-sub">組み合わせ実戦編（第4巻）の全条件を日経225に適用</div></div>
       </div>
       <div class="scr-intro">選んだ条件で日経225を絞り込みます。初回実行時は取得に30秒〜1分ほどかかります（データは30分間キャッシュ）。</div>
       <div id="scr-list"></div>
+    </div>
+
+    <!-- FUNDAMENTAL SCREENER -->
+    <div id="tab-fundscr" class="screen">
+      <div class="page-top">
+        <div><div class="page-title">銘柄選び</div><div class="page-sub">ファンダメンタル指標で日経225を絞り込み</div></div>
+      </div>
+      <div class="scr-intro">📕 ファンダメンタル分析（第3巻）と 📕 買っていい株の選び方（第5巻）に載っている条件を実行できます。初回はデータ取得に1〜2分。ファンダメンタルは12時間キャッシュ。</div>
+      <div id="fundscr-list"></div>
     </div>
 
     <!-- CALENDAR -->
@@ -2774,7 +2783,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     </button>
     <button class="nav-btn" id="nav-screener" onclick="showTab('screener')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
-      スクリーナー
+      チャート探
+    </button>
+    <button class="nav-btn" id="nav-fundscr" onclick="showTab('fundscr')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="4" width="3" height="14"/></svg>
+      銘柄選び
     </button>
     <button class="nav-btn" id="nav-memo" onclick="showTab('memo')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -4268,12 +4281,13 @@ enterApp();
 
 // ── TABS ──
 function showTab(name) {
-  ['dashboard','screener','calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
+  ['dashboard','screener','fundscr','calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
   if (name === 'dashboard') { renderDashboard(); window.scrollTo(0,0); return; }
   if (name === 'screener') { renderScreener(); window.scrollTo(0,0); return; }
+  if (name === 'fundscr') { renderFundScreener(); window.scrollTo(0,0); return; }
   if (name === 'calendar') { setTimeout(scrollToToday, 50); return; }
   if (name === 'holdings') { loadNikkei(); loadHoldings(); window.scrollTo(0,0); return; }
   if (name === 'gridcal') {
@@ -8004,6 +8018,97 @@ async function runScreenerCombo(id) {
     screenerResults[id] = { error: e.message };
   }
   renderScreener();
+}
+
+// ── ファンダメンタル・スクリーナー ──
+let fundScrCombos = null;
+let fundScrResults = {};
+
+// 第3巻(FUND_PARTS)・第5巻(PICK_PARTS) の章番号から本の第一頁を計算
+function getFundBookPage(chapterNum, book) {
+  const parts = book === 'fund' ? (typeof FUND_PARTS !== 'undefined' ? FUND_PARTS : null)
+               : book === 'picks' ? (typeof PICK_PARTS !== 'undefined' ? PICK_PARTS : null)
+               : null;
+  if (!parts) return null;
+  let page = 4; // cover + foreword + toc x2
+  for (const pt of parts) {
+    page++; // 部の扉
+    for (const ch of pt.chapters) {
+      if (ch.num === chapterNum) return page + 1;
+      page += ch.pages.length;
+    }
+  }
+  return null;
+}
+function getFundBookTitle(book) {
+  return book === 'fund' ? '📕 ファンダメンタル分析(第3巻)' : '📕 買っていい株の選び方(第5巻)';
+}
+
+async function renderFundScreener() {
+  const el = document.getElementById('fundscr-list');
+  if (!el) return;
+  if (!fundScrCombos) {
+    el.innerHTML = '<div class="scr-loading">読み込み中…</div>';
+    try {
+      const r = await fetch(API_BASE + '/api/fund-screener/combos');
+      const d = await r.json();
+      fundScrCombos = d.combos || [];
+    } catch (e) {
+      el.innerHTML = `<div class="scr-loading">取得失敗: ${escapeHtml(e.message)}</div>`;
+      return;
+    }
+  }
+  el.innerHTML = fundScrCombos.map(c => {
+    const page = getFundBookPage(c.chapter, c.book);
+    const bookTitle = getFundBookTitle(c.book);
+    const cache = fundScrResults[c.id];
+    let resultsHtml = '';
+    if (cache) {
+      if (cache.loading) {
+        resultsHtml = '<div class="scr-results"><div class="scr-loading">スクリーニング中…（初回は1〜2分）</div></div>';
+      } else if (cache.error) {
+        resultsHtml = `<div class="scr-results"><div class="scr-empty">エラー: ${escapeHtml(cache.error)}</div></div>`;
+      } else {
+        const hitsHtml = cache.hits.length
+          ? cache.hits.map(h => `<div class="scr-hit" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(h.name)}')">
+              <div class="scr-hit-top">
+                <span class="scr-hit-name">${escapeHtml(h.name)} <span class="scr-hit-code">${escapeHtml(h.code)}</span></span>
+                <span class="scr-hit-price">¥${Math.round(h.price).toLocaleString()}</span>
+              </div>
+              <div class="scr-hit-detail">${escapeHtml(h.detail || '')}</div>
+            </div>`).join('')
+          : '<div class="scr-empty">該当銘柄なし</div>';
+        resultsHtml = `<div class="scr-results">
+          <div class="scr-summary">日経225 <b>${cache.total}</b> 銘柄 → 条件一致 <b>${cache.count}</b> 銘柄</div>
+          <div class="scr-hit-list">${hitsHtml}</div>
+        </div>`;
+      }
+    }
+    return `<div class="scr-card ${cache ? 'expanded' : ''}">
+      <div class="scr-card-head" onclick="runFundScreenerCombo('${c.id}')">
+        <div class="scr-card-main">
+          <div class="scr-name">${escapeHtml(c.label)}</div>
+          <div class="scr-meta">${escapeHtml(c.chapter)}<span class="scr-book">${bookTitle}${page ? ` p.${page}` : ''}</span></div>
+        </div>
+        <button class="scr-run" ${cache && cache.loading ? 'disabled' : ''}>実行</button>
+      </div>
+      ${resultsHtml}
+    </div>`;
+  }).join('');
+}
+
+async function runFundScreenerCombo(id) {
+  fundScrResults[id] = { loading: true };
+  renderFundScreener();
+  try {
+    const r = await fetch(API_BASE + `/api/fund-screener/run?id=${encodeURIComponent(id)}`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'エラー');
+    fundScrResults[id] = { hits: d.hits || [], count: d.count || 0, total: d.total || 0, label: d.label, chapter: d.chapter, book: d.book, ts: Date.now() };
+  } catch (e) {
+    fundScrResults[id] = { error: e.message };
+  }
+  renderFundScreener();
 }
 
 // ── 参考書のしおり機能 ──
