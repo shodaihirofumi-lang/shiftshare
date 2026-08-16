@@ -1540,6 +1540,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .scr-name { font-size:15px; font-weight:800; color:var(--text); margin-bottom:3px; }
 .scr-meta { font-size:11px; color:var(--gold); letter-spacing:1px; font-weight:700; }
 .scr-meta .scr-book { color:var(--text-soft); font-weight:500; letter-spacing:0; margin-left:6px; }
+.scr-book-jump { display:inline-block; margin-left:8px; padding:2px 8px; border-radius:6px; border:1px solid var(--gold-border); background:var(--gold-bg); color:var(--gold); font-size:11px; font-weight:700; cursor:pointer; text-decoration:none; font-family:inherit; letter-spacing:.5px; }
+.scr-book-jump:hover, .scr-book-jump:active { opacity:.85; }
 .scr-run { padding:7px 14px; border-radius:9px; border:none; background:var(--grad); color:#fbf9f5; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:1px; white-space:nowrap; }
 .scr-run:active { opacity:.85; }
 .scr-run:disabled { opacity:.5; cursor:not-allowed; }
@@ -7939,6 +7941,20 @@ function closeDiaryBook() {
 let screenerCombos = null;
 let screenerResults = {}; // { comboId: {label, chapter, hits, count, total, ts} }
 
+// 指定した本を開いて特定ページへジャンプ
+function openBookAtPage(lang, pageNum) {
+  openDiaryBook('ref', lang);
+  // レンダー後にスクロール（少し待つ）
+  setTimeout(() => {
+    const pages = document.getElementById('book-pages');
+    if (!pages || !pageNum) return;
+    const isHoriz = /x/i.test(getComputedStyle(pages).scrollSnapType || '');
+    if (isHoriz && pages.clientWidth > 0) {
+      pages.scrollLeft = (pageNum - 1) * pages.clientWidth;
+    }
+  }, 150);
+}
+
 // 組み合わせ実戦編(Vol4)の章番号から、本の第一頁を計算
 function getComboBookPage(chapterNum) {
   // 本の構成: cover(1) + foreword(1) + TOC(2) + [各部: part title(1) + chapters]
@@ -7996,8 +8012,8 @@ async function renderScreener() {
     return `<div class="scr-card ${cache ? 'expanded' : ''}">
       <div class="scr-card-head" onclick="runScreenerCombo('${c.id}')">
         <div class="scr-card-main">
-          <div class="scr-name">${escapeHtml(c.label)}</div>
-          <div class="scr-meta">${escapeHtml(c.chapter)}${page ? ` <span class="scr-book">📖 本 p.${page}</span>` : ''}</div>
+          <div class="scr-name">${escapeHtml(c.label)}${page ? ` <button class="scr-book-jump" onclick="event.stopPropagation();openBookAtPage('ref-combo',${page})">📖 本を開く p.${page}</button>` : ''}</div>
+          <div class="scr-meta">組合せ実戦編 ${escapeHtml(c.chapter)}</div>
         </div>
         <button class="scr-run" ${cache && cache.loading ? 'disabled' : ''}>実行</button>
       </div>
@@ -8084,11 +8100,12 @@ async function renderFundScreener() {
         </div>`;
       }
     }
+    const bookLang = c.book === 'fund' ? 'ref-fund' : 'ref-picks';
     return `<div class="scr-card ${cache ? 'expanded' : ''}">
       <div class="scr-card-head" onclick="runFundScreenerCombo('${c.id}')">
         <div class="scr-card-main">
-          <div class="scr-name">${escapeHtml(c.label)}</div>
-          <div class="scr-meta">${escapeHtml(c.chapter)}<span class="scr-book">${bookTitle}${page ? ` p.${page}` : ''}</span></div>
+          <div class="scr-name">${escapeHtml(c.label)}${page ? ` <button class="scr-book-jump" onclick="event.stopPropagation();openBookAtPage('${bookLang}',${page})">📖 本を開く p.${page}</button>` : ''}</div>
+          <div class="scr-meta">${escapeHtml(bookTitle)} ${escapeHtml(c.chapter)}</div>
         </div>
         <button class="scr-run" ${cache && cache.loading ? 'disabled' : ''}>実行</button>
       </div>
