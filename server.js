@@ -1734,6 +1734,200 @@ app.post('/api/screening/refresh', (_req, res) => {
   res.json({ status: 'running', done: 0, total: NIKKEI225.length });
 });
 
+// ── 組み合わせスクリーナー（本の各章のシグナルを N225 に適用） ──
+// 銘柄別のインジケーターを 30分キャッシュ、同じデータを全コンボで再利用
+let comboCache = { ts: 0, data: [] };
+const COMBO_CACHE_TTL = 30 * 60 * 1000;
+
+async function fetchN225Indicators() {
+  const now = Date.now();
+  if (comboCache.data.length && (now - comboCache.ts) < COMBO_CACHE_TTL) return comboCache.data;
+  const BATCH = 15, out = [];
+  for (let i = 0; i < NIKKEI225.length; i += BATCH) {
+    await Promise.all(NIKKEI225.slice(i, i+BATCH).map(async code => {
+      try {
+        const sym = `${code}.T`;
+        const r = await fetch(
+          `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1y`,
+          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+        );
+        const d = await r.json();
+        const r0 = d?.chart?.result?.[0];
+        const q = r0?.indicators?.quote?.[0];
+        const closes = (q?.close || []).filter(v => v != null);
+        const volumes = (q?.volume || []).filter(v => v != null);
+        if (closes.length < 60) return;
+        const ind = computeComboIndicators(closes, volumes);
+        out.push({
+          code, symbol: sym,
+          name: r0.meta?.shortName || r0.meta?.longName || code,
+          price: closes[closes.length-1],
+          ...ind,
+        });
+      } catch {}
+    }));
+    if (i + BATCH < NIKKEI225.length) await new Promise(r => setTimeout(r, 200));
+  }
+  comboCache = { ts: now, data: out };
+  return out;
+}
+
+function computeComboIndicators(c, v) {
+  const p = c[c.length-1];
+  const ma = (n) => c.length < n ? null : c.slice(-n).reduce((a,b)=>a+b,0) / n;
+  const ma5 = ma(5), ma13 = ma(13), ma20 = ma(20), ma25 = ma(25), ma75 = ma(75), ma200 = ma(200);
+  const ma5Prev = c.length < 6 ? null : c.slice(-6, -1).reduce((a,b)=>a+b,0)/5;
+  const ma25Prev = c.length < 26 ? null : c.slice(-26, -1).reduce((a,b)=>a+b,0)/25;
+  const rsi = calcRSI(c, 14);
+  const rsiPrev = c.length >= 15 ? calcRSI(c.slice(0,-1), 14) : null;
+  const macd = calcMACD(c);
+  const bb = calcBB(c, 20);
+  const std20 = (() => { if (c.length < 20) return null; const s=c.slice(-20); const m=s.reduce((a,b)=>a+b,0)/20; return Math.sqrt(s.reduce((a,b)=>a+(b-m)**2,0)/20); })();
+  const bbUpper = ma20 && std20 ? ma20 + 2*std20 : null;
+  const bbLower = ma20 && std20 ? ma20 - 2*std20 : null;
+  const bbWidth = (bbUpper != null && ma20) ? (bbUpper - bbLower) / ma20 : null;
+  // 過去60日で最狭のバンド幅かどうか（Squeeze判定）
+  let bbWidthMinInPast60 = null;
+  if (c.length >= 80) {
+    let mn = Infinity;
+    for (let i = -60; i < 0; i++) {
+      const idx = c.length + i;
+      if (idx < 20) continue;
+      const s = c.slice(idx-19, idx+1);
+      const m = s.reduce((a,b)=>a+b,0) / 20;
+      const sd = Math.sqrt(s.reduce((a,b)=>a+(b-m)**2,0) / 20);
+      const w = (m + 2*sd - (m - 2*sd)) / m;
+      if (w < mn) mn = w;
+    }
+    bbWidthMinInPast60 = mn;
+  }
+  // 週足MA (5日足=1週間近似)
+  const weekly = [];
+  for (let i = c.length - 1; i >= 0; i -= 5) weekly.unshift(c[i]);
+  const wma13 = weekly.length >= 13 ? weekly.slice(-13).reduce((a,b)=>a+b,0)/13 : null;
+  const wma26 = weekly.length >= 26 ? weekly.slice(-26).reduce((a,b)=>a+b,0)/26 : null;
+  const wRsi = calcRSI(weekly, 14);
+  // Volume
+  const volMa20 = v.length >= 20 ? v.slice(-20).reduce((a,b)=>a+b,0)/20 : null;
+  const curVol = v[v.length-1];
+  const volRatio = volMa20 ? curVol / volMa20 : null;
+  // 20日高値・安値
+  const high20 = c.length >= 20 ? Math.max(...c.slice(-20)) : null;
+  const low20 = c.length >= 20 ? Math.min(...c.slice(-20)) : null;
+  const low40Prev = c.length >= 60 ? Math.min(...c.slice(-60, -20)) : null;
+  const low40PrevIdx = (() => {
+    if (c.length < 60) return -1;
+    const s = c.slice(-60, -20);
+    return s.indexOf(Math.min(...s));
+  })();
+  const rsi20LowAgo = c.length >= 34 ? calcRSI(c.slice(0, c.length - 20 + low40PrevIdx + 1), 14) : null;
+  return {
+    ma5, ma13, ma20, ma25, ma75, ma200, ma5Prev, ma25Prev, rsi, rsiPrev,
+    macd, bb, bbUpper, bbLower, bbWidth, bbWidthMinInPast60,
+    wma13, wma26, wRsi, volMa20, curVol, volRatio, high20, low20, low40Prev, rsi20LowAgo,
+  };
+}
+
+const COMBO_CHECKS = {
+  ma_rsi_push: {
+    label: 'MA+RSI 押し目買い', chapter: '第6章',
+    check: (i, p) => i.ma25 && i.wma13 && i.wma26 && i.wma13 > i.wma26 && p >= i.ma25 * 0.97 && p <= i.ma25 * 1.03 && i.rsi != null && i.rsi >= 30 && i.rsi <= 45,
+    detail: (i, p) => `週足MA13>MA26(上昇) / 株価がMA25近辺 / RSI=${i.rsi ? i.rsi.toFixed(0) : '-'}`,
+  },
+  ma_macd_bottom: {
+    label: 'MA+MACD 底値反発', chapter: '第7章',
+    check: (i, p) => i.ma25 && i.ma25Prev && i.ma25 > i.ma25Prev && i.macd && i.macd.prevMacd <= i.macd.prevSignal && i.macd.macd > i.macd.signal && i.macd.macd > 0,
+    detail: (i, p) => `MA25上向き転換 / MACDゴールデンクロス / MACD>0`,
+  },
+  perfect_order: {
+    label: 'パーフェクトオーダー', chapter: '第8章',
+    check: (i, p) => i.ma5 && i.ma25 && i.ma75 && p > i.ma5 && i.ma5 > i.ma25 && i.ma25 > i.ma75,
+    detail: (i, p) => `株価>MA5>MA25>MA75 (強い上昇トレンド)`,
+  },
+  volume_ma_break: {
+    label: 'MA25上抜け+出来高', chapter: '第12章',
+    check: (i, p) => i.ma25 && i.ma25Prev && p > i.ma25 && (i.ma25 - i.ma25Prev < i.ma25 * 0.005) === false && i.volRatio != null && i.volRatio >= 1.5,
+    detail: (i, p) => `MA25を上抜け / 出来高${i.volRatio ? i.volRatio.toFixed(1) : '-'}倍`,
+  },
+  golden_cross_vol: {
+    label: 'ゴールデンクロス+出来高', chapter: '第13章',
+    check: (i, p) => i.ma5 && i.ma25 && i.ma5Prev && i.ma25Prev && i.ma5Prev <= i.ma25Prev && i.ma5 > i.ma25 && i.volRatio != null && i.volRatio >= 1.5,
+    detail: (i, p) => `MA5がMA25を上抜け / 出来高${i.volRatio ? i.volRatio.toFixed(1) : '-'}倍`,
+  },
+  rsi_bb_reversal: {
+    label: 'RSI+ボリンジャー逆張り', chapter: '第14章',
+    check: (i, p) => i.bbLower != null && i.rsi != null && p <= i.bbLower && i.rsi <= 30,
+    detail: (i, p) => `株価≤-2σ / RSI=${i.rsi ? i.rsi.toFixed(0) : '-'}`,
+  },
+  rsi_divergence: {
+    label: 'RSIダイバージェンス(強気)', chapter: '第16章',
+    check: (i, p) => i.low40Prev != null && i.rsi20LowAgo != null && i.rsi != null && p <= i.low40Prev * 1.02 && i.rsi > i.rsi20LowAgo + 5,
+    detail: (i, p) => `株価は前回安値並/RSIは前回安値時より高い（下落勢い衰え）`,
+  },
+  pb_rsi_reversal: {
+    label: '%B+RSI 過熱底反発', chapter: '第18章',
+    check: (i, p) => i.bbLower != null && i.bbUpper != null && p < i.bbLower && i.rsi != null && i.rsi < 25,
+    detail: (i, p) => `株価が-2σ突破 / RSI=${i.rsi ? i.rsi.toFixed(0) : '-'}(極端)`,
+  },
+  bb_squeeze: {
+    label: 'ボリンジャー・スクイーズ', chapter: '第22章',
+    check: (i, p) => i.bbWidth != null && i.bbWidthMinInPast60 != null && Math.abs(i.bbWidth - i.bbWidthMinInPast60) < 0.005,
+    detail: (i, p) => `過去60日で最狭のバンド幅（大きな動きの前兆）`,
+  },
+  breakout_high20: {
+    label: '20日高値ブレイク+出来高', chapter: '第23章',
+    check: (i, p) => i.high20 != null && p >= i.high20 && i.volRatio != null && i.volRatio >= 1.5,
+    detail: (i, p) => `20日高値を突破 / 出来高${i.volRatio ? i.volRatio.toFixed(1) : '-'}倍`,
+  },
+  weekly_push: {
+    label: '週足 長期押し目', chapter: '第28章',
+    check: (i, p) => i.wma13 && i.wma26 && i.wma13 > i.wma26 && p >= i.wma13 * 0.97 && p <= i.wma13 * 1.03 && i.wRsi != null && i.wRsi >= 40 && i.wRsi <= 55,
+    detail: (i, p) => `週足MA13>MA26 / 週足MA13近辺 / 週足RSI=${i.wRsi ? i.wRsi.toFixed(0) : '-'}`,
+  },
+  ma200_uptrend: {
+    label: '200日MA上・押し目', chapter: '第30章',
+    check: (i, p) => i.ma200 && p > i.ma200 && p <= i.ma200 * 1.05 && i.rsi != null && i.rsi <= 50,
+    detail: (i, p) => `200日MAより上・近く / RSI=${i.rsi ? i.rsi.toFixed(0) : '-'}(押し目)`,
+  },
+  overheated_top: {
+    label: 'RSI過熱・利確目安', chapter: '第33章',
+    check: (i, p) => i.rsi != null && i.rsi >= 75 && i.bbUpper != null && p >= i.bbUpper,
+    detail: (i, p) => `RSI=${i.rsi ? i.rsi.toFixed(0) : '-'} / 株価が+2σ超（買われすぎ）`,
+  },
+  weekly_rsi_bottom: {
+    label: '週足RSI 底値反発', chapter: '第36章',
+    check: (i, p) => i.wRsi != null && i.wRsi <= 35,
+    detail: (i, p) => `週足RSI=${i.wRsi ? i.wRsi.toFixed(0) : '-'}(売られすぎ)`,
+  },
+};
+
+app.get('/api/screener/combos', (_req, res) => {
+  const combos = Object.entries(COMBO_CHECKS).map(([id, c]) => ({
+    id, label: c.label, chapter: c.chapter,
+  }));
+  res.json({ combos });
+});
+
+app.get('/api/screener/run', async (req, res) => {
+  const id = String(req.query.id || '');
+  const combo = COMBO_CHECKS[id];
+  if (!combo) return res.status(400).json({ error: '不明な組み合わせID' });
+  try {
+    const stocks = await fetchN225Indicators();
+    const hits = [];
+    for (const s of stocks) {
+      try {
+        if (combo.check(s, s.price)) hits.push({
+          code: s.code, symbol: s.symbol, name: s.name, price: s.price,
+          detail: combo.detail(s, s.price),
+        });
+      } catch {}
+    }
+    hits.sort((a, b) => a.code.localeCompare(b.code));
+    res.json({ id, label: combo.label, chapter: combo.chapter, total: stocks.length, count: hits.length, hits: hits.slice(0, 50) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 async function runScreening(date) {
   const BATCH = 12, candidates = [];
   for (let i = 0; i < NIKKEI225.length; i += BATCH) {

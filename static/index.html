@@ -1531,6 +1531,32 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .ref-bm-act.clear { color:#b5544f; }
 .ref-bm-act:hover, .ref-bm-act:active { opacity:.8; }
 
+/* ── スクリーナー ── */
+.scr-intro { font-size:13px; color:var(--text-soft); background:var(--card); border:1.5px solid var(--line-soft); border-radius:10px; padding:10px 14px; margin-bottom:14px; line-height:1.7; }
+.scr-card { background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:10px; box-shadow:var(--shadow-sm); }
+.scr-card.expanded { border-color:var(--gold); }
+.scr-card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; cursor:pointer; }
+.scr-card-main { flex:1; min-width:0; }
+.scr-name { font-size:15px; font-weight:800; color:var(--text); margin-bottom:3px; }
+.scr-meta { font-size:11px; color:var(--gold); letter-spacing:1px; font-weight:700; }
+.scr-meta .scr-book { color:var(--text-soft); font-weight:500; letter-spacing:0; margin-left:6px; }
+.scr-run { padding:7px 14px; border-radius:9px; border:none; background:var(--grad); color:#fbf9f5; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:1px; white-space:nowrap; }
+.scr-run:active { opacity:.85; }
+.scr-run:disabled { opacity:.5; cursor:not-allowed; }
+.scr-results { margin-top:12px; padding-top:12px; border-top:1px dashed var(--line-soft); }
+.scr-loading { font-size:13px; color:var(--text-soft); text-align:center; padding:20px 0; }
+.scr-summary { font-size:12px; color:var(--text-soft); margin-bottom:8px; letter-spacing:.5px; }
+.scr-summary b { color:var(--text); font-weight:700; font-size:14px; }
+.scr-hit-list { display:flex; flex-direction:column; gap:6px; max-height:400px; overflow-y:auto; }
+.scr-hit { padding:8px 11px; background:var(--bg); border-radius:8px; border-left:3px solid var(--gold); cursor:pointer; }
+.scr-hit:active { background:var(--card); }
+.scr-hit-top { display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
+.scr-hit-name { font-size:14px; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.scr-hit-code { font-size:11px; color:var(--text-soft); font-weight:500; }
+.scr-hit-price { font-size:13px; font-weight:700; color:var(--mine); }
+.scr-hit-detail { font-size:11px; color:var(--text-soft); margin-top:3px; line-height:1.5; }
+.scr-empty { font-size:13px; color:var(--text-soft); text-align:center; padding:14px 0; }
+
 /* 株ノートの背表紙 (バインダー風) */
 .book-spine.stock { border-radius:1px 3px 3px 1px; }
 .book-spine.stock.s1 { background:linear-gradient(90deg,#1f2e2a,#2f4640,#1f2e2a); }
@@ -2187,6 +2213,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div id="dash-content"></div>
     </div>
 
+    <!-- SCREENER -->
+    <div id="tab-screener" class="screen">
+      <div class="page-top">
+        <div><div class="page-title">スクリーナー</div><div class="page-sub">組み合わせ実戦編の全条件を日経225に適用</div></div>
+      </div>
+      <div class="scr-intro">選んだ条件で日経225を絞り込みます。初回実行時は取得に30秒〜1分ほどかかります（データは30分間キャッシュ）。</div>
+      <div id="scr-list"></div>
+    </div>
+
     <!-- CALENDAR -->
     <div id="tab-calendar" class="screen active">
       <div class="page-top">
@@ -2736,6 +2771,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <button class="nav-btn" id="nav-dashboard" onclick="showTab('dashboard')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
       ダッシュ
+    </button>
+    <button class="nav-btn" id="nav-screener" onclick="showTab('screener')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
+      スクリーナー
     </button>
     <button class="nav-btn" id="nav-memo" onclick="showTab('memo')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -4229,11 +4268,12 @@ enterApp();
 
 // ── TABS ──
 function showTab(name) {
-  ['dashboard','calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
+  ['dashboard','screener','calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
   if (name === 'dashboard') { renderDashboard(); window.scrollTo(0,0); return; }
+  if (name === 'screener') { renderScreener(); window.scrollTo(0,0); return; }
   if (name === 'calendar') { setTimeout(scrollToToday, 50); return; }
   if (name === 'holdings') { loadNikkei(); loadHoldings(); window.scrollTo(0,0); return; }
   if (name === 'gridcal') {
@@ -7879,6 +7919,91 @@ function closeDiaryBook() {
   currentBookYm = null;
   detachBookNavigation();
   applyAppZoom();
+}
+
+// ── スクリーナータブ ──
+let screenerCombos = null;
+let screenerResults = {}; // { comboId: {label, chapter, hits, count, total, ts} }
+
+// 組み合わせ実戦編(Vol4)の章番号から、本の第一頁を計算
+function getComboBookPage(chapterNum) {
+  // 本の構成: cover(1) + foreword(1) + TOC(2) + [各部: part title(1) + chapters]
+  if (typeof COMBO_PARTS === 'undefined') return null;
+  let page = 4; // 前付け合計
+  for (const pt of COMBO_PARTS) {
+    page++; // 部の扉
+    for (const ch of pt.chapters) {
+      if (ch.num === chapterNum) return page + 1;
+      page += ch.pages.length;
+    }
+  }
+  return null;
+}
+
+async function renderScreener() {
+  const el = document.getElementById('scr-list');
+  if (!el) return;
+  if (!screenerCombos) {
+    el.innerHTML = '<div class="scr-loading">読み込み中…</div>';
+    try {
+      const r = await fetch(API_BASE + '/api/screener/combos');
+      const d = await r.json();
+      screenerCombos = d.combos || [];
+    } catch (e) {
+      el.innerHTML = `<div class="scr-loading">取得失敗: ${escapeHtml(e.message)}</div>`;
+      return;
+    }
+  }
+  el.innerHTML = screenerCombos.map(c => {
+    const page = getComboBookPage(c.chapter);
+    const cache = screenerResults[c.id];
+    let resultsHtml = '';
+    if (cache) {
+      if (cache.loading) {
+        resultsHtml = '<div class="scr-results"><div class="scr-loading">スクリーニング中…（30秒〜1分）</div></div>';
+      } else if (cache.error) {
+        resultsHtml = `<div class="scr-results"><div class="scr-empty">エラー: ${escapeHtml(cache.error)}</div></div>`;
+      } else {
+        const hitsHtml = cache.hits.length
+          ? cache.hits.map(h => `<div class="scr-hit" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(h.name)}')">
+              <div class="scr-hit-top">
+                <span class="scr-hit-name">${escapeHtml(h.name)} <span class="scr-hit-code">${escapeHtml(h.code)}</span></span>
+                <span class="scr-hit-price">¥${Math.round(h.price).toLocaleString()}</span>
+              </div>
+              <div class="scr-hit-detail">${escapeHtml(h.detail || '')}</div>
+            </div>`).join('')
+          : '<div class="scr-empty">該当銘柄なし</div>';
+        resultsHtml = `<div class="scr-results">
+          <div class="scr-summary">日経225 <b>${cache.total}</b> 銘柄 → 条件一致 <b>${cache.count}</b> 銘柄</div>
+          <div class="scr-hit-list">${hitsHtml}</div>
+        </div>`;
+      }
+    }
+    return `<div class="scr-card ${cache ? 'expanded' : ''}">
+      <div class="scr-card-head" onclick="runScreenerCombo('${c.id}')">
+        <div class="scr-card-main">
+          <div class="scr-name">${escapeHtml(c.label)}</div>
+          <div class="scr-meta">${escapeHtml(c.chapter)}${page ? ` <span class="scr-book">📖 本 p.${page}</span>` : ''}</div>
+        </div>
+        <button class="scr-run" ${cache && cache.loading ? 'disabled' : ''}>実行</button>
+      </div>
+      ${resultsHtml}
+    </div>`;
+  }).join('');
+}
+
+async function runScreenerCombo(id) {
+  screenerResults[id] = { loading: true };
+  renderScreener();
+  try {
+    const r = await fetch(API_BASE + `/api/screener/run?id=${encodeURIComponent(id)}`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'エラー');
+    screenerResults[id] = { hits: d.hits || [], count: d.count || 0, total: d.total || 0, label: d.label, chapter: d.chapter, ts: Date.now() };
+  } catch (e) {
+    screenerResults[id] = { error: e.message };
+  }
+  renderScreener();
 }
 
 // ── 参考書のしおり機能 ──
