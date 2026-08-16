@@ -2044,8 +2044,8 @@ const FUND_COMBOS = {
     detail: f => `ROE ${fmtPct(f.roe)} / 有利子負債÷自己資本 ${fmtNum(f.debtToEquity,0)}%`,
   },
   growth: {
-    label: '成長株（売上と利益がともに二桁成長）', book: 'picks', chapter: '第14章',
-    check: f => f.revenueGrowth != null && f.revenueGrowth >= 0.10 && f.earningsGrowth != null && f.earningsGrowth >= 0.10,
+    label: '成長株（売上もしくは利益が二桁成長）', book: 'picks', chapter: '第14章',
+    check: f => (f.revenueGrowth != null && f.revenueGrowth >= 0.10) || (f.earningsGrowth != null && f.earningsGrowth >= 0.15),
     detail: f => `売上成長率 ${fmtPct(f.revenueGrowth)} / 利益成長率 ${fmtPct(f.earningsGrowth)}`,
   },
   peg_growth_value: {
@@ -2065,7 +2065,7 @@ const FUND_COMBOS = {
   },
   safe_finance: {
     label: '財務が健全（借金少・支払余力あり）', book: 'picks', chapter: '第10章',
-    check: f => f.debtToEquity != null && f.debtToEquity < 30 && f.currentRatio != null && f.currentRatio > 1.5,
+    check: f => f.debtToEquity != null && f.debtToEquity < 50 && f.currentRatio != null && f.currentRatio > 1.3,
     detail: f => `有利子負債÷自己資本 ${fmtNum(f.debtToEquity,0)}% / 流動比率 ${fmtNum(f.currentRatio,2)}`,
   },
   large_quality: {
@@ -2092,6 +2092,17 @@ app.get('/api/fund-screener/combos', (_req, res) => {
   res.json({ combos });
 });
 
+// データ取得状況の診断: 各指標がN225のうち何銘柄で取得できたかを返す
+app.get('/api/fund-screener/debug', async (_req, res) => {
+  try {
+    const stocks = await fetchN225Fundamentals();
+    const fields = ['trailingPE','priceToBook','dividendYield','payoutRatio','roe','roa','debtToEquity','currentRatio','revenueGrowth','earningsGrowth','pegRatio','enterpriseToEbitda','priceToSalesTTM','operatingMargins','profitMargins','marketCap'];
+    const fieldCounts = {};
+    for (const f of fields) fieldCounts[f] = { available: stocks.filter(s => s[f] != null).length, total: stocks.length };
+    res.json({ totalFetched: stocks.length, targetTotal: NIKKEI225.length, fields: fieldCounts });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/fund-screener/run', async (req, res) => {
   const id = String(req.query.id || '');
   const combo = FUND_COMBOS[id];
@@ -2108,7 +2119,11 @@ app.get('/api/fund-screener/run', async (req, res) => {
       } catch {}
     }
     hits.sort((a, b) => a.code.localeCompare(b.code));
-    res.json({ id, label: combo.label, book: combo.book, chapter: combo.chapter, total: stocks.length, count: hits.length, hits: hits.slice(0, 50) });
+    res.json({
+      id, label: combo.label, book: combo.book, chapter: combo.chapter,
+      total: stocks.length, fetchTotal: NIKKEI225.length,
+      count: hits.length, hits: hits.slice(0, 50),
+    });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

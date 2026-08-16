@@ -1540,6 +1540,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .scr-name { font-size:15px; font-weight:800; color:var(--text); margin-bottom:3px; }
 .scr-meta { font-size:11px; color:var(--gold); letter-spacing:1px; font-weight:700; }
 .scr-meta .scr-book { color:var(--text-soft); font-weight:500; letter-spacing:0; margin-left:6px; }
+.book-return-btn { display:none; position:fixed; top:calc(env(safe-area-inset-top, 0px) + 46px); left:50%; transform:translateX(-50%); z-index:240; padding:8px 18px; background:var(--gold); color:#fbf9f5; border:none; border-radius:20px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,.25); font-family:inherit; letter-spacing:1px; -webkit-tap-highlight-color:transparent; }
+.book-return-btn.active { display:block; }
+.book-return-btn:active { opacity:.85; }
 .scr-book-jump { display:inline-block; margin-left:8px; padding:2px 8px; border-radius:6px; border:1px solid var(--gold-border); background:var(--gold-bg); color:var(--gold); font-size:11px; font-weight:700; cursor:pointer; text-decoration:none; font-family:inherit; letter-spacing:.5px; }
 .scr-book-jump:hover, .scr-book-jump:active { opacity:.85; }
 .scr-run { padding:7px 14px; border-radius:9px; border:none; background:var(--grad); color:#fbf9f5; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:1px; white-space:nowrap; }
@@ -2837,6 +2840,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 <div id="diary-book-list"></div>
 <button class="book-nav-btn prev" id="book-nav-prev" onclick="bookNav(-1)" aria-label="前のページ">‹</button>
 <button class="book-nav-btn next" id="book-nav-next" onclick="bookNav(1)" aria-label="次のページ">›</button>
+<button class="book-return-btn" id="book-return-btn" onclick="returnFromBook()">← 戻る</button>
 <div class="ref-bm-popover" id="ref-bm-popover">
   <div class="ref-bm-title">🔖 しおり</div>
   <div class="ref-bm-row">
@@ -7932,6 +7936,9 @@ function closeDiaryBook() {
   if (bookList) bookList.classList.remove('active');
   const pop = document.getElementById('ref-bm-popover');
   if (pop) pop.classList.remove('active');
+  const rbtn = document.getElementById('book-return-btn');
+  if (rbtn) rbtn.classList.remove('active');
+  bookReturnTab = null;
   currentBookYm = null;
   detachBookNavigation();
   applyAppZoom();
@@ -7941,18 +7948,38 @@ function closeDiaryBook() {
 let screenerCombos = null;
 let screenerResults = {}; // { comboId: {label, chapter, hits, count, total, ts} }
 
+// 本を開いた元のタブ（戻るボタン用）
+let bookReturnTab = null;
+const TAB_LABEL = { screener: 'チャート探し', fundscr: '銘柄選び' };
+
 // 指定した本を開いて特定ページへジャンプ
-function openBookAtPage(lang, pageNum) {
+function openBookAtPage(lang, pageNum, returnTab) {
+  bookReturnTab = returnTab || null;
   openDiaryBook('ref', lang);
-  // レンダー後にスクロール（少し待つ）
   setTimeout(() => {
     const pages = document.getElementById('book-pages');
-    if (!pages || !pageNum) return;
-    const isHoriz = /x/i.test(getComputedStyle(pages).scrollSnapType || '');
-    if (isHoriz && pages.clientWidth > 0) {
-      pages.scrollLeft = (pageNum - 1) * pages.clientWidth;
+    if (pages && pageNum) {
+      const isHoriz = /x/i.test(getComputedStyle(pages).scrollSnapType || '');
+      if (isHoriz && pages.clientWidth > 0) {
+        pages.scrollLeft = (pageNum - 1) * pages.clientWidth;
+      }
+    }
+    // 戻るボタンを表示
+    if (bookReturnTab) {
+      const rbtn = document.getElementById('book-return-btn');
+      if (rbtn) {
+        rbtn.textContent = `← ${TAB_LABEL[bookReturnTab] || '前のタブ'}へ戻る`;
+        rbtn.classList.add('active');
+      }
     }
   }, 150);
+}
+
+function returnFromBook() {
+  const tab = bookReturnTab;
+  bookReturnTab = null;
+  closeDiaryBook();
+  if (tab) showTab(tab);
 }
 
 // 組み合わせ実戦編(Vol4)の章番号から、本の第一頁を計算
@@ -8012,7 +8039,7 @@ async function renderScreener() {
     return `<div class="scr-card ${cache ? 'expanded' : ''}">
       <div class="scr-card-head" onclick="runScreenerCombo('${c.id}')">
         <div class="scr-card-main">
-          <div class="scr-name">${escapeHtml(c.label)}${page ? ` <button class="scr-book-jump" onclick="event.stopPropagation();openBookAtPage('ref-combo',${page})">📖 本を開く p.${page}</button>` : ''}</div>
+          <div class="scr-name">${escapeHtml(c.label)}${page ? ` <button class="scr-book-jump" onclick="event.stopPropagation();openBookAtPage('ref-combo',${page},'screener')">📖 本を開く p.${page}</button>` : ''}</div>
           <div class="scr-meta">組合せ実戦編 ${escapeHtml(c.chapter)}</div>
         </div>
         <button class="scr-run" ${cache && cache.loading ? 'disabled' : ''}>実行</button>
@@ -8094,8 +8121,10 @@ async function renderFundScreener() {
               <div class="scr-hit-detail">${escapeHtml(h.detail || '')}</div>
             </div>`).join('')
           : '<div class="scr-empty">該当銘柄なし</div>';
+        const fetchNote = cache.fetchTotal && cache.total < cache.fetchTotal
+          ? ` <span style="color:var(--text-soft);font-size:11px">(日経225 ${cache.fetchTotal}銘柄中 ${cache.total}銘柄でファンダデータ取得)</span>` : '';
         resultsHtml = `<div class="scr-results">
-          <div class="scr-summary">日経225 <b>${cache.total}</b> 銘柄 → 条件一致 <b>${cache.count}</b> 銘柄</div>
+          <div class="scr-summary">対象 <b>${cache.total}</b> 銘柄 → 条件一致 <b>${cache.count}</b> 銘柄${fetchNote}</div>
           <div class="scr-hit-list">${hitsHtml}</div>
         </div>`;
       }
@@ -8104,7 +8133,7 @@ async function renderFundScreener() {
     return `<div class="scr-card ${cache ? 'expanded' : ''}">
       <div class="scr-card-head" onclick="runFundScreenerCombo('${c.id}')">
         <div class="scr-card-main">
-          <div class="scr-name">${escapeHtml(c.label)}${page ? ` <button class="scr-book-jump" onclick="event.stopPropagation();openBookAtPage('${bookLang}',${page})">📖 本を開く p.${page}</button>` : ''}</div>
+          <div class="scr-name">${escapeHtml(c.label)}${page ? ` <button class="scr-book-jump" onclick="event.stopPropagation();openBookAtPage('${bookLang}',${page},'fundscr')">📖 本を開く p.${page}</button>` : ''}</div>
           <div class="scr-meta">${escapeHtml(bookTitle)} ${escapeHtml(c.chapter)}</div>
         </div>
         <button class="scr-run" ${cache && cache.loading ? 'disabled' : ''}>実行</button>
@@ -8121,7 +8150,7 @@ async function runFundScreenerCombo(id) {
     const r = await fetch(API_BASE + `/api/fund-screener/run?id=${encodeURIComponent(id)}`);
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'エラー');
-    fundScrResults[id] = { hits: d.hits || [], count: d.count || 0, total: d.total || 0, label: d.label, chapter: d.chapter, book: d.book, ts: Date.now() };
+    fundScrResults[id] = { hits: d.hits || [], count: d.count || 0, total: d.total || 0, fetchTotal: d.fetchTotal, label: d.label, chapter: d.chapter, book: d.book, ts: Date.now() };
   } catch (e) {
     fundScrResults[id] = { error: e.message };
   }
