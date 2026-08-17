@@ -2071,6 +2071,40 @@ app.get('/api/candle-data', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.get('/api/debug-yahoo', async (req, res) => {
+  const sym = req.query.symbol || '7203.T';
+  const results = {};
+  try {
+    const { cookie, crumb } = await getYahooAuth(true);
+    results.auth = { cookie: cookie ? cookie.slice(0, 20) + '...' : null, crumb };
+    const r1 = await fetch(
+      `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=summaryDetail&crumb=${encodeURIComponent(crumb)}`,
+      { headers: { 'User-Agent': YH_UA, 'Cookie': cookie }, signal: AbortSignal.timeout(8000) }
+    );
+    results.q1_status = r1.status;
+    results.q1_body = await r1.json();
+  } catch (e) { results.q1_error = e.message; }
+  try {
+    const { cookie, crumb } = await getYahooAuth(false);
+    const r2 = await fetch(
+      `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=summaryDetail&crumb=${encodeURIComponent(crumb)}`,
+      { headers: { 'User-Agent': YH_UA, 'Cookie': cookie }, signal: AbortSignal.timeout(8000) }
+    );
+    results.q2_status = r2.status;
+    results.q2_body = await r2.json();
+  } catch (e) { results.q2_error = e.message; }
+  try {
+    const r3 = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`,
+      { headers: { 'User-Agent': YH_UA }, signal: AbortSignal.timeout(6000) }
+    );
+    const cj = await r3.json();
+    results.chart_meta = cj?.chart?.result?.[0]?.meta ? Object.keys(cj.chart.result[0].meta) : 'no meta';
+    results.chart_meta_vals = cj?.chart?.result?.[0]?.meta;
+  } catch (e) { results.chart_error = e.message; }
+  res.json(results);
+});
+
 // ── 銘柄詳細 (ファンダメンタル+テクニカル+レジサポ) ──
 app.get('/api/stock-detail', async (req, res) => {
   const code0 = String(req.query.symbol || '').trim();
@@ -2089,12 +2123,41 @@ app.get('/api/stock-detail', async (req, res) => {
 
     let sd = {}, ks = {}, fd = {}, ce = {};
     let quoteSummaryOk = false;
+    let quoteSummaryError = null;
     try {
       let j = await doFetch(false);
       if (j.finance?.error?.code === 'Unauthorized' || j.quoteSummary?.error?.code === 'Unauthorized') j = await doFetch(true);
       const rs = j.quoteSummary?.result?.[0];
       if (rs) { sd = rs.summaryDetail || {}; ks = rs.defaultKeyStatistics || {}; fd = rs.financialData || {}; ce = rs.calendarEvents || {}; quoteSummaryOk = true; }
-    } catch {}
+      else { quoteSummaryError = JSON.stringify(j.finance?.error || j.quoteSummary?.error || 'no result').slice(0, 200); }
+    } catch (qe) { quoteSummaryError = qe.message; }
+    if (!quoteSummaryOk) {
+      try {
+        const { cookie, crumb } = await getYahooAuth(true);
+        const r2 = await fetch(
+          `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=${modules}&crumb=${encodeURIComponent(crumb)}`,
+          { headers: { 'User-Agent': YH_UA, 'Cookie': cookie }, signal: AbortSignal.timeout(10000) }
+        );
+        const j2 = await r2.json();
+        const rs2 = j2.quoteSummary?.result?.[0];
+        if (rs2) { sd = rs2.summaryDetail || {}; ks = rs2.defaultKeyStatistics || {}; fd = rs2.financialData || {}; ce = rs2.calendarEvents || {}; quoteSummaryOk = true; quoteSummaryError = null; }
+      } catch {}
+    }
+    if (!quoteSummaryOk) {
+      try {
+        const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d&includePrePost=false`;
+        const cj = await fetch(chartUrl, { headers: { 'User-Agent': YH_UA }, signal: AbortSignal.timeout(6000) }).then(r => r.json());
+        const meta = cj?.chart?.result?.[0]?.meta;
+        if (meta) {
+          if (meta.trailingPE) sd.trailingPE = { raw: meta.trailingPE };
+          if (meta.priceToBook) ks.priceToBook = { raw: meta.priceToBook };
+          if (meta.marketCap) sd.marketCap = { raw: meta.marketCap };
+          if (meta.dividendYield) sd.dividendYield = { raw: meta.dividendYield };
+          if (meta.forwardPE) sd.forwardPE = { raw: meta.forwardPE };
+        }
+      } catch {}
+    }
+    console.log(`[stock-detail] ${sym} quoteSummary=${quoteSummaryOk}${quoteSummaryError ? ' err=' + quoteSummaryError : ''}`);
 
     // 価格情報（chart APIから必ず取得 — quoteSummaryが失敗しても動作する）
     let price = raw(sd, 'regularMarketPrice') || raw(fd, 'currentPrice');
@@ -2203,7 +2266,7 @@ app.get('/api/stock-detail', async (req, res) => {
       week52High, week52Low, volume, avgVolume,
       fundamental, technical, nextEarnings,
       currency: sd.currency || 'JPY',
-      quoteSummaryOk,
+      quoteSummaryOk, quoteSummaryError,
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
