@@ -2070,6 +2070,117 @@ app.get('/api/candle-data', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── 銘柄詳細 (ファンダメンタル+テクニカル+レジサポ) ──
+app.get('/api/stock-detail', async (req, res) => {
+  const code0 = String(req.query.symbol || '').trim();
+  const sym = /^\d{3,5}[A-Z]?$/.test(code0) ? code0 + '.T' : code0;
+  try {
+    const modules = 'summaryDetail,defaultKeyStatistics,financialData,calendarEvents,earningsTrend';
+    const doFetch = async (force) => {
+      const { cookie, crumb } = await getYahooAuth(force);
+      return fetch(
+        `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=${modules}&crumb=${encodeURIComponent(crumb)}`,
+        { headers: { 'User-Agent': 'Mozilla/5.0', 'Cookie': cookie }, signal: AbortSignal.timeout(10000) }
+      ).then(r => r.json());
+    };
+    let j = await doFetch(false);
+    if (j.finance?.error?.code === 'Unauthorized' || j.quoteSummary?.error?.code === 'Unauthorized') j = await doFetch(true);
+    const rs = j.quoteSummary?.result?.[0];
+    if (!rs) throw new Error('データなし');
+    const sd = rs.summaryDetail || {}, ks = rs.defaultKeyStatistics || {}, fd = rs.financialData || {};
+    const ce = rs.calendarEvents || {};
+    const raw = (obj, k) => obj?.[k]?.raw ?? null;
+    const fmt = (obj, k) => obj?.[k]?.fmt ?? null;
+
+    // 価格情報
+    const price = raw(sd, 'regularMarketPrice') || raw(fd, 'currentPrice');
+    const prevClose = raw(sd, 'regularMarketPreviousClose');
+    const open = raw(sd, 'regularMarketOpen') || raw(sd, 'open');
+    const dayHigh = raw(sd, 'regularMarketDayHigh') || raw(sd, 'dayHigh');
+    const dayLow = raw(sd, 'regularMarketDayLow') || raw(sd, 'dayLow');
+    const week52High = raw(sd, 'fiftyTwoWeekHigh');
+    const week52Low = raw(sd, 'fiftyTwoWeekLow');
+    const volume = raw(sd, 'regularMarketVolume') || raw(sd, 'volume');
+    const avgVolume = raw(sd, 'averageDailyVolume10Day');
+
+    // ファンダメンタル
+    const fundamental = {
+      trailingPE: raw(sd, 'trailingPE'), forwardPE: raw(sd, 'forwardPE'),
+      priceToBook: raw(ks, 'priceToBook'), pegRatio: raw(ks, 'pegRatio'),
+      marketCap: raw(sd, 'marketCap'),
+      enterpriseToEbitda: raw(ks, 'enterpriseToEbitda'),
+      dividendYield: raw(sd, 'dividendYield'), payoutRatio: raw(sd, 'payoutRatio'),
+      roe: raw(fd, 'returnOnEquity'), roa: raw(fd, 'returnOnAssets'),
+      operatingMargins: raw(fd, 'operatingMargins'), profitMargins: raw(fd, 'profitMargins'),
+      revenueGrowth: raw(fd, 'revenueGrowth'), earningsGrowth: raw(fd, 'earningsGrowth'),
+      debtToEquity: raw(fd, 'debtToEquity'), currentRatio: raw(fd, 'currentRatio'),
+      targetMeanPrice: raw(fd, 'targetMeanPrice'),
+      recommendationKey: fd.recommendationKey || null,
+      numberOfAnalystOpinions: raw(fd, 'numberOfAnalystOpinions'),
+    };
+
+    // 決算日
+    const earningsDates = ce.earnings?.earningsDate;
+    const nextEarnings = earningsDates?.length ? earningsDates[0].fmt : null;
+
+    // テクニカル (日足1年分からMA・RSI・レジサポ算出)
+    let technical = null;
+    try {
+      const cj = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1y`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+      ).then(r => r.json());
+      const cr = cj?.chart?.result?.[0];
+      if (cr) {
+        const closes = cr.indicators?.quote?.[0]?.close?.filter(v => v != null) || [];
+        const highs = cr.indicators?.quote?.[0]?.high?.filter(v => v != null) || [];
+        const lows = cr.indicators?.quote?.[0]?.low?.filter(v => v != null) || [];
+        const n = closes.length;
+        const sma = (arr, p) => arr.length >= p ? arr.slice(-p).reduce((s,v) => s+v, 0) / p : null;
+        const ma5 = sma(closes, 5), ma25 = sma(closes, 25), ma75 = sma(closes, 75), ma200 = sma(closes, 200);
+        // RSI (14)
+        let gains = 0, losses = 0;
+        const rsiPeriod = 14;
+        for (let i = Math.max(1, n - rsiPeriod); i < n; i++) {
+          const d = closes[i] - closes[i-1];
+          if (d > 0) gains += d; else losses -= d;
+        }
+        const rsi = (gains + losses) > 0 ? Math.round(gains / (gains + losses) * 100) : null;
+        // レジスタンス / サポート (直近60日の高値安値 + ピボット)
+        const recent = closes.slice(-60);
+        const recentHighs = highs.slice(-60);
+        const recentLows = lows.slice(-60);
+        const support1 = recentLows.length ? Math.min(...recentLows) : null;
+        const resistance1 = recentHighs.length ? Math.max(...recentHighs) : null;
+        const lastC = closes[n - 1], lastH = highs[highs.length - 1] || lastC, lastL = lows[lows.length - 1] || lastC;
+        const pivot = (lastH + lastL + lastC) / 3;
+        const s1 = 2 * pivot - lastH;
+        const r1 = 2 * pivot - lastL;
+        // ボリンジャーバンド (20)
+        const bb20 = closes.slice(-20);
+        const bbMean = bb20.reduce((s,v) => s+v, 0) / bb20.length;
+        const bbStd = Math.sqrt(bb20.reduce((s,v) => s + (v-bbMean)**2, 0) / bb20.length);
+        technical = {
+          ma5: ma5 ? Math.round(ma5) : null, ma25: ma25 ? Math.round(ma25) : null,
+          ma75: ma75 ? Math.round(ma75) : null, ma200: ma200 ? Math.round(ma200) : null,
+          rsi,
+          bbUpper: Math.round(bbMean + 2*bbStd), bbMiddle: Math.round(bbMean), bbLower: Math.round(bbMean - 2*bbStd),
+          pivot: Math.round(pivot), pivotS1: Math.round(s1), pivotR1: Math.round(r1),
+          support60d: support1 ? Math.round(support1) : null,
+          resistance60d: resistance1 ? Math.round(resistance1) : null,
+        };
+      }
+    } catch {}
+
+    res.json({
+      symbol: sym, price, prevClose, open, dayHigh, dayLow,
+      week52High, week52Low, volume, avgVolume,
+      fundamental, technical, nextEarnings,
+      currency: sd.currency || 'JPY',
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/screener/run', async (req, res) => {
   const id = String(req.query.id || '');
   const universe = String(req.query.universe || 'nikkei225');

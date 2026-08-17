@@ -1810,13 +1810,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .wl-section { margin-bottom:18px; }
 .wl-section-head { font-size:13px; font-weight:800; color:var(--text); margin-bottom:8px; letter-spacing:1px; display:flex; justify-content:space-between; align-items:baseline; }
 .wl-section-head .wl-count { font-size:11px; color:var(--text-soft); font-weight:500; }
-.wl-item { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:11px 13px; background:var(--card); border:1.5px solid var(--line); border-radius:10px; margin-bottom:6px; }
+.wl-item { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:14px 15px; background:var(--card); border:1.5px solid var(--line); border-radius:12px; margin-bottom:8px; }
 .wl-item-main { flex:1; min-width:0; cursor:pointer; }
-.wl-item-name { font-size:14px; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.wl-item-sub { font-size:11px; color:var(--text-soft); margin-top:2px; }
-.wl-item-sub .wl-price { color:var(--mine); font-weight:700; margin-right:8px; }
-.wl-item-sub .wl-chg.up { color:#c0392b; font-weight:700; }
-.wl-item-sub .wl-chg.down { color:#2e6da4; font-weight:700; }
+.wl-item-name { font-size:16px; font-weight:800; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wl-item-code { font-size:13px; color:var(--text-soft); font-weight:600; margin-left:6px; }
+.wl-item-price-row { display:flex; align-items:baseline; gap:10px; margin-top:4px; flex-wrap:wrap; }
+.wl-item-price { font-size:22px; font-weight:800; color:var(--text); letter-spacing:.5px; }
+.wl-item-chg { font-size:15px; font-weight:700; }
+.wl-item-chg.up { color:#c0392b; }
+.wl-item-chg.down { color:#2e6da4; }
 .wl-item-del { padding:6px 12px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); color:#b5544f; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }
 .wl-empty { text-align:center; padding:20px; color:var(--text-soft); font-size:13px; }
 .wl-item.has-signal { border-color:var(--gold); background:linear-gradient(90deg, var(--gold-bg), var(--card)); box-shadow:0 2px 8px rgba(180,140,80,.15); }
@@ -1825,7 +1827,27 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .wl-sig-badge { font-size:10px; padding:2px 7px; border-radius:8px; background:var(--gold-bg); color:#7a4a0a; border:1px solid var(--gold-border); font-weight:700; letter-spacing:.5px; }
 
 /* ── ロウソク足モーダル ── */
-.candle-modal { max-height:92vh; }
+.candle-modal { max-height:92vh; overflow-y:auto; }
+.candle-detail-tabs { display:flex; gap:0; margin:12px 0 8px; border-bottom:2px solid var(--line); }
+.candle-dtab { flex:1; padding:9px 4px; font-size:13px; font-weight:700; color:var(--text-soft); background:none; border:none; cursor:pointer; font-family:inherit; border-bottom:2.5px solid transparent; margin-bottom:-2px; letter-spacing:.5px; }
+.candle-dtab.active { color:var(--gold); border-bottom-color:var(--gold); }
+.candle-detail-body { min-height:60px; }
+.cd-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; }
+.cd-row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px dashed var(--line-soft); }
+.cd-row:last-child { border-bottom:none; }
+.cd-lbl { font-size:13px; color:var(--text-soft); font-weight:600; }
+.cd-val { font-size:14px; font-weight:700; color:var(--text); text-align:right; }
+.cd-val.up { color:#c0392b; } .cd-val.down { color:#2e6da4; } .cd-val.gold { color:var(--gold); }
+.cd-section { font-size:12px; font-weight:700; color:var(--gold); letter-spacing:2px; margin:10px 0 4px; padding-left:2px; }
+.cd-bar { height:8px; border-radius:4px; background:var(--bg); margin:4px 0 8px; position:relative; overflow:hidden; }
+.cd-bar-fill { height:100%; border-radius:4px; }
+.cd-sim-row { display:flex; align-items:center; gap:8px; margin:8px 0; }
+.cd-sim-row label { font-size:13px; font-weight:600; color:var(--text-soft); white-space:nowrap; }
+.cd-sim-input { flex:1; padding:8px 10px; border:1.5px solid var(--line); border-radius:8px; font-size:16px; font-weight:700; background:var(--bg); color:var(--text); font-family:inherit; }
+.cd-sim-result { background:var(--bg); border-radius:10px; padding:12px 14px; margin-top:8px; }
+.cd-sim-big { font-size:22px; font-weight:800; }
+.cd-sim-sub { font-size:13px; color:var(--text-soft); margin-top:4px; }
+.cd-loading { text-align:center; padding:20px; color:var(--text-soft); font-size:13px; }
 .candle-interval { display:flex; gap:6px; margin-bottom:12px; justify-content:center; }
 .candle-int-btn { flex:1; padding:8px 12px; border:1.5px solid var(--line); background:var(--card); border-radius:8px; font-size:13px; font-weight:700; color:var(--text-soft); cursor:pointer; font-family:inherit; }
 .candle-int-btn.active { background:var(--mine-bg); border-color:var(--mine); color:var(--mine); }
@@ -3296,10 +3318,18 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <button class="candle-int-btn" data-int="1wk" onclick="setCandleInterval('1wk')">週足</button>
       <button class="candle-int-btn" data-int="1mo" onclick="setCandleInterval('1mo')">月足</button>
     </div>
-    <div class="candle-chart-wrap" id="candle-chart">
+    <div class="candle-chart-wrap" id="candle-chart" style="touch-action:none">
       <div class="scr-loading">読み込み中…</div>
     </div>
     <div id="candle-signals-wrap"></div>
+    <div class="candle-detail-tabs">
+      <button class="candle-dtab active" onclick="setCandleTab('fundamental')">財務</button>
+      <button class="candle-dtab" onclick="setCandleTab('technical')">テクニカル</button>
+      <button class="candle-dtab" onclick="setCandleTab('simulate')">もし買ったら</button>
+    </div>
+    <div class="candle-detail-body" id="candle-detail-body">
+      <div class="cd-loading">タブを選択してください</div>
+    </div>
     <div class="modal-actions">
       <button class="btn-save" onclick="closeCandle()">閉じる</button>
     </div>
@@ -8499,22 +8529,59 @@ function updateUniverseCounts() {
 
 // ── ロウソク足チャートモーダル ──
 let candleSymbol = null, candleName = '', candleInterval = '1d';
+let candleBars = null, candleZoom = 1, candleDetailCache = null, candleActiveTab = 'fundamental';
 function openCandleChart(ticker, name) {
   candleSymbol = ticker;
   candleName = name || ticker;
   candleInterval = '1d';
+  candleZoom = 1;
+  candleBars = null;
+  candleDetailCache = null;
+  candleActiveTab = 'fundamental';
   document.getElementById('candle-title').textContent = name;
   document.getElementById('candle-sub').textContent = ticker;
   document.querySelectorAll('.candle-int-btn').forEach(b => b.classList.toggle('active', b.dataset.int === '1d'));
+  document.querySelectorAll('.candle-dtab').forEach(b => b.classList.toggle('active', b.textContent === '財務'));
+  document.getElementById('candle-detail-body').innerHTML = '<div class="cd-loading">読み込み中…</div>';
   document.getElementById('candle-modal').classList.add('active');
   loadCandleChart();
   loadCandleSignals();
+  loadCandleDetail();
+  setupCandlePinch();
 }
 function closeCandle() { document.getElementById('candle-modal').classList.remove('active'); }
 function setCandleInterval(int) {
   candleInterval = int;
+  candleZoom = 1;
   document.querySelectorAll('.candle-int-btn').forEach(b => b.classList.toggle('active', b.dataset.int === int));
   loadCandleChart();
+}
+function setCandleTab(tab) {
+  candleActiveTab = tab;
+  document.querySelectorAll('.candle-dtab').forEach(b => {
+    const map = { '財務':'fundamental', 'テクニカル':'technical', 'もし買ったら':'simulate' };
+    b.classList.toggle('active', map[b.textContent] === tab);
+  });
+  renderCandleDetail();
+}
+// ピンチズーム
+function setupCandlePinch() {
+  const el = document.getElementById('candle-chart');
+  let startDist = 0, startZoom = 1;
+  el.ontouchstart = e => {
+    if (e.touches.length === 2) {
+      startDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      startZoom = candleZoom;
+    }
+  };
+  el.ontouchmove = e => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      candleZoom = Math.max(0.5, Math.min(4, startZoom * (dist / startDist)));
+      if (candleBars) renderCandleFromBars();
+    }
+  };
 }
 async function loadCandleChart() {
   const el = document.getElementById('candle-chart');
@@ -8523,15 +8590,182 @@ async function loadCandleChart() {
     const r = await fetch(API_BASE + `/api/candle-data?symbol=${encodeURIComponent(candleSymbol)}&interval=${candleInterval}`);
     const d = await r.json();
     if (!r.ok || !d.bars?.length) throw new Error(d.error || 'データなし');
-    el.innerHTML = renderCandleSvg(d.bars);
+    candleBars = d.bars;
+    renderCandleFromBars();
   } catch (e) {
     el.innerHTML = `<div class="scr-loading">取得失敗: ${escapeHtml(e.message)}</div>`;
   }
 }
+function renderCandleFromBars() {
+  const el = document.getElementById('candle-chart');
+  if (!candleBars) return;
+  el.innerHTML = renderCandleSvg(candleBars);
+}
+async function loadCandleDetail() {
+  try {
+    const r = await fetch(API_BASE + `/api/stock-detail?symbol=${encodeURIComponent(candleSymbol)}`);
+    candleDetailCache = await r.json();
+    renderCandleDetail();
+  } catch {
+    document.getElementById('candle-detail-body').innerHTML = '<div class="cd-loading">詳細取得失敗</div>';
+  }
+}
+function renderCandleDetail() {
+  const el = document.getElementById('candle-detail-body');
+  const d = candleDetailCache;
+  if (!d) { el.innerHTML = '<div class="cd-loading">読み込み中…</div>'; return; }
+  if (candleActiveTab === 'fundamental') renderFundDetail(el, d);
+  else if (candleActiveTab === 'technical') renderTechDetail(el, d);
+  else if (candleActiveTab === 'simulate') renderSimDetail(el, d);
+}
+function _fmtNum(v, dec) { return v != null ? v.toLocaleString(undefined, { minimumFractionDigits: dec||0, maximumFractionDigits: dec||0 }) : '—'; }
+function _fmtPct(v) { return v != null ? (v * 100).toFixed(1) + '%' : '—'; }
+function _fmtMcap(v) { if (v == null) return '—'; if (v >= 1e12) return (v/1e12).toFixed(1) + '兆'; if (v >= 1e8) return (v/1e8).toFixed(0) + '億'; return Math.round(v).toLocaleString(); }
+function _cdRow(lbl, val, cls) { return `<div class="cd-row"><span class="cd-lbl">${lbl}</span><span class="cd-val ${cls||''}">${val}</span></div>`; }
+function renderFundDetail(el, d) {
+  const f = d.fundamental || {};
+  const price = d.price;
+  const prev = d.prevClose;
+  const chg = price && prev ? price - prev : null;
+  const chgPct = prev ? (chg / prev * 100) : null;
+  const chgUp = chg != null ? chg >= 0 : null;
+  const chgCls = chgUp == null ? '' : chgUp ? 'up' : 'down';
+  const chgSign = chgUp ? '+' : '';
+  el.innerHTML = `
+    <div class="cd-section">価格情報</div>
+    ${_cdRow('現在値', price ? '¥' + Math.round(price).toLocaleString() : '—')}
+    ${_cdRow('前日比', chg != null ? `${chgSign}${Math.round(chg).toLocaleString()} (${chgSign}${chgPct.toFixed(2)}%)` : '—', chgCls)}
+    ${_cdRow('始値', d.open ? '¥' + Math.round(d.open).toLocaleString() : '—')}
+    ${_cdRow('高値 / 安値', (d.dayHigh ? '¥' + Math.round(d.dayHigh).toLocaleString() : '—') + ' / ' + (d.dayLow ? '¥' + Math.round(d.dayLow).toLocaleString() : '—'))}
+    ${_cdRow('52週 高値/安値', (d.week52High ? '¥' + Math.round(d.week52High).toLocaleString() : '—') + ' / ' + (d.week52Low ? '¥' + Math.round(d.week52Low).toLocaleString() : '—'))}
+    ${_cdRow('出来高', d.volume ? Math.round(d.volume).toLocaleString() + '株' : '—')}
+    <div class="cd-section">バリュエーション</div>
+    ${_cdRow('PER (実績)', f.trailingPE != null ? _fmtNum(f.trailingPE, 1) + '倍' : '—')}
+    ${_cdRow('PER (予想)', f.forwardPE != null ? _fmtNum(f.forwardPE, 1) + '倍' : '—')}
+    ${_cdRow('PBR', f.priceToBook != null ? _fmtNum(f.priceToBook, 2) + '倍' : '—')}
+    ${_cdRow('PEG', f.pegRatio != null ? _fmtNum(f.pegRatio, 2) : '—')}
+    ${_cdRow('EV/EBITDA', f.enterpriseToEbitda != null ? _fmtNum(f.enterpriseToEbitda, 1) + '倍' : '—')}
+    ${_cdRow('時価総額', _fmtMcap(f.marketCap) + '円')}
+    <div class="cd-section">配当</div>
+    ${_cdRow('配当利回り', _fmtPct(f.dividendYield))}
+    ${_cdRow('配当性向', _fmtPct(f.payoutRatio))}
+    <div class="cd-section">収益性</div>
+    ${_cdRow('ROE', _fmtPct(f.roe))}
+    ${_cdRow('ROA', _fmtPct(f.roa))}
+    ${_cdRow('営業利益率', _fmtPct(f.operatingMargins))}
+    ${_cdRow('純利益率', _fmtPct(f.profitMargins))}
+    <div class="cd-section">成長性</div>
+    ${_cdRow('売上成長率', _fmtPct(f.revenueGrowth))}
+    ${_cdRow('利益成長率', _fmtPct(f.earningsGrowth))}
+    <div class="cd-section">財務健全性</div>
+    ${_cdRow('自己資本比率(D/E)', f.debtToEquity != null ? _fmtNum(f.debtToEquity, 1) : '—')}
+    ${_cdRow('流動比率', f.currentRatio != null ? _fmtNum(f.currentRatio, 2) + '倍' : '—')}
+    <div class="cd-section">決算・アナリスト</div>
+    ${_cdRow('次回決算日', d.nextEarnings || '—')}
+    ${_cdRow('目標株価', f.targetMeanPrice ? '¥' + Math.round(f.targetMeanPrice).toLocaleString() : '—')}
+    ${_cdRow('アナリスト評価', f.recommendationKey ? f.recommendationKey.toUpperCase() : '—')}
+    ${_cdRow('カバー人数', f.numberOfAnalystOpinions != null ? f.numberOfAnalystOpinions + '人' : '—')}
+  `;
+}
+function renderTechDetail(el, d) {
+  const t = d.technical;
+  if (!t) { el.innerHTML = '<div class="cd-loading">テクニカルデータなし</div>'; return; }
+  const price = d.price || 0;
+  const maRow = (label, val) => {
+    if (val == null) return _cdRow(label, '—');
+    const diff = price - val;
+    const pct = val ? (diff / val * 100) : 0;
+    const cls = diff >= 0 ? 'up' : 'down';
+    const sign = diff >= 0 ? '+' : '';
+    return _cdRow(label, `¥${val.toLocaleString()} <span style="font-size:12px">(${sign}${pct.toFixed(1)}%)</span>`, cls);
+  };
+  const rsiColor = t.rsi != null ? (t.rsi >= 70 ? 'up' : t.rsi <= 30 ? 'down' : 'gold') : '';
+  const rsiLabel = t.rsi != null ? (t.rsi >= 70 ? '買われすぎ' : t.rsi <= 30 ? '売られすぎ' : '中立') : '';
+  el.innerHTML = `
+    <div class="cd-section">移動平均線</div>
+    ${maRow('MA5 (短期)', t.ma5)}
+    ${maRow('MA25 (中期)', t.ma25)}
+    ${maRow('MA75 (長期)', t.ma75)}
+    ${maRow('MA200 (超長期)', t.ma200)}
+    <div class="cd-section">オシレーター</div>
+    ${_cdRow('RSI (14)', t.rsi != null ? t.rsi + ' — ' + rsiLabel : '—', rsiColor)}
+    ${t.rsi != null ? `<div class="cd-bar"><div class="cd-bar-fill" style="width:${t.rsi}%;background:${t.rsi>=70?'#c0392b':t.rsi<=30?'#2e6da4':'var(--gold)'}"></div></div>` : ''}
+    <div class="cd-section">ボリンジャーバンド (20,2σ)</div>
+    ${_cdRow('上バンド', t.bbUpper ? '¥' + t.bbUpper.toLocaleString() : '—')}
+    ${_cdRow('中央', t.bbMiddle ? '¥' + t.bbMiddle.toLocaleString() : '—')}
+    ${_cdRow('下バンド', t.bbLower ? '¥' + t.bbLower.toLocaleString() : '—')}
+    <div class="cd-section">レジスタンス / サポート</div>
+    ${_cdRow('60日 レジスタンス', t.resistance60d ? '¥' + t.resistance60d.toLocaleString() : '—', 'up')}
+    ${_cdRow('ピボット R1', t.pivotR1 ? '¥' + t.pivotR1.toLocaleString() : '—')}
+    ${_cdRow('ピボット', t.pivot ? '¥' + t.pivot.toLocaleString() : '—', 'gold')}
+    ${_cdRow('ピボット S1', t.pivotS1 ? '¥' + t.pivotS1.toLocaleString() : '—')}
+    ${_cdRow('60日 サポート', t.support60d ? '¥' + t.support60d.toLocaleString() : '—', 'down')}
+  `;
+}
+function renderSimDetail(el, d) {
+  const price = d.price || 0;
+  el.innerHTML = `
+    <div class="cd-section">もしここで買ったら</div>
+    <div class="cd-sim-row">
+      <label>買い株数</label>
+      <input class="cd-sim-input" id="sim-shares" type="number" inputmode="numeric" value="100" min="1" onchange="calcSim()" oninput="calcSim()">
+    </div>
+    <div class="cd-sim-row">
+      <label>買い価格</label>
+      <input class="cd-sim-input" id="sim-price" type="number" inputmode="decimal" value="${Math.round(price)}" onchange="calcSim()" oninput="calcSim()">
+    </div>
+    <div class="cd-sim-row">
+      <label>目標株価</label>
+      <input class="cd-sim-input" id="sim-target" type="number" inputmode="decimal" value="${Math.round(price * 1.1)}" onchange="calcSim()" oninput="calcSim()">
+    </div>
+    <div class="cd-sim-row">
+      <label>損切り株価</label>
+      <input class="cd-sim-input" id="sim-stop" type="number" inputmode="decimal" value="${Math.round(price * 0.95)}" onchange="calcSim()" oninput="calcSim()">
+    </div>
+    <div id="sim-result"></div>
+  `;
+  calcSim();
+}
+function calcSim() {
+  const shares = parseInt(document.getElementById('sim-shares')?.value) || 0;
+  const buyPrice = parseFloat(document.getElementById('sim-price')?.value) || 0;
+  const target = parseFloat(document.getElementById('sim-target')?.value) || 0;
+  const stop = parseFloat(document.getElementById('sim-stop')?.value) || 0;
+  const el = document.getElementById('sim-result');
+  if (!el || !shares || !buyPrice) return;
+  const cost = shares * buyPrice;
+  const profitAtTarget = shares * (target - buyPrice);
+  const lossAtStop = shares * (stop - buyPrice);
+  const profitPct = buyPrice ? ((target - buyPrice) / buyPrice * 100) : 0;
+  const lossPct = buyPrice ? ((stop - buyPrice) / buyPrice * 100) : 0;
+  const rr = lossAtStop !== 0 ? Math.abs(profitAtTarget / lossAtStop) : 0;
+  el.innerHTML = `
+    <div class="cd-sim-result">
+      <div class="cd-section">投資金額</div>
+      <div class="cd-sim-big">¥${Math.round(cost).toLocaleString()}</div>
+      <div class="cd-sim-sub">${shares}株 × ¥${Math.round(buyPrice).toLocaleString()}</div>
+    </div>
+    <div class="cd-sim-result" style="margin-top:6px">
+      <div class="cd-section">🎯 目標達成時</div>
+      <div class="cd-sim-big" style="color:#c0392b">+¥${Math.round(profitAtTarget).toLocaleString()}</div>
+      <div class="cd-sim-sub">利益率 +${profitPct.toFixed(1)}%　(¥${Math.round(target).toLocaleString()} で売却)</div>
+    </div>
+    <div class="cd-sim-result" style="margin-top:6px">
+      <div class="cd-section">🛑 損切り時</div>
+      <div class="cd-sim-big" style="color:#2e6da4">${Math.round(lossAtStop).toLocaleString().replace('-','−¥')}</div>
+      <div class="cd-sim-sub">損失率 ${lossPct.toFixed(1)}%　(¥${Math.round(stop).toLocaleString()} で損切り)</div>
+    </div>
+    <div class="cd-sim-result" style="margin-top:6px">
+      <div class="cd-section">リスクリワード比</div>
+      <div class="cd-sim-big" style="color:var(--gold)">${rr.toFixed(2)} : 1</div>
+      <div class="cd-sim-sub">${rr >= 2 ? '✅ 良好（2以上が理想）' : rr >= 1 ? '⚠️ まずまず' : '❌ リスク高い（1未満）'}</div>
+    </div>
+  `;
+}
 function renderCandleSvg(bars) {
-  const W = 600, H = 340, padL = 78, padR = 12, padT = 14, padB = 44;
-  // 表示するバー数を制限
-  const shown = bars.slice(-120);
+  const maxBars = Math.max(20, Math.round(120 / candleZoom));
+  const W = Math.max(600, 600 * candleZoom), H = 340, padL = 78, padR = 12, padT = 14, padB = 44;
+  const shown = bars.slice(-maxBars);
   const highs = shown.map(b => b.h), lows = shown.map(b => b.l);
   const max = Math.max(...highs), min = Math.min(...lows);
   const range = (max - min) || 1;
@@ -8638,8 +8872,13 @@ async function renderWatch() {
       ? list.map(w => {
           const jaName = STOCK_JA[w.ticker] || w.name || w.ticker;
           const q = quotes[w.ticker];
-          const priceText = q?.price ? `¥${Math.round(q.price).toLocaleString()}` : '取得中…';
-          const chgHtml = q?.change != null ? `<span class="wl-chg ${q.change>=0?'up':'down'}">${q.change>=0?'+':''}${q.change.toFixed(2)}%</span>` : '';
+          const priceText = q?.price ? `¥${Math.round(q.price).toLocaleString()}` : '—';
+          const chgAmt = q?.change != null ? Math.round(q.change) : null;
+          const chgPct = q?.changePct;
+          const chgUp = chgPct != null ? chgPct >= 0 : null;
+          const chgHtml = chgPct != null
+            ? `<span class="wl-item-chg ${chgUp?'up':'down'}">${chgUp?'▲+':'▼'}${chgAmt != null ? Math.abs(chgAmt).toLocaleString() : ''} (${chgUp?'+':''}${chgPct.toFixed(2)}%)</span>`
+            : '';
           const sigs = sigMap[p][w.ticker] || [];
           const sigClass = sigs.length ? ' has-signal' : '';
           const sigBadges = sigs.length
@@ -8647,8 +8886,11 @@ async function renderWatch() {
             : '';
           return `<div class="wl-item${sigClass}">
             <div class="wl-item-main" onclick="openCandleChart('${jsAttr(w.ticker)}','${jsAttr(jaName)}')">
-              <div class="wl-item-name">${escapeHtml(jaName)}</div>
-              <div class="wl-item-sub"><span class="wl-price">${priceText}</span>${chgHtml}<span style="color:var(--text-soft);margin-left:8px">${escapeHtml(w.ticker)}</span></div>
+              <div class="wl-item-name">${escapeHtml(jaName)}<span class="wl-item-code">${escapeHtml(w.ticker)}</span></div>
+              <div class="wl-item-price-row">
+                <span class="wl-item-price">${priceText}</span>
+                ${chgHtml}
+              </div>
               ${sigBadges}
             </div>
             <button class="wl-item-del" onclick="removeWatchStockUI('${p}','${jsAttr(w.ticker)}')">削除</button>
