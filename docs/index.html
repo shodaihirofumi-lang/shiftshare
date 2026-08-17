@@ -154,6 +154,230 @@
   --grad: linear-gradient(135deg, #6b5b8f, #57436d);
 }
 
+/* ── シンプル系ライト ── */
+:root[data-theme="white"] {
+  --bg-grad: linear-gradient(165deg, #f8f8f8 0%, #f0f0f0 100%);
+  --bg: #f5f5f5; --card: #ffffff; --text: #1a1a1a; --text-soft: #888888;
+  --line: #e0e0e0; --line-soft: #eeeeee;
+  --mine: #3a7ca5; --mine-bg: #e8f2f8; --mine-border: #b5d4e8;
+  --hers: #b05070; --hers-bg: #f8e8ee; --hers-border: #e0b8c8;
+  --gold: #9a8040; --gold-bg: #f0ecd8; --gold-border: #d4c898;
+  --grad: linear-gradient(135deg, #3a7ca5, #2a5a7a);
+}
+:root[data-theme="snow"] {
+  --bg-grad: linear-gradient(165deg, #fafcff 0%, #eef3fa 100%);
+  --bg: #f4f7fc; --card: #ffffff; --text: #2a3040; --text-soft: #8890a0;
+  --line: #dde3ee; --line-soft: #eaeff5;
+  --mine: #4a78a0; --mine-bg: #e4eef6; --mine-border: #b0c8dd;
+  --hers: #a06888; --hers-bg: #f2e6ee; --hers-border: #d8bece;
+  --gold: #a08850; --gold-bg: #f0eadc; --gold-border: #d4c8a0;
+  --grad: linear-gradient(135deg, #4a78a0, #3a5a78);
+}
+:root[data-theme="paper"] {
+  --bg-grad: linear-gradient(165deg, #faf6f0 0%, #f0ebe2 100%);
+  --bg: #f5f0e8; --card: #fffdf8; --text: #2a2520; --text-soft: #8a8070;
+  --line: #e0d8cc; --line-soft: #ece6dc;
+  --mine: #5a7068; --mine-bg: #e6ece8; --mine-border: #b8c8c0;
+  --hers: #987060; --hers-bg: #f0e6e0; --hers-border: #d0b8ac;
+  --gold: #907838; --gold-bg: #ede4cc; --gold-border: #c8b488;
+  --grad: linear-gradient(135deg, #5a7068, #3a5048);
+}
+:root[data-theme="cream"] {
+  --bg-grad: linear-gradient(165deg, #faf5e8 0%, #f0e8d0 100%);
+  --bg: #f5f0e0; --card: #fffcf2; --text: #3a3428; --text-soft: #908060;
+  --line: #e4dac0; --line-soft: #eee6d0;
+  --mine: #607848; --mine-bg: #e8eee0; --mine-border: #b8c8a8;
+  --hers: #a87058; --hers-bg: #f2e6dc; --hers-border: #d4b8a0;
+  --gold: #8a7430; --gold-bg: #ece0c0; --gold-border: #c4b080;
+  --grad: linear-gradient(135deg, #607848, #486038);
+}
+
+/* ── カラフル系ライト ── */
+:root[data-theme="peach"] {
+  --bg-grad: linear-gradient(165deg, #fff0e8 0%, #fce4d4 100%);
+  --bg: #fceee4; --card: #fffaf6; --text: #4a3028; --text-soft: #a08878;
+  --line: #f0d8c8; --line-soft: #f6e6da;
+  --mine: #3a8878; --mine-bg: #dceee8; --mine-border: #a8d0c4;
+  --hers: #d07858; --hers-bg: #fce8dc; --hers-border: #e8c0a8;
+  --gold: #b88840; --gold-bg: #f4eacc; --gold-border: #dcc890;
+  --grad: linear-gradient(135deg, #d07858, #a06040);
+}
+:root[data-theme="mint"] {
+  --bg-grad: linear-gradient(165deg, #e8f5f0 0%, #d4eae2 100%);
+  --bg: #e4f0ea; --card: #f8fcfa; --text: #1e3830; --text-soft: #708880;
+  --line: #c4d8d0; --line-soft: #d8e8e0;
+  --mine: #2e7868; --mine-bg: #d8ece4; --mine-border: #a0c8b8;
+  --hers: #b86878; --hers-bg: #f4e4e8; --hers-border: #ddb8c4;
+  --gold: #a08838; --gold-bg: #eee6c8; --gold-border: #d0c090;
+  --grad: linear-gradient(135deg, #2e7868, #1e5848);
+}
+:root[data-theme="sky"] {
+  --bg-grad: linear-gradient(165deg, #e4f0fc 0%, #d0e4f4 100%);
+  --bg: #e0ecf8; --card: #f6faff; --text: #1a3048; --text-soft: #6888a0;
+  --line: #c0d4e8; --line-soft: #d8e6f2;
+  --mine: #2868a0; --mine-bg: #d8eaf6; --mine-border: #a0c0dc;
+  --hers: #a87098; --hers-bg: #f0e4ee; --hers-border: #d4b8cc;
+  --gold: #a89040; --gold-bg: #f0e8cc; --gold-border: #d4c490;
+  --grad: linear-gradient(135deg, #2868a0, #184878);
+}
+:root[data-theme="honey"] {
+  --bg-grad: linear-gradient(165deg, #f8f0d8 0%, #f0e4c0 100%);
+  --bg: #f4ecd0; --card: #fffcf0; --text: #3a3018; --text-soft: #908058;
+  --line: #e0d4b0; --line-soft: #ebe0c4;
+  --mine: #587040; --mine-bg: #e4ecda; --mine-border: #b4c4a0;
+  --hers: #a06850; --hers-bg: #f0e2d6; --hers-border: #d0b49c;
+  --gold: #8a7020; --gold-bg: #ece0b0; --gold-border: #c4ac70;
+  --grad: linear-gradient(135deg, #a08030, #786020);
+}
+:root[data-theme="rose"] {
+  --bg-grad: linear-gradient(165deg, #fce8ee 0%, #f4d8e2 100%);
+  --bg: #f8e4ea; --card: #fffafc; --text: #48282e; --text-soft: #a07880;
+  --line: #ecc8d2; --line-soft: #f4d8e0;
+  --mine: #487080; --mine-bg: #dce8ee; --mine-border: #a8c4d0;
+  --hers: #c85878; --hers-bg: #f8dce6; --hers-border: #e4aac0;
+  --gold: #b08848; --gold-bg: #f0e4cc; --gold-border: #d4c090;
+  --grad: linear-gradient(135deg, #c85878, #984060);
+}
+:root[data-theme="sand"] {
+  --bg-grad: linear-gradient(165deg, #f0eadc 0%, #e4dcc8 100%);
+  --bg: #ece4d4; --card: #faf8f0; --text: #38322a; --text-soft: #8a8070;
+  --line: #d8ccb8; --line-soft: #e4dcc8;
+  --mine: #5a7a70; --mine-bg: #e0eae6; --mine-border: #b0c8c0;
+  --hers: #a07060; --hers-bg: #f0e4dc; --hers-border: #d0b8a8;
+  --gold: #907830; --gold-bg: #ece0c0; --gold-border: #c4b080;
+  --grad: linear-gradient(135deg, #8a7848, #685830);
+}
+:root[data-theme="lilac"] {
+  --bg-grad: linear-gradient(165deg, #f0e8f8 0%, #e2d6f0 100%);
+  --bg: #ece4f4; --card: #faf8ff; --text: #32283e; --text-soft: #8878a0;
+  --line: #d4c8e0; --line-soft: #e2d8ec;
+  --mine: #4a70a0; --mine-bg: #dce8f4; --mine-border: #a8c0dc;
+  --hers: #a868a0; --hers-bg: #f2e0f0; --hers-border: #d4b0d0;
+  --gold: #a89048; --gold-bg: #eee6cc; --gold-border: #d0c090;
+  --grad: linear-gradient(135deg, #7858a0, #584078);
+}
+:root[data-theme="matcha"] {
+  --bg-grad: linear-gradient(165deg, #e8eee0 0%, #dae4cc 100%);
+  --bg: #e2eada; --card: #f8faf4; --text: #282e20; --text-soft: #708060;
+  --line: #c8d4b8; --line-soft: #d8e2cc;
+  --mine: #406838; --mine-bg: #dee8da; --mine-border: #a8c0a0;
+  --hers: #a07068; --hers-bg: #f0e4e0; --hers-border: #d4b8b0;
+  --gold: #888030; --gold-bg: #e8e0c0; --gold-border: #c0b080;
+  --grad: linear-gradient(135deg, #506a38, #3a5028);
+}
+
+/* ── ダーク系（新規） ── */
+:root[data-theme="noir"] {
+  --bg-grad: linear-gradient(165deg, #0a0a0a 0%, #000000 100%);
+  --bg: #080808; --card: #161616; --text: #e8e8e8; --text-soft: #808080;
+  --line: #2a2a2a; --line-soft: #1e1e1e;
+  --mine: #90b0c0; --mine-bg: #1a2228; --mine-border: #304050;
+  --hers: #c88898; --hers-bg: #281820; --hers-border: #482838;
+  --gold: #c8b060; --gold-bg: #282410; --gold-border: #484018;
+  --grad: linear-gradient(135deg, #404040, #202020);
+  --shadow: 0 4px 22px rgba(0,0,0,.6); --shadow-sm: 0 2px 10px rgba(0,0,0,.4);
+}
+:root[data-theme="abyss"] {
+  --bg-grad: linear-gradient(165deg, #04080e 0%, #000408 100%);
+  --bg: #040810; --card: #101820; --text: #d0dce8; --text-soft: #607080;
+  --line: #1a2838; --line-soft: #101c28;
+  --mine: #5090c0; --mine-bg: #0c1e30; --mine-border: #1a3850;
+  --hers: #a080b8; --hers-bg: #1a1428; --hers-border: #302448;
+  --gold: #d0b858; --gold-bg: #241e08; --gold-border: #403410;
+  --grad: linear-gradient(135deg, #1a3050, #0c1828);
+  --shadow: 0 4px 22px rgba(0,0,0,.7); --shadow-sm: 0 2px 10px rgba(0,0,0,.5);
+}
+:root[data-theme="obsidian"] {
+  --bg-grad: linear-gradient(165deg, #18141c 0%, #0e0a12 100%);
+  --bg: #14101a; --card: #201c28; --text: #e0dce8; --text-soft: #888098;
+  --line: #302838; --line-soft: #241e2c;
+  --mine: #80a0c8; --mine-bg: #1a2438; --mine-border: #2c3c58;
+  --hers: #d09090; --hers-bg: #2c1c20; --hers-border: #4c3038;
+  --gold: #d8c070; --gold-bg: #302a18; --gold-border: #504828;
+  --grad: linear-gradient(135deg, #483858, #302040);
+  --shadow: 0 4px 22px rgba(0,0,0,.5); --shadow-sm: 0 2px 10px rgba(0,0,0,.35);
+}
+:root[data-theme="slate"] {
+  --bg-grad: linear-gradient(165deg, #1e2228 0%, #141820 100%);
+  --bg: #1a2028; --card: #262e38; --text: #dce0e8; --text-soft: #808890;
+  --line: #343c48; --line-soft: #2a3240;
+  --mine: #68a0c0; --mine-bg: #1c2c3c; --mine-border: #304858;
+  --hers: #c08090; --hers-bg: #2c2028; --hers-border: #4c3440;
+  --gold: #d0b868; --gold-bg: #302a18; --gold-border: #4c4428;
+  --grad: linear-gradient(135deg, #3a4858, #283440);
+  --shadow: 0 4px 22px rgba(0,0,0,.4); --shadow-sm: 0 2px 10px rgba(0,0,0,.3);
+}
+:root[data-theme="ink"] {
+  --bg-grad: linear-gradient(165deg, #12121a 0%, #0a0a10 100%);
+  --bg: #0e0e16; --card: #1c1c28; --text: #e4e4ec; --text-soft: #7878a0;
+  --line: #2c2c3c; --line-soft: #20202e;
+  --mine: #7098c8; --mine-bg: #141e30; --mine-border: #243850;
+  --hers: #c87898; --hers-bg: #281420; --hers-border: #442438;
+  --gold: #d4b860; --gold-bg: #2a240c; --gold-border: #483e18;
+  --grad: linear-gradient(135deg, #303048, #1e1e30);
+  --shadow: 0 4px 22px rgba(0,0,0,.55); --shadow-sm: 0 2px 10px rgba(0,0,0,.4);
+}
+:root[data-theme="onyx"] {
+  --bg-grad: linear-gradient(165deg, #101010 0%, #060606 100%);
+  --bg: #0c0c0c; --card: #1a1a1a; --text: #e0e0e0; --text-soft: #787878;
+  --line: #2c2c2c; --line-soft: #202020;
+  --mine: #70a8b8; --mine-bg: #142028; --mine-border: #283c48;
+  --hers: #c48888; --hers-bg: #241414; --hers-border: #442828;
+  --gold: #c8b458; --gold-bg: #242008; --gold-border: #403810;
+  --grad: linear-gradient(135deg, #383838, #1c1c1c);
+  --shadow: 0 4px 22px rgba(0,0,0,.6); --shadow-sm: 0 2px 10px rgba(0,0,0,.4);
+}
+:root[data-theme="carbon"] {
+  --bg-grad: linear-gradient(165deg, #1a1c1e 0%, #101214 100%);
+  --bg: #161818; --card: #222426; --text: #e2e4e6; --text-soft: #848688;
+  --line: #343638; --line-soft: #2a2c2e;
+  --mine: #58a0d0; --mine-bg: #142430; --mine-border: #244060;
+  --hers: #d08080; --hers-bg: #2c1818; --hers-border: #4c2c2c;
+  --gold: #d4b460; --gold-bg: #2c260e; --gold-border: #4a4018;
+  --grad: linear-gradient(135deg, #3a3c3e, #202224);
+  --shadow: 0 4px 22px rgba(0,0,0,.45); --shadow-sm: 0 2px 10px rgba(0,0,0,.3);
+}
+:root[data-theme="eclipse"] {
+  --bg-grad: linear-gradient(165deg, #14121a 0%, #080610 100%);
+  --bg: #100e18; --card: #1e1a28; --text: #dcd8e8; --text-soft: #8880a0;
+  --line: #302a40; --line-soft: #241e34;
+  --mine: #6898d0; --mine-bg: #121c32; --mine-border: #203450;
+  --hers: #d888a0; --hers-bg: #2c1822; --hers-border: #4a2838;
+  --gold: #e0c468; --gold-bg: #302810; --gold-border: #504420;
+  --grad: linear-gradient(135deg, #4a3868, #2c1e48);
+  --shadow: 0 4px 22px rgba(10,0,20,.5); --shadow-sm: 0 2px 10px rgba(10,0,20,.35);
+}
+:root[data-theme="volcanic"] {
+  --bg-grad: linear-gradient(165deg, #1e1410 0%, #120c08 100%);
+  --bg: #18100c; --card: #281e18; --text: #f0e4d8; --text-soft: #988070;
+  --line: #3a2c22; --line-soft: #2e2218;
+  --mine: #e0884c; --mine-bg: #30200c; --mine-border: #503818;
+  --hers: #d87878; --hers-bg: #301818; --hers-border: #502828;
+  --gold: #e8c060; --gold-bg: #382c0c; --gold-border: #584818;
+  --grad: linear-gradient(135deg, #8a4020, #502810);
+  --shadow: 0 4px 22px rgba(10,0,0,.5); --shadow-sm: 0 2px 10px rgba(10,0,0,.35);
+}
+:root[data-theme="matrix"] {
+  --bg-grad: linear-gradient(165deg, #0a100a 0%, #060c06 100%);
+  --bg: #080e08; --card: #14201a; --text: #c0e0c8; --text-soft: #608068;
+  --line: #203828; --line-soft: #182a1e;
+  --mine: #40c070; --mine-bg: #0c2018; --mine-border: #183c28;
+  --hers: #b888a0; --hers-bg: #201420; --hers-border: #3c2838;
+  --gold: #c0b050; --gold-bg: #24200c; --gold-border: #403810;
+  --grad: linear-gradient(135deg, #185028, #0c3018);
+  --shadow: 0 4px 22px rgba(0,10,0,.5); --shadow-sm: 0 2px 10px rgba(0,10,0,.35);
+}
+:root[data-theme="cosmos"] {
+  --bg-grad: linear-gradient(165deg, #0c0818 0%, #06040e 100%);
+  --bg: #0a0614; --card: #181428; --text: #d8d0f0; --text-soft: #7870a0;
+  --line: #282040; --line-soft: #1e1830;
+  --mine: #6888e0; --mine-bg: #101830; --mine-border: #1c2c50;
+  --hers: #d080b0; --hers-bg: #281828; --hers-border: #442840;
+  --gold: #d8c060; --gold-bg: #2a240c; --gold-border: #484018;
+  --grad: linear-gradient(135deg, #3828a0, #201860);
+  --shadow: 0 4px 22px rgba(0,0,20,.6); --shadow-sm: 0 2px 10px rgba(0,0,20,.4);
+}
+
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 /* iOS Safari が狭い列(カレンダー等)の文字を勝手に拡大するのを防ぐ */
 html { -webkit-text-size-adjust:100%; text-size-adjust:100%; overflow-x:hidden; overscroll-behavior-x:none; }
@@ -340,7 +564,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .backup-btn:active { opacity:.85; }
 .backup-btn:disabled { opacity:.5; cursor:not-allowed; }
 .backup-warn { font-size:16px; color:#b5544f; margin-top:11px; line-height:1.6; }
-.theme-picker { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:8px; }
+.theme-picker { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:8px; }
+.theme-section-lbl { grid-column:1/-1; font-size:12px; font-weight:700; color:var(--text-soft); letter-spacing:2px; margin:6px 0 2px; padding-left:2px; }
 .theme-swatch { background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:10px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px; font-family:inherit; -webkit-tap-highlight-color:transparent; transition:border-color .15s, transform .1s; }
 .theme-swatch:active { transform:scale(.97); }
 .theme-swatch.active { border-color:var(--mine); border-width:2.5px; padding:9px 5px; }
@@ -368,8 +593,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .bz-item-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:3px; }
 .bz-item-reason { font-size:12px; color:var(--text-soft); line-height:1.5; }
 .bz-item-meta { font-size:11px; color:var(--text-soft); margin-top:3px; }
-:root[data-theme="night"] .bz-item.good, :root[data-theme="deepsea"] .bz-item.good, :root[data-theme="forestnight"] .bz-item.good, :root[data-theme="midnight"] .bz-item.good, :root[data-theme="charcoal"] .bz-item.good { background:#1d2c1d; border-color:#3d6a3d; color:#c8e5c8; }
-:root[data-theme="night"] .bz-item.caution, :root[data-theme="deepsea"] .bz-item.caution, :root[data-theme="forestnight"] .bz-item.caution, :root[data-theme="midnight"] .bz-item.caution, :root[data-theme="charcoal"] .bz-item.caution { background:#302716; border-color:#6a5230; color:#e5d5b0; }
+[data-dark] .bz-item.good { background:#1d2c1d; border-color:#3d6a3d; color:#c8e5c8; }
+[data-dark] .bz-item.caution { background:#302716; border-color:#6a5230; color:#e5d5b0; }
 
 /* 年末レポート */
 .explain-loading { text-align:center; padding:20px; color:var(--text-soft); }
@@ -786,14 +1011,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .prompt-lbl { font-size:10px; font-weight:700; color:var(--mine); letter-spacing:2.5px; margin-bottom:5px; }
 .prompt-text { font-size:16px; font-weight:700; color:var(--text); line-height:1.5; }
 .prompt-hint { font-size:11px; color:var(--text-soft); margin-top:4px; letter-spacing:.5px; }
-:root[data-theme="night"] .prompt-card, :root[data-theme="deepsea"] .prompt-card, :root[data-theme="forestnight"] .prompt-card, :root[data-theme="midnight"] .prompt-card, :root[data-theme="charcoal"] .prompt-card { background:linear-gradient(135deg, var(--mine-bg), var(--card)); }
+[data-dark] .prompt-card { background:linear-gradient(135deg, var(--mine-bg), var(--card)); }
 
 /* 週フォトチャレンジ (ダッシュボード内) */
 .dash-photo-challenge { background:linear-gradient(135deg, var(--hers-bg), #f7dce6); border:1.5px solid var(--hers-border); }
 .dash-photo-challenge .dash-label { color:var(--hers); }
 .pc-theme { font-size:20px; font-weight:800; color:var(--hers); letter-spacing:1px; }
 .pc-hint { font-size:11px; color:var(--text-soft); margin-top:4px; letter-spacing:.5px; }
-:root[data-theme="night"] .dash-photo-challenge, :root[data-theme="deepsea"] .dash-photo-challenge, :root[data-theme="forestnight"] .dash-photo-challenge, :root[data-theme="midnight"] .dash-photo-challenge, :root[data-theme="charcoal"] .dash-photo-challenge { background:linear-gradient(135deg, var(--hers-bg), var(--card)); }
+[data-dark] .dash-photo-challenge { background:linear-gradient(135deg, var(--hers-bg), var(--card)); }
 
 /* 株の1日1トピック (保有株タブ) */
 #stock-tip-card { margin-bottom:16px; }
@@ -801,12 +1026,12 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .stock-tip-lbl { font-size:10px; font-weight:700; color:#8a6f43; letter-spacing:2.5px; margin-bottom:5px; }
 .stock-tip-term { font-size:18px; font-weight:800; color:#6a5320; margin-bottom:5px; letter-spacing:.5px; }
 .stock-tip-desc { font-size:13px; color:var(--text); line-height:1.7; }
-:root[data-theme="night"] .stock-tip, :root[data-theme="deepsea"] .stock-tip, :root[data-theme="forestnight"] .stock-tip, :root[data-theme="midnight"] .stock-tip, :root[data-theme="charcoal"] .stock-tip { background:linear-gradient(135deg, #3a3220, #2a2318); border-color:#5c4d2e; }
-:root[data-theme="night"] .stock-tip-lbl, :root[data-theme="deepsea"] .stock-tip-lbl, :root[data-theme="forestnight"] .stock-tip-lbl, :root[data-theme="midnight"] .stock-tip-lbl, :root[data-theme="charcoal"] .stock-tip-lbl { color:#d4b876; }
-:root[data-theme="night"] .stock-tip-term, :root[data-theme="deepsea"] .stock-tip-term, :root[data-theme="forestnight"] .stock-tip-term, :root[data-theme="midnight"] .stock-tip-term, :root[data-theme="charcoal"] .stock-tip-term { color:#e2c886; }
+[data-dark] .stock-tip { background:linear-gradient(135deg, #3a3220, #2a2318); border-color:#5c4d2e; }
+[data-dark] .stock-tip-lbl { color:#d4b876; }
+[data-dark] .stock-tip-term { color:#e2c886; }
 .stock-tip-more { margin-top:10px; padding:7px 12px; border-radius:8px; border:1.5px solid #d6c39c; background:rgba(255,255,255,.5); color:#6a5320; font-size:12px; font-weight:700; cursor:pointer; letter-spacing:.5px; font-family:inherit; }
 .stock-tip-more:active { opacity:.85; }
-:root[data-theme="night"] .stock-tip-more, :root[data-theme="deepsea"] .stock-tip-more, :root[data-theme="forestnight"] .stock-tip-more, :root[data-theme="midnight"] .stock-tip-more, :root[data-theme="charcoal"] .stock-tip-more { background:rgba(255,255,255,.1); color:#e2c886; border-color:#5c4d2e; }
+[data-dark] .stock-tip-more { background:rgba(255,255,255,.1); color:#e2c886; border-color:#5c4d2e; }
 
 /* 株を学ぶモーダル */
 .learn-modal { max-height:92vh; }
@@ -947,10 +1172,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .dash-empty { font-size:12px; color:var(--text-soft); text-align:center; padding:6px 0; }
 
 /* ダーク系テーマ調整 */
-:root[data-theme="night"] .dash-mem, :root[data-theme="deepsea"] .dash-mem, :root[data-theme="forestnight"] .dash-mem, :root[data-theme="midnight"] .dash-mem, :root[data-theme="charcoal"] .dash-mem { background:linear-gradient(90deg, #2e2820, #221d15); border-color:#5c4d2e; }
-:root[data-theme="night"] .dash-mem-body b, :root[data-theme="deepsea"] .dash-mem-body b, :root[data-theme="forestnight"] .dash-mem-body b, :root[data-theme="midnight"] .dash-mem-body b, :root[data-theme="charcoal"] .dash-mem-body b { color:#d4b876; }
-:root[data-theme="night"] .dash-alert, :root[data-theme="deepsea"] .dash-alert, :root[data-theme="forestnight"] .dash-alert, :root[data-theme="midnight"] .dash-alert, :root[data-theme="charcoal"] .dash-alert { background:#38301e; }
-:root[data-theme="night"] .dash-tomorrow, :root[data-theme="deepsea"] .dash-tomorrow, :root[data-theme="forestnight"] .dash-tomorrow, :root[data-theme="midnight"] .dash-tomorrow, :root[data-theme="charcoal"] .dash-tomorrow { background:linear-gradient(135deg, #3a3220, #2e2618); border-color:#5c4d2e; }
+[data-dark] .dash-mem { background:linear-gradient(90deg, #2e2820, #221d15); border-color:#5c4d2e; }
+[data-dark] .dash-mem-body b { color:#d4b876; }
+[data-dark] .dash-alert { background:#38301e; }
+[data-dark] .dash-tomorrow { background:linear-gradient(135deg, #3a3220, #2e2618); border-color:#5c4d2e; }
 /* ── 1年前の今日 メモリーカード ── */
 #memory-card { margin-bottom:14px; }
 .memory-card { background:linear-gradient(180deg, #f5efe0 0%, #ede4cd 100%); border:1.5px solid #d6c39c; border-radius:16px; padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow-sm); position:relative; }
@@ -968,9 +1193,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .memory-diary .memory-text.truncated::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2em; background:linear-gradient(180deg, transparent, #ede4cd); pointer-events:none; }
 .memory-empty { font-size:13px; color:var(--text-soft); text-align:center; padding:6px 0; }
 .memory-more { display:inline-block; font-size:11px; color:#8a6f43; margin-top:4px; cursor:pointer; text-decoration:underline; }
-:root[data-theme="night"] .memory-card, :root[data-theme="deepsea"] .memory-card, :root[data-theme="forestnight"] .memory-card, :root[data-theme="midnight"] .memory-card, :root[data-theme="charcoal"] .memory-card { background:linear-gradient(180deg, #2e2820 0%, #221d15 100%); border-color:#5c4d2e; }
-:root[data-theme="night"] .memory-head, :root[data-theme="deepsea"] .memory-head, :root[data-theme="forestnight"] .memory-head, :root[data-theme="midnight"] .memory-head, :root[data-theme="charcoal"] .memory-head { color:#d4b876; }
-:root[data-theme="night"] .memory-diary .memory-text.truncated::after, :root[data-theme="deepsea"] .memory-diary .memory-text.truncated::after, :root[data-theme="forestnight"] .memory-diary .memory-text.truncated::after, :root[data-theme="midnight"] .memory-diary .memory-text.truncated::after, :root[data-theme="charcoal"] .memory-diary .memory-text.truncated::after { background:linear-gradient(180deg, transparent, #221d15); }
+[data-dark] .memory-card { background:linear-gradient(180deg, #2e2820 0%, #221d15 100%); border-color:#5c4d2e; }
+[data-dark] .memory-head { color:#d4b876; }
+[data-dark] .memory-diary .memory-text.truncated::after { background:linear-gradient(180deg, transparent, #221d15); }
 
 /* ── 本棚UI ── */
 #diary-shelf { display:none; padding:20px 8px 24px; }
@@ -2845,16 +3070,44 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="backup-title">カラーテーマ</div>
         <div class="backup-note">アプリ全体の配色を変えられます。</div>
         <div class="theme-picker">
-          <button class="theme-swatch" data-theme="default" onclick="setTheme('default')" title="デフォルト（ベージュ）"><span class="th-p" style="background:#e8e3da"></span><span class="th-p" style="background:#4f6d7a"></span><span class="th-p" style="background:#a76b80"></span><span class="th-name">デフォルト</span></button>
-          <button class="theme-swatch" data-theme="sakura" onclick="setTheme('sakura')" title="桜"><span class="th-p" style="background:#fbeef1"></span><span class="th-p" style="background:#6b8e6d"></span><span class="th-p" style="background:#c47493"></span><span class="th-name">桜</span></button>
-          <button class="theme-swatch" data-theme="ocean" onclick="setTheme('ocean')" title="海"><span class="th-p" style="background:#e4eef2"></span><span class="th-p" style="background:#2d6b8a"></span><span class="th-p" style="background:#4a9d9d"></span><span class="th-name">海</span></button>
-          <button class="theme-swatch" data-theme="forest" onclick="setTheme('forest')" title="森"><span class="th-p" style="background:#eaead9"></span><span class="th-p" style="background:#4d704a"></span><span class="th-p" style="background:#9a6b4c"></span><span class="th-name">森</span></button>
-          <button class="theme-swatch" data-theme="lavender" onclick="setTheme('lavender')" title="ラベンダー"><span class="th-p" style="background:#ece5f0"></span><span class="th-p" style="background:#6b5b8f"></span><span class="th-p" style="background:#a97a9a"></span><span class="th-name">ラベンダー</span></button>
-          <button class="theme-swatch" data-theme="night" onclick="setTheme('night')" title="夜"><span class="th-p" style="background:#1a1c22"></span><span class="th-p" style="background:#7fa5b5"></span><span class="th-p" style="background:#d18ea4"></span><span class="th-name">夜</span></button>
-          <button class="theme-swatch" data-theme="deepsea" onclick="setTheme('deepsea')" title="深海"><span class="th-p" style="background:#0f1a26"></span><span class="th-p" style="background:#6bb2d4"></span><span class="th-p" style="background:#b592d1"></span><span class="th-name">深海</span></button>
-          <button class="theme-swatch" data-theme="forestnight" onclick="setTheme('forestnight')" title="森の夜"><span class="th-p" style="background:#16201a"></span><span class="th-p" style="background:#82b088"></span><span class="th-p" style="background:#d19a7c"></span><span class="th-name">森夜</span></button>
-          <button class="theme-swatch" data-theme="midnight" onclick="setTheme('midnight')" title="深紫"><span class="th-p" style="background:#1c1526"></span><span class="th-p" style="background:#9787c9"></span><span class="th-p" style="background:#e0899e"></span><span class="th-name">深紫</span></button>
-          <button class="theme-swatch" data-theme="charcoal" onclick="setTheme('charcoal')" title="炭"><span class="th-p" style="background:#1e1913"></span><span class="th-p" style="background:#d19a5b"></span><span class="th-p" style="background:#d68585"></span><span class="th-name">炭</span></button>
+          <div class="theme-section-lbl">シンプル</div>
+          <button class="theme-swatch" data-theme="white" onclick="setTheme('white')"><span class="th-p" style="background:#f5f5f5"></span><span class="th-p" style="background:#3a7ca5"></span><span class="th-p" style="background:#b05070"></span><span class="th-name">ホワイト</span></button>
+          <button class="theme-swatch" data-theme="snow" onclick="setTheme('snow')"><span class="th-p" style="background:#f4f7fc"></span><span class="th-p" style="background:#4a78a0"></span><span class="th-p" style="background:#a06888"></span><span class="th-name">スノー</span></button>
+          <button class="theme-swatch" data-theme="paper" onclick="setTheme('paper')"><span class="th-p" style="background:#f5f0e8"></span><span class="th-p" style="background:#5a7068"></span><span class="th-p" style="background:#987060"></span><span class="th-name">ペーパー</span></button>
+          <button class="theme-swatch" data-theme="cream" onclick="setTheme('cream')"><span class="th-p" style="background:#f5f0e0"></span><span class="th-p" style="background:#607848"></span><span class="th-p" style="background:#a87058"></span><span class="th-name">クリーム</span></button>
+          <div class="theme-section-lbl">ナチュラル</div>
+          <button class="theme-swatch" data-theme="default" onclick="setTheme('default')"><span class="th-p" style="background:#e8e3da"></span><span class="th-p" style="background:#4f6d7a"></span><span class="th-p" style="background:#a76b80"></span><span class="th-name">デフォルト</span></button>
+          <button class="theme-swatch" data-theme="sand" onclick="setTheme('sand')"><span class="th-p" style="background:#ece4d4"></span><span class="th-p" style="background:#5a7a70"></span><span class="th-p" style="background:#a07060"></span><span class="th-name">サンド</span></button>
+          <button class="theme-swatch" data-theme="honey" onclick="setTheme('honey')"><span class="th-p" style="background:#f4ecd0"></span><span class="th-p" style="background:#587040"></span><span class="th-p" style="background:#a06850"></span><span class="th-name">ハニー</span></button>
+          <button class="theme-swatch" data-theme="forest" onclick="setTheme('forest')"><span class="th-p" style="background:#eaead9"></span><span class="th-p" style="background:#4d704a"></span><span class="th-p" style="background:#9a6b4c"></span><span class="th-name">森</span></button>
+          <div class="theme-section-lbl">カラフル</div>
+          <button class="theme-swatch" data-theme="sakura" onclick="setTheme('sakura')"><span class="th-p" style="background:#fbeef1"></span><span class="th-p" style="background:#6b8e6d"></span><span class="th-p" style="background:#c47493"></span><span class="th-name">桜</span></button>
+          <button class="theme-swatch" data-theme="rose" onclick="setTheme('rose')"><span class="th-p" style="background:#f8e4ea"></span><span class="th-p" style="background:#487080"></span><span class="th-p" style="background:#c85878"></span><span class="th-name">ローズ</span></button>
+          <button class="theme-swatch" data-theme="peach" onclick="setTheme('peach')"><span class="th-p" style="background:#fceee4"></span><span class="th-p" style="background:#3a8878"></span><span class="th-p" style="background:#d07858"></span><span class="th-name">ピーチ</span></button>
+          <button class="theme-swatch" data-theme="mint" onclick="setTheme('mint')"><span class="th-p" style="background:#e4f0ea"></span><span class="th-p" style="background:#2e7868"></span><span class="th-p" style="background:#b86878"></span><span class="th-name">ミント</span></button>
+          <button class="theme-swatch" data-theme="matcha" onclick="setTheme('matcha')"><span class="th-p" style="background:#e2eada"></span><span class="th-p" style="background:#406838"></span><span class="th-p" style="background:#a07068"></span><span class="th-name">抹茶</span></button>
+          <button class="theme-swatch" data-theme="sky" onclick="setTheme('sky')"><span class="th-p" style="background:#e0ecf8"></span><span class="th-p" style="background:#2868a0"></span><span class="th-p" style="background:#a87098"></span><span class="th-name">空</span></button>
+          <button class="theme-swatch" data-theme="ocean" onclick="setTheme('ocean')"><span class="th-p" style="background:#e4eef2"></span><span class="th-p" style="background:#2d6b8a"></span><span class="th-p" style="background:#4a9d9d"></span><span class="th-name">海</span></button>
+          <button class="theme-swatch" data-theme="lavender" onclick="setTheme('lavender')"><span class="th-p" style="background:#ece5f0"></span><span class="th-p" style="background:#6b5b8f"></span><span class="th-p" style="background:#a97a9a"></span><span class="th-name">ラベンダー</span></button>
+          <button class="theme-swatch" data-theme="lilac" onclick="setTheme('lilac')"><span class="th-p" style="background:#ece4f4"></span><span class="th-p" style="background:#4a70a0"></span><span class="th-p" style="background:#a868a0"></span><span class="th-name">ライラック</span></button>
+          <div class="theme-section-lbl">ダーク（シンプル）</div>
+          <button class="theme-swatch" data-theme="noir" onclick="setTheme('noir')"><span class="th-p" style="background:#080808"></span><span class="th-p" style="background:#90b0c0"></span><span class="th-p" style="background:#c88898"></span><span class="th-name">ノワール</span></button>
+          <button class="theme-swatch" data-theme="onyx" onclick="setTheme('onyx')"><span class="th-p" style="background:#0c0c0c"></span><span class="th-p" style="background:#70a8b8"></span><span class="th-p" style="background:#c48888"></span><span class="th-name">オニキス</span></button>
+          <button class="theme-swatch" data-theme="carbon" onclick="setTheme('carbon')"><span class="th-p" style="background:#161818"></span><span class="th-p" style="background:#58a0d0"></span><span class="th-p" style="background:#d08080"></span><span class="th-name">カーボン</span></button>
+          <button class="theme-swatch" data-theme="slate" onclick="setTheme('slate')"><span class="th-p" style="background:#1a2028"></span><span class="th-p" style="background:#68a0c0"></span><span class="th-p" style="background:#c08090"></span><span class="th-name">スレート</span></button>
+          <div class="theme-section-lbl">ダーク（カラー）</div>
+          <button class="theme-swatch" data-theme="night" onclick="setTheme('night')"><span class="th-p" style="background:#1a1c22"></span><span class="th-p" style="background:#7fa5b5"></span><span class="th-p" style="background:#d18ea4"></span><span class="th-name">夜</span></button>
+          <button class="theme-swatch" data-theme="charcoal" onclick="setTheme('charcoal')"><span class="th-p" style="background:#1e1913"></span><span class="th-p" style="background:#d19a5b"></span><span class="th-p" style="background:#d68585"></span><span class="th-name">炭</span></button>
+          <button class="theme-swatch" data-theme="ink" onclick="setTheme('ink')"><span class="th-p" style="background:#0e0e16"></span><span class="th-p" style="background:#7098c8"></span><span class="th-p" style="background:#c87898"></span><span class="th-name">墨</span></button>
+          <button class="theme-swatch" data-theme="deepsea" onclick="setTheme('deepsea')"><span class="th-p" style="background:#0f1a26"></span><span class="th-p" style="background:#6bb2d4"></span><span class="th-p" style="background:#b592d1"></span><span class="th-name">深海</span></button>
+          <button class="theme-swatch" data-theme="abyss" onclick="setTheme('abyss')"><span class="th-p" style="background:#040810"></span><span class="th-p" style="background:#5090c0"></span><span class="th-p" style="background:#a080b8"></span><span class="th-name">深淵</span></button>
+          <button class="theme-swatch" data-theme="forestnight" onclick="setTheme('forestnight')"><span class="th-p" style="background:#16201a"></span><span class="th-p" style="background:#82b088"></span><span class="th-p" style="background:#d19a7c"></span><span class="th-name">森夜</span></button>
+          <button class="theme-swatch" data-theme="matrix" onclick="setTheme('matrix')"><span class="th-p" style="background:#080e08"></span><span class="th-p" style="background:#40c070"></span><span class="th-p" style="background:#b888a0"></span><span class="th-name">マトリクス</span></button>
+          <button class="theme-swatch" data-theme="midnight" onclick="setTheme('midnight')"><span class="th-p" style="background:#1c1526"></span><span class="th-p" style="background:#9787c9"></span><span class="th-p" style="background:#e0899e"></span><span class="th-name">深紫</span></button>
+          <button class="theme-swatch" data-theme="obsidian" onclick="setTheme('obsidian')"><span class="th-p" style="background:#14101a"></span><span class="th-p" style="background:#80a0c8"></span><span class="th-p" style="background:#d09090"></span><span class="th-name">黒曜石</span></button>
+          <button class="theme-swatch" data-theme="eclipse" onclick="setTheme('eclipse')"><span class="th-p" style="background:#100e18"></span><span class="th-p" style="background:#6898d0"></span><span class="th-p" style="background:#d888a0"></span><span class="th-name">日蝕</span></button>
+          <button class="theme-swatch" data-theme="cosmos" onclick="setTheme('cosmos')"><span class="th-p" style="background:#0a0614"></span><span class="th-p" style="background:#6888e0"></span><span class="th-p" style="background:#d080b0"></span><span class="th-name">宇宙</span></button>
+          <button class="theme-swatch" data-theme="volcanic" onclick="setTheme('volcanic')"><span class="th-p" style="background:#18100c"></span><span class="th-p" style="background:#e0884c"></span><span class="th-p" style="background:#d87878"></span><span class="th-name">火山</span></button>
         </div>
       </div>
 
@@ -3217,9 +3470,12 @@ function jsAttr(s){ return String(s).replace(/[<>&"'\\`]/g, c => '\\u' + c.charC
 
 
 // ── カラーテーマ ──
+const DARK_THEMES = ['night','deepsea','forestnight','midnight','charcoal','noir','abyss','obsidian','slate','ink','onyx','carbon','eclipse','volcanic','matrix','cosmos'];
 function setTheme(name) {
   if (name === 'default') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', name);
+  if (DARK_THEMES.includes(name)) document.documentElement.setAttribute('data-dark','');
+  else document.documentElement.removeAttribute('data-dark');
   localStorage.setItem('appTheme', name);
   document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.theme === name));
   const meta = document.querySelector('meta[name="theme-color"]');
