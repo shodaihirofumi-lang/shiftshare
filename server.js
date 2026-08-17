@@ -2083,32 +2083,48 @@ app.get('/api/stock-detail', async (req, res) => {
         { headers: { 'User-Agent': 'Mozilla/5.0', 'Cookie': cookie }, signal: AbortSignal.timeout(10000) }
       ).then(r => r.json());
     };
-    let j = await doFetch(false);
-    if (j.finance?.error?.code === 'Unauthorized' || j.quoteSummary?.error?.code === 'Unauthorized') j = await doFetch(true);
-    const rs = j.quoteSummary?.result?.[0];
-    if (!rs) throw new Error('データなし — quoteSummary結果なし（Unauthorized?）');
-    const sd = rs.summaryDetail || {}, ks = rs.defaultKeyStatistics || {}, fd = rs.financialData || {};
-    const ce = rs.calendarEvents || {};
     const raw = (obj, k) => obj?.[k]?.raw ?? null;
     const fmt = (obj, k) => obj?.[k]?.fmt ?? null;
 
-    // 価格情報（summaryDetailに無い場合chartAPIからフォールバック）
+    let sd = {}, ks = {}, fd = {}, ce = {};
+    let quoteSummaryOk = false;
+    try {
+      let j = await doFetch(false);
+      if (j.finance?.error?.code === 'Unauthorized' || j.quoteSummary?.error?.code === 'Unauthorized') j = await doFetch(true);
+      const rs = j.quoteSummary?.result?.[0];
+      if (rs) { sd = rs.summaryDetail || {}; ks = rs.defaultKeyStatistics || {}; fd = rs.financialData || {}; ce = rs.calendarEvents || {}; quoteSummaryOk = true; }
+    } catch {}
+
+    // 価格情報（chart APIから必ず取得 — quoteSummaryが失敗しても動作する）
     let price = raw(sd, 'regularMarketPrice') || raw(fd, 'currentPrice');
     let prevClose = raw(sd, 'regularMarketPreviousClose') || raw(sd, 'previousClose');
+    let open = raw(sd, 'regularMarketOpen') || raw(sd, 'open');
+    let dayHigh = raw(sd, 'regularMarketDayHigh') || raw(sd, 'dayHigh');
+    let dayLow = raw(sd, 'regularMarketDayLow') || raw(sd, 'dayLow');
+    let volume = raw(sd, 'regularMarketVolume') || raw(sd, 'volume');
     if (!price) {
       try {
         const cj = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`,
           { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }).then(r => r.json());
-        const m = cj?.chart?.result?.[0]?.meta;
-        if (m) { price = m.regularMarketPrice; prevClose = prevClose || m.chartPreviousClose || m.previousClose; }
+        const cr = cj?.chart?.result?.[0];
+        const m = cr?.meta;
+        if (m) {
+          price = m.regularMarketPrice;
+          prevClose = prevClose || m.chartPreviousClose || m.previousClose;
+        }
+        const q = cr?.indicators?.quote?.[0];
+        const ts = cr?.timestamp;
+        if (q && ts?.length) {
+          const last = ts.length - 1;
+          open = open || q.open?.[last];
+          dayHigh = dayHigh || q.high?.[last];
+          dayLow = dayLow || q.low?.[last];
+          volume = volume || q.volume?.[last];
+        }
       } catch {}
     }
-    const open = raw(sd, 'regularMarketOpen') || raw(sd, 'open');
-    const dayHigh = raw(sd, 'regularMarketDayHigh') || raw(sd, 'dayHigh');
-    const dayLow = raw(sd, 'regularMarketDayLow') || raw(sd, 'dayLow');
     const week52High = raw(sd, 'fiftyTwoWeekHigh');
     const week52Low = raw(sd, 'fiftyTwoWeekLow');
-    const volume = raw(sd, 'regularMarketVolume') || raw(sd, 'volume');
     const avgVolume = raw(sd, 'averageDailyVolume10Day');
 
     // ファンダメンタル
@@ -2180,11 +2196,13 @@ app.get('/api/stock-detail', async (req, res) => {
       }
     } catch {}
 
+    if (!price && !quoteSummaryOk) throw new Error('価格データを取得できませんでした');
     res.json({
       symbol: sym, price, prevClose, open, dayHigh, dayLow,
       week52High, week52Low, volume, avgVolume,
       fundamental, technical, nextEarnings,
       currency: sd.currency || 'JPY',
+      quoteSummaryOk,
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

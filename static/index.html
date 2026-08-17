@@ -1847,6 +1847,23 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .cd-sim-result { background:var(--bg); border-radius:10px; padding:12px 14px; margin-top:8px; }
 .cd-sim-big { font-size:22px; font-weight:800; }
 .cd-sim-sub { font-size:13px; color:var(--text-soft); margin-top:4px; }
+.cd-sim-buy-btn { width:100%; padding:14px; margin-top:12px; border:none; border-radius:12px; background:#c0392b; color:#fff; font-size:18px; font-weight:800; cursor:pointer; letter-spacing:1px; }
+.cd-sim-buy-btn:active { opacity:.8; }
+.demo-summary-card { background:var(--card); border-radius:14px; padding:16px; margin-bottom:10px; }
+.demo-total-label { font-size:12px; font-weight:700; color:var(--text-soft); letter-spacing:1px; }
+.demo-total-val { font-size:28px; font-weight:900; margin:4px 0; }
+.demo-total-sub { font-size:14px; font-weight:600; }
+.demo-card { background:var(--card); border-radius:12px; padding:14px; margin-bottom:8px; position:relative; }
+.demo-card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.demo-card-name { font-size:16px; font-weight:800; }
+.demo-card-code { font-size:12px; color:var(--text-soft); font-weight:500; }
+.demo-card-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px 12px; }
+.demo-card-lbl { font-size:11px; color:var(--text-soft); font-weight:600; }
+.demo-card-val { font-size:15px; font-weight:700; }
+.demo-card-pnl { font-size:20px; font-weight:900; }
+.demo-card-del { position:absolute; top:8px; right:10px; background:none; border:none; color:var(--text-soft); font-size:18px; cursor:pointer; padding:4px 8px; }
+.demo-badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+[data-dark] .demo-summary-card, [data-dark] .demo-card { background:var(--card); }
 .cd-loading { text-align:center; padding:20px; color:var(--text-soft); font-size:13px; }
 .candle-interval { display:flex; gap:6px; margin-bottom:12px; justify-content:center; }
 .candle-int-btn { flex:1; padding:8px 12px; border:1.5px solid var(--line); background:var(--card); border-radius:8px; font-size:13px; font-weight:700; color:var(--text-soft); cursor:pointer; font-family:inherit; }
@@ -3044,6 +3061,16 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div id="diary-shelf"></div>
     </div>
 
+    <!-- DEMO TRADING -->
+    <div id="tab-demo" class="screen">
+      <div class="page-top">
+        <div><div class="page-title">デモ取引</div><div class="page-sub">仮想ポートフォリオ（実際の取引ではありません）</div></div>
+      </div>
+      <div id="demo-summary" style="margin-bottom:12px"></div>
+      <div id="demo-list"></div>
+      <div style="text-align:center;margin-top:16px;padding-bottom:12px;opacity:.5;font-size:12px">※ デモ取引はシミュレーションです。実際の金銭の移動はありません。</div>
+    </div>
+
     <!-- UPLOAD -->
     <div id="tab-upload" class="screen">
       <div class="page-top">
@@ -3203,6 +3230,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <button class="nav-btn" id="nav-board" onclick="showTab('board')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
       掲示板
+    </button>
+    <button class="nav-btn" id="nav-demo" onclick="showTab('demo')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      デモ取引
     </button>
     <button class="nav-btn" id="nav-upload" onclick="showTab('upload')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -4749,7 +4780,7 @@ enterApp();
 
 // ── TABS ──
 function showTab(name) {
-  ['dashboard','screener','fundscr','watch','calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
+  ['dashboard','screener','fundscr','watch','calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','demo','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
@@ -4759,6 +4790,7 @@ function showTab(name) {
   if (name === 'watch') { renderWatch(); window.scrollTo(0,0); return; }
   if (name === 'calendar') { setTimeout(scrollToToday, 50); return; }
   if (name === 'holdings') { loadNikkei(); loadHoldings(); window.scrollTo(0,0); return; }
+  if (name === 'demo') { renderDemoPortfolio(); window.scrollTo(0,0); return; }
   if (name === 'gridcal') {
     renderGridCalendar();
     const td = new Date();
@@ -8626,6 +8658,7 @@ function _fmtMcap(v) { if (v == null) return '—'; if (v >= 1e12) return (v/1e1
 function _cdRow(lbl, val, cls) { return `<div class="cd-row"><span class="cd-lbl">${lbl}</span><span class="cd-val ${cls||''}">${val}</span></div>`; }
 function renderFundDetail(el, d) {
   const f = d.fundamental || {};
+  const noFund = d.quoteSummaryOk === false;
   const price = d.price;
   const prev = d.prevClose;
   const chg = price && prev ? price - prev : null;
@@ -8641,6 +8674,7 @@ function renderFundDetail(el, d) {
     ${_cdRow('高値 / 安値', (d.dayHigh ? '¥' + Math.round(d.dayHigh).toLocaleString() : '—') + ' / ' + (d.dayLow ? '¥' + Math.round(d.dayLow).toLocaleString() : '—'))}
     ${_cdRow('52週 高値/安値', (d.week52High ? '¥' + Math.round(d.week52High).toLocaleString() : '—') + ' / ' + (d.week52Low ? '¥' + Math.round(d.week52Low).toLocaleString() : '—'))}
     ${_cdRow('出来高', d.volume ? Math.round(d.volume).toLocaleString() + '株' : '—')}
+    ${noFund ? '<div style="background:rgba(200,150,50,.15);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:12px;color:var(--text-soft)">財務詳細データは現在取得できません（Yahoo認証制限）。価格・テクニカルは表示されます。</div>' : ''}
     <div class="cd-section">バリュエーション</div>
     ${_cdRow('PER (実績)', f.trailingPE != null ? _fmtNum(f.trailingPE, 1) + '倍' : '—')}
     ${_cdRow('PER (予想)', f.forwardPE != null ? _fmtNum(f.forwardPE, 1) + '倍' : '—')}
@@ -8707,7 +8741,7 @@ function renderTechDetail(el, d) {
 function renderSimDetail(el, d) {
   const price = d.price || 0;
   el.innerHTML = `
-    <div class="cd-section">もしここで買ったら</div>
+    <div class="cd-section">デモ購入シミュレーション</div>
     <div class="cd-sim-row">
       <label>買い株数</label>
       <input class="cd-sim-input" id="sim-shares" type="number" inputmode="numeric" value="100" min="1" onchange="calcSim()" oninput="calcSim()">
@@ -8725,6 +8759,8 @@ function renderSimDetail(el, d) {
       <input class="cd-sim-input" id="sim-stop" type="number" inputmode="decimal" value="${Math.round(price * 0.95)}" onchange="calcSim()" oninput="calcSim()">
     </div>
     <div id="sim-result"></div>
+    <button class="cd-sim-buy-btn" onclick="demoBuy()">デモ購入する</button>
+    <div style="text-align:center;margin-top:6px;font-size:11px;color:var(--text-soft)">※ 実際の取引ではありません</div>
   `;
   calcSim();
 }
@@ -8763,6 +8799,103 @@ function calcSim() {
       <div class="cd-sim-sub">${rr >= 2 ? '✅ 良好（2以上が理想）' : rr >= 1 ? '⚠️ まずまず' : '❌ リスク高い（1未満）'}</div>
     </div>
   `;
+}
+// ── デモ取引 ──
+function getDemoTrades() {
+  try { return JSON.parse(localStorage.getItem('demoTrades') || '[]'); } catch { return []; }
+}
+function saveDemoTrades(trades) {
+  localStorage.setItem('demoTrades', JSON.stringify(trades));
+}
+function demoBuy() {
+  const shares = parseInt(document.getElementById('sim-shares')?.value) || 0;
+  const buyPrice = parseFloat(document.getElementById('sim-price')?.value) || 0;
+  const target = parseFloat(document.getElementById('sim-target')?.value) || 0;
+  const stop = parseFloat(document.getElementById('sim-stop')?.value) || 0;
+  if (!shares || !buyPrice || !candleSymbol) return;
+  const trades = getDemoTrades();
+  trades.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    ticker: candleSymbol,
+    name: candleName,
+    shares,
+    buyPrice,
+    target,
+    stop,
+    date: new Date().toISOString().slice(0,10),
+  });
+  saveDemoTrades(trades);
+  alert('デモ購入しました！\nデモ取引タブで確認できます。');
+}
+function demoSell(id) {
+  if (!confirm('このデモポジションを決済しますか？')) return;
+  const trades = getDemoTrades().filter(t => t.id !== id);
+  saveDemoTrades(trades);
+  renderDemoPortfolio();
+}
+async function renderDemoPortfolio() {
+  const trades = getDemoTrades();
+  const sumEl = document.getElementById('demo-summary');
+  const listEl = document.getElementById('demo-list');
+  if (!trades.length) {
+    sumEl.innerHTML = '';
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-soft);font-size:15px">デモ取引はまだありません<br><span style="font-size:13px">監視銘柄のチャート →「もし買ったら」→ デモ購入</span></div>';
+    return;
+  }
+  const tickers = [...new Set(trades.map(t => t.ticker))];
+  let quotes = {};
+  try {
+    const qRes = await fetch(`/api/quotes?symbols=${tickers.join(',')}`);
+    const qj = await qRes.json();
+    if (Array.isArray(qj)) qj.forEach(q => { quotes[q.symbol] = q; });
+  } catch {}
+  let totalCost = 0, totalValue = 0;
+  const rows = trades.map(t => {
+    const q = quotes[t.ticker] || quotes[t.ticker.replace('.T','')] || {};
+    const curPrice = q.price || t.buyPrice;
+    const cost = t.shares * t.buyPrice;
+    const value = t.shares * curPrice;
+    const pnl = value - cost;
+    const pnlPct = cost ? (pnl / cost * 100) : 0;
+    totalCost += cost;
+    totalValue += value;
+    const pnlColor = pnl >= 0 ? '#c0392b' : '#2e6da4';
+    const pnlSign = pnl >= 0 ? '+' : '';
+    const targetPnl = t.target ? ((t.target - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
+    const stopPnl = t.stop ? ((t.stop - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
+    return `<div class="demo-card" onclick="openCandleChart('${t.ticker.replace(/'/g,"\\'")}','${(t.name||'').replace(/'/g,"\\'")}')">
+      <button class="demo-card-del" onclick="event.stopPropagation();demoSell('${t.id}')">✕</button>
+      <div class="demo-card-head">
+        <div>
+          <span class="demo-card-name">${t.name || t.ticker}</span>
+          <span class="demo-card-code">${t.ticker}</span>
+        </div>
+        <span class="demo-badge" style="background:${pnl >= 0 ? 'rgba(192,57,43,.12)' : 'rgba(46,109,164,.12)'};color:${pnlColor}">${pnlSign}${pnlPct.toFixed(1)}%</span>
+      </div>
+      <div class="demo-card-pnl" style="color:${pnlColor};margin-bottom:6px">${pnlSign}¥${Math.round(pnl).toLocaleString()}</div>
+      <div class="demo-card-grid">
+        <div><div class="demo-card-lbl">買値</div><div class="demo-card-val">¥${Math.round(t.buyPrice).toLocaleString()}</div></div>
+        <div><div class="demo-card-lbl">現在値</div><div class="demo-card-val">¥${Math.round(curPrice).toLocaleString()}</div></div>
+        <div><div class="demo-card-lbl">株数</div><div class="demo-card-val">${t.shares}株</div></div>
+        <div><div class="demo-card-lbl">購入日</div><div class="demo-card-val">${t.date}</div></div>
+        <div><div class="demo-card-lbl">投資額</div><div class="demo-card-val">¥${Math.round(cost).toLocaleString()}</div></div>
+        <div><div class="demo-card-lbl">評価額</div><div class="demo-card-val">¥${Math.round(value).toLocaleString()}</div></div>
+        ${t.target ? `<div><div class="demo-card-lbl">目標</div><div class="demo-card-val">¥${Math.round(t.target).toLocaleString()} (${targetPnl}%)</div></div>` : ''}
+        ${t.stop ? `<div><div class="demo-card-lbl">損切り</div><div class="demo-card-val">¥${Math.round(t.stop).toLocaleString()} (${stopPnl}%)</div></div>` : ''}
+      </div>
+    </div>`;
+  });
+  const totalPnl = totalValue - totalCost;
+  const totalPct = totalCost ? (totalPnl / totalCost * 100) : 0;
+  const tc = totalPnl >= 0 ? '#c0392b' : '#2e6da4';
+  const ts = totalPnl >= 0 ? '+' : '';
+  sumEl.innerHTML = `<div class="demo-summary-card">
+    <div class="demo-total-label">デモ評価総額</div>
+    <div class="demo-total-val">¥${Math.round(totalValue).toLocaleString()}</div>
+    <div class="demo-total-sub" style="color:${tc}">${ts}¥${Math.round(totalPnl).toLocaleString()} (${ts}${totalPct.toFixed(1)}%)</div>
+    <div style="margin-top:6px;font-size:12px;color:var(--text-soft)">投資総額: ¥${Math.round(totalCost).toLocaleString()} / ${trades.length}銘柄保有中</div>
+  </div>`;
+  listEl.innerHTML = rows.join('');
 }
 function renderCandleSvg(bars) {
   const maxBars = Math.max(20, Math.round(120 / candleZoom));
