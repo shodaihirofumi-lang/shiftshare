@@ -545,6 +545,35 @@ export function getRealized() {
   return cache.realized || [];
 }
 
+// ── 監視銘柄（Watchlist）──
+export function getWatchlist() {
+  if (!cache.watchlist) cache.watchlist = { mine: [], hers: [] };
+  if (!Array.isArray(cache.watchlist.mine)) cache.watchlist.mine = [];
+  if (!Array.isArray(cache.watchlist.hers)) cache.watchlist.hers = [];
+  return cache.watchlist;
+}
+function _normTicker(t) {
+  let s = String(t || '').trim().toUpperCase().slice(0, 20);
+  if (/^\d{3,5}[A-Z]?$/.test(s)) s += '.T';
+  return s;
+}
+export async function addWatchStock(person, ticker, name) {
+  if (!['mine', 'hers'].includes(person)) throw new Error('person が不正です');
+  const t = _normTicker(ticker);
+  if (!t) throw new Error('銘柄コードが不正です');
+  const wl = getWatchlist();
+  if (wl[person].some(x => x.ticker === t)) return; // 重複なし
+  wl[person].push({ ticker: t, name: String(name || '').slice(0, 40), addedAt: Date.now() });
+  await persist();
+}
+export async function removeWatchStock(person, ticker) {
+  if (!['mine', 'hers'].includes(person)) return;
+  const t = _normTicker(ticker);
+  const wl = getWatchlist();
+  wl[person] = wl[person].filter(x => x.ticker !== t);
+  await persist();
+}
+
 // ── BOARD（ふたりの掲示板：行きたい所・やりたいこと。日付に紐づかない共有メモ）──
 export function getNotes() {
   return cache.notes || [];

@@ -1562,6 +1562,33 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .scr-hit-detail { font-size:11px; color:var(--text-soft); margin-top:3px; line-height:1.5; }
 .scr-empty { font-size:13px; color:var(--text-soft); text-align:center; padding:14px 0; }
 
+/* ── 銘柄群セレクター（スクリーナー内） ── */
+.uni-picker { background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:12px; box-shadow:var(--shadow-sm); }
+.uni-picker-lbl { font-size:11px; font-weight:700; color:var(--text-soft); letter-spacing:2px; margin-bottom:8px; }
+.uni-picker-btns { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.uni-btn { background:var(--card); border:1.5px solid var(--line); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:13px; font-weight:700; color:var(--text-soft); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px; letter-spacing:.5px; -webkit-tap-highlight-color:transparent; }
+.uni-btn span { font-size:10px; font-weight:500; color:var(--text-soft); letter-spacing:.5px; }
+.uni-btn.active { background:var(--mine-bg); border-color:var(--mine); color:var(--mine); }
+.uni-btn.active span { color:var(--mine); }
+.uni-btn:active { transform:scale(.98); }
+
+/* ── 監視銘柄タブ ── */
+.watch-add { background:var(--mine-bg); border:1.5px solid var(--mine-border); border-radius:14px; padding:14px 16px; margin-bottom:14px; }
+.wl-btn { flex:1; padding:7px 12px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); font-size:13px; font-weight:700; color:var(--text); cursor:pointer; font-family:inherit; }
+.wl-btn.active { background:var(--mine-bg); border-color:var(--mine); color:var(--mine); }
+.wl-section { margin-bottom:18px; }
+.wl-section-head { font-size:13px; font-weight:800; color:var(--text); margin-bottom:8px; letter-spacing:1px; display:flex; justify-content:space-between; align-items:baseline; }
+.wl-section-head .wl-count { font-size:11px; color:var(--text-soft); font-weight:500; }
+.wl-item { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:11px 13px; background:var(--card); border:1.5px solid var(--line); border-radius:10px; margin-bottom:6px; }
+.wl-item-main { flex:1; min-width:0; cursor:pointer; }
+.wl-item-name { font-size:14px; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wl-item-sub { font-size:11px; color:var(--text-soft); margin-top:2px; }
+.wl-item-sub .wl-price { color:var(--mine); font-weight:700; margin-right:8px; }
+.wl-item-sub .wl-chg.up { color:#c0392b; font-weight:700; }
+.wl-item-sub .wl-chg.down { color:#2e6da4; font-weight:700; }
+.wl-item-del { padding:6px 12px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); color:#b5544f; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }
+.wl-empty { text-align:center; padding:20px; color:var(--text-soft); font-size:13px; }
+
 /* 株ノートの背表紙 (バインダー風) */
 .book-spine.stock { border-radius:1px 3px 3px 1px; }
 .book-spine.stock.s1 { background:linear-gradient(90deg,#1f2e2a,#2f4640,#1f2e2a); }
@@ -2221,21 +2248,56 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <!-- SCREENER -->
     <div id="tab-screener" class="screen">
       <div class="page-top">
-        <div><div class="page-title">チャート探し</div><div class="page-sub">組み合わせ実戦編（第4巻）の全条件を日経225に適用</div></div>
+        <div><div class="page-title">チャート探し</div><div class="page-sub">組み合わせ実戦編（第4巻）の条件を適用</div></div>
         <button class="chip-gray" style="cursor:pointer;border:none" onclick="refreshScreenerList()">🔄 更新</button>
       </div>
-      <div class="scr-intro">選んだ条件で日経225を絞り込みます。初回実行時は取得に30秒〜1分ほどかかります（データは30分間キャッシュ）。</div>
+      <div class="uni-picker">
+        <div class="uni-picker-lbl">対象銘柄:</div>
+        <div class="uni-picker-btns" id="uni-picker-scr">
+          <button class="uni-btn active" data-u="nikkei225" onclick="setScreenerUniverse('nikkei225')">日経225<span>225社</span></button>
+          <button class="uni-btn" data-u="topix30" onclick="setScreenerUniverse('topix30')">TOPIX30<span>大型30社</span></button>
+          <button class="uni-btn" data-u="watchlist_mine" onclick="setScreenerUniverse('watchlist_mine')">監視 ひろ<span id="uni-cnt-scr-mine">0</span></button>
+          <button class="uni-btn" data-u="watchlist_hers" onclick="setScreenerUniverse('watchlist_hers')">監視 ちか<span id="uni-cnt-scr-hers">0</span></button>
+        </div>
+      </div>
       <div id="scr-list"></div>
     </div>
 
     <!-- FUNDAMENTAL SCREENER -->
     <div id="tab-fundscr" class="screen">
       <div class="page-top">
-        <div><div class="page-title">銘柄選び</div><div class="page-sub">ファンダメンタル指標で日経225を絞り込み</div></div>
+        <div><div class="page-title">銘柄選び</div><div class="page-sub">ファンダメンタル指標で絞り込み</div></div>
         <button class="chip-gray" style="cursor:pointer;border:none" onclick="refreshFundScreenerList()">🔄 更新</button>
       </div>
-      <div class="scr-intro">📕 ファンダメンタル分析（第3巻）と 📕 買っていい株の選び方（第5巻）に載っている条件を実行できます。初回はデータ取得に1〜2分。ファンダメンタルは12時間キャッシュ。</div>
+      <div class="uni-picker">
+        <div class="uni-picker-lbl">対象銘柄:</div>
+        <div class="uni-picker-btns" id="uni-picker-fs">
+          <button class="uni-btn active" data-u="nikkei225" onclick="setFundScreenerUniverse('nikkei225')">日経225<span>225社</span></button>
+          <button class="uni-btn" data-u="topix30" onclick="setFundScreenerUniverse('topix30')">TOPIX30<span>大型30社</span></button>
+          <button class="uni-btn" data-u="watchlist_mine" onclick="setFundScreenerUniverse('watchlist_mine')">監視 ひろ<span id="uni-cnt-fs-mine">0</span></button>
+          <button class="uni-btn" data-u="watchlist_hers" onclick="setFundScreenerUniverse('watchlist_hers')">監視 ちか<span id="uni-cnt-fs-hers">0</span></button>
+        </div>
+      </div>
       <div id="fundscr-list"></div>
+    </div>
+
+    <!-- WATCHLIST -->
+    <div id="tab-watch" class="screen">
+      <div class="page-top">
+        <div><div class="page-title">監視銘柄</div><div class="page-sub">気になる銘柄を保存・スクリーナーの対象にも</div></div>
+      </div>
+      <div class="watch-add">
+        <div class="ev-person-toggle" style="margin-bottom:8px">
+          <button class="wl-btn active" data-p="mine" onclick="setWatchPerson('mine')">ひろの監視</button>
+          <button class="wl-btn" data-p="hers" onclick="setWatchPerson('hers')">ちかの監視</button>
+        </div>
+        <div class="ev-add-row">
+          <input id="wl-ticker" class="ev-in" placeholder="銘柄コード（例:7203 / AAPL）">
+          <input id="wl-name" class="ev-in" placeholder="表示名（任意）">
+          <button class="ev-add-btn" onclick="addWatchStockFromUI()">追加</button>
+        </div>
+      </div>
+      <div id="wl-list"></div>
     </div>
 
     <!-- CALENDAR -->
@@ -2796,6 +2858,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="4" width="3" height="14"/></svg>
       銘柄選び
     </button>
+    <button class="nav-btn" id="nav-watch" onclick="showTab('watch')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      監視銘柄
+    </button>
     <button class="nav-btn" id="nav-memo" onclick="showTab('memo')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       メモ
@@ -3157,6 +3223,7 @@ async function enterApp() {
   loadMemos();
   loadTrades();
   loadDayPhotos();
+  loadWatchlist();
   loadDiaries();
   loadMonthlyDiaries().then(() => renderMonthlyInline());
   setupPush();
@@ -4291,13 +4358,14 @@ enterApp();
 
 // ── TABS ──
 function showTab(name) {
-  ['dashboard','screener','fundscr','calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
+  ['dashboard','screener','fundscr','watch','calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
     document.getElementById('nav-'+t).classList.toggle('active', t===name);
   });
   if (name === 'dashboard') { renderDashboard(); window.scrollTo(0,0); return; }
   if (name === 'screener') { renderScreener(); window.scrollTo(0,0); return; }
   if (name === 'fundscr') { renderFundScreener(); window.scrollTo(0,0); return; }
+  if (name === 'watch') { renderWatch(); window.scrollTo(0,0); return; }
   if (name === 'calendar') { setTimeout(scrollToToday, 50); return; }
   if (name === 'holdings') { loadNikkei(); loadHoldings(); window.scrollTo(0,0); return; }
   if (name === 'gridcal') {
@@ -7998,6 +8066,119 @@ function refreshFundScreenerList() {
   showToast('スクリーナー一覧を再取得しました');
 }
 
+// ── 銘柄群セレクター ──
+let currentScrUniverse = 'nikkei225';
+let currentFundScrUniverse = 'nikkei225';
+function setScreenerUniverse(u) {
+  currentScrUniverse = u;
+  screenerResults = {}; // 対象変更で結果クリア
+  document.querySelectorAll('#uni-picker-scr .uni-btn').forEach(b => b.classList.toggle('active', b.dataset.u === u));
+  renderScreener();
+}
+function setFundScreenerUniverse(u) {
+  currentFundScrUniverse = u;
+  fundScrResults = {};
+  document.querySelectorAll('#uni-picker-fs .uni-btn').forEach(b => b.classList.toggle('active', b.dataset.u === u));
+  renderFundScreener();
+}
+function updateUniverseCounts() {
+  if (!watchlistData) return;
+  const setTxt = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n + '件'; };
+  const mineN = watchlistData.mine?.length || 0;
+  const hersN = watchlistData.hers?.length || 0;
+  setTxt('uni-cnt-scr-mine', mineN);
+  setTxt('uni-cnt-scr-hers', hersN);
+  setTxt('uni-cnt-fs-mine', mineN);
+  setTxt('uni-cnt-fs-hers', hersN);
+}
+
+// ── 監視銘柄タブ ──
+let watchlistData = null; // { mine: [...], hers: [...] }
+let watchPerson = 'mine';
+
+async function loadWatchlist() {
+  try {
+    const r = await fetch(API_BASE + '/api/watchlist');
+    watchlistData = await r.json();
+    updateUniverseCounts();
+  } catch { watchlistData = { mine: [], hers: [] }; }
+}
+async function renderWatch() {
+  if (!watchlistData) await loadWatchlist();
+  const el = document.getElementById('wl-list');
+  if (!el) return;
+  const sections = ['mine', 'hers'].map(p => {
+    const list = watchlistData?.[p] || [];
+    const items = list.length
+      ? list.map(w => {
+          const jaName = STOCK_JA[w.ticker] || w.name || w.ticker;
+          const q = quotes[w.ticker];
+          const priceText = q?.price ? `¥${Math.round(q.price).toLocaleString()}` : '取得中…';
+          const chgHtml = q?.change != null ? `<span class="wl-chg ${q.change>=0?'up':'down'}">${q.change>=0?'+':''}${q.change.toFixed(2)}%</span>` : '';
+          return `<div class="wl-item">
+            <div class="wl-item-main" onclick="openStockChart('${jsAttr(w.ticker)}','${jsAttr(jaName)}')">
+              <div class="wl-item-name">${escapeHtml(jaName)}</div>
+              <div class="wl-item-sub"><span class="wl-price">${priceText}</span>${chgHtml}<span style="color:var(--text-soft);margin-left:8px">${escapeHtml(w.ticker)}</span></div>
+            </div>
+            <button class="wl-item-del" onclick="removeWatchStockUI('${p}','${jsAttr(w.ticker)}')">削除</button>
+          </div>`;
+        }).join('')
+      : '<div class="wl-empty">まだ登録されていません</div>';
+    return `<div class="wl-section">
+      <div class="wl-section-head">${p === 'mine' ? 'ひろの監視銘柄' : 'ちかの監視銘柄'}<span class="wl-count">${list.length}件</span></div>
+      ${items}
+    </div>`;
+  }).join('');
+  el.innerHTML = sections;
+  // 価格取得
+  const allTickers = [...(watchlistData?.mine||[]), ...(watchlistData?.hers||[])].map(w => w.ticker).filter((v,i,a) => a.indexOf(v)===i);
+  const missing = allTickers.filter(t => !quotes[t]);
+  if (missing.length) {
+    try {
+      const q = await fetch(API_BASE+'/api/quotes?symbols='+encodeURIComponent(missing.join(','))).then(r=>r.json());
+      Object.assign(quotes, q || {});
+      renderWatch(); // 再描画
+    } catch {}
+  }
+}
+function setWatchPerson(p) {
+  watchPerson = p;
+  document.querySelectorAll('.wl-btn').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+}
+async function addWatchStockFromUI() {
+  const ticker = document.getElementById('wl-ticker').value.trim();
+  const name = document.getElementById('wl-name').value.trim();
+  if (!ticker) { showToast('銘柄コードを入力してください', true); return; }
+  try {
+    const r = await fetch(API_BASE + '/api/watchlist/add', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person: watchPerson, ticker, name }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'エラー');
+    watchlistData = d.watchlist;
+    document.getElementById('wl-ticker').value = '';
+    document.getElementById('wl-name').value = '';
+    updateUniverseCounts();
+    renderWatch();
+    showToast('監視銘柄に追加しました');
+  } catch (e) { showToast('追加失敗: ' + e.message, true); }
+}
+async function removeWatchStockUI(person, ticker) {
+  if (!confirm('この銘柄を監視から外しますか？')) return;
+  try {
+    const r = await fetch(API_BASE + '/api/watchlist/remove', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person, ticker }),
+    });
+    const d = await r.json();
+    watchlistData = d.watchlist;
+    updateUniverseCounts();
+    renderWatch();
+    showToast('監視から外しました');
+  } catch (e) { showToast('削除失敗: ' + e.message, true); }
+}
+
 // 組み合わせ実戦編(Vol4)の章番号から、本の第一頁を計算
 function getComboBookPage(chapterNum) {
   // 本の構成: cover(1) + foreword(1) + TOC(2) + [各部: part title(1) + chapters]
@@ -8069,10 +8250,10 @@ async function runScreenerCombo(id) {
   screenerResults[id] = { loading: true };
   renderScreener();
   try {
-    const r = await fetch(API_BASE + `/api/screener/run?id=${encodeURIComponent(id)}`);
+    const r = await fetch(API_BASE + `/api/screener/run?id=${encodeURIComponent(id)}&universe=${encodeURIComponent(currentScrUniverse)}`);
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'エラー');
-    screenerResults[id] = { hits: d.hits || [], count: d.count || 0, total: d.total || 0, label: d.label, chapter: d.chapter, ts: Date.now() };
+    screenerResults[id] = { hits: d.hits || [], count: d.count || 0, total: d.total || 0, fetchTotal: d.fetchTotal, label: d.label, chapter: d.chapter, ts: Date.now() };
   } catch (e) {
     screenerResults[id] = { error: e.message };
   }
@@ -8163,7 +8344,7 @@ async function runFundScreenerCombo(id) {
   fundScrResults[id] = { loading: true };
   renderFundScreener();
   try {
-    const r = await fetch(API_BASE + `/api/fund-screener/run?id=${encodeURIComponent(id)}`);
+    const r = await fetch(API_BASE + `/api/fund-screener/run?id=${encodeURIComponent(id)}&universe=${encodeURIComponent(currentFundScrUniverse)}`);
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'エラー');
     fundScrResults[id] = { hits: d.hits || [], count: d.count || 0, total: d.total || 0, fetchTotal: d.fetchTotal, label: d.label, chapter: d.chapter, book: d.book, ts: Date.now() };

@@ -16,6 +16,7 @@ import {
   getGcalUrls, saveGcalUrl,
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding, editHolding, sellHolding, getRealized,
+  getWatchlist, addWatchStock, removeWatchStock,
   setHoldingTargets, markHoldingTargetFired, markHoldingEarningsNotified, getBuys,
   hasMoveAlert, markMoveAlert,
   getNotes, addNote, deleteNote, toggleNote,
@@ -1734,17 +1735,52 @@ app.post('/api/screening/refresh', (_req, res) => {
   res.json({ status: 'running', done: 0, total: NIKKEI225.length });
 });
 
+// ── 監視銘柄 API ──
+app.get('/api/watchlist', (_req, res) => res.json(getWatchlist()));
+app.post('/api/watchlist/add', async (req, res) => {
+  try {
+    const { person, ticker, name } = req.body || {};
+    await addWatchStock(person, ticker, name);
+    res.json({ success: true, watchlist: getWatchlist() });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+app.post('/api/watchlist/remove', async (req, res) => {
+  const { person, ticker } = req.body || {};
+  await removeWatchStock(person, ticker);
+  res.json({ success: true, watchlist: getWatchlist() });
+});
+
+// ── TOPIX Core30 (代表30銘柄、時価総額最上位) ──
+// N225と大幅にオーバーラップするが「大型株のみで絞る」用途で有用
+const TOPIX_CORE30 = [
+  '4063','4502','4519','4568','6098','6501','6758','6861','6902','6981',
+  '7203','7267','7741','7974','8001','8031','8035','8053','8058','8306',
+  '8316','8411','8766','8801','8802','9432','9433','9983','9984','6367',
+];
+
+function getUniverseCodes(universe) {
+  if (universe === 'topix30') return TOPIX_CORE30;
+  if (universe === 'watchlist_mine' || universe === 'watchlist_hers') {
+    const key = universe === 'watchlist_mine' ? 'mine' : 'hers';
+    return (getWatchlist()[key] || []).map(w => w.ticker.replace(/\.T$/, ''));
+  }
+  return NIKKEI225;
+}
+
 // ── 組み合わせスクリーナー（本の各章のシグナルを N225 に適用） ──
-// 銘柄別のインジケーターを 30分キャッシュ、同じデータを全コンボで再利用
-let comboCache = { ts: 0, data: [] };
+// 銘柄別のインジケーターを universe別・30分キャッシュ、同じデータを全コンボで再利用
+let comboCache = {}; // { universe: { ts, data } }
 const COMBO_CACHE_TTL = 30 * 60 * 1000;
 
-async function fetchN225Indicators() {
+async function fetchN225Indicators(universe = 'nikkei225') {
   const now = Date.now();
-  if (comboCache.data.length && (now - comboCache.ts) < COMBO_CACHE_TTL) return comboCache.data;
+  const cache = comboCache[universe];
+  if (cache && cache.data.length && (now - cache.ts) < COMBO_CACHE_TTL) return cache.data;
+  const codes = getUniverseCodes(universe);
+  if (!codes.length) { comboCache[universe] = { ts: now, data: [] }; return []; }
   const BATCH = 15, out = [];
-  for (let i = 0; i < NIKKEI225.length; i += BATCH) {
-    await Promise.all(NIKKEI225.slice(i, i+BATCH).map(async code => {
+  for (let i = 0; i < codes.length; i += BATCH) {
+    await Promise.all(codes.slice(i, i+BATCH).map(async code => {
       try {
         const sym = `${code}.T`;
         const r = await fetch(
@@ -1766,9 +1802,9 @@ async function fetchN225Indicators() {
         });
       } catch {}
     }));
-    if (i + BATCH < NIKKEI225.length) await new Promise(r => setTimeout(r, 200));
+    if (i + BATCH < codes.length) await new Promise(r => setTimeout(r, 200));
   }
-  comboCache = { ts: now, data: out };
+  comboCache[universe] = { ts: now, data: out };
   return out;
 }
 
@@ -1910,10 +1946,11 @@ app.get('/api/screener/combos', (_req, res) => {
 
 app.get('/api/screener/run', async (req, res) => {
   const id = String(req.query.id || '');
+  const universe = String(req.query.universe || 'nikkei225');
   const combo = COMBO_CHECKS[id];
   if (!combo) return res.status(400).json({ error: '不明な組み合わせID' });
   try {
-    const stocks = await fetchN225Indicators();
+    const stocks = await fetchN225Indicators(universe);
     const hits = [];
     for (const s of stocks) {
       try {
@@ -1924,13 +1961,13 @@ app.get('/api/screener/run', async (req, res) => {
       } catch {}
     }
     hits.sort((a, b) => a.code.localeCompare(b.code));
-    res.json({ id, label: combo.label, chapter: combo.chapter, total: stocks.length, count: hits.length, hits: hits.slice(0, 50) });
+    res.json({ id, label: combo.label, chapter: combo.chapter, universe, total: stocks.length, fetchTotal: getUniverseCodes(universe).length, count: hits.length, hits: hits.slice(0, 50) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── ファンダメンタル スクリーナー ──
 // 本Vol3(ファンダメンタル分析)・Vol5(買っていい株の選び方) の条件で日経225を絞る
-let fundCache = { ts: 0, data: [] };
+let fundCache = {}; // { universe: { ts, data } }
 const FUND_CACHE_TTL = 12 * 60 * 60 * 1000; // 12時間（ファンダは日々ほぼ変わらない）
 
 async function fetchOneFundamentals(sym) {
@@ -1975,12 +2012,15 @@ async function fetchOneFundamentals(sym) {
   } catch { return null; }
 }
 
-async function fetchN225Fundamentals() {
+async function fetchN225Fundamentals(universe = 'nikkei225') {
   const now = Date.now();
-  if (fundCache.data.length && (now - fundCache.ts) < FUND_CACHE_TTL) return fundCache.data;
+  const cache = fundCache[universe];
+  if (cache && cache.data.length && (now - cache.ts) < FUND_CACHE_TTL) return cache.data;
+  const codes = getUniverseCodes(universe);
+  if (!codes.length) { fundCache[universe] = { ts: now, data: [] }; return []; }
   const BATCH = 8, out = [];
-  for (let i = 0; i < NIKKEI225.length; i += BATCH) {
-    await Promise.all(NIKKEI225.slice(i, i+BATCH).map(async code => {
+  for (let i = 0; i < codes.length; i += BATCH) {
+    await Promise.all(codes.slice(i, i+BATCH).map(async code => {
       const sym = `${code}.T`;
       const f = await fetchOneFundamentals(sym);
       if (!f || !f.price) return;
@@ -1995,9 +2035,9 @@ async function fetchN225Fundamentals() {
       } catch {}
       out.push({ code, symbol: sym, name, ...f });
     }));
-    if (i + BATCH < NIKKEI225.length) await new Promise(r => setTimeout(r, 250));
+    if (i + BATCH < codes.length) await new Promise(r => setTimeout(r, 250));
   }
-  fundCache = { ts: now, data: out };
+  fundCache[universe] = { ts: now, data: out };
   return out;
 }
 
@@ -2105,10 +2145,11 @@ app.get('/api/fund-screener/debug', async (_req, res) => {
 
 app.get('/api/fund-screener/run', async (req, res) => {
   const id = String(req.query.id || '');
+  const universe = String(req.query.universe || 'nikkei225');
   const combo = FUND_COMBOS[id];
   if (!combo) return res.status(400).json({ error: '不明な組み合わせID' });
   try {
-    const stocks = await fetchN225Fundamentals();
+    const stocks = await fetchN225Fundamentals(universe);
     const hits = [];
     for (const s of stocks) {
       try {
@@ -2120,8 +2161,8 @@ app.get('/api/fund-screener/run', async (req, res) => {
     }
     hits.sort((a, b) => a.code.localeCompare(b.code));
     res.json({
-      id, label: combo.label, book: combo.book, chapter: combo.chapter,
-      total: stocks.length, fetchTotal: NIKKEI225.length,
+      id, label: combo.label, book: combo.book, chapter: combo.chapter, universe,
+      total: stocks.length, fetchTotal: getUniverseCodes(universe).length,
       count: hits.length, hits: hits.slice(0, 50),
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
