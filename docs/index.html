@@ -1566,6 +1566,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .uni-picker { background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:12px; box-shadow:var(--shadow-sm); }
 .uni-picker-lbl { font-size:11px; font-weight:700; color:var(--text-soft); letter-spacing:2px; margin-bottom:8px; }
 .uni-picker-btns { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+@media (min-width: 600px) { .uni-picker-btns { grid-template-columns:repeat(5,1fr); } }
+.uni-picker-note { font-size:10.5px; color:var(--text-soft); margin-top:8px; line-height:1.6; }
 .uni-btn { background:var(--card); border:1.5px solid var(--line); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:13px; font-weight:700; color:var(--text-soft); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px; letter-spacing:.5px; -webkit-tap-highlight-color:transparent; }
 .uni-btn span { font-size:10px; font-weight:500; color:var(--text-soft); letter-spacing:.5px; }
 .uni-btn.active { background:var(--mine-bg); border-color:var(--mine); color:var(--mine); }
@@ -2252,13 +2254,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <button class="chip-gray" style="cursor:pointer;border:none" onclick="refreshScreenerList()">🔄 更新</button>
       </div>
       <div class="uni-picker">
-        <div class="uni-picker-lbl">対象銘柄:</div>
+        <div class="uni-picker-lbl">対象銘柄（絞り込む母集団）:</div>
         <div class="uni-picker-btns" id="uni-picker-scr">
           <button class="uni-btn active" data-u="nikkei225" onclick="setScreenerUniverse('nikkei225')">日経225<span>225社</span></button>
-          <button class="uni-btn" data-u="topix30" onclick="setScreenerUniverse('topix30')">TOPIX30<span>大型30社</span></button>
-          <button class="uni-btn" data-u="watchlist_mine" onclick="setScreenerUniverse('watchlist_mine')">監視 ひろ<span id="uni-cnt-scr-mine">0</span></button>
-          <button class="uni-btn" data-u="watchlist_hers" onclick="setScreenerUniverse('watchlist_hers')">監視 ちか<span id="uni-cnt-scr-hers">0</span></button>
+          <button class="uni-btn" data-u="topix500" onclick="setScreenerUniverse('topix500')">TOPIX 500相当<span>約500社</span></button>
+          <button class="uni-btn" data-u="topix30" onclick="setScreenerUniverse('topix30')">TOPIX Core30<span>超大型30社</span></button>
+          <button class="uni-btn" data-u="watchlist_mine" onclick="setScreenerUniverse('watchlist_mine')">監視 ひろ<span id="uni-cnt-scr-mine">0件</span></button>
+          <button class="uni-btn" data-u="watchlist_hers" onclick="setScreenerUniverse('watchlist_hers')">監視 ちか<span id="uni-cnt-scr-hers">0件</span></button>
         </div>
+        <div class="uni-picker-note">※ TOPIX全体は約2100社。全銘柄取得は時間がかかりすぎるため上位500社に絞っています</div>
       </div>
       <div id="scr-list"></div>
     </div>
@@ -2270,13 +2274,15 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <button class="chip-gray" style="cursor:pointer;border:none" onclick="refreshFundScreenerList()">🔄 更新</button>
       </div>
       <div class="uni-picker">
-        <div class="uni-picker-lbl">対象銘柄:</div>
+        <div class="uni-picker-lbl">対象銘柄（絞り込む母集団）:</div>
         <div class="uni-picker-btns" id="uni-picker-fs">
           <button class="uni-btn active" data-u="nikkei225" onclick="setFundScreenerUniverse('nikkei225')">日経225<span>225社</span></button>
-          <button class="uni-btn" data-u="topix30" onclick="setFundScreenerUniverse('topix30')">TOPIX30<span>大型30社</span></button>
-          <button class="uni-btn" data-u="watchlist_mine" onclick="setFundScreenerUniverse('watchlist_mine')">監視 ひろ<span id="uni-cnt-fs-mine">0</span></button>
-          <button class="uni-btn" data-u="watchlist_hers" onclick="setFundScreenerUniverse('watchlist_hers')">監視 ちか<span id="uni-cnt-fs-hers">0</span></button>
+          <button class="uni-btn" data-u="topix500" onclick="setFundScreenerUniverse('topix500')">TOPIX 500相当<span>約500社</span></button>
+          <button class="uni-btn" data-u="topix30" onclick="setFundScreenerUniverse('topix30')">TOPIX Core30<span>超大型30社</span></button>
+          <button class="uni-btn" data-u="watchlist_mine" onclick="setFundScreenerUniverse('watchlist_mine')">監視 ひろ<span id="uni-cnt-fs-mine">0件</span></button>
+          <button class="uni-btn" data-u="watchlist_hers" onclick="setFundScreenerUniverse('watchlist_hers')">監視 ちか<span id="uni-cnt-fs-hers">0件</span></button>
         </div>
+        <div class="uni-picker-note">※ TOPIX全体は約2100社。全銘柄取得は数分かかるため上位500社に絞っています</div>
       </div>
       <div id="fundscr-list"></div>
     </div>
