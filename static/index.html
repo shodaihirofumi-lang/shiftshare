@@ -192,6 +192,35 @@
   --grad: linear-gradient(135deg, #607848, #486038);
 }
 
+/* ── モノクロ系 ── */
+:root[data-theme="platinum"] {
+  --bg-grad: linear-gradient(165deg, #f2f0ed 0%, #e8e5e0 100%);
+  --bg: #f2f0ed; --card: #faf9f7; --text: #2a2825; --text-soft: #9a9590;
+  --line: #e5e2de; --line-soft: #edebe8;
+  --mine: #6b6560; --mine-bg: #eae8e5; --mine-border: #c8c4c0;
+  --hers: #a09088; --hers-bg: #f0ece8; --hers-border: #d4ccc6;
+  --gold: #8a8070; --gold-bg: #ece8e0; --gold-border: #ccc4b8;
+  --grad: linear-gradient(135deg, #6b6560, #5a5550);
+}
+:root[data-theme="silver"] {
+  --bg-grad: linear-gradient(165deg, #ebeef0 0%, #dfe3e6 100%);
+  --bg: #ebeef0; --card: #f8f9fa; --text: #22282e; --text-soft: #8a9098;
+  --line: #dde0e4; --line-soft: #e8eaed;
+  --mine: #5a6570; --mine-bg: #e4e8ec; --mine-border: #b8c0c8;
+  --hers: #8a95a0; --hers-bg: #e8ecf0; --hers-border: #c4ccd4;
+  --gold: #7a8088; --gold-bg: #e6e8ec; --gold-border: #c0c4c8;
+  --grad: linear-gradient(135deg, #5a6570, #4a5560);
+}
+:root[data-theme="concrete"] {
+  --bg-grad: linear-gradient(165deg, #e8e8e8 0%, #dcdcdc 100%);
+  --bg: #e8e8e8; --card: #f5f5f5; --text: #1a1a1a; --text-soft: #888888;
+  --line: #d5d5d5; --line-soft: #e0e0e0;
+  --mine: #505050; --mine-bg: #e0e0e0; --mine-border: #b8b8b8;
+  --hers: #808080; --hers-bg: #e8e8e8; --hers-border: #c8c8c8;
+  --gold: #707070; --gold-bg: #e0e0e0; --gold-border: #b8b8b8;
+  --grad: linear-gradient(135deg, #505050, #404040);
+}
+
 /* ── カラフル系ライト ── */
 :root[data-theme="peach"] {
   --bg-grad: linear-gradient(165deg, #fff0e8 0%, #fce4d4 100%);
@@ -264,6 +293,28 @@
   --hers: #a07068; --hers-bg: #f0e4e0; --hers-border: #d4b8b0;
   --gold: #888030; --gold-bg: #e8e0c0; --gold-border: #c0b080;
   --grad: linear-gradient(135deg, #506a38, #3a5028);
+}
+
+/* ── モノクロ系ダーク ── */
+:root[data-theme="graphite"] {
+  --bg-grad: linear-gradient(165deg, #1c1c1e 0%, #141416 100%);
+  --bg: #1c1c1e; --card: #2c2c2e; --text: #e5e5e8; --text-soft: #8e8e93;
+  --line: #3a3a3c; --line-soft: #323234;
+  --mine: #aeaeb2; --mine-bg: #2a2a2e; --mine-border: #48484a;
+  --hers: #636366; --hers-bg: #28282c; --hers-border: #404044;
+  --gold: #98989d; --gold-bg: #2a2a2c; --gold-border: #48484a;
+  --grad: linear-gradient(135deg, #3a3a3c, #2c2c2e);
+  --shadow: 0 4px 22px rgba(0,0,0,.5); --shadow-sm: 0 2px 10px rgba(0,0,0,.3);
+}
+:root[data-theme="sumi"] {
+  --bg-grad: linear-gradient(165deg, #0e0e0e 0%, #060606 100%);
+  --bg: #0e0e0e; --card: #1a1a1a; --text: #d0d0d0; --text-soft: #666666;
+  --line: #2a2a2a; --line-soft: #1e1e1e;
+  --mine: #c0c0c0; --mine-bg: #1a1a1a; --mine-border: #383838;
+  --hers: #555555; --hers-bg: #161616; --hers-border: #303030;
+  --gold: #a0a0a0; --gold-bg: #1c1c1c; --gold-border: #333333;
+  --grad: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  --shadow: 0 4px 22px rgba(0,0,0,.7); --shadow-sm: 0 2px 10px rgba(0,0,0,.5);
 }
 
 /* ── ダーク系（新規） ── */
@@ -3123,6 +3174,12 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="backup-title">カラーテーマ</div>
         <div class="backup-note">アプリ全体の配色を変えられます。</div>
         <div class="theme-picker">
+          <div class="theme-section-lbl">モノクロ</div>
+          <button class="theme-swatch" data-theme="platinum" onclick="setTheme('platinum')"><span class="th-p" style="background:#f2f0ed"></span><span class="th-p" style="background:#6b6560"></span><span class="th-p" style="background:#a09088"></span><span class="th-name">プラチナ</span></button>
+          <button class="theme-swatch" data-theme="silver" onclick="setTheme('silver')"><span class="th-p" style="background:#ebeef0"></span><span class="th-p" style="background:#5a6570"></span><span class="th-p" style="background:#8a95a0"></span><span class="th-name">シルバー</span></button>
+          <button class="theme-swatch" data-theme="concrete" onclick="setTheme('concrete')"><span class="th-p" style="background:#e8e8e8"></span><span class="th-p" style="background:#505050"></span><span class="th-p" style="background:#808080"></span><span class="th-name">コンクリート</span></button>
+          <button class="theme-swatch" data-theme="graphite" onclick="setTheme('graphite')"><span class="th-p" style="background:#1c1c1e"></span><span class="th-p" style="background:#aeaeb2"></span><span class="th-p" style="background:#636366"></span><span class="th-name">グラファイト</span></button>
+          <button class="theme-swatch" data-theme="sumi" onclick="setTheme('sumi')"><span class="th-p" style="background:#0e0e0e"></span><span class="th-p" style="background:#c0c0c0"></span><span class="th-p" style="background:#555555"></span><span class="th-name">墨モノ</span></button>
           <div class="theme-section-lbl">シンプル</div>
           <button class="theme-swatch" data-theme="white" onclick="setTheme('white')"><span class="th-p" style="background:#f5f5f5"></span><span class="th-p" style="background:#3a7ca5"></span><span class="th-p" style="background:#b05070"></span><span class="th-name">ホワイト</span></button>
           <button class="theme-swatch" data-theme="snow" onclick="setTheme('snow')"><span class="th-p" style="background:#f4f7fc"></span><span class="th-p" style="background:#4a78a0"></span><span class="th-p" style="background:#a06888"></span><span class="th-name">スノー</span></button>
@@ -3539,7 +3596,7 @@ function jsAttr(s){ return String(s).replace(/[<>&"'\\`]/g, c => '\\u' + c.charC
 
 
 // ── カラーテーマ ──
-const DARK_THEMES = ['night','deepsea','forestnight','midnight','charcoal','noir','abyss','obsidian','slate','ink','onyx','carbon','eclipse','volcanic','matrix','cosmos'];
+const DARK_THEMES = ['night','deepsea','forestnight','midnight','charcoal','noir','abyss','obsidian','slate','ink','onyx','carbon','eclipse','volcanic','matrix','cosmos','graphite','sumi'];
 function setTheme(name) {
   if (name === 'default') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', name);
