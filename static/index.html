@@ -2222,6 +2222,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <div id="tab-screener" class="screen">
       <div class="page-top">
         <div><div class="page-title">チャート探し</div><div class="page-sub">組み合わせ実戦編（第4巻）の全条件を日経225に適用</div></div>
+        <button class="chip-gray" style="cursor:pointer;border:none" onclick="refreshScreenerList()">🔄 更新</button>
       </div>
       <div class="scr-intro">選んだ条件で日経225を絞り込みます。初回実行時は取得に30秒〜1分ほどかかります（データは30分間キャッシュ）。</div>
       <div id="scr-list"></div>
@@ -2231,6 +2232,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <div id="tab-fundscr" class="screen">
       <div class="page-top">
         <div><div class="page-title">銘柄選び</div><div class="page-sub">ファンダメンタル指標で日経225を絞り込み</div></div>
+        <button class="chip-gray" style="cursor:pointer;border:none" onclick="refreshFundScreenerList()">🔄 更新</button>
       </div>
       <div class="scr-intro">📕 ファンダメンタル分析（第3巻）と 📕 買っていい株の選び方（第5巻）に載っている条件を実行できます。初回はデータ取得に1〜2分。ファンダメンタルは12時間キャッシュ。</div>
       <div id="fundscr-list"></div>
@@ -7980,6 +7982,18 @@ function returnFromBook() {
   bookReturnTab = null;
   closeDiaryBook();
   if (tab) showTab(tab);
+}
+function refreshScreenerList() {
+  screenerCombos = null;
+  screenerResults = {};
+  renderScreener();
+  showToast('スクリーナー一覧を再取得しました');
+}
+function refreshFundScreenerList() {
+  fundScrCombos = null;
+  fundScrResults = {};
+  renderFundScreener();
+  showToast('スクリーナー一覧を再取得しました');
 }
 
 // 組み合わせ実戦編(Vol4)の章番号から、本の第一頁を計算
