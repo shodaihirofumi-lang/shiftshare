@@ -8604,10 +8604,12 @@ function renderCandleFromBars() {
 async function loadCandleDetail() {
   try {
     const r = await fetch(API_BASE + `/api/stock-detail?symbol=${encodeURIComponent(candleSymbol)}`);
-    candleDetailCache = await r.json();
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'APIエラー');
+    candleDetailCache = d;
     renderCandleDetail();
-  } catch {
-    document.getElementById('candle-detail-body').innerHTML = '<div class="cd-loading">詳細取得失敗</div>';
+  } catch (e) {
+    document.getElementById('candle-detail-body').innerHTML = `<div class="cd-loading">詳細取得失敗: ${escapeHtml(e.message)}</div>`;
   }
 }
 function renderCandleDetail() {
@@ -8886,7 +8888,7 @@ async function renderWatch() {
             : '';
           return `<div class="wl-item${sigClass}">
             <div class="wl-item-main" onclick="openCandleChart('${jsAttr(w.ticker)}','${jsAttr(jaName)}')">
-              <div class="wl-item-name">${escapeHtml(jaName)}<span class="wl-item-code">${escapeHtml(w.ticker)}</span></div>
+              <div class="wl-item-name">${escapeHtml(jaName)}<span class="wl-item-code" onclick="event.stopPropagation()">${escapeHtml(w.ticker)}</span><button class="scr-hit-copy" onclick="event.stopPropagation();copyStockCode(this,'${jsAttr(w.ticker)}')">コピー</button></div>
               <div class="wl-item-price-row">
                 <span class="wl-item-price">${priceText}</span>
                 ${chgHtml}

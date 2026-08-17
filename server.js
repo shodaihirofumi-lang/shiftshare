@@ -2075,7 +2075,7 @@ app.get('/api/stock-detail', async (req, res) => {
   const code0 = String(req.query.symbol || '').trim();
   const sym = /^\d{3,5}[A-Z]?$/.test(code0) ? code0 + '.T' : code0;
   try {
-    const modules = 'summaryDetail,defaultKeyStatistics,financialData,calendarEvents,earningsTrend';
+    const modules = 'summaryDetail,defaultKeyStatistics,financialData,calendarEvents';
     const doFetch = async (force) => {
       const { cookie, crumb } = await getYahooAuth(force);
       return fetch(
@@ -2086,15 +2086,23 @@ app.get('/api/stock-detail', async (req, res) => {
     let j = await doFetch(false);
     if (j.finance?.error?.code === 'Unauthorized' || j.quoteSummary?.error?.code === 'Unauthorized') j = await doFetch(true);
     const rs = j.quoteSummary?.result?.[0];
-    if (!rs) throw new Error('データなし');
+    if (!rs) throw new Error('データなし — quoteSummary結果なし（Unauthorized?）');
     const sd = rs.summaryDetail || {}, ks = rs.defaultKeyStatistics || {}, fd = rs.financialData || {};
     const ce = rs.calendarEvents || {};
     const raw = (obj, k) => obj?.[k]?.raw ?? null;
     const fmt = (obj, k) => obj?.[k]?.fmt ?? null;
 
-    // 価格情報
-    const price = raw(sd, 'regularMarketPrice') || raw(fd, 'currentPrice');
-    const prevClose = raw(sd, 'regularMarketPreviousClose');
+    // 価格情報（summaryDetailに無い場合chartAPIからフォールバック）
+    let price = raw(sd, 'regularMarketPrice') || raw(fd, 'currentPrice');
+    let prevClose = raw(sd, 'regularMarketPreviousClose') || raw(sd, 'previousClose');
+    if (!price) {
+      try {
+        const cj = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`,
+          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }).then(r => r.json());
+        const m = cj?.chart?.result?.[0]?.meta;
+        if (m) { price = m.regularMarketPrice; prevClose = prevClose || m.chartPreviousClose || m.previousClose; }
+      } catch {}
+    }
     const open = raw(sd, 'regularMarketOpen') || raw(sd, 'open');
     const dayHigh = raw(sd, 'regularMarketDayHigh') || raw(sd, 'dayHigh');
     const dayLow = raw(sd, 'regularMarketDayLow') || raw(sd, 'dayLow');
