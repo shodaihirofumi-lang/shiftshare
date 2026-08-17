@@ -1869,7 +1869,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .candle-int-btn { flex:1; padding:8px 12px; border:1.5px solid var(--line); background:var(--card); border-radius:8px; font-size:13px; font-weight:700; color:var(--text-soft); cursor:pointer; font-family:inherit; }
 .candle-int-btn.active { background:var(--mine-bg); border-color:var(--mine); color:var(--mine); }
 .candle-chart-wrap { background:var(--bg); border-radius:8px; padding:10px; margin-bottom:12px; overflow-x:auto; }
-.candle-chart-wrap svg { width:100%; max-width:640px; height:auto; display:block; }
+.candle-chart-wrap svg { min-width:600px; height:auto; display:block; }
 .candle-price-head { display:flex; align-items:baseline; gap:12px; padding:4px 6px 10px; flex-wrap:wrap; }
 .candle-price-now { font-size:26px; font-weight:800; color:var(--text); letter-spacing:.5px; }
 .candle-price-chg { font-size:16px; font-weight:700; }
@@ -3195,6 +3195,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       監視銘柄
     </button>
+    <button class="nav-btn" id="nav-demo" onclick="showTab('demo')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      デモ取引
+    </button>
     <button class="nav-btn" id="nav-memo" onclick="showTab('memo')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       メモ
@@ -3230,10 +3234,6 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <button class="nav-btn" id="nav-board" onclick="showTab('board')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
       掲示板
-    </button>
-    <button class="nav-btn" id="nav-demo" onclick="showTab('demo')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-      デモ取引
     </button>
     <button class="nav-btn" id="nav-upload" onclick="showTab('upload')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -3351,6 +3351,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     </div>
     <div class="candle-chart-wrap" id="candle-chart" style="touch-action:none">
       <div class="scr-loading">読み込み中…</div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:12px;margin:-6px 0 8px">
+      <button class="candle-int-btn" onclick="candleZoomBtn(1)" style="flex:0;padding:6px 18px;font-size:18px;font-weight:900">＋</button>
+      <button class="candle-int-btn" onclick="candleZoomBtn(-1)" style="flex:0;padding:6px 18px;font-size:18px;font-weight:900">−</button>
     </div>
     <div id="candle-signals-wrap"></div>
     <div class="candle-detail-tabs">
@@ -8597,6 +8601,10 @@ function setCandleTab(tab) {
   renderCandleDetail();
 }
 // ピンチズーム
+function candleZoomBtn(dir) {
+  candleZoom = Math.max(0.5, Math.min(4, candleZoom * (dir > 0 ? 1.3 : 0.77)));
+  if (candleBars) renderCandleFromBars();
+}
 function setupCandlePinch() {
   const el = document.getElementById('candle-chart');
   let startDist = 0, startZoom = 1;

@@ -205,7 +205,7 @@ app.get('/api/hold-replay', async (_req, res) => {
   for (const t of tickers) {
     try {
       const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=1d&range=5d`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
+        headers: { 'User-Agent': YH_UA },
       }).then(r => r.json());
       const p = j.chart?.result?.[0]?.meta?.regularMarketPrice;
       if (p != null) prices[t] = p;
@@ -286,7 +286,7 @@ app.get('/api/dividends', async (_req, res) => {
   if (!holdings.length) return res.json({ byHolding: [], totals: { mine: 0, hers: 0, combined: 0 }, exCalendar: [], usdjpy: null });
   let usdjpy = 150;
   try {
-    const fx = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDJPY=X?interval=1d&range=5d', { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+    const fx = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDJPY=X?interval=1d&range=5d', { headers: { 'User-Agent': YH_UA } }).then(r => r.json());
     const p = fx.chart?.result?.[0]?.meta?.regularMarketPrice;
     if (p) usdjpy = p;
   } catch {}
@@ -296,7 +296,7 @@ app.get('/api/dividends', async (_req, res) => {
   for (const sym of tickers) {
     try {
       const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1y&events=div`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
+        headers: { 'User-Agent': YH_UA },
       }).then(r => r.json());
       const r0 = j.chart?.result?.[0];
       const divs = r0?.events?.dividends ? Object.values(r0.events.dividends) : [];
@@ -343,14 +343,15 @@ app.get('/api/earnings', (_req, res) => {
 // quoteSummary API は認証(cookie+crumb)必須になったため、先に取得してから叩く。
 // cookie/crumb は数時間有効なのでキャッシュし、Unauthorized なら取り直して1回だけ再試行。
 let _yhAuth = null; // { cookie, crumb, fetchedAt }
+const YH_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 async function getYahooAuth(force) {
-  if (!force && _yhAuth && Date.now() - _yhAuth.fetchedAt < 60 * 60 * 1000) return _yhAuth;
-  const r1 = await fetch('https://fc.yahoo.com/', { headers: { 'User-Agent': 'Mozilla/5.0' }, redirect: 'manual' });
+  if (!force && _yhAuth && Date.now() - _yhAuth.fetchedAt < 30 * 60 * 1000) return _yhAuth;
+  const r1 = await fetch('https://fc.yahoo.com/', { headers: { 'User-Agent': YH_UA }, redirect: 'manual' });
   const setCookie = r1.headers.get('set-cookie') || '';
   const cookie = setCookie.split(';')[0];
   if (!cookie) throw new Error('Yahoo cookie取得失敗');
   const crumb = (await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
-    headers: { 'User-Agent': 'Mozilla/5.0', 'Cookie': cookie },
+    headers: { 'User-Agent': YH_UA, 'Cookie': cookie },
   }).then(r => r.text())).trim();
   if (!crumb || crumb.length > 30 || crumb.includes('<')) throw new Error('Yahoo crumb取得失敗');
   _yhAuth = { cookie, crumb, fetchedAt: Date.now() };
@@ -360,7 +361,7 @@ async function fetchCalendarEvents(ticker, force) {
   const { cookie, crumb } = await getYahooAuth(force);
   return fetch(
     `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=calendarEvents&crumb=${encodeURIComponent(crumb)}`,
-    { headers: { 'User-Agent': 'Mozilla/5.0', 'Cookie': cookie } }
+    { headers: { 'User-Agent': YH_UA, 'Cookie': cookie } }
   ).then(r => r.json());
 }
 app.get('/api/earnings-date', async (req, res) => {
@@ -391,7 +392,7 @@ app.get('/api/stock-analysis', async (req, res) => {
   const cs = cur === 'JPY' ? '¥' : '$';
   let r0;
   try {
-    const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+    const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`, { headers: { 'User-Agent': YH_UA } }).then(r => r.json());
     r0 = j.chart?.result?.[0];
   } catch {}
   if (!r0) return res.status(502).json({ error: '株価データを取得できませんでした' });
@@ -489,7 +490,7 @@ app.get('/api/check-price-targets', async (_req, res) => {
   for (const symT of tickers) {
     try {
       const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symT)}?interval=1d&range=5d`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
+        headers: { 'User-Agent': YH_UA },
       }).then(r => r.json());
       const meta = j.chart?.result?.[0]?.meta;
       if (meta?.regularMarketPrice != null) {
@@ -573,7 +574,7 @@ app.get('/api/quotes', async (req, res) => {
     const ySym = /^\d{3,5}[A-Z]?$/.test(sym) ? sym + '.T' : sym;
     try {
       const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ySym)}?interval=1wk&range=2y`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
+        headers: { 'User-Agent': YH_UA },
       }).then(r => r.json());
       const r0 = j.chart?.result?.[0];
       const m = r0?.meta;
@@ -605,7 +606,7 @@ app.get('/api/portfolio-history', async (_req, res) => {
   if (!hold.length) return res.json({ history: [] });
   let usdjpy = 150;
   try {
-    const fx = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDJPY=X?interval=1d&range=5d', { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+    const fx = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDJPY=X?interval=1d&range=5d', { headers: { 'User-Agent': YH_UA } }).then(r => r.json());
     const p = fx.chart?.result?.[0]?.meta?.regularMarketPrice;
     if (p) usdjpy = p;
   } catch { /* default */ }
@@ -614,7 +615,7 @@ app.get('/api/portfolio-history', async (_req, res) => {
   const allDates = new Set();
   for (const h of hold) {
     try {
-      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(h.ticker)}?interval=1d&range=1y`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(h.ticker)}?interval=1d&range=1y`, { headers: { 'User-Agent': YH_UA } }).then(r => r.json());
       const r0 = j.chart?.result?.[0];
       if (!r0) continue;
       const ts = r0.timestamp || [];
@@ -660,7 +661,7 @@ app.get('/api/stock-history', async (req, res) => {
   const interval = (range === '1y' || range === '5y') ? '1wk' : '1d';
   try {
     const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&range=${range}`, {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
+      headers: { 'User-Agent': YH_UA },
     }).then(r => r.json());
     const r0 = j.chart?.result?.[0];
     if (!r0) throw new Error('データなし');
@@ -682,7 +683,7 @@ app.get('/api/stock-history', async (req, res) => {
 app.get('/api/nikkei', async (_req, res) => {
   try {
     const j = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EN225?interval=1d&range=1mo', {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
+      headers: { 'User-Agent': YH_UA },
     }).then(r => r.json());
     const r = j.chart?.result?.[0];
     if (!r) throw new Error('データ取得失敗');
@@ -1058,7 +1059,7 @@ app.get('/api/chart-history', async (req, res) => {
     const toTs = to ? Math.floor(Number(to)/1000) : Math.floor(now/1000);
     const fromTs = from ? Math.floor(Number(from)/1000) : Math.floor((now - 90*24*3600*1000)/1000);
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${fromTs}&period2=${toTs}&interval=1d`;
-    const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const r = await fetch(url, { headers: { 'User-Agent': YH_UA } });
     if (!r.ok) return res.status(r.status).json({ error: 'yahoo error' });
     const j = await r.json();
     const result = j.chart?.result?.[0];
@@ -1085,7 +1086,7 @@ app.get('/api/trade-analysis', async (req, res) => {
     const toSec = Math.floor(Date.now() / 1000);
     const fromSec = Math.floor((ts - 180 * 24 * 3600 * 1000) / 1000);
     const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?period1=${fromSec}&period2=${toSec}&interval=1d`, {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+      headers: { 'User-Agent': YH_UA }
     }).then(r => r.json());
     const r0 = j.chart?.result?.[0];
     if (!r0) return res.json({ error: 'no data' });
@@ -1160,7 +1161,7 @@ app.get('/api/buy-zones', async (_req, res) => {
     try {
       const sym = h.ticker;
       const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1wk&range=2y`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
+        headers: { 'User-Agent': YH_UA },
       }).then(r => r.json());
       const r0 = j.chart?.result?.[0];
       if (!r0) return null;
@@ -1839,7 +1840,7 @@ async function fetchN225Indicators(universe = 'nikkei225') {
         const sym = `${code}.T`;
         const r = await fetch(
           `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1y`,
-          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+          { headers: { 'User-Agent': YH_UA }, signal: AbortSignal.timeout(8000) }
         );
         const d = await r.json();
         const r0 = d?.chart?.result?.[0];
@@ -2004,7 +2005,7 @@ async function computeStockSignals(code) {
     const sym = /^\d{3,5}[A-Z]?$/.test(code) ? code + '.T' : code;
     const j = await fetch(
       `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1y`,
-      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      { headers: { 'User-Agent': YH_UA }, signal: AbortSignal.timeout(6000) }
     ).then(r => r.json());
     const r0 = j?.chart?.result?.[0];
     const q = r0?.indicators?.quote?.[0];
@@ -2054,7 +2055,7 @@ app.get('/api/candle-data', async (req, res) => {
   try {
     const j = await fetch(
       `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&range=${range}`,
-      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+      { headers: { 'User-Agent': YH_UA }, signal: AbortSignal.timeout(8000) }
     ).then(r => r.json());
     const r0 = j?.chart?.result?.[0];
     if (!r0) throw new Error('データなし');
@@ -2080,7 +2081,7 @@ app.get('/api/stock-detail', async (req, res) => {
       const { cookie, crumb } = await getYahooAuth(force);
       return fetch(
         `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=${modules}&crumb=${encodeURIComponent(crumb)}`,
-        { headers: { 'User-Agent': 'Mozilla/5.0', 'Cookie': cookie }, signal: AbortSignal.timeout(10000) }
+        { headers: { 'User-Agent': YH_UA, 'Cookie': cookie }, signal: AbortSignal.timeout(10000) }
       ).then(r => r.json());
     };
     const raw = (obj, k) => obj?.[k]?.raw ?? null;
@@ -2105,7 +2106,7 @@ app.get('/api/stock-detail', async (req, res) => {
     if (!price) {
       try {
         const cj = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`,
-          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }).then(r => r.json());
+          { headers: { 'User-Agent': YH_UA }, signal: AbortSignal.timeout(6000) }).then(r => r.json());
         const cr = cj?.chart?.result?.[0];
         const m = cr?.meta;
         if (m) {
@@ -2152,7 +2153,7 @@ app.get('/api/stock-detail', async (req, res) => {
     try {
       const cj = await fetch(
         `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1y`,
-        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+        { headers: { 'User-Agent': YH_UA }, signal: AbortSignal.timeout(8000) }
       ).then(r => r.json());
       const cr = cj?.chart?.result?.[0];
       if (cr) {
@@ -2239,7 +2240,7 @@ async function fetchOneFundamentals(sym) {
     const { cookie, crumb } = await getYahooAuth(force);
     const r = await fetch(
       `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=${modules}&crumb=${encodeURIComponent(crumb)}`,
-      { headers: { 'User-Agent': 'Mozilla/5.0', 'Cookie': cookie }, signal: AbortSignal.timeout(8000) }
+      { headers: { 'User-Agent': YH_UA, 'Cookie': cookie }, signal: AbortSignal.timeout(8000) }
     );
     return r.json();
   };
@@ -2292,7 +2293,7 @@ async function fetchN225Fundamentals(universe = 'nikkei225') {
       try {
         const cr = await fetch(
           `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`,
-          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) }
+          { headers: { 'User-Agent': YH_UA }, signal: AbortSignal.timeout(5000) }
         ).then(r => r.json());
         name = cr?.chart?.result?.[0]?.meta?.shortName || cr?.chart?.result?.[0]?.meta?.longName || code;
       } catch {}
@@ -2439,7 +2440,7 @@ async function runScreening(date) {
         const sym = `${code}.T`;
         const r = await fetch(
           `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=4mo`,
-          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+          { headers: { 'User-Agent': YH_UA }, signal: AbortSignal.timeout(8000) }
         );
         const d = await r.json();
         const result = d?.chart?.result?.[0];
@@ -2518,13 +2519,13 @@ app.get('/api/benchmark', async (_req, res) => {
   if (!hold.length) return res.json({ error: '保有銘柄がありません' });
   let usdjpy = 157;
   try {
-    const fx = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDJPY=X?interval=1d&range=5d', { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+    const fx = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDJPY=X?interval=1d&range=5d', { headers: { 'User-Agent': YH_UA } }).then(r => r.json());
     const c = fx.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
     const v = c.filter(Boolean).slice(-1)[0]; if (v) usdjpy = v;
   } catch {}
   const fetchBenchmark = async (sym, range) => {
     try {
-      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=${range}`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+      const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=${range}`, { headers: { 'User-Agent': YH_UA } }).then(r => r.json());
       const r0 = j.chart?.result?.[0];
       if (!r0) return null;
       const closes = r0.indicators?.quote?.[0]?.close || [];
@@ -2546,7 +2547,7 @@ app.get('/api/benchmark', async (_req, res) => {
       const tickers = [...new Set(ph.map(h => h.ticker))];
       let startVal = 0, endVal = 0;
       for (const t of tickers) {
-        const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=1d&range=${range}`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json());
+        const j = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=1d&range=${range}`, { headers: { 'User-Agent': YH_UA } }).then(r => r.json());
         const r0 = j.chart?.result?.[0];
         if (!r0) continue;
         const closes = r0.indicators?.quote?.[0]?.close || [];
