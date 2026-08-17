@@ -17,6 +17,7 @@ import {
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding, editHolding, sellHolding, getRealized,
   getWatchlist, addWatchStock, removeWatchStock,
+  getDemoTrades, addDemoTrade, removeDemoTrade,
   setHoldingTargets, markHoldingTargetFired, markHoldingEarningsNotified, getBuys,
   hasMoveAlert, markMoveAlert,
   getNotes, addNote, deleteNote, toggleNote,
@@ -1770,6 +1771,23 @@ app.post('/api/watchlist/remove', async (req, res) => {
   res.json({ success: true, watchlist: getWatchlist() });
 });
 
+// ── デモ取引 API ──
+app.get('/api/demo-trades', (_req, res) => res.json(getDemoTrades()));
+app.post('/api/demo-trades/add', async (req, res) => {
+  try {
+    const { person, trade } = req.body || {};
+    if (!trade || !trade.ticker) throw new Error('取引データが不正です');
+    trade.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    await addDemoTrade(person || 'mine', trade);
+    res.json({ success: true, demoTrades: getDemoTrades() });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+app.post('/api/demo-trades/remove', async (req, res) => {
+  const { person, id } = req.body || {};
+  await removeDemoTrade(person || 'mine', id);
+  res.json({ success: true, demoTrades: getDemoTrades() });
+});
+
 // ── TOPIX Core30 (代表30銘柄、時価総額最上位) ──
 const TOPIX_CORE30 = [
   '4063','4502','4519','4568','6098','6501','6758','6861','6902','6981',
@@ -2179,7 +2197,7 @@ app.get('/api/stock-detail', async (req, res) => {
         const code = sym.replace(/\.T$/, '');
         const gfUrl = `https://www.google.com/finance/quote/${encodeURIComponent(code)}:TYO`;
         const html = await fetch(gfUrl, {
-          headers: { 'User-Agent': YH_UA, 'Accept': 'text/html', 'Accept-Language': 'en-US,en;q=0.9,ja;q=0.8' },
+          headers: { 'User-Agent': YH_UA, 'Accept': 'text/html', 'Accept-Language': 'ja,en;q=0.5' },
           signal: AbortSignal.timeout(10000),
         }).then(r => r.text());
         // Google Finance: <div class="SwQK7">ラベル</div><div class="dO6ijd">値</div> を全て抽出

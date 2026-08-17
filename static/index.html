@@ -3066,6 +3066,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div class="page-top">
         <div><div class="page-title">デモ取引</div><div class="page-sub">仮想ポートフォリオ（実際の取引ではありません）</div></div>
       </div>
+      <div style="display:flex;gap:8px;margin:0 12px 12px">
+        <button class="wl-btn active" data-dp="mine" onclick="setDemoPerson('mine')">ひろ</button>
+        <button class="wl-btn" data-dp="hers" onclick="setDemoPerson('hers')">ちか</button>
+      </div>
       <div id="demo-summary" style="margin-bottom:12px"></div>
       <div id="demo-list"></div>
       <div style="text-align:center;margin-top:16px;padding-bottom:12px;opacity:.5;font-size:12px">※ デモ取引はシミュレーションです。実際の金銭の移動はありません。</div>
@@ -8674,42 +8678,55 @@ function renderFundDetail(el, d) {
   const chgUp = chg != null ? chg >= 0 : null;
   const chgCls = chgUp == null ? '' : chgUp ? 'up' : 'down';
   const chgSign = chgUp ? '+' : '';
-  el.innerHTML = `
-    <div class="cd-section">価格情報</div>
+  const row = (label, val, cls) => val && val !== '—' ? _cdRow(label, val, cls) : '';
+  const hasAny = (...vals) => vals.some(v => v != null);
+  let html = `<div class="cd-section">価格情報</div>
     ${_cdRow('現在値', price ? '¥' + Math.round(price).toLocaleString() : '—')}
     ${_cdRow('前日比', chg != null ? `${chgSign}${Math.round(chg).toLocaleString()} (${chgSign}${chgPct.toFixed(2)}%)` : '—', chgCls)}
-    ${_cdRow('始値', d.open ? '¥' + Math.round(d.open).toLocaleString() : '—')}
-    ${_cdRow('高値 / 安値', (d.dayHigh ? '¥' + Math.round(d.dayHigh).toLocaleString() : '—') + ' / ' + (d.dayLow ? '¥' + Math.round(d.dayLow).toLocaleString() : '—'))}
-    ${_cdRow('52週 高値/安値', (d.week52High ? '¥' + Math.round(d.week52High).toLocaleString() : '—') + ' / ' + (d.week52Low ? '¥' + Math.round(d.week52Low).toLocaleString() : '—'))}
-    ${_cdRow('出来高', d.volume ? Math.round(d.volume).toLocaleString() + '株' : '—')}
-    ${noFund ? '<div style="background:rgba(200,150,50,.15);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:12px;color:var(--text-soft)">財務詳細データは現在取得できません（Yahoo認証制限）。価格・テクニカルは表示されます。</div>' : ''}
-    <div class="cd-section">バリュエーション</div>
-    ${_cdRow('PER (実績)', f.trailingPE != null ? _fmtNum(f.trailingPE, 1) + '倍' : '—')}
-    ${_cdRow('PER (予想)', f.forwardPE != null ? _fmtNum(f.forwardPE, 1) + '倍' : '—')}
-    ${_cdRow('PBR', f.priceToBook != null ? _fmtNum(f.priceToBook, 2) + '倍' : '—')}
-    ${_cdRow('PEG', f.pegRatio != null ? _fmtNum(f.pegRatio, 2) : '—')}
-    ${_cdRow('EV/EBITDA', f.enterpriseToEbitda != null ? _fmtNum(f.enterpriseToEbitda, 1) + '倍' : '—')}
-    ${_cdRow('時価総額', _fmtMcap(f.marketCap) + '円')}
-    <div class="cd-section">配当</div>
-    ${_cdRow('配当利回り', _fmtPct(f.dividendYield))}
-    ${_cdRow('配当性向', _fmtPct(f.payoutRatio))}
-    <div class="cd-section">収益性</div>
-    ${_cdRow('ROE', _fmtPct(f.roe))}
-    ${_cdRow('ROA', _fmtPct(f.roa))}
-    ${_cdRow('営業利益率', _fmtPct(f.operatingMargins))}
-    ${_cdRow('純利益率', _fmtPct(f.profitMargins))}
-    <div class="cd-section">成長性</div>
-    ${_cdRow('売上成長率', _fmtPct(f.revenueGrowth))}
-    ${_cdRow('利益成長率', _fmtPct(f.earningsGrowth))}
-    <div class="cd-section">財務健全性</div>
-    ${_cdRow('自己資本比率(D/E)', f.debtToEquity != null ? _fmtNum(f.debtToEquity, 1) : '—')}
-    ${_cdRow('流動比率', f.currentRatio != null ? _fmtNum(f.currentRatio, 2) + '倍' : '—')}
-    <div class="cd-section">決算・アナリスト</div>
-    ${_cdRow('次回決算日', d.nextEarnings || '—')}
-    ${_cdRow('目標株価', f.targetMeanPrice ? '¥' + Math.round(f.targetMeanPrice).toLocaleString() : '—')}
-    ${_cdRow('アナリスト評価', f.recommendationKey ? f.recommendationKey.toUpperCase() : '—')}
-    ${_cdRow('カバー人数', f.numberOfAnalystOpinions != null ? f.numberOfAnalystOpinions + '人' : '—')}
-  `;
+    ${row('始値', d.open ? '¥' + Math.round(d.open).toLocaleString() : null)}
+    ${row('高値 / 安値', d.dayHigh || d.dayLow ? (d.dayHigh ? '¥' + Math.round(d.dayHigh).toLocaleString() : '—') + ' / ' + (d.dayLow ? '¥' + Math.round(d.dayLow).toLocaleString() : '—') : null)}
+    ${row('52週 高値/安値', d.week52High || d.week52Low ? (d.week52High ? '¥' + Math.round(d.week52High).toLocaleString() : '—') + ' / ' + (d.week52Low ? '¥' + Math.round(d.week52Low).toLocaleString() : '—') : null)}
+    ${row('出来高', d.volume ? Math.round(d.volume).toLocaleString() + '株' : null)}`;
+  if (noFund) html += '<div style="background:rgba(200,150,50,.15);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:12px;color:#aa8833">一部データはGoogle Finance公開情報から取得。PBR・ROE等は取得対象外です。</div>';
+  if (hasAny(f.trailingPE, f.forwardPE, f.priceToBook, f.pegRatio, f.enterpriseToEbitda, f.marketCap)) {
+    html += '<div class="cd-section">バリュエーション</div>';
+    html += row('PER (実績)', f.trailingPE != null ? _fmtNum(f.trailingPE, 1) + '倍' : null);
+    html += row('PER (予想)', f.forwardPE != null ? _fmtNum(f.forwardPE, 1) + '倍' : null);
+    html += row('PBR', f.priceToBook != null ? _fmtNum(f.priceToBook, 2) + '倍' : null);
+    html += row('PEG', f.pegRatio != null ? _fmtNum(f.pegRatio, 2) : null);
+    html += row('EV/EBITDA', f.enterpriseToEbitda != null ? _fmtNum(f.enterpriseToEbitda, 1) + '倍' : null);
+    html += row('時価総額', f.marketCap ? _fmtMcap(f.marketCap) + '円' : null);
+  }
+  if (hasAny(f.dividendYield, f.payoutRatio)) {
+    html += '<div class="cd-section">配当</div>';
+    html += row('配当利回り', f.dividendYield != null ? _fmtPct(f.dividendYield) : null);
+    html += row('配当性向', f.payoutRatio != null ? _fmtPct(f.payoutRatio) : null);
+  }
+  if (hasAny(f.roe, f.roa, f.operatingMargins, f.profitMargins)) {
+    html += '<div class="cd-section">収益性</div>';
+    html += row('ROE', f.roe != null ? _fmtPct(f.roe) : null);
+    html += row('ROA', f.roa != null ? _fmtPct(f.roa) : null);
+    html += row('営業利益率', f.operatingMargins != null ? _fmtPct(f.operatingMargins) : null);
+    html += row('純利益率', f.profitMargins != null ? _fmtPct(f.profitMargins) : null);
+  }
+  if (hasAny(f.revenueGrowth, f.earningsGrowth)) {
+    html += '<div class="cd-section">成長性</div>';
+    html += row('売上成長率', f.revenueGrowth != null ? _fmtPct(f.revenueGrowth) : null);
+    html += row('利益成長率', f.earningsGrowth != null ? _fmtPct(f.earningsGrowth) : null);
+  }
+  if (hasAny(f.debtToEquity, f.currentRatio)) {
+    html += '<div class="cd-section">財務健全性</div>';
+    html += row('自己資本比率(D/E)', f.debtToEquity != null ? _fmtNum(f.debtToEquity, 1) : null);
+    html += row('流動比率', f.currentRatio != null ? _fmtNum(f.currentRatio, 2) + '倍' : null);
+  }
+  if (hasAny(f.targetMeanPrice, f.recommendationKey, f.numberOfAnalystOpinions) || d.nextEarnings) {
+    html += '<div class="cd-section">決算・アナリスト</div>';
+    html += row('次回決算日', d.nextEarnings || null);
+    html += row('目標株価', f.targetMeanPrice ? '¥' + Math.round(f.targetMeanPrice).toLocaleString() : null);
+    html += row('アナリスト評価', f.recommendationKey ? f.recommendationKey.toUpperCase() : null);
+    html += row('カバー人数', f.numberOfAnalystOpinions != null ? f.numberOfAnalystOpinions + '人' : null);
+  }
+  el.innerHTML = html;
 }
 function renderTechDetail(el, d) {
   const t = d.technical;
@@ -8809,40 +8826,51 @@ function calcSim() {
   `;
 }
 // ── デモ取引 ──
-function getDemoTrades() {
-  try { return JSON.parse(localStorage.getItem('demoTrades') || '[]'); } catch { return []; }
+let demoTradesData = null;
+let demoPerson = 'mine';
+function setDemoPerson(p) {
+  demoPerson = p;
+  document.querySelectorAll('[data-dp]').forEach(b => b.classList.toggle('active', b.dataset.dp === p));
+  renderDemoPortfolio();
 }
-function saveDemoTrades(trades) {
-  localStorage.setItem('demoTrades', JSON.stringify(trades));
+async function loadDemoTrades() {
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades');
+    demoTradesData = await r.json();
+  } catch { demoTradesData = { mine: [], hers: [] }; }
 }
-function demoBuy() {
+async function demoBuy() {
   const shares = parseInt(document.getElementById('sim-shares')?.value) || 0;
   const buyPrice = parseFloat(document.getElementById('sim-price')?.value) || 0;
   const target = parseFloat(document.getElementById('sim-target')?.value) || 0;
   const stop = parseFloat(document.getElementById('sim-stop')?.value) || 0;
   if (!shares || !buyPrice || !candleSymbol) return;
-  const trades = getDemoTrades();
-  trades.push({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    ticker: candleSymbol,
-    name: candleName,
-    shares,
-    buyPrice,
-    target,
-    stop,
-    date: new Date().toISOString().slice(0,10),
-  });
-  saveDemoTrades(trades);
-  alert('デモ購入しました！\nデモ取引タブで確認できます。');
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades/add', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person: demoPerson, trade: { ticker: candleSymbol, name: candleName, shares, buyPrice, target, stop, date: new Date().toISOString().slice(0,10) } }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'エラー');
+    demoTradesData = d.demoTrades;
+    alert('デモ購入しました！\nデモ取引タブで確認できます。');
+  } catch (e) { showToast('デモ購入失敗: ' + e.message, true); }
 }
-function demoSell(id) {
+async function demoSell(person, id) {
   if (!confirm('このデモポジションを決済しますか？')) return;
-  const trades = getDemoTrades().filter(t => t.id !== id);
-  saveDemoTrades(trades);
-  renderDemoPortfolio();
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades/remove', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person, id }),
+    });
+    const d = await r.json();
+    demoTradesData = d.demoTrades;
+    renderDemoPortfolio();
+  } catch (e) { showToast('決済失敗: ' + e.message, true); }
 }
 async function renderDemoPortfolio() {
-  const trades = getDemoTrades();
+  if (!demoTradesData) await loadDemoTrades();
+  const trades = demoTradesData?.[demoPerson] || [];
   const sumEl = document.getElementById('demo-summary');
   const listEl = document.getElementById('demo-list');
   if (!trades.length) {
@@ -8872,7 +8900,7 @@ async function renderDemoPortfolio() {
     const targetPnl = t.target ? ((t.target - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
     const stopPnl = t.stop ? ((t.stop - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
     return `<div class="demo-card" onclick="openCandleChart('${t.ticker.replace(/'/g,"\\'")}','${(t.name||'').replace(/'/g,"\\'")}')">
-      <button class="demo-card-del" onclick="event.stopPropagation();demoSell('${t.id}')">✕</button>
+      <button class="demo-card-del" onclick="event.stopPropagation();demoSell('${demoPerson}','${t.id}')">✕</button>
       <div class="demo-card-head">
         <div>
           <span class="demo-card-name">${t.name || t.ticker}</span>

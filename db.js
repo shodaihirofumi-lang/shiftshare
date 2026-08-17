@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [], targetPrices: [], pushSettings: { weeklyReport: false, monthlyReport: false } });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [], targetPrices: [], pushSettings: { weeklyReport: false, monthlyReport: false }, demoTrades: { mine: [], hers: [] } });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -571,6 +571,26 @@ export async function removeWatchStock(person, ticker) {
   const t = _normTicker(ticker);
   const wl = getWatchlist();
   wl[person] = wl[person].filter(x => x.ticker !== t);
+  await persist();
+}
+
+// ── デモ取引 ──
+export function getDemoTrades() {
+  if (!cache.demoTrades) cache.demoTrades = { mine: [], hers: [] };
+  if (!Array.isArray(cache.demoTrades.mine)) cache.demoTrades.mine = [];
+  if (!Array.isArray(cache.demoTrades.hers)) cache.demoTrades.hers = [];
+  return cache.demoTrades;
+}
+export async function addDemoTrade(person, trade) {
+  if (!['mine', 'hers'].includes(person)) throw new Error('person が不正です');
+  const dt = getDemoTrades();
+  dt[person].push(trade);
+  await persist();
+}
+export async function removeDemoTrade(person, id) {
+  if (!['mine', 'hers'].includes(person)) return;
+  const dt = getDemoTrades();
+  dt[person] = dt[person].filter(t => t.id !== id);
   await persist();
 }
 
