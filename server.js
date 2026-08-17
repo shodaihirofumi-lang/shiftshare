@@ -2091,30 +2091,28 @@ app.get('/api/candle-data', async (req, res) => {
 });
 
 app.get('/api/debug-scrape', async (req, res) => {
-  const sym = req.query.symbol || '7203.T';
+  const code = req.query.symbol || '7203';
+  const sym = code.replace(/\.T$/, '');
   try {
-    const html = await fetch(`https://finance.yahoo.co.jp/quote/${encodeURIComponent(sym)}`, {
-      headers: { 'User-Agent': YH_UA, 'Accept': 'text/html', 'Accept-Language': 'ja' },
+    const url = `https://www.google.com/finance/quote/${encodeURIComponent(sym)}:TYO`;
+    const html = await fetch(url, {
+      headers: { 'User-Agent': YH_UA, 'Accept': 'text/html', 'Accept-Language': 'ja,en' },
       signal: AbortSignal.timeout(10000),
     }).then(r => r.text());
-    const findDd = (label) => {
-      const re = new RegExp('<dt[^>]*>[^]*?' + label + '[^]*?</dt>\\s*<dd[^>]*>([^]*?)</dd>', 'is');
+    const findMetric = (label) => {
+      const re = new RegExp(label + '[^]*?<div[^>]*>([^<]+)</div>', 'is');
       const m = html.match(re);
-      return m ? m[1].replace(/<[^>]+>/g, '').trim() : null;
+      return m ? m[1].trim() : null;
     };
-    // Show a snippet of HTML around PER for debugging
-    const perIdx = html.indexOf('PER');
-    const snippet = perIdx >= 0 ? html.slice(Math.max(0, perIdx - 100), perIdx + 300) : 'PER not found in HTML';
     res.json({
       html_length: html.length,
-      title_match: (html.match(/<title>([^<]*)/i) || [])[1],
-      per_dd: findDd('PER'),
-      pbr_dd: findDd('PBR'),
-      dy_dd: findDd('配当利回り'),
-      roe_dd: findDd('ROE'),
-      mcap_dd: findDd('時価総額'),
-      equity_dd: findDd('自己資本比率'),
-      per_snippet: snippet.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+      title: (html.match(/<title>([^<]*)/i) || [])[1],
+      pe: findMetric('P/E ratio') || findMetric('P/E'),
+      pb: findMetric('P/B ratio') || findMetric('Price-to-book'),
+      dy: findMetric('Dividend yield') || findMetric('配当利回り'),
+      mcap: findMetric('Market cap'),
+      roa: findMetric('Return on assets') || findMetric('ROA'),
+      roc: findMetric('Return on capital'),
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -2173,55 +2171,57 @@ app.get('/api/stock-detail', async (req, res) => {
     let quoteSummaryOk = false;
     let quoteSummaryError = null;
 
-    // Yahoo Finance Japan ページからスクレイピング（認証不要）
+    // Google Finance からスクレイピング（認証不要、サーバーIPブロックなし）
     const isJP = sym.endsWith('.T');
     if (isJP) {
       try {
-        const yfUrl = `https://finance.yahoo.co.jp/quote/${encodeURIComponent(sym)}`;
-        const html = await fetch(yfUrl, {
-          headers: { 'User-Agent': YH_UA, 'Accept': 'text/html', 'Accept-Language': 'ja' },
+        const code = sym.replace(/\.T$/, '');
+        const gfUrl = `https://www.google.com/finance/quote/${encodeURIComponent(code)}:TYO`;
+        const html = await fetch(gfUrl, {
+          headers: { 'User-Agent': YH_UA, 'Accept': 'text/html', 'Accept-Language': 'en-US,en;q=0.9,ja;q=0.8' },
           signal: AbortSignal.timeout(10000),
         }).then(r => r.text());
-        // <dt>...label...</dt> の後の <dd>value</dd> を取得
-        const findDd = (label) => {
-          // dt内にlabelを含むパターン（HTMLタグ付きでも対応）
-          const re = new RegExp('<dt[^>]*>[^]*?' + label + '[^]*?</dt>\\s*<dd[^>]*>([^]*?)</dd>', 'is');
+        const findMetric = (label) => {
+          const re = new RegExp(label + '[\\s\\S]*?<div[^>]*class="[^"]*P6K39c[^"]*"[^>]*>([^<]+)</div>', 'i');
           const m = html.match(re);
-          if (!m) return null;
-          // HTMLタグを除去して数値だけ抽出
-          const text = m[1].replace(/<[^>]+>/g, '').trim();
-          return text;
+          if (m) return m[1].trim();
+          const re2 = new RegExp(label + '[\\s\\S]{0,300}?<div[^>]*>\\s*([\\d,.]+[TBMK%]?)\\s*</div>', 'i');
+          const m2 = html.match(re2);
+          return m2 ? m2[1].trim() : null;
         };
-        const extractNum = (text) => {
-          if (!text || text === '---' || text === '—') return null;
-          // (連)11.35倍(15:30) → 11.35
-          const numMatch = text.match(/([\d,]+\.?\d*)/);
-          if (!numMatch) return null;
-          const n = parseFloat(numMatch[1].replace(/,/g, ''));
+        const toNum = (s) => {
+          if (!s || s === '-' || s === '—') return null;
+          const n = parseFloat(s.replace(/,/g, '').replace(/%$/, ''));
           return isNaN(n) ? null : n;
         };
-        const perVal = extractNum(findDd('PER') || findDd('株価収益率'));
-        const pbrVal = extractNum(findDd('PBR') || findDd('株価純資産倍率'));
-        const dyVal = extractNum(findDd('配当利回り'));
-        const roeVal = extractNum(findDd('ROE') || findDd('自己資本利益率'));
-        const mcapText = findDd('時価総額');
-        let mcap = null;
-        if (mcapText) {
-          const mcapNum = extractNum(mcapText);
-          if (mcapNum) mcap = mcapText.includes('兆') ? mcapNum * 1e12 : mcapNum * 1e6;
-        }
-        const equityRatio = extractNum(findDd('自己資本比率'));
-        console.log(`[scrape-raw] PER_dd=${(findDd('PER')||'').slice(0,40)} PBR_dd=${(findDd('PBR')||'').slice(0,40)} DY_dd=${(findDd('配当利回り')||'').slice(0,40)} html_len=${html.length}`);
+        const parseMcap = (s) => {
+          if (!s) return null;
+          const n = parseFloat(s.replace(/,/g, ''));
+          if (isNaN(n)) return null;
+          if (s.includes('T')) return n * 1e12;
+          if (s.includes('B')) return n * 1e9;
+          if (s.includes('M')) return n * 1e6;
+          return n;
+        };
+        const perVal = toNum(findMetric('P/E ratio'));
+        const pbrVal = toNum(findMetric('P/B ratio') || findMetric('Price-to-book'));
+        const dyText = findMetric('Dividend yield');
+        const dyVal = toNum(dyText);
+        const mcapText = findMetric('Market cap');
+        const mcap = parseMcap(mcapText);
+        const roaVal = toNum(findMetric('Return on assets'));
+        const rocVal = toNum(findMetric('Return on capital'));
+        console.log(`[google-scrape] ${sym} html=${html.length} PER=${perVal} PBR=${pbrVal} DY=${dyVal} mcap=${mcapText} ROA=${roaVal}`);
 
         if (perVal != null) sd.trailingPE = { raw: perVal };
         if (pbrVal != null) ks.priceToBook = { raw: pbrVal };
         if (dyVal != null) sd.dividendYield = { raw: dyVal / 100 };
-        if (roeVal != null) fd.returnOnEquity = { raw: roeVal / 100 };
+        if (roaVal != null) fd.returnOnAssets = { raw: roaVal / 100 };
+        if (rocVal != null) fd.returnOnEquity = { raw: rocVal / 100 };
         if (mcap != null) sd.marketCap = { raw: mcap };
-        quoteSummaryOk = true;
-        console.log(`[stock-detail] ${sym} scraped: PER=${perVal} PBR=${pbrVal} DY=${dyVal} ROE=${roeVal}`);
+        if (perVal != null || pbrVal != null) quoteSummaryOk = true;
       } catch (e) {
-        quoteSummaryError = 'scrape failed: ' + e.message;
+        quoteSummaryError = 'google scrape failed: ' + e.message;
       }
     }
 
