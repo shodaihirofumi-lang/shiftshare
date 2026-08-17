@@ -4044,85 +4044,137 @@ function changePnlMonth(delta) {
   pnlYM = { year: y, month: m };
   renderPnlHistory();
 }
-// ── 銘柄チャート ──
-let chartSymbol = null, chartRange = '6mo';
-const RNG_LABEL = { '1mo':'1ヶ月', '6mo':'6ヶ月', '1y':'1年', '5y':'5年' };
+// ── 銘柄チャート (ロウソク足) ──
+let chartSymbol = null, chartInterval = '1d';
+const INT_LABEL = { '1d':'日足', '1wk':'週足', '1mo':'月足' };
 function openStockChart(ticker, name) {
-  chartSymbol = ticker; chartRange = '6mo';
+  chartSymbol = ticker; chartInterval = '1d';
   document.getElementById('chart-title').textContent = name;
   document.getElementById('chart-price').textContent = '';
-  document.getElementById('chart-range').innerHTML = Object.keys(RNG_LABEL).map(r=>`<button class="rng-btn ${r===chartRange?'active':''}" data-r="${r}" onclick="setChartRange('${r}')">${RNG_LABEL[r]}</button>`).join('');
+  document.getElementById('chart-range').innerHTML = Object.keys(INT_LABEL).map(r=>`<button class="rng-btn ${r===chartInterval?'active':''}" data-r="${r}" onclick="setChartInterval('${r}')">${INT_LABEL[r]}</button>`).join('');
   document.getElementById('chart-modal').classList.add('active');
   loadStockChart();
 }
-function setChartRange(r){ chartRange=r; document.querySelectorAll('.rng-btn').forEach(b=>b.classList.toggle('active', b.dataset.r===r)); loadStockChart(); }
+function setChartInterval(r){ chartInterval=r; document.querySelectorAll('.rng-btn').forEach(b=>b.classList.toggle('active', b.dataset.r===r)); loadStockChart(); }
 function closeChart(){ document.getElementById('chart-modal').classList.remove('active'); }
 async function loadStockChart() {
   const body = document.getElementById('chart-body');
   body.innerHTML = '<div class="ev-empty">読み込み中…</div>';
   let d, txs = [];
-  try { d = await fetch(API_BASE+`/api/stock-history?symbol=${encodeURIComponent(chartSymbol)}&range=${chartRange}`).then(r=>r.json()); } catch { body.innerHTML='<div class="ev-empty">取得できませんでした</div>'; return; }
-  if (!d.history || d.history.length < 2) { body.innerHTML='<div class="ev-empty">データがありません</div>'; return; }
+  try { d = await fetch(API_BASE+`/api/candle-data?symbol=${encodeURIComponent(chartSymbol)}&interval=${chartInterval}`).then(r=>r.json()); } catch { body.innerHTML='<div class="ev-empty">取得できませんでした</div>'; return; }
+  if (!d.bars || d.bars.length < 2) { body.innerHTML='<div class="ev-empty">データがありません</div>'; return; }
   try { txs = await fetch(API_BASE+`/api/transactions?ticker=${encodeURIComponent(chartSymbol)}`).then(r=>r.json()); } catch { txs = []; }
-  const vals = d.history.map(h=>h.close);
-  const last = vals[vals.length-1], first = vals[0]; const up = last>=first;
+  const bars = d.bars;
+  const last = bars[bars.length-1].c, first = bars[0].c; const up = last>=first;
   const chg = last-first, chgPct = first?Math.round(chg/first*1000)/10:0;
-  document.getElementById('chart-price').innerHTML = `${curSym(d.currency)}${last.toLocaleString()} <span class="nk-change ${up?'up':'down'}" style="font-size:16px">${up?'▲+':'▼−'}${curSym(d.currency)}${Math.abs(Math.round(chg)).toLocaleString()} (${up?'+':''}${chgPct}%)</span>`;
-  body.innerHTML = bigChart(d.history, up, txs);
+  document.getElementById('chart-price').innerHTML = `${curSym(d.currency)}${Math.round(last).toLocaleString()} <span class="nk-change ${up?'up':'down'}" style="font-size:16px">${up?'▲+':'▼−'}${curSym(d.currency)}${Math.abs(Math.round(chg)).toLocaleString()} (${up?'+':''}${chgPct}%)</span>`;
+  body.innerHTML = bigCandleChart(bars, txs, d.currency);
 }
-// 取引のタイムスタンプを history のインデックスに対応付け（範囲外はnull）
-function txIndex(ts, hist) {
-  if (!ts) return null;
-  // Yahooの "yy/m/d" を Date に直すのは曖昧なので、近似でts↔順序にマップ
-  // ヒストリの始点と終点のtsを推定するため、history全体の長さで線形補間
-  // 厳密性より「だいたい正しい位置」優先（チャート表示用）
-  const N = hist.length;
-  // 各バーのおおよそのms間隔
-  const last = new Date(); // 終端＝現在に近い
-  const firstApprox = new Date(last.getTime() - (N-1) * 86400000);
-  if (ts < firstApprox.getTime() - 86400000 * 7) return null; // 範囲外（マージン1週間）
-  if (ts > last.getTime() + 86400000) return null;
-  const idx = Math.round((ts - firstApprox.getTime()) / (last.getTime() - firstApprox.getTime() || 1) * (N - 1));
-  return Math.max(0, Math.min(N-1, idx));
+// 取引のタイムスタンプを bars の最も近いインデックスに対応付け（範囲外はnull）
+function txIndexByTs(tsMs, bars) {
+  if (!tsMs) return null;
+  const tsSec = tsMs / 1000;
+  const first = bars[0].t, last = bars[bars.length-1].t;
+  const marginSec = 86400 * 7;
+  if (tsSec < first - marginSec || tsSec > last + marginSec) return null;
+  // 二分探索で最寄り
+  let lo = 0, hi = bars.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (bars[mid].t < tsSec) lo = mid + 1; else hi = mid;
+  }
+  if (lo > 0 && Math.abs(bars[lo-1].t - tsSec) < Math.abs(bars[lo].t - tsSec)) lo--;
+  return lo;
 }
-function bigChart(hist, up, txs) {
-  const vals = hist.map(h=>h.close);
-  const w=320, h=170, padL=2, padR=2, padT=12, padB=4;
-  const min=Math.min(...vals), max=Math.max(...vals), range=(max-min)||1;
-  const X=i=> padL + (i/(vals.length-1))*(w-padL-padR);
-  const Y=v=> padT + (1-(v-min)/range)*(h-padT-padB);
-  const pts = vals.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
-  const color = up?'#c0392b':'#2e6da4';
-  // 取引マーカー（買い=▲赤・売り=▼青）
+function bigCandleChart(bars, txs, currency) {
+  const shown = bars.slice(-120);
+  const startIdx = bars.length - shown.length;
+  const W = 600, H = 340, padL = 78, padR = 12, padT = 14, padB = 44;
+  const highs = shown.map(b => b.h), lows = shown.map(b => b.l);
+  const max = Math.max(...highs), min = Math.min(...lows);
+  const range = (max - min) || 1;
+  const pad = range * 0.05;
+  const yMax = max + pad, yMin = min - pad;
+  const yRange = yMax - yMin;
+  const cw = (W - padL - padR) / shown.length;
+  const bodyW = Math.max(2, cw * 0.7);
+  const Y = v => padT + (1 - (v - yMin) / yRange) * (H - padT - padB);
+  const X = i => padL + cw * i + cw / 2;
+  const lastClose = shown[shown.length - 1].c;
+  const prevClose = shown.length > 1 ? shown[shown.length - 2].c : lastClose;
+  const chgAbs = lastClose - prevClose;
+  const chgPct = prevClose ? (chgAbs / prevClose * 100) : 0;
+  const chgColor = chgAbs >= 0 ? '#c0392b' : '#2e6da4';
+  const chgSign = chgAbs >= 0 ? '+' : '';
+  // グリッド線 + 価格ラベル
+  let grid = '';
+  const nLines = 5;
+  for (let i = 0; i <= nLines; i++) {
+    const v = yMin + (yRange * i / nLines);
+    const y = Y(v);
+    grid += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#ded7ca" stroke-width="0.6"/>`;
+    grid += `<text x="${padL-6}" y="${y+6}" font-size="16" fill="#5a5148" font-weight="600" text-anchor="end">${Math.round(v).toLocaleString()}</text>`;
+  }
+  const yLast = Y(lastClose);
+  grid += `<line x1="${padL}" y1="${yLast}" x2="${W-padR}" y2="${yLast}" stroke="${chgColor}" stroke-width="1.2" stroke-dasharray="6,3"/>`;
+  grid += `<rect x="${W-padR-72}" y="${yLast-13}" width="72" height="26" fill="${chgColor}" rx="4"/>`;
+  grid += `<text x="${W-padR-36}" y="${yLast+6}" font-size="15" fill="#fff" font-weight="700" text-anchor="middle">${Math.round(lastClose).toLocaleString()}</text>`;
+  // 日付ラベル
+  const fmtDate = (t) => { const d = new Date(t * 1000); return `${d.getMonth()+1}/${d.getDate()}`; };
+  const midIdx = Math.floor(shown.length / 2);
+  const dateLbls = `
+    <text x="${padL}" y="${H-14}" font-size="15" fill="#5a5148" font-weight="600">${fmtDate(shown[0].t)}</text>
+    <text x="${padL + cw*midIdx}" y="${H-14}" font-size="15" fill="#5a5148" font-weight="600" text-anchor="middle">${fmtDate(shown[midIdx].t)}</text>
+    <text x="${W-padR}" y="${H-14}" font-size="15" fill="#5a5148" font-weight="600" text-anchor="end">${fmtDate(shown[shown.length-1].t)}</text>
+  `;
+  // ロウソク
+  const candles = shown.map((b, i) => {
+    const x = X(i);
+    const upBar = b.c >= b.o;
+    const color = upBar ? '#c0392b' : '#2e6da4';
+    const yHigh = Y(b.h), yLow = Y(b.l);
+    const yOpen = Y(b.o), yClose = Y(b.c);
+    const yBody = Math.min(yOpen, yClose);
+    const bodyH = Math.max(1, Math.abs(yClose - yOpen));
+    return `<line x1="${x}" y1="${yHigh}" x2="${x}" y2="${yLow}" stroke="${color}" stroke-width="0.8"/>
+      <rect x="${x - bodyW/2}" y="${yBody}" width="${bodyW}" height="${bodyH}" fill="${color}"/>`;
+  }).join('');
+  // 取引マーカー
   let markers = '';
   let hasBuy = false, hasSell = false;
   if (Array.isArray(txs)) {
     for (const t of txs) {
-      const idx = txIndex(t.ts, hist);
-      if (idx == null) continue;
-      const x = X(idx);
-      const y = Y(t.price || vals[idx]);
+      const gIdx = txIndexByTs(t.ts, bars);
+      if (gIdx == null) continue;
+      const localIdx = gIdx - startIdx;
+      if (localIdx < 0 || localIdx >= shown.length) continue;
+      const x = X(localIdx);
+      const priceVal = t.price || shown[localIdx].c;
+      // 価格が範囲外の場合はクランプ
+      const yVal = Math.max(padT+8, Math.min(H-padB-8, Y(priceVal)));
       if (t.type === 'buy') {
         hasBuy = true;
-        // 上向き三角（買い）
-        markers += `<polygon class="chart-marker-buy" points="${(x-4).toFixed(1)},${(y+4).toFixed(1)} ${(x+4).toFixed(1)},${(y+4).toFixed(1)} ${x.toFixed(1)},${(y-4).toFixed(1)}"/>`;
+        markers += `<polygon fill="#c0392b" stroke="#fff" stroke-width="1.2" points="${(x-7).toFixed(1)},${(yVal+7).toFixed(1)} ${(x+7).toFixed(1)},${(yVal+7).toFixed(1)} ${x.toFixed(1)},${(yVal-7).toFixed(1)}"/>`;
       } else if (t.type === 'sell') {
         hasSell = true;
-        // 下向き三角（売り）
-        markers += `<polygon class="chart-marker-sell" points="${(x-4).toFixed(1)},${(y-4).toFixed(1)} ${(x+4).toFixed(1)},${(y-4).toFixed(1)} ${x.toFixed(1)},${(y+4).toFixed(1)}"/>`;
+        markers += `<polygon fill="#2e6da4" stroke="#fff" stroke-width="1.2" points="${(x-7).toFixed(1)},${(yVal-7).toFixed(1)} ${(x+7).toFixed(1)},${(yVal-7).toFixed(1)} ${x.toFixed(1)},${(yVal+7).toFixed(1)}"/>`;
       }
     }
   }
   const legend = (hasBuy || hasSell) ? `<div class="chart-legend">
-    ${hasBuy ? '<span><svg class="chart-legend-mark" viewBox="0 0 10 10"><polygon class="chart-marker-buy" points="1,8 9,8 5,2"/></svg>買い</span>' : ''}
-    ${hasSell ? '<span><svg class="chart-legend-mark" viewBox="0 0 10 10"><polygon class="chart-marker-sell" points="1,2 9,2 5,8"/></svg>売り</span>' : ''}
+    ${hasBuy ? '<span><svg class="chart-legend-mark" viewBox="0 0 10 10"><polygon fill="#c0392b" points="1,8 9,8 5,2"/></svg>買い</span>' : ''}
+    ${hasSell ? '<span><svg class="chart-legend-mark" viewBox="0 0 10 10"><polygon fill="#2e6da4" points="1,2 9,2 5,8"/></svg>売り</span>' : ''}
   </div>` : '';
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:180px">
-    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+  const priceHeaderHtml = `<div class="candle-price-head">
+    <span class="candle-price-now">${curSym(currency)}${Math.round(lastClose).toLocaleString()}</span>
+    <span class="candle-price-chg" style="color:${chgColor}">${chgSign}${Math.round(chgAbs).toLocaleString()} (${chgSign}${chgPct.toFixed(2)}%)</span>
+  </div>`;
+  return `<div class="candle-chart-wrap">${priceHeaderHtml}<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block">
+    ${grid}
+    ${candles}
     ${markers}
-  </svg>
-  <div class="chart-axis"><span>${hist[0].date}</span><span>高${Math.round(max).toLocaleString()}・安${Math.round(min).toLocaleString()}</span><span>${hist[hist.length-1].date}</span></div>
-  ${legend}`;
+    ${dateLbls}
+  </svg></div>${legend}`;
 }
 function renderPnlHistory() {
   const histEl = document.getElementById('pnl-history');
