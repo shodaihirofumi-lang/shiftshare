@@ -2181,45 +2181,34 @@ app.get('/api/stock-detail', async (req, res) => {
           headers: { 'User-Agent': YH_UA, 'Accept': 'text/html', 'Accept-Language': 'en-US,en;q=0.9,ja;q=0.8' },
           signal: AbortSignal.timeout(10000),
         }).then(r => r.text());
-        const findMetric = (label) => {
-          const re = new RegExp(label + '[\\s\\S]*?<div[^>]*class="[^"]*P6K39c[^"]*"[^>]*>([^<]+)</div>', 'i');
+        // Google Finance: <div class="SwQK7">ラベル</div><div class="dO6ijd">値</div>
+        const findGF = (label) => {
+          const re = new RegExp(label + '</div>\\s*<div[^>]*class="[^"]*dO6ijd[^"]*"[^>]*>([^<]+)</div>', 'i');
           const m = html.match(re);
-          if (m) return m[1].trim();
-          const re2 = new RegExp(label + '[\\s\\S]{0,300}?<div[^>]*>\\s*([\\d,.]+[TBMK%]?)\\s*</div>', 'i');
-          const m2 = html.match(re2);
-          return m2 ? m2[1].trim() : null;
+          return m ? m[1].trim() : null;
         };
         const toNum = (s) => {
-          if (!s || s === '-' || s === '—') return null;
-          const n = parseFloat(s.replace(/,/g, '').replace(/%$/, ''));
+          if (!s || s === '-' || s === '—' || s === '---') return null;
+          const clean = s.replace(/[￥¥,、]/g, '').replace(/%$/, '');
+          const n = parseFloat(clean);
           return isNaN(n) ? null : n;
         };
-        const parseMcap = (s) => {
-          if (!s) return null;
-          const n = parseFloat(s.replace(/,/g, ''));
-          if (isNaN(n)) return null;
-          if (s.includes('T')) return n * 1e12;
-          if (s.includes('B')) return n * 1e9;
-          if (s.includes('M')) return n * 1e6;
-          return n;
-        };
-        const perVal = toNum(findMetric('P/E ratio'));
-        const pbrVal = toNum(findMetric('P/B ratio') || findMetric('Price-to-book'));
-        const dyText = findMetric('Dividend yield');
-        const dyVal = toNum(dyText);
-        const mcapText = findMetric('Market cap');
-        const mcap = parseMcap(mcapText);
-        const roaVal = toNum(findMetric('Return on assets'));
-        const rocVal = toNum(findMetric('Return on capital'));
-        console.log(`[google-scrape] ${sym} html=${html.length} PER=${perVal} PBR=${pbrVal} DY=${dyVal} mcap=${mcapText} ROA=${roaVal}`);
+        const perVal = toNum(findGF('株価収益率') || findGF('P/E ratio'));
+        const epsVal = toNum(findGF('EPS'));
+        const w52h = toNum(findGF('52 週高値') || findGF('52-week high'));
+        const w52l = toNum(findGF('52 週安値') || findGF('52-week low'));
+        const dyVal = toNum(findGF('配当利回り') || findGF('Dividend yield'));
+        const pbrText = findGF('株価純資産倍率') || findGF('P/B ratio') || findGF('Price-to-book');
+        const pbrVal = toNum(pbrText);
+        const sharesText = findGF('発行済株式数') || findGF('Shares outstanding');
+        console.log(`[google-scrape] ${sym} html=${html.length} PER=${perVal} EPS=${epsVal} PBR=${pbrVal} DY=${dyVal} w52h=${w52h}`);
 
         if (perVal != null) sd.trailingPE = { raw: perVal };
         if (pbrVal != null) ks.priceToBook = { raw: pbrVal };
         if (dyVal != null) sd.dividendYield = { raw: dyVal / 100 };
-        if (roaVal != null) fd.returnOnAssets = { raw: roaVal / 100 };
-        if (rocVal != null) fd.returnOnEquity = { raw: rocVal / 100 };
-        if (mcap != null) sd.marketCap = { raw: mcap };
-        if (perVal != null || pbrVal != null) quoteSummaryOk = true;
+        if (w52h != null) sd.fiftyTwoWeekHigh = { raw: w52h };
+        if (w52l != null) sd.fiftyTwoWeekLow = { raw: w52l };
+        if (perVal != null || pbrVal != null || w52h != null) quoteSummaryOk = true;
       } catch (e) {
         quoteSummaryError = 'google scrape failed: ' + e.message;
       }
