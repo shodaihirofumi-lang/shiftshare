@@ -2104,18 +2104,15 @@ app.get('/api/debug-scrape', async (req, res) => {
       const m = html.match(re);
       return m ? m[1].trim() : null;
     };
-    const peIdx = html.indexOf('P/E ratio');
-    const pbIdx = html.indexOf('P/B ratio');
-    const dyIdx = html.indexOf('Dividend yield');
-    const mcIdx = html.indexOf('Market cap');
-    const snip = (idx) => idx >= 0 ? html.slice(idx, idx + 500).replace(/\n/g,' ').replace(/\s+/g,' ') : 'NOT FOUND';
+    const searches = ['PER','PBR','P/E','P/B','株価収益率','株価純資産','配当利回','時価総額','Market cap','Dividend','gyFHGc','P6K39c','eYanAe'];
+    const snip = (term) => { const i = html.indexOf(term); return i >= 0 ? html.slice(Math.max(0,i-50), i + 400).replace(/\n/g,' ').replace(/\s+/g,' ') : null; };
+    const found = {};
+    for (const s of searches) { const r = snip(s); if (r) found[s] = r; }
     res.json({
       html_length: html.length,
       title: (html.match(/<title>([^<]*)/i) || [])[1],
-      pe_raw_html: snip(peIdx),
-      pb_raw_html: snip(pbIdx),
-      dy_raw_html: snip(dyIdx),
-      mc_raw_html: snip(mcIdx),
+      found_keys: Object.keys(found),
+      snippets: found,
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
