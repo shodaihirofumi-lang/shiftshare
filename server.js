@@ -346,14 +346,33 @@ let _yhAuth = null; // { cookie, crumb, fetchedAt }
 const YH_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 async function getYahooAuth(force) {
   if (!force && _yhAuth && Date.now() - _yhAuth.fetchedAt < 30 * 60 * 1000) return _yhAuth;
-  const r1 = await fetch('https://fc.yahoo.com/', { headers: { 'User-Agent': YH_UA }, redirect: 'manual' });
-  const setCookie = r1.headers.get('set-cookie') || '';
-  const cookie = setCookie.split(';')[0];
+  const r1 = await fetch('https://login.yahoo.com/', {
+    headers: { 'User-Agent': YH_UA, 'Accept': 'text/html,application/xhtml+xml', 'Accept-Language': 'en-US,en;q=0.9' },
+    redirect: 'manual',
+  });
+  let cookie = '';
+  const allCookies = r1.headers.getSetCookie ? r1.headers.getSetCookie() : [r1.headers.get('set-cookie') || ''];
+  for (const sc of allCookies) {
+    const part = sc.split(';')[0];
+    if (part) cookie += (cookie ? '; ' : '') + part;
+  }
+  if (!cookie) {
+    const r1b = await fetch('https://fc.yahoo.com/', { headers: { 'User-Agent': YH_UA }, redirect: 'manual' });
+    const sc = r1b.headers.get('set-cookie') || '';
+    cookie = sc.split(';')[0];
+  }
   if (!cookie) throw new Error('Yahoo cookie取得失敗');
-  const crumb = (await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
+  const crumbText = await fetch('https://query2.finance.yahoo.com/v1/test/getcrumb', {
     headers: { 'User-Agent': YH_UA, 'Cookie': cookie },
-  }).then(r => r.text())).trim();
-  if (!crumb || crumb.length > 30 || crumb.includes('<')) throw new Error('Yahoo crumb取得失敗');
+  }).then(r => r.text());
+  let crumb = crumbText.trim();
+  if (crumb === 'Too Many Requests' || !crumb || crumb.length > 30 || crumb.includes('<')) {
+    const crumbText2 = await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
+      headers: { 'User-Agent': YH_UA, 'Cookie': cookie },
+    }).then(r => r.text());
+    crumb = crumbText2.trim();
+  }
+  if (!crumb || crumb.length > 30 || crumb.includes('<') || crumb === 'Too Many Requests') throw new Error('Yahoo crumb取得失敗: ' + crumb?.slice(0, 50));
   _yhAuth = { cookie, crumb, fetchedAt: Date.now() };
   return _yhAuth;
 }
@@ -2124,38 +2143,61 @@ app.get('/api/stock-detail', async (req, res) => {
     let sd = {}, ks = {}, fd = {}, ce = {};
     let quoteSummaryOk = false;
     let quoteSummaryError = null;
-    try {
-      let j = await doFetch(false);
-      if (j.finance?.error?.code === 'Unauthorized' || j.quoteSummary?.error?.code === 'Unauthorized') j = await doFetch(true);
-      const rs = j.quoteSummary?.result?.[0];
-      if (rs) { sd = rs.summaryDetail || {}; ks = rs.defaultKeyStatistics || {}; fd = rs.financialData || {}; ce = rs.calendarEvents || {}; quoteSummaryOk = true; }
-      else { quoteSummaryError = JSON.stringify(j.finance?.error || j.quoteSummary?.error || 'no result').slice(0, 200); }
-    } catch (qe) { quoteSummaryError = qe.message; }
-    if (!quoteSummaryOk) {
+
+    // Yahoo Finance Japan ページからスクレイピング（認証不要）
+    const isJP = sym.endsWith('.T');
+    if (isJP) {
       try {
-        const { cookie, crumb } = await getYahooAuth(true);
-        const r2 = await fetch(
-          `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=${modules}&crumb=${encodeURIComponent(crumb)}`,
-          { headers: { 'User-Agent': YH_UA, 'Cookie': cookie }, signal: AbortSignal.timeout(10000) }
-        );
-        const j2 = await r2.json();
-        const rs2 = j2.quoteSummary?.result?.[0];
-        if (rs2) { sd = rs2.summaryDetail || {}; ks = rs2.defaultKeyStatistics || {}; fd = rs2.financialData || {}; ce = rs2.calendarEvents || {}; quoteSummaryOk = true; quoteSummaryError = null; }
-      } catch {}
-    }
-    if (!quoteSummaryOk) {
-      try {
-        const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d&includePrePost=false`;
-        const cj = await fetch(chartUrl, { headers: { 'User-Agent': YH_UA }, signal: AbortSignal.timeout(6000) }).then(r => r.json());
-        const meta = cj?.chart?.result?.[0]?.meta;
-        if (meta) {
-          if (meta.trailingPE) sd.trailingPE = { raw: meta.trailingPE };
-          if (meta.priceToBook) ks.priceToBook = { raw: meta.priceToBook };
-          if (meta.marketCap) sd.marketCap = { raw: meta.marketCap };
-          if (meta.dividendYield) sd.dividendYield = { raw: meta.dividendYield };
-          if (meta.forwardPE) sd.forwardPE = { raw: meta.forwardPE };
+        const yfUrl = `https://finance.yahoo.co.jp/quote/${encodeURIComponent(sym)}`;
+        const html = await fetch(yfUrl, {
+          headers: { 'User-Agent': YH_UA, 'Accept': 'text/html', 'Accept-Language': 'ja' },
+          signal: AbortSignal.timeout(10000),
+        }).then(r => r.text());
+        const findVal = (label) => {
+          const patterns = [
+            new RegExp(label + '[^>]*>[^<]*</[^>]+>\\s*<[^>]+>([^<]+)', 'i'),
+            new RegExp(label + '.*?</(?:dt|th|span|div)>\\s*<(?:dd|td|span|div)[^>]*>\\s*([^<]+)', 'is'),
+          ];
+          for (const re of patterns) {
+            const m = html.match(re);
+            if (m) return m[1].trim().replace(/,/g, '').replace(/倍$/, '').replace(/%$/, '').replace(/百万円$/, '').replace(/円$/, '');
+          }
+          return null;
+        };
+        const toNum = (s) => { if (!s || s === '---' || s === '—') return null; const n = parseFloat(s); return isNaN(n) ? null : n; };
+        const perVal = toNum(findVal('PER')) || toNum(findVal('株価収益率'));
+        const pbrVal = toNum(findVal('PBR')) || toNum(findVal('株価純資産倍率'));
+        const dyVal = toNum(findVal('配当利回り'));
+        const roeVal = toNum(findVal('ROE')) || toNum(findVal('自己資本利益率'));
+        const mcapStr = findVal('時価総額');
+        let mcap = null;
+        if (mcapStr) {
+          const mcapNum = parseFloat(mcapStr.replace(/,/g, ''));
+          if (!isNaN(mcapNum)) mcap = mcapStr.includes('兆') ? mcapNum * 1e12 : mcapNum * 1e6;
         }
-      } catch {}
+        const equityRatio = toNum(findVal('自己資本比率'));
+
+        if (perVal != null) sd.trailingPE = { raw: perVal };
+        if (pbrVal != null) ks.priceToBook = { raw: pbrVal };
+        if (dyVal != null) sd.dividendYield = { raw: dyVal / 100 };
+        if (roeVal != null) fd.returnOnEquity = { raw: roeVal / 100 };
+        if (mcap != null) sd.marketCap = { raw: mcap };
+        quoteSummaryOk = true;
+        console.log(`[stock-detail] ${sym} scraped: PER=${perVal} PBR=${pbrVal} DY=${dyVal} ROE=${roeVal}`);
+      } catch (e) {
+        quoteSummaryError = 'scrape failed: ' + e.message;
+      }
+    }
+
+    // Yahoo US quoteSummary (US株 or JP scrape失敗時のフォールバック)
+    if (!quoteSummaryOk) {
+      try {
+        let j = await doFetch(false);
+        if (j.finance?.error?.code === 'Unauthorized' || j.quoteSummary?.error?.code === 'Unauthorized') j = await doFetch(true);
+        const rs = j.quoteSummary?.result?.[0];
+        if (rs) { sd = rs.summaryDetail || {}; ks = rs.defaultKeyStatistics || {}; fd = rs.financialData || {}; ce = rs.calendarEvents || {}; quoteSummaryOk = true; }
+        else { quoteSummaryError = JSON.stringify(j.finance?.error || j.quoteSummary?.error || 'no result').slice(0, 200); }
+      } catch (qe) { quoteSummaryError = qe.message; }
     }
     console.log(`[stock-detail] ${sym} quoteSummary=${quoteSummaryOk}${quoteSummaryError ? ' err=' + quoteSummaryError : ''}`);
 
