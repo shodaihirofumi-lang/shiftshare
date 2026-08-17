@@ -2104,15 +2104,18 @@ app.get('/api/debug-scrape', async (req, res) => {
       const m = html.match(re);
       return m ? m[1].trim() : null;
     };
+    const peIdx = html.indexOf('P/E ratio');
+    const pbIdx = html.indexOf('P/B ratio');
+    const dyIdx = html.indexOf('Dividend yield');
+    const mcIdx = html.indexOf('Market cap');
+    const snip = (idx) => idx >= 0 ? html.slice(idx, idx + 500).replace(/\n/g,' ').replace(/\s+/g,' ') : 'NOT FOUND';
     res.json({
       html_length: html.length,
       title: (html.match(/<title>([^<]*)/i) || [])[1],
-      pe: findMetric('P/E ratio') || findMetric('P/E'),
-      pb: findMetric('P/B ratio') || findMetric('Price-to-book'),
-      dy: findMetric('Dividend yield') || findMetric('配当利回り'),
-      mcap: findMetric('Market cap'),
-      roa: findMetric('Return on assets') || findMetric('ROA'),
-      roc: findMetric('Return on capital'),
+      pe_raw_html: snip(peIdx),
+      pb_raw_html: snip(pbIdx),
+      dy_raw_html: snip(dyIdx),
+      mc_raw_html: snip(mcIdx),
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
