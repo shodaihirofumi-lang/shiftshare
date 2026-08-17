@@ -2199,18 +2199,31 @@ app.get('/api/stock-detail', async (req, res) => {
         const gm = (keys) => { for (const k of keys) { if (metrics[k]) return metrics[k]; } return null; };
         const perVal = toNum(gm(['株価収益率','P/E ratio','PER']));
         const pbrVal = toNum(gm(['株価純資産倍率','P/B ratio','PBR','Price-to-book']));
-        const dyVal = toNum(gm(['配当利回り','Dividend yield']));
+        const dyVal = toNum(gm(['配当','配当利回り','Dividend yield']));
         const epsVal = toNum(gm(['EPS']));
         const w52h = toNum(gm(['52 週高値','52-week high']));
         const w52l = toNum(gm(['52 週安値','52-week low']));
-        console.log(`[google-scrape] ${sym} PER=${perVal} PBR=${pbrVal} DY=${dyVal} EPS=${epsVal} w52h=${w52h} w52l=${w52l}`);
+        const mcapText = gm(['時価総額','Market cap']);
+        let mcap = null;
+        if (mcapText) {
+          const mcn = parseFloat(mcapText.replace(/[^\d.]/g, ''));
+          if (!isNaN(mcn)) {
+            if (mcapText.includes('兆')) mcap = mcn * 1e12;
+            else if (mcapText.includes('億')) mcap = mcn * 1e8;
+            else if (mcapText.includes('T')) mcap = mcn * 1e12;
+            else if (mcapText.includes('B')) mcap = mcn * 1e9;
+            else mcap = mcn;
+          }
+        }
+        console.log(`[google-scrape] ${sym} PER=${perVal} PBR=${pbrVal} DY=${dyVal} EPS=${epsVal} w52h=${w52h} mcap=${mcapText}`);
 
         if (perVal != null) sd.trailingPE = { raw: perVal };
         if (pbrVal != null) ks.priceToBook = { raw: pbrVal };
         if (dyVal != null) sd.dividendYield = { raw: dyVal / 100 };
         if (w52h != null) sd.fiftyTwoWeekHigh = { raw: w52h };
         if (w52l != null) sd.fiftyTwoWeekLow = { raw: w52l };
-        if (perVal != null || pbrVal != null || w52h != null) quoteSummaryOk = true;
+        if (mcap != null) sd.marketCap = { raw: mcap };
+        if (perVal != null || dyVal != null || w52h != null) quoteSummaryOk = true;
       } catch (e) {
         quoteSummaryError = 'google scrape failed: ' + e.message;
       }
