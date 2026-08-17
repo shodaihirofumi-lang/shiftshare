@@ -1557,7 +1557,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .scr-hit:active { background:var(--card); }
 .scr-hit-top { display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
 .scr-hit-name { font-size:14px; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.scr-hit-code { font-size:11px; color:var(--text-soft); font-weight:500; }
+.scr-hit-code { font-size:14px; color:var(--gold); font-weight:800; letter-spacing:1px; padding:1px 6px; background:var(--gold-bg); border-radius:5px; cursor:pointer; user-select:all; -webkit-user-select:all; }
+.scr-hit-code:active { opacity:.7; }
+.scr-hit-copy { display:inline-block; margin-left:6px; font-size:11px; color:var(--text-soft); background:var(--card); border:1px solid var(--line); border-radius:5px; padding:1px 6px; cursor:pointer; font-family:inherit; }
+.scr-hit-copy:active { background:var(--bg); }
+.scr-hit-copy.copied { background:var(--gold-bg); color:var(--gold); border-color:var(--gold-border); }
 .scr-hit-price { font-size:13px; font-weight:700; color:var(--mine); }
 .scr-hit-detail { font-size:11px; color:var(--text-soft); margin-top:3px; line-height:1.5; }
 .scr-empty { font-size:13px; color:var(--text-soft); text-align:center; padding:14px 0; }
@@ -1590,6 +1594,24 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .wl-item-sub .wl-chg.down { color:#2e6da4; font-weight:700; }
 .wl-item-del { padding:6px 12px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); color:#b5544f; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }
 .wl-empty { text-align:center; padding:20px; color:var(--text-soft); font-size:13px; }
+.wl-item.has-signal { border-color:var(--gold); background:linear-gradient(90deg, var(--gold-bg), var(--card)); box-shadow:0 2px 8px rgba(180,140,80,.15); }
+.wl-item.has-signal .wl-item-name { color:#7a4a0a; }
+.wl-signals { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+.wl-sig-badge { font-size:10px; padding:2px 7px; border-radius:8px; background:var(--gold-bg); color:#7a4a0a; border:1px solid var(--gold-border); font-weight:700; letter-spacing:.5px; }
+
+/* ── ロウソク足モーダル ── */
+.candle-modal { max-height:92vh; }
+.candle-interval { display:flex; gap:6px; margin-bottom:12px; justify-content:center; }
+.candle-int-btn { flex:1; padding:8px 12px; border:1.5px solid var(--line); background:var(--card); border-radius:8px; font-size:13px; font-weight:700; color:var(--text-soft); cursor:pointer; font-family:inherit; }
+.candle-int-btn.active { background:var(--mine-bg); border-color:var(--mine); color:var(--mine); }
+.candle-chart-wrap { background:var(--bg); border-radius:8px; padding:8px; margin-bottom:12px; overflow-x:auto; }
+.candle-chart-wrap svg { width:100%; max-width:600px; height:auto; display:block; }
+.candle-signals { background:var(--gold-bg); border:1.5px solid var(--gold-border); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+.candle-signals-head { font-size:12px; font-weight:700; color:#7a4a0a; letter-spacing:1px; margin-bottom:6px; }
+.candle-signals-list { display:flex; flex-direction:column; gap:5px; }
+.candle-sig-item { font-size:13px; color:var(--text); background:var(--card); border-radius:6px; padding:6px 10px; }
+.candle-sig-item b { color:#7a4a0a; }
+.candle-no-sig { font-size:12px; color:var(--text-soft); text-align:center; padding:8px; }
 
 /* 株ノートの背表紙 (バインダー風) */
 .book-spine.stock { border-radius:1px 3px 3px 1px; }
@@ -3004,6 +3026,26 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSell()">キャンセル</button>
       <button class="btn-save" onclick="doSell()">売却を確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 監視銘柄用ロウソク足チャート -->
+<div class="modal-bg" id="candle-modal" onclick="if(event.target===this)closeCandle()">
+  <div class="modal candle-modal">
+    <div class="modal-title" id="candle-title">—</div>
+    <div class="modal-sub" id="candle-sub"></div>
+    <div class="candle-interval">
+      <button class="candle-int-btn active" data-int="1d" onclick="setCandleInterval('1d')">日足</button>
+      <button class="candle-int-btn" data-int="1wk" onclick="setCandleInterval('1wk')">週足</button>
+      <button class="candle-int-btn" data-int="1mo" onclick="setCandleInterval('1mo')">月足</button>
+    </div>
+    <div class="candle-chart-wrap" id="candle-chart">
+      <div class="scr-loading">読み込み中…</div>
+    </div>
+    <div id="candle-signals-wrap"></div>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="closeCandle()">閉じる</button>
     </div>
   </div>
 </div>
@@ -8110,6 +8152,29 @@ function setFundScreenerUniverse(u) {
   renderFundScreener();
 }
 function _scrKey(u, id) { return `${u}::${id}`; }
+function copyStockCode(btn, code) {
+  const raw = String(code || '').replace('.T', '');
+  const write = async () => {
+    try {
+      if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(raw); return true; }
+    } catch {}
+    // フォールバック: 一時 textarea
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = raw; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      return true;
+    } catch { return false; }
+  };
+  write().then(ok => {
+    if (ok && btn) {
+      const orig = btn.textContent;
+      btn.textContent = '✓ コピー済';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+    }
+  });
+}
 function updateUniverseCounts() {
   if (!watchlistData) return;
   const setTxt = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n + '件'; };
@@ -8121,9 +8186,111 @@ function updateUniverseCounts() {
   setTxt('uni-cnt-fs-hers', hersN);
 }
 
+// ── ロウソク足チャートモーダル ──
+let candleSymbol = null, candleName = '', candleInterval = '1d';
+function openCandleChart(ticker, name) {
+  candleSymbol = ticker;
+  candleName = name || ticker;
+  candleInterval = '1d';
+  document.getElementById('candle-title').textContent = name;
+  document.getElementById('candle-sub').textContent = ticker;
+  document.querySelectorAll('.candle-int-btn').forEach(b => b.classList.toggle('active', b.dataset.int === '1d'));
+  document.getElementById('candle-modal').classList.add('active');
+  loadCandleChart();
+  loadCandleSignals();
+}
+function closeCandle() { document.getElementById('candle-modal').classList.remove('active'); }
+function setCandleInterval(int) {
+  candleInterval = int;
+  document.querySelectorAll('.candle-int-btn').forEach(b => b.classList.toggle('active', b.dataset.int === int));
+  loadCandleChart();
+}
+async function loadCandleChart() {
+  const el = document.getElementById('candle-chart');
+  el.innerHTML = '<div class="scr-loading">読み込み中…</div>';
+  try {
+    const r = await fetch(API_BASE + `/api/candle-data?symbol=${encodeURIComponent(candleSymbol)}&interval=${candleInterval}`);
+    const d = await r.json();
+    if (!r.ok || !d.bars?.length) throw new Error(d.error || 'データなし');
+    el.innerHTML = renderCandleSvg(d.bars);
+  } catch (e) {
+    el.innerHTML = `<div class="scr-loading">取得失敗: ${escapeHtml(e.message)}</div>`;
+  }
+}
+function renderCandleSvg(bars) {
+  const W = 600, H = 300, padL = 46, padR = 8, padT = 10, padB = 30;
+  // 表示するバー数を制限（画面幅に応じて100本まで）
+  const shown = bars.slice(-120);
+  const highs = shown.map(b => b.h), lows = shown.map(b => b.l);
+  const max = Math.max(...highs), min = Math.min(...lows);
+  const range = (max - min) || 1;
+  const pad = range * 0.05;
+  const yMax = max + pad, yMin = min - pad;
+  const yRange = yMax - yMin;
+  const cw = (W - padL - padR) / shown.length;
+  const bodyW = Math.max(2, cw * 0.7);
+  const Y = v => padT + (1 - (v - yMin) / yRange) * (H - padT - padB);
+  // グリッド線
+  let grid = '';
+  const nLines = 5;
+  for (let i = 0; i <= nLines; i++) {
+    const v = yMin + (yRange * i / nLines);
+    const y = Y(v);
+    grid += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#ded7ca" stroke-width="0.5"/>`;
+    grid += `<text x="${padL-4}" y="${y+3}" font-size="10" fill="#978d80" text-anchor="end">${Math.round(v).toLocaleString()}</text>`;
+  }
+  // 日付ラベル（開始・中間・終了）
+  const fmtDate = (t) => { const d = new Date(t * 1000); return `${d.getMonth()+1}/${d.getDate()}`; };
+  const midIdx = Math.floor(shown.length / 2);
+  const dateLbls = `
+    <text x="${padL}" y="${H-8}" font-size="10" fill="#978d80">${fmtDate(shown[0].t)}</text>
+    <text x="${padL + cw*midIdx}" y="${H-8}" font-size="10" fill="#978d80" text-anchor="middle">${fmtDate(shown[midIdx].t)}</text>
+    <text x="${W-padR}" y="${H-8}" font-size="10" fill="#978d80" text-anchor="end">${fmtDate(shown[shown.length-1].t)}</text>
+  `;
+  // ロウソク
+  const candles = shown.map((b, i) => {
+    const x = padL + cw * i + cw / 2;
+    const up = b.c >= b.o;
+    const color = up ? '#c0392b' : '#2e6da4';
+    const yHigh = Y(b.h), yLow = Y(b.l);
+    const yOpen = Y(b.o), yClose = Y(b.c);
+    const yBody = Math.min(yOpen, yClose);
+    const bodyH = Math.max(1, Math.abs(yClose - yOpen));
+    return `<line x1="${x}" y1="${yHigh}" x2="${x}" y2="${yLow}" stroke="${color}" stroke-width="0.8"/>
+      <rect x="${x - bodyW/2}" y="${yBody}" width="${bodyW}" height="${bodyH}" fill="${color}"/>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+    ${grid}
+    ${candles}
+    ${dateLbls}
+  </svg>`;
+}
+async function loadCandleSignals() {
+  const el = document.getElementById('candle-signals-wrap');
+  el.innerHTML = '<div class="scr-loading">シグナル判定中…</div>';
+  try {
+    const r = await fetch(API_BASE + `/api/stock-signals?symbol=${encodeURIComponent(candleSymbol)}`);
+    const d = await r.json();
+    const sigs = d.signals || [];
+    if (!sigs.length) {
+      el.innerHTML = `<div class="candle-no-sig">現在、シグナルは検出されていません</div>`;
+      return;
+    }
+    el.innerHTML = `<div class="candle-signals">
+      <div class="candle-signals-head">🎯 検出シグナル ${sigs.length}件</div>
+      <div class="candle-signals-list">
+        ${sigs.map(s => `<div class="candle-sig-item"><b>${escapeHtml(s.label)}</b><br><span style="font-size:11px;color:var(--text-soft)">組合せ実戦編 ${escapeHtml(s.chapter)}</span></div>`).join('')}
+      </div>
+    </div>`;
+  } catch (e) {
+    el.innerHTML = `<div class="candle-no-sig">シグナル取得失敗</div>`;
+  }
+}
+
 // ── 監視銘柄タブ ──
 let watchlistData = null; // { mine: [...], hers: [...] }
 let watchPerson = 'mine';
+let watchlistSignals = { mine: null, hers: null }; // { ticker: [signals] }
 
 async function loadWatchlist() {
   try {
@@ -8136,25 +8303,34 @@ async function renderWatch() {
   if (!watchlistData) await loadWatchlist();
   const el = document.getElementById('wl-list');
   if (!el) return;
+  const sigMap = { mine: watchlistSignals.mine || {}, hers: watchlistSignals.hers || {} };
   const sections = ['mine', 'hers'].map(p => {
     const list = watchlistData?.[p] || [];
+    const signalCount = Object.values(sigMap[p]).filter(arr => arr && arr.length).length;
     const items = list.length
       ? list.map(w => {
           const jaName = STOCK_JA[w.ticker] || w.name || w.ticker;
           const q = quotes[w.ticker];
           const priceText = q?.price ? `¥${Math.round(q.price).toLocaleString()}` : '取得中…';
           const chgHtml = q?.change != null ? `<span class="wl-chg ${q.change>=0?'up':'down'}">${q.change>=0?'+':''}${q.change.toFixed(2)}%</span>` : '';
-          return `<div class="wl-item">
-            <div class="wl-item-main" onclick="openStockChart('${jsAttr(w.ticker)}','${jsAttr(jaName)}')">
+          const sigs = sigMap[p][w.ticker] || [];
+          const sigClass = sigs.length ? ' has-signal' : '';
+          const sigBadges = sigs.length
+            ? `<div class="wl-signals">${sigs.slice(0,3).map(s => `<span class="wl-sig-badge">🎯 ${escapeHtml(s.label)}</span>`).join('')}${sigs.length > 3 ? `<span class="wl-sig-badge">+${sigs.length - 3}</span>` : ''}</div>`
+            : '';
+          return `<div class="wl-item${sigClass}">
+            <div class="wl-item-main" onclick="openCandleChart('${jsAttr(w.ticker)}','${jsAttr(jaName)}')">
               <div class="wl-item-name">${escapeHtml(jaName)}</div>
               <div class="wl-item-sub"><span class="wl-price">${priceText}</span>${chgHtml}<span style="color:var(--text-soft);margin-left:8px">${escapeHtml(w.ticker)}</span></div>
+              ${sigBadges}
             </div>
             <button class="wl-item-del" onclick="removeWatchStockUI('${p}','${jsAttr(w.ticker)}')">削除</button>
           </div>`;
         }).join('')
       : '<div class="wl-empty">まだ登録されていません</div>';
+    const sigNote = signalCount > 0 ? ` <span style="color:var(--gold);font-weight:700">🎯 ${signalCount}件 シグナル発生中</span>` : '';
     return `<div class="wl-section">
-      <div class="wl-section-head">${p === 'mine' ? 'ひろの監視銘柄' : 'ちかの監視銘柄'}<span class="wl-count">${list.length}件</span></div>
+      <div class="wl-section-head">${p === 'mine' ? 'ひろの監視銘柄' : 'ちかの監視銘柄'}<span class="wl-count">${list.length}件${sigNote}</span></div>
       ${items}
     </div>`;
   }).join('');
@@ -8166,8 +8342,22 @@ async function renderWatch() {
     try {
       const q = await fetch(API_BASE+'/api/quotes?symbols='+encodeURIComponent(missing.join(','))).then(r=>r.json());
       Object.assign(quotes, q || {});
-      renderWatch(); // 再描画
+      renderWatch();
     } catch {}
+  }
+  // シグナル取得（両人分・並列）
+  for (const p of ['mine', 'hers']) {
+    if (watchlistSignals[p] !== null) continue; // 既に取得済み
+    if (!watchlistData?.[p]?.length) { watchlistSignals[p] = {}; continue; }
+    watchlistSignals[p] = {}; // 空で仮設定→取得完了で上書き
+    (async () => {
+      try {
+        const r = await fetch(API_BASE + `/api/watchlist/signals?person=${p}`);
+        const d = await r.json();
+        watchlistSignals[p] = d.results || {};
+        renderWatch();
+      } catch {}
+    })();
   }
 }
 function setWatchPerson(p) {
@@ -8248,12 +8438,12 @@ async function renderScreener() {
         resultsHtml = `<div class="scr-results"><div class="scr-empty">エラー: ${escapeHtml(cache.error)}</div></div>`;
       } else {
         const hitsHtml = cache.hits.length
-          ? cache.hits.map(h => { const jaName = STOCK_JA[h.symbol] || h.name; return `<div class="scr-hit" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(jaName)}')">
-              <div class="scr-hit-top">
-                <span class="scr-hit-name">${escapeHtml(jaName)} <span class="scr-hit-code">${escapeHtml(h.code)}</span></span>
+          ? cache.hits.map(h => { const jaName = STOCK_JA[h.symbol] || h.name; return `<div class="scr-hit">
+              <div class="scr-hit-top" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(jaName)}')">
+                <span class="scr-hit-name">${escapeHtml(jaName)} <span class="scr-hit-code" onclick="event.stopPropagation()">${escapeHtml(h.code)}</span><button class="scr-hit-copy" onclick="event.stopPropagation();copyStockCode(this,'${jsAttr(h.code)}')">コピー</button></span>
                 <span class="scr-hit-price">¥${Math.round(h.price).toLocaleString()}</span>
               </div>
-              <div class="scr-hit-detail">${escapeHtml(h.detail || '')}</div>
+              <div class="scr-hit-detail" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(jaName)}')">${escapeHtml(h.detail || '')}</div>
             </div>`; }).join('')
           : '<div class="scr-empty">該当銘柄なし</div>';
         resultsHtml = `<div class="scr-results">
@@ -8341,12 +8531,12 @@ async function renderFundScreener() {
         resultsHtml = `<div class="scr-results"><div class="scr-empty">エラー: ${escapeHtml(cache.error)}</div></div>`;
       } else {
         const hitsHtml = cache.hits.length
-          ? cache.hits.map(h => { const jaName = STOCK_JA[h.symbol] || h.name; return `<div class="scr-hit" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(jaName)}')">
-              <div class="scr-hit-top">
-                <span class="scr-hit-name">${escapeHtml(jaName)} <span class="scr-hit-code">${escapeHtml(h.code)}</span></span>
+          ? cache.hits.map(h => { const jaName = STOCK_JA[h.symbol] || h.name; return `<div class="scr-hit">
+              <div class="scr-hit-top" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(jaName)}')">
+                <span class="scr-hit-name">${escapeHtml(jaName)} <span class="scr-hit-code" onclick="event.stopPropagation()">${escapeHtml(h.code)}</span><button class="scr-hit-copy" onclick="event.stopPropagation();copyStockCode(this,'${jsAttr(h.code)}')">コピー</button></span>
                 <span class="scr-hit-price">¥${Math.round(h.price).toLocaleString()}</span>
               </div>
-              <div class="scr-hit-detail">${escapeHtml(h.detail || '')}</div>
+              <div class="scr-hit-detail" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(jaName)}')">${escapeHtml(h.detail || '')}</div>
             </div>`; }).join('')
           : '<div class="scr-empty">該当銘柄なし</div>';
         const fetchNote = cache.fetchTotal && cache.total < cache.fetchTotal

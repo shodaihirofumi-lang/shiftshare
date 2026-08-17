@@ -1998,6 +1998,78 @@ app.get('/api/screener/combos', (_req, res) => {
   res.json({ combos });
 });
 
+// ── 単一銘柄の全シグナル判定（監視銘柄のチャート/一覧で使う） ──
+async function computeStockSignals(code) {
+  try {
+    const sym = /^\d{3,5}[A-Z]?$/.test(code) ? code + '.T' : code;
+    const j = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1y`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+    ).then(r => r.json());
+    const r0 = j?.chart?.result?.[0];
+    const q = r0?.indicators?.quote?.[0];
+    const closes = (q?.close || []).filter(v => v != null);
+    const volumes = (q?.volume || []).filter(v => v != null);
+    if (closes.length < 30) return { signals: [] };
+    const ind = computeComboIndicators(closes, volumes);
+    const p = closes[closes.length - 1];
+    const signals = [];
+    for (const [id, c] of Object.entries(COMBO_CHECKS)) {
+      try { if (c.check(ind, p)) signals.push({ id, label: c.label, chapter: c.chapter }); } catch {}
+    }
+    return { symbol: sym, price: p, signals };
+  } catch (e) { return { signals: [], error: e.message }; }
+}
+
+app.get('/api/stock-signals', async (req, res) => {
+  const code = String(req.query.symbol || '').trim().replace(/\.T$/, '');
+  if (!code) return res.status(400).json({ error: 'symbol が必要です' });
+  const r = await computeStockSignals(code);
+  res.json(r);
+});
+
+// 監視銘柄の全銘柄に対して一括シグナル判定
+app.get('/api/watchlist/signals', async (req, res) => {
+  const person = ['mine', 'hers'].includes(req.query.person) ? req.query.person : 'mine';
+  const list = (getWatchlist()[person] || []).map(w => w.ticker.replace(/\.T$/, ''));
+  if (!list.length) return res.json({ results: {} });
+  const results = {};
+  const BATCH = 8;
+  for (let i = 0; i < list.length; i += BATCH) {
+    await Promise.all(list.slice(i, i+BATCH).map(async code => {
+      const r = await computeStockSignals(code);
+      results[code + '.T'] = r.signals;
+    }));
+    if (i + BATCH < list.length) await new Promise(r => setTimeout(r, 150));
+  }
+  res.json({ results });
+});
+
+// ── ロウソク足データ取得 (OHLC + interval対応) ──
+app.get('/api/candle-data', async (req, res) => {
+  const code0 = String(req.query.symbol || '').trim();
+  const sym = /^\d{3,5}[A-Z]?$/.test(code0) ? code0 + '.T' : code0;
+  const interval = ['1d', '1wk', '1mo'].includes(req.query.interval) ? req.query.interval : '1d';
+  const range = interval === '1mo' ? '5y' : interval === '1wk' ? '2y' : '6mo';
+  try {
+    const j = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&range=${range}`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+    ).then(r => r.json());
+    const r0 = j?.chart?.result?.[0];
+    if (!r0) throw new Error('データなし');
+    const ts = r0.timestamp || [];
+    const q = r0.indicators?.quote?.[0] || {};
+    const bars = [];
+    for (let i = 0; i < ts.length; i++) {
+      const o = q.open?.[i], h = q.high?.[i], l = q.low?.[i], c = q.close?.[i], v = q.volume?.[i];
+      if (o == null || h == null || l == null || c == null) continue;
+      bars.push({ t: ts[i], o, h, l, c, v: v || 0 });
+    }
+    res.json({ symbol: sym, currency: r0.meta?.currency || 'JPY', interval, bars });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/screener/run', async (req, res) => {
   const id = String(req.query.id || '');
   const universe = String(req.query.universe || 'nikkei225');
