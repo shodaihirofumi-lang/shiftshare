@@ -1604,8 +1604,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .candle-interval { display:flex; gap:6px; margin-bottom:12px; justify-content:center; }
 .candle-int-btn { flex:1; padding:8px 12px; border:1.5px solid var(--line); background:var(--card); border-radius:8px; font-size:13px; font-weight:700; color:var(--text-soft); cursor:pointer; font-family:inherit; }
 .candle-int-btn.active { background:var(--mine-bg); border-color:var(--mine); color:var(--mine); }
-.candle-chart-wrap { background:var(--bg); border-radius:8px; padding:8px; margin-bottom:12px; overflow-x:auto; }
-.candle-chart-wrap svg { width:100%; max-width:600px; height:auto; display:block; }
+.candle-chart-wrap { background:var(--bg); border-radius:8px; padding:10px; margin-bottom:12px; overflow-x:auto; }
+.candle-chart-wrap svg { width:100%; max-width:640px; height:auto; display:block; }
+.candle-price-head { display:flex; align-items:baseline; gap:12px; padding:4px 6px 10px; flex-wrap:wrap; }
+.candle-price-now { font-size:26px; font-weight:800; color:var(--text); letter-spacing:.5px; }
+.candle-price-chg { font-size:16px; font-weight:700; }
 .candle-signals { background:var(--gold-bg); border:1.5px solid var(--gold-border); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
 .candle-signals-head { font-size:12px; font-weight:700; color:#7a4a0a; letter-spacing:1px; margin-bottom:6px; }
 .candle-signals-list { display:flex; flex-direction:column; gap:5px; }
@@ -8218,8 +8221,8 @@ async function loadCandleChart() {
   }
 }
 function renderCandleSvg(bars) {
-  const W = 600, H = 300, padL = 46, padR = 8, padT = 10, padB = 30;
-  // 表示するバー数を制限（画面幅に応じて100本まで）
+  const W = 600, H = 340, padL = 78, padR = 12, padT = 14, padB = 44;
+  // 表示するバー数を制限
   const shown = bars.slice(-120);
   const highs = shown.map(b => b.h), lows = shown.map(b => b.l);
   const max = Math.max(...highs), min = Math.min(...lows);
@@ -8230,23 +8233,39 @@ function renderCandleSvg(bars) {
   const cw = (W - padL - padR) / shown.length;
   const bodyW = Math.max(2, cw * 0.7);
   const Y = v => padT + (1 - (v - yMin) / yRange) * (H - padT - padB);
-  // グリッド線
+  // 現在値（最新終値）
+  const lastClose = shown[shown.length - 1].c;
+  const prevClose = shown.length > 1 ? shown[shown.length - 2].c : lastClose;
+  const chgAbs = lastClose - prevClose;
+  const chgPct = prevClose ? (chgAbs / prevClose * 100) : 0;
+  const chgColor = chgAbs >= 0 ? '#c0392b' : '#2e6da4';
+  const chgSign = chgAbs >= 0 ? '+' : '';
+  // グリッド線＋価格ラベル（大きく）
   let grid = '';
   const nLines = 5;
   for (let i = 0; i <= nLines; i++) {
     const v = yMin + (yRange * i / nLines);
     const y = Y(v);
-    grid += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#ded7ca" stroke-width="0.5"/>`;
-    grid += `<text x="${padL-4}" y="${y+3}" font-size="10" fill="#978d80" text-anchor="end">${Math.round(v).toLocaleString()}</text>`;
+    grid += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#ded7ca" stroke-width="0.6"/>`;
+    grid += `<text x="${padL-6}" y="${y+6}" font-size="16" fill="#5a5148" font-weight="600" text-anchor="end">${Math.round(v).toLocaleString()}</text>`;
   }
-  // 日付ラベル（開始・中間・終了）
+  // 現在値ライン
+  const yLast = Y(lastClose);
+  grid += `<line x1="${padL}" y1="${yLast}" x2="${W-padR}" y2="${yLast}" stroke="${chgColor}" stroke-width="1.2" stroke-dasharray="6,3"/>`;
+  grid += `<rect x="${W-padR-72}" y="${yLast-13}" width="72" height="26" fill="${chgColor}" rx="4"/>`;
+  grid += `<text x="${W-padR-36}" y="${yLast+6}" font-size="15" fill="#fff" font-weight="700" text-anchor="middle">${Math.round(lastClose).toLocaleString()}</text>`;
+  // 日付ラベル（開始・中間・終了）大きく
   const fmtDate = (t) => { const d = new Date(t * 1000); return `${d.getMonth()+1}/${d.getDate()}`; };
   const midIdx = Math.floor(shown.length / 2);
   const dateLbls = `
-    <text x="${padL}" y="${H-8}" font-size="10" fill="#978d80">${fmtDate(shown[0].t)}</text>
-    <text x="${padL + cw*midIdx}" y="${H-8}" font-size="10" fill="#978d80" text-anchor="middle">${fmtDate(shown[midIdx].t)}</text>
-    <text x="${W-padR}" y="${H-8}" font-size="10" fill="#978d80" text-anchor="end">${fmtDate(shown[shown.length-1].t)}</text>
+    <text x="${padL}" y="${H-14}" font-size="15" fill="#5a5148" font-weight="600">${fmtDate(shown[0].t)}</text>
+    <text x="${padL + cw*midIdx}" y="${H-14}" font-size="15" fill="#5a5148" font-weight="600" text-anchor="middle">${fmtDate(shown[midIdx].t)}</text>
+    <text x="${W-padR}" y="${H-14}" font-size="15" fill="#5a5148" font-weight="600" text-anchor="end">${fmtDate(shown[shown.length-1].t)}</text>
   `;
+  const priceHeaderHtml = `<div class="candle-price-head">
+    <span class="candle-price-now">¥${Math.round(lastClose).toLocaleString()}</span>
+    <span class="candle-price-chg" style="color:${chgColor}">${chgSign}${Math.round(chgAbs).toLocaleString()} (${chgSign}${chgPct.toFixed(2)}%)</span>
+  </div>`;
   // ロウソク
   const candles = shown.map((b, i) => {
     const x = padL + cw * i + cw / 2;
@@ -8259,7 +8278,7 @@ function renderCandleSvg(bars) {
     return `<line x1="${x}" y1="${yHigh}" x2="${x}" y2="${yLow}" stroke="${color}" stroke-width="0.8"/>
       <rect x="${x - bodyW/2}" y="${yBody}" width="${bodyW}" height="${bodyH}" fill="${color}"/>`;
   }).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  return `${priceHeaderHtml}<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block">
     ${grid}
     ${candles}
     ${dateLbls}
@@ -8304,7 +8323,7 @@ async function renderWatch() {
   const el = document.getElementById('wl-list');
   if (!el) return;
   const sigMap = { mine: watchlistSignals.mine || {}, hers: watchlistSignals.hers || {} };
-  const sections = ['mine', 'hers'].map(p => {
+  const sections = ['hers', 'mine'].map(p => {
     const list = watchlistData?.[p] || [];
     const signalCount = Object.values(sigMap[p]).filter(arr => arr && arr.length).length;
     const items = list.length
