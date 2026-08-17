@@ -2104,15 +2104,16 @@ app.get('/api/debug-scrape', async (req, res) => {
       const m = html.match(re);
       return m ? m[1].trim() : null;
     };
-    const searches = ['PER','PBR','P/E','P/B','株価収益率','株価純資産','配当利回','時価総額','Market cap','Dividend','gyFHGc','P6K39c','eYanAe'];
-    const snip = (term) => { const i = html.indexOf(term); return i >= 0 ? html.slice(Math.max(0,i-50), i + 400).replace(/\n/g,' ').replace(/\s+/g,' ') : null; };
-    const found = {};
-    for (const s of searches) { const r = snip(s); if (r) found[s] = r; }
+    const metrics = {};
+    const re = /<div[^>]*class="[^"]*SwQK7[^"]*"[^>]*>([^<]+)<\/div>\s*<div[^>]*class="[^"]*dO6ijd[^"]*"[^>]*>([^<]+)<\/div>/gi;
+    let match;
+    while ((match = re.exec(html)) !== null) {
+      metrics[match[1].trim()] = match[2].trim();
+    }
     res.json({
       html_length: html.length,
       title: (html.match(/<title>([^<]*)/i) || [])[1],
-      found_keys: Object.keys(found),
-      snippets: found,
+      all_metrics: metrics,
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -2181,27 +2182,28 @@ app.get('/api/stock-detail', async (req, res) => {
           headers: { 'User-Agent': YH_UA, 'Accept': 'text/html', 'Accept-Language': 'en-US,en;q=0.9,ja;q=0.8' },
           signal: AbortSignal.timeout(10000),
         }).then(r => r.text());
-        // Google Finance: <div class="SwQK7">ラベル</div><div class="dO6ijd">値</div>
-        const findGF = (label) => {
-          const re = new RegExp(label + '</div>\\s*<div[^>]*class="[^"]*dO6ijd[^"]*"[^>]*>([^<]+)</div>', 'i');
-          const m = html.match(re);
-          return m ? m[1].trim() : null;
-        };
+        // Google Finance: <div class="SwQK7">ラベル</div><div class="dO6ijd">値</div> を全て抽出
+        const metrics = {};
+        const re = /<div[^>]*class="[^"]*SwQK7[^"]*"[^>]*>([^<]+)<\/div>\s*<div[^>]*class="[^"]*dO6ijd[^"]*"[^>]*>([^<]+)<\/div>/gi;
+        let match;
+        while ((match = re.exec(html)) !== null) {
+          metrics[match[1].trim()] = match[2].trim();
+        }
+        console.log(`[google-scrape] ${sym} metrics:`, JSON.stringify(metrics));
         const toNum = (s) => {
           if (!s || s === '-' || s === '—' || s === '---') return null;
           const clean = s.replace(/[￥¥,、]/g, '').replace(/%$/, '');
           const n = parseFloat(clean);
           return isNaN(n) ? null : n;
         };
-        const perVal = toNum(findGF('株価収益率') || findGF('P/E ratio'));
-        const epsVal = toNum(findGF('EPS'));
-        const w52h = toNum(findGF('52 週高値') || findGF('52-week high'));
-        const w52l = toNum(findGF('52 週安値') || findGF('52-week low'));
-        const dyVal = toNum(findGF('配当利回り') || findGF('Dividend yield'));
-        const pbrText = findGF('株価純資産倍率') || findGF('P/B ratio') || findGF('Price-to-book');
-        const pbrVal = toNum(pbrText);
-        const sharesText = findGF('発行済株式数') || findGF('Shares outstanding');
-        console.log(`[google-scrape] ${sym} html=${html.length} PER=${perVal} EPS=${epsVal} PBR=${pbrVal} DY=${dyVal} w52h=${w52h}`);
+        const gm = (keys) => { for (const k of keys) { if (metrics[k]) return metrics[k]; } return null; };
+        const perVal = toNum(gm(['株価収益率','P/E ratio','PER']));
+        const pbrVal = toNum(gm(['株価純資産倍率','P/B ratio','PBR','Price-to-book']));
+        const dyVal = toNum(gm(['配当利回り','Dividend yield']));
+        const epsVal = toNum(gm(['EPS']));
+        const w52h = toNum(gm(['52 週高値','52-week high']));
+        const w52l = toNum(gm(['52 週安値','52-week low']));
+        console.log(`[google-scrape] ${sym} PER=${perVal} PBR=${pbrVal} DY=${dyVal} EPS=${epsVal} w52h=${w52h} w52l=${w52l}`);
 
         if (perVal != null) sd.trailingPE = { raw: perVal };
         if (pbrVal != null) ks.priceToBook = { raw: pbrVal };
