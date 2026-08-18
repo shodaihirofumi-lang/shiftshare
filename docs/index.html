@@ -2604,6 +2604,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         </div>
         <div class="uni-picker-note">※ TOPIX全体は約2100社。全銘柄取得は時間がかかりすぎるため上位500社に絞っています</div>
       </div>
+      <div style="display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap">
+        <button class="screening-refresh-btn" style="font-size:15px;font-weight:700;padding:8px 16px" onclick="runAllScreener('nikkei225')">日経225 一括実行</button>
+        <button class="screening-refresh-btn" style="font-size:15px;font-weight:700;padding:8px 16px" onclick="runAllScreener('topix500')">TOPIX500 一括実行</button>
+      </div>
+      <div id="scr-batch-status"></div>
       <div id="scr-list"></div>
     </div>
 
@@ -2624,6 +2629,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         </div>
         <div class="uni-picker-note">※ TOPIX全体は約2100社。全銘柄取得は数分かかるため上位500社に絞っています</div>
       </div>
+      <div style="display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap">
+        <button class="screening-refresh-btn" style="font-size:15px;font-weight:700;padding:8px 16px" onclick="runAllFundScreener('nikkei225')">日経225 一括実行</button>
+        <button class="screening-refresh-btn" style="font-size:15px;font-weight:700;padding:8px 16px" onclick="runAllFundScreener('topix500')">TOPIX500 一括実行</button>
+      </div>
+      <div id="fundscr-batch-status"></div>
       <div id="fundscr-list"></div>
     </div>
 
@@ -3410,7 +3420,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <button class="candle-int-btn" data-int="1wk" onclick="setCandleInterval('1wk')">週足</button>
       <button class="candle-int-btn" data-int="1mo" onclick="setCandleInterval('1mo')">月足</button>
     </div>
-    <div class="candle-chart-wrap" id="candle-chart" style="touch-action:none">
+    <div class="candle-chart-wrap" id="candle-chart" style="touch-action:pan-x pan-y">
       <div class="scr-loading">読み込み中…</div>
     </div>
     <div style="display:flex;justify-content:center;gap:12px;margin:-6px 0 8px">
@@ -8669,20 +8679,25 @@ function candleZoomBtn(dir) {
 function setupCandlePinch() {
   const el = document.getElementById('candle-chart');
   let startDist = 0, startZoom = 1;
-  el.ontouchstart = e => {
+  el.addEventListener('touchstart', e => {
     if (e.touches.length === 2) {
       startDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
       startZoom = candleZoom;
+      el.style.touchAction = 'none';
     }
-  };
-  el.ontouchmove = e => {
-    if (e.touches.length === 2) {
+  }, { passive: true });
+  el.addEventListener('touchmove', e => {
+    if (e.touches.length === 2 && startDist > 0) {
       e.preventDefault();
       const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
       candleZoom = Math.max(0.5, Math.min(4, startZoom * (dist / startDist)));
       if (candleBars) renderCandleFromBars();
     }
-  };
+  }, { passive: false });
+  el.addEventListener('touchend', () => {
+    startDist = 0;
+    el.style.touchAction = 'pan-x pan-y';
+  }, { passive: true });
 }
 async function loadCandleChart() {
   const el = document.getElementById('candle-chart');
@@ -8938,9 +8953,9 @@ async function renderDemoPortfolio() {
   const tickers = [...new Set(trades.map(t => t.ticker))];
   let quotes = {};
   try {
-    const qRes = await fetch(`/api/quotes?symbols=${tickers.join(',')}`);
+    const qRes = await fetch(API_BASE + `/api/quotes?symbols=${encodeURIComponent(tickers.join(','))}`);
     const qj = await qRes.json();
-    if (Array.isArray(qj)) qj.forEach(q => { quotes[q.symbol] = q; });
+    if (qj && typeof qj === 'object') Object.assign(quotes, qj);
   } catch {}
   let totalCost = 0, totalValue = 0;
   const rows = trades.map(t => {
@@ -9372,6 +9387,46 @@ async function runFundScreenerCombo(id) {
   }
   savePersistedResults('fs', fundScrResults);
   renderFundScreener();
+}
+
+// ── 一括実行 ──
+async function runAllScreener(universe) {
+  if (!screenerCombos) {
+    try {
+      const r = await fetch(API_BASE + '/api/screener/combos');
+      const d = await r.json();
+      screenerCombos = d.combos || [];
+    } catch { return showToast('コンボ取得失敗', true); }
+  }
+  setScreenerUniverse(universe);
+  const statusEl = document.getElementById('scr-batch-status');
+  const total = screenerCombos.length;
+  for (let i = 0; i < total; i++) {
+    const c = screenerCombos[i];
+    statusEl.innerHTML = `<div style="padding:8px 0;font-size:14px;color:var(--text-soft)">一括実行中… ${i+1}/${total}（${escapeHtml(c.label)}）</div>`;
+    await runScreenerCombo(c.id);
+  }
+  statusEl.innerHTML = `<div style="padding:8px 0;font-size:14px;color:var(--mine);font-weight:700">一括実行完了（${total}件）</div>`;
+  setTimeout(() => { statusEl.innerHTML = ''; }, 5000);
+}
+async function runAllFundScreener(universe) {
+  if (!fundScrCombos) {
+    try {
+      const r = await fetch(API_BASE + '/api/fund-screener/combos');
+      const d = await r.json();
+      fundScrCombos = d.combos || [];
+    } catch { return showToast('コンボ取得失敗', true); }
+  }
+  setFundScreenerUniverse(universe);
+  const statusEl = document.getElementById('fundscr-batch-status');
+  const total = fundScrCombos.length;
+  for (let i = 0; i < total; i++) {
+    const c = fundScrCombos[i];
+    statusEl.innerHTML = `<div style="padding:8px 0;font-size:14px;color:var(--text-soft)">一括実行中… ${i+1}/${total}（${escapeHtml(c.label)}）</div>`;
+    await runFundScreenerCombo(c.id);
+  }
+  statusEl.innerHTML = `<div style="padding:8px 0;font-size:14px;color:var(--mine);font-weight:700">一括実行完了（${total}件）</div>`;
+  setTimeout(() => { statusEl.innerHTML = ''; }, 5000);
 }
 
 // ── 参考書のしおり機能 ──
