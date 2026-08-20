@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [], targetPrices: [], pushSettings: { weeklyReport: false, monthlyReport: false }, demoTrades: { mine: [], hers: [] }, demoClosedTrades: { mine: [], hers: [] } });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [], targetPrices: [], pushSettings: { weeklyReport: false, monthlyReport: false }, demoTrades: { mine: [], hers: [] }, demoClosedTrades: { mine: [], hers: [] }, demoLimitOrders: { mine: [], hers: [] } });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -609,6 +609,24 @@ export async function sellDemoTrade(person, id, sellPrice) {
   trade.sellDate = new Date().toISOString().slice(0, 10);
   const closed = getDemoClosedTrades();
   closed[person].push(trade);
+  await persist();
+}
+export function getDemoLimitOrders() {
+  if (!cache.demoLimitOrders) cache.demoLimitOrders = { mine: [], hers: [] };
+  if (!Array.isArray(cache.demoLimitOrders.mine)) cache.demoLimitOrders.mine = [];
+  if (!Array.isArray(cache.demoLimitOrders.hers)) cache.demoLimitOrders.hers = [];
+  return cache.demoLimitOrders;
+}
+export async function addDemoLimitOrder(person, order) {
+  if (!['mine', 'hers'].includes(person)) throw new Error('person が不正です');
+  const lo = getDemoLimitOrders();
+  lo[person].push(order);
+  await persist();
+}
+export async function cancelDemoLimitOrder(person, orderId) {
+  if (!['mine', 'hers'].includes(person)) return;
+  const lo = getDemoLimitOrders();
+  lo[person] = lo[person].filter(o => o.id !== orderId);
   await persist();
 }
 

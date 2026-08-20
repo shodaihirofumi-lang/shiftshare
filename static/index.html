@@ -8988,6 +8988,13 @@ async function demoSellTrade(person, id, sellPrice) {
     renderDemoPortfolio();
   } catch (e) { showToast('売却失敗: ' + e.message, true); }
 }
+let demoLimitOrders = null;
+async function loadDemoLimitOrders() {
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades/limits');
+    demoLimitOrders = await r.json();
+  } catch { demoLimitOrders = { mine: [], hers: [] }; }
+}
 function demoShowLimitSell(person, id, curPrice) {
   const el = document.getElementById('demo-limit-' + id);
   if (el.style.display === 'flex') { el.style.display = 'none'; return; }
@@ -8996,11 +9003,58 @@ function demoShowLimitSell(person, id, curPrice) {
   inp.value = Math.round(curPrice);
   inp.focus();
 }
-function demoLimitSell(person, id) {
-  const el = document.getElementById('demo-limit-' + id);
+async function demoPlaceLimitOrder(person, tradeId) {
+  const el = document.getElementById('demo-limit-' + tradeId);
   const price = parseFloat(el.querySelector('input').value);
   if (!price || price <= 0) { showToast('売却価格を入力してください', true); return; }
-  demoSellTrade(person, id, price);
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades/limit-order', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person, tradeId, limitPrice: price }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'エラー');
+    demoLimitOrders = d.demoLimitOrders;
+    el.style.display = 'none';
+    showToast(`指値注文 ¥${Math.round(price).toLocaleString()} を設定しました`);
+    renderDemoPortfolio();
+  } catch (e) { showToast('指値設定失敗: ' + e.message, true); }
+}
+async function demoCancelLimitOrder(person, orderId) {
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades/limit-cancel', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person, orderId }),
+    });
+    const d = await r.json();
+    demoLimitOrders = d.demoLimitOrders;
+    showToast('指値注文を取消しました');
+    renderDemoPortfolio();
+  } catch (e) { showToast('取消失敗: ' + e.message, true); }
+}
+async function demoCheckLimitOrders(quotes) {
+  if (!demoLimitOrders) return;
+  for (const person of ['mine', 'hers']) {
+    const orders = demoLimitOrders[person] || [];
+    for (const order of orders) {
+      const q = quotes[order.ticker] || quotes[order.ticker.replace('.T', '')] || {};
+      if (q.price && q.price >= order.limitPrice) {
+        try {
+          const r = await fetch(API_BASE + '/api/demo-trades/execute-limit', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ person, orderId: order.id }),
+          });
+          const d = await r.json();
+          if (d.success) {
+            demoTradesData = d.demoTrades;
+            demoClosedData = d.demoClosedTrades;
+            demoLimitOrders = d.demoLimitOrders;
+            showToast(`指値約定！ ${order.name || order.ticker} ¥${Math.round(order.limitPrice).toLocaleString()}`);
+          }
+        } catch {}
+      }
+    }
+  }
 }
 async function demoDeleteTrade(person, id) {
   if (!confirm('この取引を削除しますか？（売却履歴に残りません）')) return;
@@ -9017,6 +9071,7 @@ async function demoDeleteTrade(person, id) {
 async function renderDemoPortfolio() {
   if (!demoTradesData) await loadDemoTrades();
   if (!demoClosedData) await loadDemoClosedTrades();
+  if (!demoLimitOrders) await loadDemoLimitOrders();
   const sumEl = document.getElementById('demo-summary');
   const listEl = document.getElementById('demo-list');
   if (demoTab === 'closed') { renderDemoClosed(sumEl, listEl); return; }
@@ -9034,6 +9089,8 @@ async function renderDemoPortfolio() {
     const qj = await qRes.json();
     if (qj && typeof qj === 'object') Object.assign(quotes, qj);
   } catch {}
+  await demoCheckLimitOrders(quotes);
+  const myLimits = demoLimitOrders?.[demoPerson] || [];
   let totalCost = 0, totalValue = 0;
   const rows = trades.map(t => {
     const q = quotes[t.ticker] || quotes[t.ticker.replace('.T','')] || {};
@@ -9048,6 +9105,13 @@ async function renderDemoPortfolio() {
     const pnlSign = pnl >= 0 ? '+' : '';
     const targetPnl = t.target ? ((t.target - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
     const stopPnl = t.stop ? ((t.stop - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
+    const limitOrder = myLimits.find(o => o.tradeId === t.id);
+    const limitHtml = limitOrder
+      ? `<div style="margin-top:8px;padding:8px 12px;background:rgba(192,57,43,.08);border:1.5px solid #c0392b;border-radius:8px;display:flex;align-items:center;justify-content:space-between">
+          <div><span style="font-size:13px;font-weight:700;color:#c0392b">📌 指値注文中</span><br><span style="font-size:16px;font-weight:800">¥${Math.round(limitOrder.limitPrice).toLocaleString()}</span> <span style="font-size:12px;color:var(--text-soft)">(${limitOrder.orderDate}設定)</span></div>
+          <button onclick="event.stopPropagation();demoCancelLimitOrder('${demoPerson}','${limitOrder.id}')" style="background:none;border:1.5px solid #c0392b;color:#c0392b;border-radius:6px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer">取消</button>
+        </div>`
+      : '';
     return `<div class="demo-card">
       <div class="demo-card-head" onclick="openCandleChart('${t.ticker.replace(/'/g,"\\'")}','${(t.name||'').replace(/'/g,"\\'")}')">
         <div>
@@ -9067,14 +9131,15 @@ async function renderDemoPortfolio() {
         ${t.target ? `<div><div class="demo-card-lbl">目標</div><div class="demo-card-val">¥${Math.round(t.target).toLocaleString()} (${targetPnl}%)</div></div>` : ''}
         ${t.stop ? `<div><div class="demo-card-lbl">損切り</div><div class="demo-card-val">¥${Math.round(t.stop).toLocaleString()} (${stopPnl}%)</div></div>` : ''}
       </div>
+      ${limitHtml}
       <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
         <button onclick="event.stopPropagation();demoSellTrade('${demoPerson}','${t.id}',${curPrice})" style="flex:1;background:#c0392b;color:#fff;border:none;border-radius:8px;padding:10px 0;font-size:15px;font-weight:700;cursor:pointer">成行売却</button>
-        <button onclick="event.stopPropagation();demoShowLimitSell('${demoPerson}','${t.id}',${curPrice})" style="flex:1;background:var(--bg);color:var(--text);border:2px solid #c0392b;border-radius:8px;padding:8px 0;font-size:15px;font-weight:700;cursor:pointer">指値売却</button>
+        <button onclick="event.stopPropagation();demoShowLimitSell('${demoPerson}','${t.id}',${curPrice})" style="flex:1;background:var(--bg);color:var(--text);border:2px solid #c0392b;border-radius:8px;padding:8px 0;font-size:15px;font-weight:700;cursor:pointer">${limitOrder ? '指値変更' : '指値注文'}</button>
         <button onclick="event.stopPropagation();demoDeleteTrade('${demoPerson}','${t.id}')" style="background:none;border:none;color:var(--text-soft);font-size:18px;cursor:pointer;padding:6px 8px" title="削除">🗑</button>
       </div>
       <div id="demo-limit-${t.id}" style="display:none;gap:8px;margin-top:8px;align-items:center">
         <input type="number" value="${Math.round(curPrice)}" style="flex:1;padding:10px;border:2px solid var(--line);border-radius:8px;font-size:16px;font-weight:700;background:var(--bg);color:var(--text);font-family:inherit" onclick="event.stopPropagation()" placeholder="売却価格">
-        <button onclick="event.stopPropagation();demoLimitSell('${demoPerson}','${t.id}')" style="background:#c0392b;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap">この価格で売却</button>
+        <button onclick="event.stopPropagation();demoPlaceLimitOrder('${demoPerson}','${t.id}')" style="background:#c0392b;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap">指値設定</button>
       </div>
     </div>`;
   });

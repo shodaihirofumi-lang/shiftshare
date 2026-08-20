@@ -17,7 +17,7 @@ import {
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding, editHolding, sellHolding, getRealized,
   getWatchlist, addWatchStock, removeWatchStock,
-  getDemoTrades, addDemoTrade, removeDemoTrade, getDemoClosedTrades, sellDemoTrade,
+  getDemoTrades, addDemoTrade, removeDemoTrade, getDemoClosedTrades, sellDemoTrade, getDemoLimitOrders, addDemoLimitOrder, cancelDemoLimitOrder,
   setHoldingTargets, markHoldingTargetFired, markHoldingEarningsNotified, getBuys,
   hasMoveAlert, markMoveAlert,
   getNotes, addNote, deleteNote, toggleNote,
@@ -1796,6 +1796,42 @@ app.post('/api/demo-trades/sell', async (req, res) => {
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 app.get('/api/demo-trades/closed', (_req, res) => res.json(getDemoClosedTrades()));
+app.get('/api/demo-trades/limits', (_req, res) => res.json(getDemoLimitOrders()));
+app.post('/api/demo-trades/limit-order', async (req, res) => {
+  try {
+    const { person, tradeId, limitPrice } = req.body || {};
+    if (!tradeId || !limitPrice) throw new Error('tradeId と limitPrice が必要です');
+    const dt = getDemoTrades();
+    const p = person || 'mine';
+    const trade = dt[p]?.find(t => t.id === tradeId);
+    if (!trade) throw new Error('保有中の取引が見つかりません');
+    const order = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      tradeId, ticker: trade.ticker, name: trade.name, shares: trade.shares,
+      buyPrice: trade.buyPrice, limitPrice, orderDate: new Date().toISOString().slice(0, 10),
+    };
+    await addDemoLimitOrder(p, order);
+    res.json({ success: true, demoLimitOrders: getDemoLimitOrders() });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+app.post('/api/demo-trades/limit-cancel', async (req, res) => {
+  const { person, orderId } = req.body || {};
+  await cancelDemoLimitOrder(person || 'mine', orderId);
+  res.json({ success: true, demoLimitOrders: getDemoLimitOrders() });
+});
+app.post('/api/demo-trades/execute-limit', async (req, res) => {
+  try {
+    const { person, orderId } = req.body || {};
+    if (!orderId) throw new Error('orderId が必要です');
+    const p = person || 'mine';
+    const lo = getDemoLimitOrders();
+    const order = lo[p]?.find(o => o.id === orderId);
+    if (!order) throw new Error('注文が見つかりません');
+    await sellDemoTrade(p, order.tradeId, order.limitPrice);
+    await cancelDemoLimitOrder(p, order.id);
+    res.json({ success: true, demoTrades: getDemoTrades(), demoClosedTrades: getDemoClosedTrades(), demoLimitOrders: getDemoLimitOrders() });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
 
 // ── TOPIX Core30 (代表30銘柄、時価総額最上位) ──
 const TOPIX_CORE30 = [
