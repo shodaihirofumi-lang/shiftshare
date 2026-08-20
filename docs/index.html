@@ -1914,7 +1914,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .demo-card-lbl { font-size:11px; color:var(--text-soft); font-weight:600; }
 .demo-card-val { font-size:15px; font-weight:700; }
 .demo-card-pnl { font-size:20px; font-weight:900; }
-.demo-card-del { position:absolute; top:8px; right:10px; background:none; border:none; color:var(--text-soft); font-size:18px; cursor:pointer; padding:4px 8px; }
+.demo-card-del { background:none; border:none; color:var(--text-soft); font-size:18px; cursor:pointer; padding:4px 8px; }
 .demo-badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; }
 [data-dark] .demo-summary-card, [data-dark] .demo-card { background:var(--card); }
 .cd-loading { text-align:center; padding:20px; color:var(--text-soft); font-size:13px; }
@@ -8974,7 +8974,7 @@ async function demoBuy() {
   } catch (e) { showToast('デモ購入失敗: ' + e.message, true); }
 }
 async function demoSellTrade(person, id, sellPrice) {
-  if (!confirm(`現在値 ¥${Math.round(sellPrice).toLocaleString()} で売却しますか？`)) return;
+  if (!confirm(`¥${Math.round(sellPrice).toLocaleString()} で売却しますか？`)) return;
   try {
     const r = await fetch(API_BASE + '/api/demo-trades/sell', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -8987,6 +8987,20 @@ async function demoSellTrade(person, id, sellPrice) {
     showToast('売却しました');
     renderDemoPortfolio();
   } catch (e) { showToast('売却失敗: ' + e.message, true); }
+}
+function demoShowLimitSell(person, id, curPrice) {
+  const el = document.getElementById('demo-limit-' + id);
+  if (el.style.display === 'flex') { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  const inp = el.querySelector('input');
+  inp.value = Math.round(curPrice);
+  inp.focus();
+}
+function demoLimitSell(person, id) {
+  const el = document.getElementById('demo-limit-' + id);
+  const price = parseFloat(el.querySelector('input').value);
+  if (!price || price <= 0) { showToast('売却価格を入力してください', true); return; }
+  demoSellTrade(person, id, price);
 }
 async function demoDeleteTrade(person, id) {
   if (!confirm('この取引を削除しますか？（売却履歴に残りません）')) return;
@@ -9034,12 +9048,8 @@ async function renderDemoPortfolio() {
     const pnlSign = pnl >= 0 ? '+' : '';
     const targetPnl = t.target ? ((t.target - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
     const stopPnl = t.stop ? ((t.stop - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
-    return `<div class="demo-card" onclick="openCandleChart('${t.ticker.replace(/'/g,"\\'")}','${(t.name||'').replace(/'/g,"\\'")}')">
-      <div style="position:absolute;top:6px;right:6px;display:flex;gap:4px">
-        <button class="demo-card-sell" onclick="event.stopPropagation();demoSellTrade('${demoPerson}','${t.id}',${curPrice})" style="background:#c0392b;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:13px;font-weight:700;cursor:pointer">売却</button>
-        <button class="demo-card-del" onclick="event.stopPropagation();demoDeleteTrade('${demoPerson}','${t.id}')">✕</button>
-      </div>
-      <div class="demo-card-head">
+    return `<div class="demo-card">
+      <div class="demo-card-head" onclick="openCandleChart('${t.ticker.replace(/'/g,"\\'")}','${(t.name||'').replace(/'/g,"\\'")}')">
         <div>
           <span class="demo-card-name">${t.name || t.ticker}</span>
           <span class="demo-card-code">${t.ticker}</span>
@@ -9056,6 +9066,15 @@ async function renderDemoPortfolio() {
         <div><div class="demo-card-lbl">評価額</div><div class="demo-card-val">¥${Math.round(value).toLocaleString()}</div></div>
         ${t.target ? `<div><div class="demo-card-lbl">目標</div><div class="demo-card-val">¥${Math.round(t.target).toLocaleString()} (${targetPnl}%)</div></div>` : ''}
         ${t.stop ? `<div><div class="demo-card-lbl">損切り</div><div class="demo-card-val">¥${Math.round(t.stop).toLocaleString()} (${stopPnl}%)</div></div>` : ''}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+        <button onclick="event.stopPropagation();demoSellTrade('${demoPerson}','${t.id}',${curPrice})" style="flex:1;background:#c0392b;color:#fff;border:none;border-radius:8px;padding:10px 0;font-size:15px;font-weight:700;cursor:pointer">成行売却</button>
+        <button onclick="event.stopPropagation();demoShowLimitSell('${demoPerson}','${t.id}',${curPrice})" style="flex:1;background:var(--bg);color:var(--text);border:2px solid #c0392b;border-radius:8px;padding:8px 0;font-size:15px;font-weight:700;cursor:pointer">指値売却</button>
+        <button onclick="event.stopPropagation();demoDeleteTrade('${demoPerson}','${t.id}')" style="background:none;border:none;color:var(--text-soft);font-size:18px;cursor:pointer;padding:6px 8px" title="削除">🗑</button>
+      </div>
+      <div id="demo-limit-${t.id}" style="display:none;gap:8px;margin-top:8px;align-items:center">
+        <input type="number" value="${Math.round(curPrice)}" style="flex:1;padding:10px;border:2px solid var(--line);border-radius:8px;font-size:16px;font-weight:700;background:var(--bg);color:var(--text);font-family:inherit" onclick="event.stopPropagation()" placeholder="売却価格">
+        <button onclick="event.stopPropagation();demoLimitSell('${demoPerson}','${t.id}')" style="background:#c0392b;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap">この価格で売却</button>
       </div>
     </div>`;
   });
