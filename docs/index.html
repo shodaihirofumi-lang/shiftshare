@@ -221,6 +221,27 @@
   --grad: linear-gradient(135deg, #505050, #404040);
 }
 
+/* ── 白黒2色 ── */
+:root[data-theme="whitenoir"] {
+  --bg-grad: linear-gradient(165deg, #ffffff 0%, #ffffff 100%);
+  --bg: #ffffff; --card: #ffffff; --text: #000000; --text-soft: #000000;
+  --line: #000000; --line-soft: #000000;
+  --mine: #000000; --mine-bg: #ffffff; --mine-border: #000000;
+  --hers: #000000; --hers-bg: #ffffff; --hers-border: #000000;
+  --gold: #000000; --gold-bg: #ffffff; --gold-border: #000000;
+  --grad: linear-gradient(135deg, #000000, #000000);
+}
+:root[data-theme="noirwhite"] {
+  --bg-grad: linear-gradient(165deg, #000000 0%, #000000 100%);
+  --bg: #000000; --card: #000000; --text: #ffffff; --text-soft: #ffffff;
+  --line: #ffffff; --line-soft: #ffffff;
+  --mine: #ffffff; --mine-bg: #000000; --mine-border: #ffffff;
+  --hers: #ffffff; --hers-bg: #000000; --hers-border: #ffffff;
+  --gold: #ffffff; --gold-bg: #000000; --gold-border: #ffffff;
+  --grad: linear-gradient(135deg, #ffffff, #ffffff);
+  --shadow: 0 4px 22px rgba(255,255,255,.1); --shadow-sm: 0 2px 10px rgba(255,255,255,.05);
+}
+
 /* ── カラフル系ライト ── */
 :root[data-theme="peach"] {
   --bg-grad: linear-gradient(165deg, #fff0e8 0%, #fce4d4 100%);
@@ -3199,6 +3220,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <button class="theme-swatch" data-theme="concrete" onclick="setTheme('concrete')"><span class="th-p" style="background:#e8e8e8"></span><span class="th-p" style="background:#505050"></span><span class="th-p" style="background:#808080"></span><span class="th-name">コンクリート</span></button>
           <button class="theme-swatch" data-theme="graphite" onclick="setTheme('graphite')"><span class="th-p" style="background:#1c1c1e"></span><span class="th-p" style="background:#aeaeb2"></span><span class="th-p" style="background:#636366"></span><span class="th-name">グラファイト</span></button>
           <button class="theme-swatch" data-theme="sumi" onclick="setTheme('sumi')"><span class="th-p" style="background:#0e0e0e"></span><span class="th-p" style="background:#c0c0c0"></span><span class="th-p" style="background:#555555"></span><span class="th-name">墨モノ</span></button>
+          <button class="theme-swatch" data-theme="whitenoir" onclick="setTheme('whitenoir')"><span class="th-p" style="background:#ffffff;border:1px solid #ccc"></span><span class="th-p" style="background:#000000"></span><span class="th-p" style="background:#000000"></span><span class="th-name">白黒</span></button>
+          <button class="theme-swatch" data-theme="noirwhite" onclick="setTheme('noirwhite')"><span class="th-p" style="background:#000000"></span><span class="th-p" style="background:#ffffff"></span><span class="th-p" style="background:#ffffff"></span><span class="th-name">黒白</span></button>
           <div class="theme-section-lbl">シンプル</div>
           <button class="theme-swatch" data-theme="white" onclick="setTheme('white')"><span class="th-p" style="background:#f5f5f5"></span><span class="th-p" style="background:#3a7ca5"></span><span class="th-p" style="background:#b05070"></span><span class="th-name">ホワイト</span></button>
           <button class="theme-swatch" data-theme="snow" onclick="setTheme('snow')"><span class="th-p" style="background:#f4f7fc"></span><span class="th-p" style="background:#4a78a0"></span><span class="th-p" style="background:#a06888"></span><span class="th-name">スノー</span></button>
@@ -3616,7 +3639,7 @@ function jsAttr(s){ return String(s).replace(/[<>&"'\\`]/g, c => '\\u' + c.charC
 
 
 // ── カラーテーマ ──
-const DARK_THEMES = ['night','deepsea','forestnight','midnight','charcoal','noir','abyss','obsidian','slate','ink','onyx','carbon','eclipse','volcanic','matrix','cosmos','graphite','sumi'];
+const DARK_THEMES = ['night','deepsea','forestnight','midnight','charcoal','noir','abyss','obsidian','slate','ink','onyx','carbon','eclipse','volcanic','matrix','cosmos','graphite','sumi','noirwhite'];
 function setTheme(name) {
   if (name === 'default') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', name);
