@@ -1874,8 +1874,10 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .wl-empty { text-align:center; padding:20px; color:var(--text-soft); font-size:13px; }
 .wl-item.has-signal { border-color:var(--gold); background:linear-gradient(90deg, var(--gold-bg), var(--card)); box-shadow:0 2px 8px rgba(180,140,80,.15); }
 .wl-item.has-signal .wl-item-name { color:#7a4a0a; }
-.wl-signals { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
-.wl-sig-badge { font-size:10px; padding:2px 7px; border-radius:8px; background:var(--gold-bg); color:#7a4a0a; border:1px solid var(--gold-border); font-weight:700; letter-spacing:.5px; }
+.wl-signals { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+.wl-sig-badge { font-size:14px; padding:5px 10px; border-radius:8px; background:var(--gold-bg); color:#7a4a0a; border:1px solid var(--gold-border); font-weight:700; letter-spacing:.5px; display:block; width:100%; box-sizing:border-box; }
+.wl-sig-desc { font-size:12px; font-weight:400; color:#5a3a0a; margin-top:2px; line-height:1.4; }
+.wl-chg-label { font-size:11px; color:var(--text-soft); margin-right:4px; }
 
 /* ── ロウソク足モーダル ── */
 .candle-modal { max-height:92vh; overflow-y:auto; }
@@ -1925,11 +1927,13 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .candle-price-now { font-size:26px; font-weight:800; color:var(--text); letter-spacing:.5px; }
 .candle-price-chg { font-size:16px; font-weight:700; }
 .candle-signals { background:var(--gold-bg); border:1.5px solid var(--gold-border); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
-.candle-signals-head { font-size:12px; font-weight:700; color:#7a4a0a; letter-spacing:1px; margin-bottom:6px; }
-.candle-signals-list { display:flex; flex-direction:column; gap:5px; }
-.candle-sig-item { font-size:13px; color:var(--text); background:var(--card); border-radius:6px; padding:6px 10px; }
-.candle-sig-item b { color:#7a4a0a; }
-.candle-no-sig { font-size:12px; color:var(--text-soft); text-align:center; padding:8px; }
+.candle-signals-head { font-size:16px; font-weight:700; color:#7a4a0a; letter-spacing:1px; margin-bottom:8px; }
+.candle-signals-list { display:flex; flex-direction:column; gap:8px; }
+.candle-sig-item { font-size:15px; color:var(--text); background:var(--card); border-radius:8px; padding:10px 12px; line-height:1.5; }
+.candle-sig-item b { color:#7a4a0a; font-size:16px; }
+.candle-sig-detail { font-size:13px; color:var(--text-soft); margin-top:3px; }
+.candle-sig-desc { font-size:14px; color:var(--text); margin-top:5px; line-height:1.5; background:rgba(180,140,80,.08); border-radius:6px; padding:6px 8px; }
+.candle-no-sig { font-size:14px; color:var(--text-soft); text-align:center; padding:8px; }
 
 /* 株ノートの背表紙 (バインダー風) */
 .book-spine.stock { border-radius:1px 3px 3px 1px; }
@@ -3415,6 +3419,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
   <div class="modal candle-modal">
     <div class="modal-title" id="candle-title">—</div>
     <div class="modal-sub" id="candle-sub"></div>
+    <div id="candle-company-desc" style="font-size:13px;color:var(--text-soft);margin:4px 0 8px;line-height:1.5;display:none"></div>
     <div class="candle-interval">
       <button class="candle-int-btn active" data-int="1d" onclick="setCandleInterval('1d')">日足</button>
       <button class="candle-int-btn" data-int="1wk" onclick="setCandleInterval('1wk')">週足</button>
@@ -8647,6 +8652,8 @@ function openCandleChart(ticker, name) {
   candleActiveTab = 'fundamental';
   document.getElementById('candle-title').textContent = name;
   document.getElementById('candle-sub').textContent = ticker;
+  const descEl = document.getElementById('candle-company-desc');
+  descEl.textContent = ''; descEl.style.display = 'none';
   document.querySelectorAll('.candle-int-btn').forEach(b => b.classList.toggle('active', b.dataset.int === '1d'));
   document.querySelectorAll('.candle-dtab').forEach(b => b.classList.toggle('active', b.textContent === '財務'));
   document.getElementById('candle-detail-body').innerHTML = '<div class="cd-loading">読み込み中…</div>';
@@ -8678,7 +8685,7 @@ function candleZoomBtn(dir) {
 }
 function setupCandlePinch() {
   const el = document.getElementById('candle-chart');
-  let startDist = 0, startZoom = 1;
+  let startDist = 0, startZoom = 1, rafId = 0, pendingZoom = null;
   el.addEventListener('touchstart', e => {
     if (e.touches.length === 2) {
       startDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
@@ -8690,12 +8697,27 @@ function setupCandlePinch() {
     if (e.touches.length === 2 && startDist > 0) {
       e.preventDefault();
       const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      candleZoom = Math.max(0.5, Math.min(4, startZoom * (dist / startDist)));
-      if (candleBars) renderCandleFromBars();
+      pendingZoom = Math.max(0.5, Math.min(4, startZoom * (dist / startDist)));
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          rafId = 0;
+          if (pendingZoom !== null) {
+            candleZoom = pendingZoom;
+            pendingZoom = null;
+            if (candleBars) renderCandleFromBars();
+          }
+        });
+      }
     }
   }, { passive: false });
   el.addEventListener('touchend', () => {
     startDist = 0;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+    if (pendingZoom !== null) {
+      candleZoom = pendingZoom;
+      pendingZoom = null;
+      if (candleBars) renderCandleFromBars();
+    }
     el.style.touchAction = 'pan-x pan-y';
   }, { passive: true });
 }
@@ -8723,6 +8745,9 @@ async function loadCandleDetail() {
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'APIエラー');
     candleDetailCache = d;
+    const descEl = document.getElementById('candle-company-desc');
+    if (d.companyDesc) { descEl.textContent = d.companyDesc; descEl.style.display = ''; }
+    else { descEl.style.display = 'none'; }
     renderCandleDetail();
   } catch (e) {
     document.getElementById('candle-detail-body').innerHTML = `<div class="cd-loading">詳細取得失敗: ${escapeHtml(e.message)}</div>`;
@@ -9083,7 +9108,7 @@ async function loadCandleSignals() {
     el.innerHTML = `<div class="candle-signals">
       <div class="candle-signals-head">🎯 検出シグナル ${sigs.length}件</div>
       <div class="candle-signals-list">
-        ${sigs.map(s => `<div class="candle-sig-item"><b>${escapeHtml(s.label)}</b><br><span style="font-size:11px;color:var(--text-soft)">組合せ実戦編 ${escapeHtml(s.chapter)}</span></div>`).join('')}
+        ${sigs.map(s => `<div class="candle-sig-item"><b>🎯 ${escapeHtml(s.label)}</b> <span style="font-size:12px;color:var(--text-soft)">（${escapeHtml(s.chapter)}）</span>${s.detail ? `<div class="candle-sig-detail">${escapeHtml(s.detail)}</div>` : ''}${s.desc ? `<div class="candle-sig-desc">💡 ${escapeHtml(s.desc)}</div>` : ''}</div>`).join('')}
       </div>
     </div>`;
   } catch (e) {
@@ -9120,12 +9145,12 @@ async function renderWatch() {
           const chgPct = q?.changePct;
           const chgUp = chgPct != null ? chgPct >= 0 : null;
           const chgHtml = chgPct != null
-            ? `<span class="wl-item-chg ${chgUp?'up':'down'}">${chgUp?'▲+':'▼'}${chgAmt != null ? Math.abs(chgAmt).toLocaleString() : ''} (${chgUp?'+':''}${chgPct.toFixed(2)}%)</span>`
+            ? `<span class="wl-chg-label">前日比</span><span class="wl-item-chg ${chgUp?'up':'down'}">${chgUp?'▲+':'▼'}${chgAmt != null ? Math.abs(chgAmt).toLocaleString() : ''} (${chgUp?'+':''}${chgPct.toFixed(2)}%)</span>`
             : '';
           const sigs = sigMap[p][w.ticker] || [];
           const sigClass = sigs.length ? ' has-signal' : '';
           const sigBadges = sigs.length
-            ? `<div class="wl-signals">${sigs.slice(0,3).map(s => `<span class="wl-sig-badge">🎯 ${escapeHtml(s.label)}</span>`).join('')}${sigs.length > 3 ? `<span class="wl-sig-badge">+${sigs.length - 3}</span>` : ''}</div>`
+            ? `<div class="wl-signals">${sigs.map(s => `<span class="wl-sig-badge">🎯 ${escapeHtml(s.label)}${s.desc ? `<div class="wl-sig-desc">${escapeHtml(s.desc)}</div>` : ''}</span>`).join('')}</div>`
             : '';
           return `<div class="wl-item${sigClass}">
             <div class="wl-item-main" onclick="openCandleChart('${jsAttr(w.ticker)}','${jsAttr(jaName)}')">

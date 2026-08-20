@@ -1959,71 +1959,85 @@ function computeComboIndicators(c, v) {
 const COMBO_CHECKS = {
   ma_rsi_push: {
     label: '移動平均線と勢い指標で押し目買い', chapter: '第6章',
+    desc: '上昇中の株が一時的に下がった「お買い得ポイント」。平均線の近くまで下がり、勢い指標も控えめなので、再び上がる可能性が高い場面。',
     check: (i, p) => i.ma25 && i.wma13 && i.wma26 && i.wma13 > i.wma26 && p >= i.ma25 * 0.97 && p <= i.ma25 * 1.03 && i.rsi != null && i.rsi >= 30 && i.rsi <= 45,
     detail: (i, p) => `週足で上昇トレンド / 株価が25日移動平均線の近く / RSI ${i.rsi ? i.rsi.toFixed(0) : '-'}`,
   },
   ma_macd_bottom: {
     label: '移動平均線と勢い転換で底値反発', chapter: '第7章',
+    desc: '下がっていた株の流れが変わり始めた瞬間。平均線が上向きに転じ、勢いの指標もプラスに転換。底打ちして上がり始めるサイン。',
     check: (i, p) => i.ma25 && i.ma25Prev && i.ma25 > i.ma25Prev && i.macd && i.macd.prevMacd <= i.macd.prevSignal && i.macd.macd > i.macd.signal && i.macd.macd > 0,
     detail: (i, p) => `25日移動平均線が上向き転換 / 勢い指標が上抜け / 勢い指標がプラス`,
   },
   perfect_order: {
     label: '三本の移動平均線がきれいに揃った上昇', chapter: '第8章',
+    desc: '短期・中期・長期の3つの平均線が全て上向きに並んだ最も強い上昇パターン。勢いが強く、トレンドに乗りやすい局面。',
     check: (i, p) => i.ma5 && i.ma25 && i.ma75 && p > i.ma5 && i.ma5 > i.ma25 && i.ma25 > i.ma75,
     detail: (i, p) => `株価 > 5日 > 25日 > 75日移動平均線（強い上昇トレンド）`,
   },
   volume_ma_break: {
     label: '25日移動平均線を出来高を伴って上抜け', chapter: '第12章',
+    desc: '平均的な株価ラインを大量の売買を伴って突破。多くの投資家が注目している証拠で、上昇が本物である可能性が高い。',
     check: (i, p) => i.ma25 && i.ma25Prev && p > i.ma25 && (i.ma25 - i.ma25Prev < i.ma25 * 0.005) === false && i.volRatio != null && i.volRatio >= 1.5,
     detail: (i, p) => `25日移動平均線を上抜け / 出来高が普段の${i.volRatio ? i.volRatio.toFixed(1) : '-'}倍`,
   },
   golden_cross_vol: {
     label: '短期線が長期線を上抜け（出来高付き）', chapter: '第13章',
+    desc: '「ゴールデンクロス」と呼ばれる買いサイン。短期の流れが長期を追い越し、さらに売買量が多いので信頼度が高い。',
     check: (i, p) => i.ma5 && i.ma25 && i.ma5Prev && i.ma25Prev && i.ma5Prev <= i.ma25Prev && i.ma5 > i.ma25 && i.volRatio != null && i.volRatio >= 1.5,
     detail: (i, p) => `5日線が25日線を上抜け / 出来高が普段の${i.volRatio ? i.volRatio.toFixed(1) : '-'}倍`,
   },
   rsi_bb_reversal: {
     label: '売られすぎ+バンド下限反発（逆張り）', chapter: '第14章',
+    desc: '株が下がりすぎて「安売り状態」に。統計的な下限にも達しているので、反発して上がりやすいタイミング。',
     check: (i, p) => i.bbLower != null && i.rsi != null && p <= i.bbLower && i.rsi <= 30,
     detail: (i, p) => `株価がバンド下限（-2σ）割れ / RSI ${i.rsi ? i.rsi.toFixed(0) : '-'}（売られすぎ）`,
   },
   rsi_divergence: {
     label: '株価と勢いのズレ（強気の底反転）', chapter: '第16章',
+    desc: '株価はまだ安いのに、下落の「勢い」は弱まっている。売り手が力尽きつつある証拠で、近く反転上昇する兆候。',
     check: (i, p) => i.low40Prev != null && i.rsi20LowAgo != null && i.rsi != null && p <= i.low40Prev * 1.02 && i.rsi > i.rsi20LowAgo + 5,
     detail: (i, p) => `株価は前回安値付近だが RSIは前回よりも高い（下落の勢いが弱まっている）`,
   },
   pb_rsi_reversal: {
     label: 'バンド割れ+極端な売られすぎ', chapter: '第18章',
+    desc: '極端に売られすぎた状態。統計的に「ここまで下がるのは異常」なレベルなので、短期で大きく反発する可能性がある。',
     check: (i, p) => i.bbLower != null && i.bbUpper != null && p < i.bbLower && i.rsi != null && i.rsi < 25,
     detail: (i, p) => `株価がバンド下限突破 / RSI ${i.rsi ? i.rsi.toFixed(0) : '-'}（極端な売られすぎ）`,
   },
   bb_squeeze: {
     label: 'ボリンジャーバンド収束（大変動の前兆）', chapter: '第22章',
+    desc: '株価の変動幅が過去最小レベルに縮小。エネルギーが溜まっている状態で、近いうちに大きく動く前触れ。上下どちらかに注目。',
     check: (i, p) => i.bbWidth != null && i.bbWidthMinInPast60 != null && Math.abs(i.bbWidth - i.bbWidthMinInPast60) < 0.005,
     detail: (i, p) => `過去60日で最狭のバンド幅（次に大きな動きが来やすい）`,
   },
   breakout_high20: {
     label: '20日高値を出来高を伴って突破', chapter: '第23章',
+    desc: '直近20日間の最高値を大量の売買で突破。新しい上昇ステージに入った可能性が高く、勢いに乗るチャンス。',
     check: (i, p) => i.high20 != null && p >= i.high20 && i.volRatio != null && i.volRatio >= 1.5,
     detail: (i, p) => `20日高値を突破 / 出来高が普段の${i.volRatio ? i.volRatio.toFixed(1) : '-'}倍`,
   },
   weekly_push: {
     label: '週足で長期上昇中の押し目', chapter: '第28章',
+    desc: '週単位で見ても上昇トレンドが続いている中での一時的な下げ。長期投資家にとっての買い場で、中長期で利益を狙えるポイント。',
     check: (i, p) => i.wma13 && i.wma26 && i.wma13 > i.wma26 && p >= i.wma13 * 0.97 && p <= i.wma13 * 1.03 && i.wRsi != null && i.wRsi >= 40 && i.wRsi <= 55,
     detail: (i, p) => `週足の13週線 > 26週線（上昇） / 13週線近辺で押し目 / 週足RSI ${i.wRsi ? i.wRsi.toFixed(0) : '-'}`,
   },
   ma200_uptrend: {
     label: '200日線の上での押し目', chapter: '第30章',
+    desc: '長期トレンド（200日平均線）は上向きのまま、一時的に下がった場面。長い目で見れば上昇基調なので、割安に買えるチャンス。',
     check: (i, p) => i.ma200 && p > i.ma200 && p <= i.ma200 * 1.05 && i.rsi != null && i.rsi <= 50,
     detail: (i, p) => `株価が200日線より上・近く / RSI ${i.rsi ? i.rsi.toFixed(0) : '-'}（押し目レベル）`,
   },
   overheated_top: {
     label: '買われすぎ・利益確定の目安', chapter: '第33章',
+    desc: '株が上がりすぎて「割高」になっている状態。利益確定売りが出やすく、ここからの新規買いはリスクが高い。保有中なら売り時かも。',
     check: (i, p) => i.rsi != null && i.rsi >= 75 && i.bbUpper != null && p >= i.bbUpper,
     detail: (i, p) => `RSI ${i.rsi ? i.rsi.toFixed(0) : '-'} / 株価がバンド上限超え（買われすぎ）`,
   },
   weekly_rsi_bottom: {
     label: '週足で売られすぎ・底値反発', chapter: '第36章',
+    desc: '週単位の勢い指標が「売られすぎ」水準。中長期的に見て底値圏にある可能性が高く、反発狙いの買いポイント。',
     check: (i, p) => i.wRsi != null && i.wRsi <= 35,
     detail: (i, p) => `週足RSI ${i.wRsi ? i.wRsi.toFixed(0) : '-'}（売られすぎ水準）`,
   },
@@ -2053,7 +2067,7 @@ async function computeStockSignals(code) {
     const p = closes[closes.length - 1];
     const signals = [];
     for (const [id, c] of Object.entries(COMBO_CHECKS)) {
-      try { if (c.check(ind, p)) signals.push({ id, label: c.label, chapter: c.chapter }); } catch {}
+      try { if (c.check(ind, p)) signals.push({ id, label: c.label, chapter: c.chapter, detail: c.detail(ind, p), desc: c.desc || '' }); } catch {}
     }
     return { symbol: sym, price: p, signals };
   } catch (e) { return { signals: [], error: e.message }; }
@@ -2242,6 +2256,11 @@ app.get('/api/stock-detail', async (req, res) => {
         if (w52l != null) sd.fiftyTwoWeekLow = { raw: w52l };
         if (mcap != null) sd.marketCap = { raw: mcap };
         if (perVal != null || dyVal != null || w52h != null) quoteSummaryOk = true;
+        // 会社概要を抽出（Google Finance の bLLb2d クラス）
+        const descMatch = html.match(/<div[^>]*class="[^"]*bLLb2d[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+        if (descMatch) {
+          sd._companyDesc = descMatch[1].replace(/<[^>]+>/g, '').trim().slice(0, 200);
+        }
       } catch (e) {
         quoteSummaryError = 'google scrape failed: ' + e.message;
       }
@@ -2365,6 +2384,7 @@ app.get('/api/stock-detail', async (req, res) => {
       symbol: sym, price, prevClose, open, dayHigh, dayLow,
       week52High, week52Low, volume, avgVolume,
       fundamental, technical, nextEarnings,
+      companyDesc: sd._companyDesc || null,
       currency: sd.currency || 'JPY',
       quoteSummaryOk, quoteSummaryError,
     });
