@@ -3135,6 +3135,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <button class="wl-btn active" data-dp="mine" onclick="setDemoPerson('mine')">ひろ</button>
         <button class="wl-btn" data-dp="hers" onclick="setDemoPerson('hers')">ちか</button>
       </div>
+      <div style="display:flex;gap:0;margin:0 12px 12px;border-bottom:2px solid var(--line)">
+        <button class="candle-dtab active" id="demo-tab-open" onclick="setDemoTab('open')">保有中</button>
+        <button class="candle-dtab" id="demo-tab-closed" onclick="setDemoTab('closed')">売却済み</button>
+        <button class="candle-dtab" id="demo-tab-stats" onclick="setDemoTab('stats')">成績</button>
+      </div>
       <div id="demo-summary" style="margin-bottom:12px"></div>
       <div id="demo-list"></div>
       <div style="text-align:center;margin-top:16px;padding-bottom:12px;opacity:.5;font-size:12px">※ デモ取引はシミュレーションです。実際の金銭の移動はありません。</div>
@@ -8924,10 +8929,19 @@ function calcSim() {
 }
 // ── デモ取引 ──
 let demoTradesData = null;
+let demoClosedData = null;
 let demoPerson = 'mine';
+let demoTab = 'open';
 function setDemoPerson(p) {
   demoPerson = p;
   document.querySelectorAll('[data-dp]').forEach(b => b.classList.toggle('active', b.dataset.dp === p));
+  renderDemoPortfolio();
+}
+function setDemoTab(tab) {
+  demoTab = tab;
+  document.getElementById('demo-tab-open')?.classList.toggle('active', tab === 'open');
+  document.getElementById('demo-tab-closed')?.classList.toggle('active', tab === 'closed');
+  document.getElementById('demo-tab-stats')?.classList.toggle('active', tab === 'stats');
   renderDemoPortfolio();
 }
 async function loadDemoTrades() {
@@ -8935,6 +8949,12 @@ async function loadDemoTrades() {
     const r = await fetch(API_BASE + '/api/demo-trades');
     demoTradesData = await r.json();
   } catch { demoTradesData = { mine: [], hers: [] }; }
+}
+async function loadDemoClosedTrades() {
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades/closed');
+    demoClosedData = await r.json();
+  } catch { demoClosedData = { mine: [], hers: [] }; }
 }
 async function demoBuy() {
   const shares = parseInt(document.getElementById('sim-shares')?.value) || 0;
@@ -8953,8 +8973,23 @@ async function demoBuy() {
     alert('デモ購入しました！\nデモ取引タブで確認できます。');
   } catch (e) { showToast('デモ購入失敗: ' + e.message, true); }
 }
-async function demoSell(person, id) {
-  if (!confirm('このデモポジションを決済しますか？')) return;
+async function demoSellTrade(person, id, sellPrice) {
+  if (!confirm(`現在値 ¥${Math.round(sellPrice).toLocaleString()} で売却しますか？`)) return;
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades/sell', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person, id, sellPrice }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'エラー');
+    demoTradesData = d.demoTrades;
+    demoClosedData = d.demoClosedTrades;
+    showToast('売却しました');
+    renderDemoPortfolio();
+  } catch (e) { showToast('売却失敗: ' + e.message, true); }
+}
+async function demoDeleteTrade(person, id) {
+  if (!confirm('この取引を削除しますか？（売却履歴に残りません）')) return;
   try {
     const r = await fetch(API_BASE + '/api/demo-trades/remove', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -8963,16 +8998,19 @@ async function demoSell(person, id) {
     const d = await r.json();
     demoTradesData = d.demoTrades;
     renderDemoPortfolio();
-  } catch (e) { showToast('決済失敗: ' + e.message, true); }
+  } catch (e) { showToast('削除失敗: ' + e.message, true); }
 }
 async function renderDemoPortfolio() {
   if (!demoTradesData) await loadDemoTrades();
-  const trades = demoTradesData?.[demoPerson] || [];
+  if (!demoClosedData) await loadDemoClosedTrades();
   const sumEl = document.getElementById('demo-summary');
   const listEl = document.getElementById('demo-list');
+  if (demoTab === 'closed') { renderDemoClosed(sumEl, listEl); return; }
+  if (demoTab === 'stats') { renderDemoStats(sumEl, listEl); return; }
+  const trades = demoTradesData?.[demoPerson] || [];
   if (!trades.length) {
     sumEl.innerHTML = '';
-    listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-soft);font-size:15px">デモ取引はまだありません<br><span style="font-size:13px">監視銘柄のチャート →「もし買ったら」→ デモ購入</span></div>';
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-soft);font-size:15px">保有中のデモ取引はありません<br><span style="font-size:13px">監視銘柄のチャート →「もし買ったら」→ デモ購入</span></div>';
     return;
   }
   const tickers = [...new Set(trades.map(t => t.ticker))];
@@ -8997,7 +9035,10 @@ async function renderDemoPortfolio() {
     const targetPnl = t.target ? ((t.target - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
     const stopPnl = t.stop ? ((t.stop - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
     return `<div class="demo-card" onclick="openCandleChart('${t.ticker.replace(/'/g,"\\'")}','${(t.name||'').replace(/'/g,"\\'")}')">
-      <button class="demo-card-del" onclick="event.stopPropagation();demoSell('${demoPerson}','${t.id}')">✕</button>
+      <div style="position:absolute;top:6px;right:6px;display:flex;gap:4px">
+        <button class="demo-card-sell" onclick="event.stopPropagation();demoSellTrade('${demoPerson}','${t.id}',${curPrice})" style="background:#c0392b;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:13px;font-weight:700;cursor:pointer">売却</button>
+        <button class="demo-card-del" onclick="event.stopPropagation();demoDeleteTrade('${demoPerson}','${t.id}')">✕</button>
+      </div>
       <div class="demo-card-head">
         <div>
           <span class="demo-card-name">${t.name || t.ticker}</span>
@@ -9029,6 +9070,136 @@ async function renderDemoPortfolio() {
     <div style="margin-top:6px;font-size:12px;color:var(--text-soft)">投資総額: ¥${Math.round(totalCost).toLocaleString()} / ${trades.length}銘柄保有中</div>
   </div>`;
   listEl.innerHTML = rows.join('');
+}
+function renderDemoClosed(sumEl, listEl) {
+  const closed = demoClosedData?.[demoPerson] || [];
+  if (!closed.length) {
+    sumEl.innerHTML = '';
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-soft);font-size:15px">売却済みの取引はありません</div>';
+    return;
+  }
+  let totalPnl = 0;
+  const rows = closed.slice().reverse().map(t => {
+    const cost = t.shares * t.buyPrice;
+    const value = t.shares * t.sellPrice;
+    const pnl = value - cost;
+    const pnlPct = cost ? (pnl / cost * 100) : 0;
+    totalPnl += pnl;
+    const pnlColor = pnl >= 0 ? '#c0392b' : '#2e6da4';
+    const pnlSign = pnl >= 0 ? '+' : '';
+    const holdDays = Math.max(1, Math.round((new Date(t.sellDate) - new Date(t.date)) / 86400000));
+    return `<div class="demo-card" style="opacity:.92">
+      <div class="demo-card-head">
+        <div>
+          <span class="demo-card-name">${t.name || t.ticker}</span>
+          <span class="demo-card-code">${t.ticker}</span>
+        </div>
+        <span class="demo-badge" style="background:${pnl >= 0 ? 'rgba(192,57,43,.12)' : 'rgba(46,109,164,.12)'};color:${pnlColor}">${pnlSign}${pnlPct.toFixed(1)}%</span>
+      </div>
+      <div class="demo-card-pnl" style="color:${pnlColor};margin-bottom:6px">${pnlSign}¥${Math.round(pnl).toLocaleString()}</div>
+      <div class="demo-card-grid">
+        <div><div class="demo-card-lbl">買値</div><div class="demo-card-val">¥${Math.round(t.buyPrice).toLocaleString()}</div></div>
+        <div><div class="demo-card-lbl">売値</div><div class="demo-card-val">¥${Math.round(t.sellPrice).toLocaleString()}</div></div>
+        <div><div class="demo-card-lbl">株数</div><div class="demo-card-val">${t.shares}株</div></div>
+        <div><div class="demo-card-lbl">保有日数</div><div class="demo-card-val">${holdDays}日</div></div>
+        <div><div class="demo-card-lbl">購入日</div><div class="demo-card-val">${t.date}</div></div>
+        <div><div class="demo-card-lbl">売却日</div><div class="demo-card-val">${t.sellDate}</div></div>
+      </div>
+    </div>`;
+  });
+  const tc = totalPnl >= 0 ? '#c0392b' : '#2e6da4';
+  const ts = totalPnl >= 0 ? '+' : '';
+  sumEl.innerHTML = `<div class="demo-summary-card">
+    <div class="demo-total-label">売却済み実現損益</div>
+    <div class="demo-total-val" style="color:${tc}">${ts}¥${Math.round(totalPnl).toLocaleString()}</div>
+    <div style="margin-top:6px;font-size:12px;color:var(--text-soft)">${closed.length}件の売却済み取引</div>
+  </div>`;
+  listEl.innerHTML = rows.join('');
+}
+function renderDemoStats(sumEl, listEl) {
+  const closed = demoClosedData?.[demoPerson] || [];
+  const open = demoTradesData?.[demoPerson] || [];
+  if (!closed.length && !open.length) {
+    sumEl.innerHTML = '';
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-soft);font-size:15px">取引データがありません</div>';
+    return;
+  }
+  sumEl.innerHTML = '';
+  const wins = closed.filter(t => t.sellPrice >= t.buyPrice);
+  const losses = closed.filter(t => t.sellPrice < t.buyPrice);
+  const winRate = closed.length ? (wins.length / closed.length * 100) : 0;
+  let totalRealizedPnl = 0, totalRealizedCost = 0;
+  let biggestWin = null, biggestLoss = null;
+  let totalHoldDays = 0;
+  closed.forEach(t => {
+    const cost = t.shares * t.buyPrice;
+    const pnl = t.shares * (t.sellPrice - t.buyPrice);
+    const pnlPct = cost ? (pnl / cost * 100) : 0;
+    totalRealizedPnl += pnl;
+    totalRealizedCost += cost;
+    const days = Math.max(1, Math.round((new Date(t.sellDate) - new Date(t.date)) / 86400000));
+    totalHoldDays += days;
+    if (!biggestWin || pnlPct > biggestWin.pct) biggestWin = { name: t.name || t.ticker, pct: pnlPct, pnl };
+    if (!biggestLoss || pnlPct < biggestLoss.pct) biggestLoss = { name: t.name || t.ticker, pct: pnlPct, pnl };
+  });
+  const avgHold = closed.length ? Math.round(totalHoldDays / closed.length) : 0;
+  const totalReturnPct = totalRealizedCost ? (totalRealizedPnl / totalRealizedCost * 100) : 0;
+  const avgWinPct = wins.length ? (wins.reduce((s,t) => s + (t.sellPrice - t.buyPrice) / t.buyPrice * 100, 0) / wins.length) : 0;
+  const avgLossPct = losses.length ? (losses.reduce((s,t) => s + (t.sellPrice - t.buyPrice) / t.buyPrice * 100, 0) / losses.length) : 0;
+  const profitFactor = losses.length && avgLossPct ? Math.abs(avgWinPct * wins.length / (avgLossPct * losses.length)) : wins.length ? Infinity : 0;
+  const pnlColor = totalRealizedPnl >= 0 ? '#c0392b' : '#2e6da4';
+  const pnlSign = totalRealizedPnl >= 0 ? '+' : '';
+  const wrColor = winRate >= 50 ? '#c0392b' : '#2e6da4';
+  listEl.innerHTML = `
+    <div class="demo-summary-card" style="margin:0 12px 12px">
+      <div class="demo-total-label">実現損益合計</div>
+      <div class="demo-total-val" style="color:${pnlColor}">${pnlSign}¥${Math.round(totalRealizedPnl).toLocaleString()}</div>
+      <div style="font-size:14px;color:${pnlColor};margin-top:2px">${pnlSign}${totalReturnPct.toFixed(1)}%</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px;margin-bottom:12px">
+      <div class="demo-summary-card" style="text-align:center">
+        <div style="font-size:12px;color:var(--text-soft)">勝率</div>
+        <div style="font-size:28px;font-weight:800;color:${wrColor}">${winRate.toFixed(0)}%</div>
+        <div style="font-size:12px;color:var(--text-soft)">${wins.length}勝 ${losses.length}敗</div>
+      </div>
+      <div class="demo-summary-card" style="text-align:center">
+        <div style="font-size:12px;color:var(--text-soft)">プロフィットファクター</div>
+        <div style="font-size:28px;font-weight:800;color:var(--text)">${profitFactor === Infinity ? '∞' : profitFactor.toFixed(2)}</div>
+        <div style="font-size:12px;color:var(--text-soft)">${profitFactor >= 2 ? '✅ 良好' : profitFactor >= 1 ? '⚠️ まずまず' : '❌ 改善余地あり'}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px;margin-bottom:12px">
+      <div class="demo-summary-card" style="text-align:center">
+        <div style="font-size:12px;color:var(--text-soft)">平均利益</div>
+        <div style="font-size:18px;font-weight:700;color:#c0392b">${wins.length ? '+' + avgWinPct.toFixed(1) + '%' : '—'}</div>
+      </div>
+      <div class="demo-summary-card" style="text-align:center">
+        <div style="font-size:12px;color:var(--text-soft)">平均損失</div>
+        <div style="font-size:18px;font-weight:700;color:#2e6da4">${losses.length ? avgLossPct.toFixed(1) + '%' : '—'}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px;margin-bottom:12px">
+      <div class="demo-summary-card" style="text-align:center">
+        <div style="font-size:12px;color:var(--text-soft)">平均保有日数</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text)">${avgHold}日</div>
+      </div>
+      <div class="demo-summary-card" style="text-align:center">
+        <div style="font-size:12px;color:var(--text-soft)">取引回数</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text)">${closed.length}回</div>
+      </div>
+    </div>
+    ${biggestWin && biggestWin.pct > 0 ? `<div class="demo-summary-card" style="margin:0 12px 10px">
+      <div style="font-size:12px;color:var(--text-soft)">🏆 最大利益</div>
+      <div style="font-size:16px;font-weight:700;color:#c0392b">${biggestWin.name} +${biggestWin.pct.toFixed(1)}% (+¥${Math.round(biggestWin.pnl).toLocaleString()})</div>
+    </div>` : ''}
+    ${biggestLoss && biggestLoss.pct < 0 ? `<div class="demo-summary-card" style="margin:0 12px 10px">
+      <div style="font-size:12px;color:var(--text-soft)">💀 最大損失</div>
+      <div style="font-size:16px;font-weight:700;color:#2e6da4">${biggestLoss.name} ${biggestLoss.pct.toFixed(1)}% (¥${Math.round(biggestLoss.pnl).toLocaleString()})</div>
+    </div>` : ''}
+    <div style="padding:0 12px;font-size:13px;color:var(--text-soft);margin-bottom:8px">
+      保有中: ${open.length}銘柄
+    </div>
+  `;
 }
 function renderCandleSvg(bars) {
   const maxBars = Math.max(20, Math.round(120 / candleZoom));

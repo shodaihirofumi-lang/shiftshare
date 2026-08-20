@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [], targetPrices: [], pushSettings: { weeklyReport: false, monthlyReport: false }, demoTrades: { mine: [], hers: [] } });
+const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [], targetPrices: [], pushSettings: { weeklyReport: false, monthlyReport: false }, demoTrades: { mine: [], hers: [] }, demoClosedTrades: { mine: [], hers: [] } });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -591,6 +591,24 @@ export async function removeDemoTrade(person, id) {
   if (!['mine', 'hers'].includes(person)) return;
   const dt = getDemoTrades();
   dt[person] = dt[person].filter(t => t.id !== id);
+  await persist();
+}
+export function getDemoClosedTrades() {
+  if (!cache.demoClosedTrades) cache.demoClosedTrades = { mine: [], hers: [] };
+  if (!Array.isArray(cache.demoClosedTrades.mine)) cache.demoClosedTrades.mine = [];
+  if (!Array.isArray(cache.demoClosedTrades.hers)) cache.demoClosedTrades.hers = [];
+  return cache.demoClosedTrades;
+}
+export async function sellDemoTrade(person, id, sellPrice) {
+  if (!['mine', 'hers'].includes(person)) throw new Error('person が不正です');
+  const dt = getDemoTrades();
+  const idx = dt[person].findIndex(t => t.id === id);
+  if (idx === -1) throw new Error('取引が見つかりません');
+  const trade = dt[person].splice(idx, 1)[0];
+  trade.sellPrice = sellPrice;
+  trade.sellDate = new Date().toISOString().slice(0, 10);
+  const closed = getDemoClosedTrades();
+  closed[person].push(trade);
   await persist();
 }
 

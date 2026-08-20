@@ -17,7 +17,7 @@ import {
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding, editHolding, sellHolding, getRealized,
   getWatchlist, addWatchStock, removeWatchStock,
-  getDemoTrades, addDemoTrade, removeDemoTrade,
+  getDemoTrades, addDemoTrade, removeDemoTrade, getDemoClosedTrades, sellDemoTrade,
   setHoldingTargets, markHoldingTargetFired, markHoldingEarningsNotified, getBuys,
   hasMoveAlert, markMoveAlert,
   getNotes, addNote, deleteNote, toggleNote,
@@ -1787,6 +1787,15 @@ app.post('/api/demo-trades/remove', async (req, res) => {
   await removeDemoTrade(person || 'mine', id);
   res.json({ success: true, demoTrades: getDemoTrades() });
 });
+app.post('/api/demo-trades/sell', async (req, res) => {
+  try {
+    const { person, id, sellPrice } = req.body || {};
+    if (!id || !sellPrice) throw new Error('id と sellPrice が必要です');
+    await sellDemoTrade(person || 'mine', id, sellPrice);
+    res.json({ success: true, demoTrades: getDemoTrades(), demoClosedTrades: getDemoClosedTrades() });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+app.get('/api/demo-trades/closed', (_req, res) => res.json(getDemoClosedTrades()));
 
 // ── TOPIX Core30 (代表30銘柄、時価総額最上位) ──
 const TOPIX_CORE30 = [
