@@ -659,6 +659,39 @@ export async function removeDemoClosedTrade(person, id) {
   closed[person] = closed[person].filter(t => t.id !== id);
   await persist();
 }
+// 保有中の同一銘柄を平均取得単価で1つに統合する（既存データの重複解消用）
+export async function mergeDemoOpenPositions() {
+  const dt = getDemoTrades();
+  let merged = 0;
+  for (const person of ['mine', 'hers']) {
+    const byTicker = {};
+    for (const t of dt[person]) {
+      if (!byTicker[t.ticker]) byTicker[t.ticker] = [];
+      byTicker[t.ticker].push(t);
+    }
+    const result = [];
+    for (const ticker of Object.keys(byTicker)) {
+      const group = byTicker[ticker];
+      if (group.length === 1) { result.push(group[0]); continue; }
+      merged += group.length - 1;
+      // 購入日が最も早い取引をベースにする
+      group.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+      const base = group[0];
+      const totalShares = group.reduce((s, t) => s + (t.shares || 0), 0);
+      const totalCost = group.reduce((s, t) => s + (t.shares || 0) * (t.buyPrice || 0), 0);
+      const last = group[group.length - 1];
+      base.buyPrice = totalShares ? Math.round((totalCost / totalShares) * 100) / 100 : base.buyPrice;
+      base.shares = totalShares;
+      if (last.target) base.target = last.target;
+      if (last.stop) base.stop = last.stop;
+      base.lastBuyDate = last.date;
+      result.push(base);
+    }
+    dt[person] = result;
+  }
+  if (merged > 0) await persist();
+  return merged;
+}
 export function getDemoLimitOrders() {
   if (!cache.demoLimitOrders) cache.demoLimitOrders = { mine: [], hers: [] };
   if (!Array.isArray(cache.demoLimitOrders.mine)) cache.demoLimitOrders.mine = [];

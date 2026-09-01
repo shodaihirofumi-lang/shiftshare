@@ -17,7 +17,7 @@ import {
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding, editHolding, sellHolding, getRealized,
   getWatchlist, addWatchStock, removeWatchStock,
-  getDemoTrades, addDemoTrade, removeDemoTrade, getDemoClosedTrades, sellDemoTrade, removeDemoClosedTrade, getDemoLimitOrders, addDemoLimitOrder, cancelDemoLimitOrder, getDemoCash,
+  getDemoTrades, addDemoTrade, removeDemoTrade, getDemoClosedTrades, sellDemoTrade, removeDemoClosedTrade, getDemoLimitOrders, addDemoLimitOrder, cancelDemoLimitOrder, getDemoCash, mergeDemoOpenPositions,
   setHoldingTargets, markHoldingTargetFired, markHoldingEarningsNotified, getBuys,
   hasMoveAlert, markMoveAlert,
   getNotes, addNote, deleteNote, toggleNote,
@@ -1802,6 +1802,10 @@ app.post('/api/demo-trades/remove-closed', async (req, res) => {
 });
 app.get('/api/demo-trades/closed', (_req, res) => res.json(getDemoClosedTrades()));
 app.get('/api/demo-trades/cash', (_req, res) => res.json(getDemoCash()));
+app.post('/api/demo-trades/merge-open', async (_req, res) => {
+  const merged = await mergeDemoOpenPositions();
+  res.json({ success: true, merged, demoTrades: getDemoTrades() });
+});
 app.get('/api/demo-trades/limits', (_req, res) => res.json(getDemoLimitOrders()));
 app.post('/api/demo-trades/limit-order', async (req, res) => {
   try {
