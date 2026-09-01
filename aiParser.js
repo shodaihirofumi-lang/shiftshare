@@ -64,8 +64,11 @@ export async function parseShiftImages(imagesB64, mimeTypes) {
   try {
     message = await client.messages.create({
       model: 'claude-sonnet-5',
-      max_tokens: 4096,
-      messages: [{ role: 'user', content }],
+      max_tokens: 8192,
+      messages: [
+        { role: 'user', content },
+        { role: 'assistant', content: '[' }, // JSON配列の出力を強制（プリフィル）
+      ],
     });
   } catch (e) {
     _lastShiftDebug.error = 'API呼び出し失敗: ' + (e?.message || e);
@@ -73,9 +76,14 @@ export async function parseShiftImages(imagesB64, mimeTypes) {
     throw e;
   }
 
-  const raw = (message.content?.[0]?.text || '').trim();
+  // 全テキストブロックを結合（thinking等が混じっても拾えるように）
+  const textOut = (message.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  // プリフィルの "[" を先頭に補って配列を完成させる
+  const raw = ('[' + textOut).trim();
   _lastShiftDebug.rawSample = raw.slice(0, 2000);
   _lastShiftDebug.stopReason = message.stop_reason;
+  _lastShiftDebug.blocks = (message.content || []).map(b => b.type);
+  _lastShiftDebug.usage = message.usage;
   const match = raw.match(/\[[\s\S]*\]/);
   if (!match) { _lastShiftDebug.error = 'JSON配列なし'; throw new Error(`AIからJSONが返されませんでした: ${raw.slice(0, 200)}`); }
 
