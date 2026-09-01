@@ -143,10 +143,11 @@ export async function parseExpenseAmount(imageB64, mimeType) {
   ];
   const message = await client.messages.create({
     model: 'claude-sonnet-5',
-    max_tokens: 256,
+    max_tokens: 2048, // thinkingブロック分の余裕を確保
     messages: [{ role: 'user', content }],
   });
-  const raw = message.content[0].text.trim();
+  // 全textブロックを結合（先頭にthinkingブロックが来るモデルに対応）
+  const raw = (message.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
   const match = raw.match(/\{[\s\S]*\}/);
   if (!match) throw new Error(`AIから金額が返されませんでした: ${raw.slice(0, 200)}`);
   const obj = JSON.parse(match[0]);

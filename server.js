@@ -35,6 +35,13 @@ import {
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
+// Anthropic応答から本文テキストを取り出す。
+// claude-sonnet-5等は先頭にthinkingブロックを返すため、content[0]だけ見ると空になる。
+// 全てのtextブロックを結合して返す。
+function aiText(data) {
+  return (data?.content || []).filter(b => b && b.type === 'text').map(b => b.text || '').join('').trim();
+}
+
 app.use(express.json({ limit: '8mb' }));
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -274,7 +281,7 @@ ${lines}`;
     });
     if (!response.ok) { const e = await response.json().catch(() => ({})); throw new Error(e.error?.message || `API error ${response.status}`); }
     const data = await response.json();
-    res.json({ text: data.content?.[0]?.text?.trim() || '', count: all.length });
+    res.json({ text: aiText(data), count: all.length });
   } catch (e) {
     console.error('[trade-review]', e.message);
     res.status(500).json({ error: e.message });
@@ -464,11 +471,11 @@ ${summary}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 700, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] }),
     });
     if (!response.ok) { const e = await response.json().catch(() => ({})); throw new Error(e.error?.message || `API error ${response.status}`); }
     const data = await response.json();
-    const text = data.content?.[0]?.text?.trim() || '';
+    const text = aiText(data);
     let parsed = null;
     try { const m = text.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); } catch {}
     res.json({
@@ -835,11 +842,11 @@ ${topL ? `含み損トップ: ${topL}` : ''}
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 600, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] }),
     });
     if (!response.ok) { const e = await response.json().catch(()=>({})); throw new Error(e.error?.message || `API ${response.status}`); }
     const data = await response.json();
-    res.json({ text: data.content?.[0]?.text?.trim() || '' });
+    res.json({ text: aiText(data) });
   } catch (e) {
     console.error('[monthly-summary]', e.message);
     res.status(500).json({ error: e.message });
@@ -1000,7 +1007,7 @@ ${raw}`;
       throw new Error(e.error?.message || `API error ${response.status}`);
     }
     const data = await response.json();
-    const text = data.content?.[0]?.text?.trim() || '';
+    const text = aiText(data);
     const existing = getDiary(date) || {};
     await setDiary(date, { ...existing, [person]: { ...(existing[person]||{}), text, generatedAt: Date.now() } });
     res.json({ success: true, text });
@@ -1036,7 +1043,7 @@ ${parts.join('\n\n')}`;
       throw new Error(e.error?.message || `API error ${response.status}`);
     }
     const data = await response.json();
-    const text = data.content?.[0]?.text?.trim() || '';
+    const text = aiText(data);
     // [Chika] ... [Hiro] ... のパートに分割
     let en_hers = '', en_mine = '';
     const parts2 = text.split(/\n?\[(Chika|Hiro)\]\n?/);
@@ -1291,9 +1298,9 @@ ${lines}
       const j = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 500, messages: [{ role: 'user', content: prompt }] }),
+        body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] }),
       }).then(r => r.json());
-      aiSummary = j?.content?.[0]?.text?.trim() || null;
+      aiSummary = aiText(j) || null;
     } catch {}
   }
 
@@ -1376,7 +1383,7 @@ ${entries.map(e => `【${e.date}】\n${e.text}`).join('\n\n')}`;
       throw new Error(e.error?.message || `API error ${response.status}`);
     }
     const data = await response.json();
-    const text = data.content?.[0]?.text?.trim() || '';
+    const text = aiText(data);
     const existing = getMonthlyDiaries()[yearMonth] || {};
     await setMonthlyDiary(yearMonth, { ...existing, [person]: { text, generatedAt: Date.now() } });
     res.json({ success: true, text });
@@ -2756,7 +2763,7 @@ ${lines('hers')}
     });
     if (!response.ok) { const e = await response.json().catch(()=>({})); throw new Error(e.error?.message || `API ${response.status}`); }
     const data = await response.json();
-    res.json({ text: data.content?.[0]?.text?.trim() || '' });
+    res.json({ text: aiText(data) });
   } catch (e) {
     console.error('[style-diagnosis]', e.message);
     res.status(500).json({ error: e.message });
