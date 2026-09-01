@@ -17,7 +17,7 @@ import {
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding, editHolding, sellHolding, getRealized,
   getWatchlist, addWatchStock, removeWatchStock,
-  getDemoTrades, addDemoTrade, removeDemoTrade, getDemoClosedTrades, sellDemoTrade, getDemoLimitOrders, addDemoLimitOrder, cancelDemoLimitOrder,
+  getDemoTrades, addDemoTrade, removeDemoTrade, getDemoClosedTrades, sellDemoTrade, removeDemoClosedTrade, getDemoLimitOrders, addDemoLimitOrder, cancelDemoLimitOrder, getDemoCash,
   setHoldingTargets, markHoldingTargetFired, markHoldingEarningsNotified, getBuys,
   hasMoveAlert, markMoveAlert,
   getNotes, addNote, deleteNote, toggleNote,
@@ -1779,23 +1779,29 @@ app.post('/api/demo-trades/add', async (req, res) => {
     if (!trade || !trade.ticker) throw new Error('取引データが不正です');
     trade.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     await addDemoTrade(person || 'mine', trade);
-    res.json({ success: true, demoTrades: getDemoTrades() });
+    res.json({ success: true, demoTrades: getDemoTrades(), demoCash: getDemoCash() });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 app.post('/api/demo-trades/remove', async (req, res) => {
   const { person, id } = req.body || {};
   await removeDemoTrade(person || 'mine', id);
-  res.json({ success: true, demoTrades: getDemoTrades() });
+  res.json({ success: true, demoTrades: getDemoTrades(), demoCash: getDemoCash() });
 });
 app.post('/api/demo-trades/sell', async (req, res) => {
   try {
     const { person, id, sellPrice } = req.body || {};
     if (!id || !sellPrice) throw new Error('id と sellPrice が必要です');
     await sellDemoTrade(person || 'mine', id, sellPrice);
-    res.json({ success: true, demoTrades: getDemoTrades(), demoClosedTrades: getDemoClosedTrades() });
+    res.json({ success: true, demoTrades: getDemoTrades(), demoClosedTrades: getDemoClosedTrades(), demoCash: getDemoCash() });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
+app.post('/api/demo-trades/remove-closed', async (req, res) => {
+  const { person, id } = req.body || {};
+  await removeDemoClosedTrade(person || 'mine', id);
+  res.json({ success: true, demoClosedTrades: getDemoClosedTrades(), demoCash: getDemoCash() });
+});
 app.get('/api/demo-trades/closed', (_req, res) => res.json(getDemoClosedTrades()));
+app.get('/api/demo-trades/cash', (_req, res) => res.json(getDemoCash()));
 app.get('/api/demo-trades/limits', (_req, res) => res.json(getDemoLimitOrders()));
 app.post('/api/demo-trades/limit-order', async (req, res) => {
   try {
@@ -1829,7 +1835,7 @@ app.post('/api/demo-trades/execute-limit', async (req, res) => {
     if (!order) throw new Error('注文が見つかりません');
     await sellDemoTrade(p, order.tradeId, order.limitPrice);
     await cancelDemoLimitOrder(p, order.id);
-    res.json({ success: true, demoTrades: getDemoTrades(), demoClosedTrades: getDemoClosedTrades(), demoLimitOrders: getDemoLimitOrders() });
+    res.json({ success: true, demoTrades: getDemoTrades(), demoClosedTrades: getDemoClosedTrades(), demoLimitOrders: getDemoLimitOrders(), demoCash: getDemoCash() });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 

@@ -575,23 +575,12 @@ export async function removeWatchStock(person, ticker) {
 }
 
 // ── デモ取引 ──
+const DEMO_START_CASH = 100000000; // 1億円スタート
 export function getDemoTrades() {
   if (!cache.demoTrades) cache.demoTrades = { mine: [], hers: [] };
   if (!Array.isArray(cache.demoTrades.mine)) cache.demoTrades.mine = [];
   if (!Array.isArray(cache.demoTrades.hers)) cache.demoTrades.hers = [];
   return cache.demoTrades;
-}
-export async function addDemoTrade(person, trade) {
-  if (!['mine', 'hers'].includes(person)) throw new Error('person が不正です');
-  const dt = getDemoTrades();
-  dt[person].push(trade);
-  await persist();
-}
-export async function removeDemoTrade(person, id) {
-  if (!['mine', 'hers'].includes(person)) return;
-  const dt = getDemoTrades();
-  dt[person] = dt[person].filter(t => t.id !== id);
-  await persist();
 }
 export function getDemoClosedTrades() {
   if (!cache.demoClosedTrades) cache.demoClosedTrades = { mine: [], hers: [] };
@@ -599,16 +588,75 @@ export function getDemoClosedTrades() {
   if (!Array.isArray(cache.demoClosedTrades.hers)) cache.demoClosedTrades.hers = [];
   return cache.demoClosedTrades;
 }
+// 現金残高。未設定なら1億円スタートを前提に取引履歴から復元する
+export function getDemoCash() {
+  if (!cache.demoCash || typeof cache.demoCash.mine !== 'number' || typeof cache.demoCash.hers !== 'number') {
+    const open = getDemoTrades();
+    const closed = getDemoClosedTrades();
+    cache.demoCash = {};
+    for (const p of ['mine', 'hers']) {
+      let cash = DEMO_START_CASH;
+      for (const t of open[p]) cash -= (t.shares || 0) * (t.buyPrice || 0);
+      for (const t of closed[p]) cash += (t.shares || 0) * ((t.sellPrice || 0) - (t.buyPrice || 0));
+      cache.demoCash[p] = Math.round(cash);
+    }
+  }
+  return cache.demoCash;
+}
+export async function addDemoTrade(person, trade) {
+  if (!['mine', 'hers'].includes(person)) throw new Error('person が不正です');
+  const dt = getDemoTrades();
+  const cash = getDemoCash();
+  const cost = (trade.shares || 0) * (trade.buyPrice || 0);
+  if (cost > cash[person]) throw new Error('資金が不足しています（残高 ¥' + Math.round(cash[person]).toLocaleString() + '）');
+  // 同一銘柄を保有中なら平均取得単価で合算
+  const existing = dt[person].find(t => t.ticker === trade.ticker);
+  if (existing) {
+    const totalShares = (existing.shares || 0) + (trade.shares || 0);
+    const totalCost = (existing.shares || 0) * (existing.buyPrice || 0) + cost;
+    existing.buyPrice = totalShares ? Math.round((totalCost / totalShares) * 100) / 100 : existing.buyPrice;
+    existing.shares = totalShares;
+    // 目標・損切りは最新の値で更新
+    if (trade.target) existing.target = trade.target;
+    if (trade.stop) existing.stop = trade.stop;
+    existing.lastBuyDate = trade.date;
+  } else {
+    dt[person].push(trade);
+  }
+  cash[person] = Math.round(cash[person] - cost);
+  await persist();
+}
+export async function removeDemoTrade(person, id) {
+  if (!['mine', 'hers'].includes(person)) return;
+  const dt = getDemoTrades();
+  const cash = getDemoCash();
+  const trade = dt[person].find(t => t.id === id);
+  if (trade) cash[person] = Math.round(cash[person] + (trade.shares || 0) * (trade.buyPrice || 0)); // 購入を取消して資金を戻す
+  dt[person] = dt[person].filter(t => t.id !== id);
+  await persist();
+}
 export async function sellDemoTrade(person, id, sellPrice) {
   if (!['mine', 'hers'].includes(person)) throw new Error('person が不正です');
   const dt = getDemoTrades();
+  const cash = getDemoCash();
   const idx = dt[person].findIndex(t => t.id === id);
   if (idx === -1) throw new Error('取引が見つかりません');
   const trade = dt[person].splice(idx, 1)[0];
   trade.sellPrice = sellPrice;
   trade.sellDate = new Date().toISOString().slice(0, 10);
+  cash[person] = Math.round(cash[person] + (trade.shares || 0) * sellPrice);
   const closed = getDemoClosedTrades();
   closed[person].push(trade);
+  await persist();
+}
+export async function removeDemoClosedTrade(person, id) {
+  if (!['mine', 'hers'].includes(person)) return;
+  const closed = getDemoClosedTrades();
+  const cash = getDemoCash();
+  const trade = closed[person].find(t => t.id === id);
+  // 売却済みの取り消し：この取引が現金に与えた実現損益を打ち消す
+  if (trade) cash[person] = Math.round(cash[person] - (trade.shares || 0) * ((trade.sellPrice || 0) - (trade.buyPrice || 0)));
+  closed[person] = closed[person].filter(t => t.id !== id);
   await persist();
 }
 export function getDemoLimitOrders() {

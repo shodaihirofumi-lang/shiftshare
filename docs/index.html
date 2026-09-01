@@ -1936,6 +1936,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .demo-card-val { font-size:15px; font-weight:700; }
 .demo-card-pnl { font-size:20px; font-weight:900; }
 .demo-card-del { background:none; border:none; color:var(--text-soft); font-size:18px; cursor:pointer; padding:4px 8px; }
+.sim-person-btn { background:var(--bg); color:var(--text-soft); border:2px solid var(--line); border-radius:8px; padding:6px 16px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; }
+.sim-person-btn.active { background:var(--gold); color:#fff; border-color:var(--gold); }
 .demo-badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; }
 [data-dark] .demo-summary-card, [data-dark] .demo-card { background:var(--card); }
 .cd-loading { text-align:center; padding:20px; color:var(--text-soft); font-size:13px; }
@@ -8678,6 +8680,7 @@ function openCandleChart(ticker, name) {
   candleBars = null;
   candleDetailCache = null;
   candleActiveTab = 'fundamental';
+  simBuyPerson = demoPerson; // 直近に見ていた人をデフォルトに
   document.getElementById('candle-title').textContent = name;
   document.getElementById('candle-sub').textContent = ticker;
   const descEl = document.getElementById('candle-company-desc');
@@ -8888,10 +8891,21 @@ function renderTechDetail(el, d) {
     ${_cdRow('60日 サポート', t.support60d ? '¥' + t.support60d.toLocaleString() : '—', 'down')}
   `;
 }
+function setSimBuyPerson(p) {
+  simBuyPerson = p;
+  document.querySelectorAll('[data-sbp]').forEach(b => b.classList.toggle('active', b.dataset.sbp === p));
+}
 function renderSimDetail(el, d) {
   const price = d.price || 0;
   el.innerHTML = `
     <div class="cd-section">デモ購入シミュレーション</div>
+    <div class="cd-sim-row" style="align-items:center">
+      <label>誰が買う？</label>
+      <div style="display:flex;gap:6px">
+        <button class="sim-person-btn${simBuyPerson==='mine'?' active':''}" data-sbp="mine" onclick="setSimBuyPerson('mine')">ひろ</button>
+        <button class="sim-person-btn${simBuyPerson==='hers'?' active':''}" data-sbp="hers" onclick="setSimBuyPerson('hers')">ちか</button>
+      </div>
+    </div>
     <div class="cd-sim-row">
       <label>買い株数</label>
       <input class="cd-sim-input" id="sim-shares" type="number" inputmode="numeric" value="100" min="1" onchange="calcSim()" oninput="calcSim()">
@@ -8955,10 +8969,18 @@ let demoTradesData = null;
 let demoClosedData = null;
 let demoPerson = 'mine';
 let demoTab = 'open';
+let demoCashData = null;
+let simBuyPerson = 'mine';
 function setDemoPerson(p) {
   demoPerson = p;
   document.querySelectorAll('[data-dp]').forEach(b => b.classList.toggle('active', b.dataset.dp === p));
   renderDemoPortfolio();
+}
+async function loadDemoCash() {
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades/cash');
+    demoCashData = await r.json();
+  } catch { demoCashData = { mine: 100000000, hers: 100000000 }; }
 }
 function setDemoTab(tab) {
   demoTab = tab;
@@ -8985,15 +9007,17 @@ async function demoBuy() {
   const target = parseFloat(document.getElementById('sim-target')?.value) || 0;
   const stop = parseFloat(document.getElementById('sim-stop')?.value) || 0;
   if (!shares || !buyPrice || !candleSymbol) return;
+  const who = simBuyPerson === 'hers' ? 'ちか' : 'ひろ';
   try {
     const r = await fetch(API_BASE + '/api/demo-trades/add', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ person: demoPerson, trade: { ticker: candleSymbol, name: candleName, shares, buyPrice, target, stop, date: new Date().toISOString().slice(0,10) } }),
+      body: JSON.stringify({ person: simBuyPerson, trade: { ticker: candleSymbol, name: candleName, shares, buyPrice, target, stop, date: new Date().toISOString().slice(0,10) } }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'エラー');
     demoTradesData = d.demoTrades;
-    alert('デモ購入しました！\nデモ取引タブで確認できます。');
+    if (d.demoCash) demoCashData = d.demoCash;
+    alert(`${who}のデモ口座で購入しました！\nデモ取引タブで確認できます。`);
   } catch (e) { showToast('デモ購入失敗: ' + e.message, true); }
 }
 async function demoSellTrade(person, id, sellPrice) {
@@ -9007,6 +9031,7 @@ async function demoSellTrade(person, id, sellPrice) {
     if (!r.ok) throw new Error(d.error || 'エラー');
     demoTradesData = d.demoTrades;
     demoClosedData = d.demoClosedTrades;
+    if (d.demoCash) demoCashData = d.demoCash;
     showToast('売却しました');
     renderDemoPortfolio();
   } catch (e) { showToast('売却失敗: ' + e.message, true); }
@@ -9072,6 +9097,7 @@ async function demoCheckLimitOrders(quotes) {
             demoTradesData = d.demoTrades;
             demoClosedData = d.demoClosedTrades;
             demoLimitOrders = d.demoLimitOrders;
+            if (d.demoCash) demoCashData = d.demoCash;
             showToast(`指値約定！ ${order.name || order.ticker} ¥${Math.round(order.limitPrice).toLocaleString()}`);
           }
         } catch {}
@@ -9080,7 +9106,7 @@ async function demoCheckLimitOrders(quotes) {
   }
 }
 async function demoDeleteTrade(person, id) {
-  if (!confirm('この取引を削除しますか？（売却履歴に残りません）')) return;
+  if (!confirm('この取引を削除しますか？（購入がなかったことになり、資金が戻ります）')) return;
   try {
     const r = await fetch(API_BASE + '/api/demo-trades/remove', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -9088,20 +9114,96 @@ async function demoDeleteTrade(person, id) {
     });
     const d = await r.json();
     demoTradesData = d.demoTrades;
+    if (d.demoCash) demoCashData = d.demoCash;
     renderDemoPortfolio();
   } catch (e) { showToast('削除失敗: ' + e.message, true); }
+}
+async function demoDeleteClosedTrade(person, id) {
+  if (!confirm('この売却済み取引を履歴から削除しますか？（成績からも除外されます）')) return;
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades/remove-closed', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person, id }),
+    });
+    const d = await r.json();
+    demoClosedData = d.demoClosedTrades;
+    if (d.demoCash) demoCashData = d.demoCash;
+    showToast('売却済み取引を削除しました');
+    renderDemoPortfolio();
+  } catch (e) { showToast('削除失敗: ' + e.message, true); }
+}
+const DEMO_START_CASH = 100000000; // 1億円スタート
+const DEMO_LV_TH = [0, 1000000, 3000000, 6000000, 10000000, 15000000, 22000000, 30000000, 40000000, 55000000, 75000000, 100000000];
+function demoLevelInfo(netWorth) {
+  const profit = netWorth - DEMO_START_CASH;
+  let idx = 0;
+  for (let i = 0; i < DEMO_LV_TH.length; i++) if (profit >= DEMO_LV_TH[i]) idx = i;
+  let level, curBase, nextBase;
+  if (idx < DEMO_LV_TH.length - 1) { level = idx + 1; curBase = DEMO_LV_TH[idx]; nextBase = DEMO_LV_TH[idx + 1]; }
+  else {
+    const step = 30000000;
+    const over = Math.floor((profit - DEMO_LV_TH[idx]) / step);
+    level = DEMO_LV_TH.length + over;
+    curBase = DEMO_LV_TH[idx] + over * step;
+    nextBase = curBase + step;
+  }
+  const progress = nextBase > curBase ? Math.max(0, Math.min(1, (profit - curBase) / (nextBase - curBase))) : 1;
+  const ranks = [
+    { min: 1, label: '見習いトレーダー', emoji: '🌱' },
+    { min: 3, label: '駆け出し投資家', emoji: '📈' },
+    { min: 5, label: '一人前トレーダー', emoji: '💼' },
+    { min: 7, label: 'ベテラン投資家', emoji: '🎯' },
+    { min: 9, label: '敏腕トレーダー', emoji: '🏆' },
+    { min: 12, label: '伝説の投資家', emoji: '👑' },
+  ];
+  let rank = ranks[0];
+  for (const r of ranks) if (level >= r.min) rank = r;
+  const toNext = Math.max(0, nextBase - profit);
+  return { level, rank, progress, toNext, profit };
+}
+function demoLevelCard(netWorth) {
+  const lv = demoLevelInfo(netWorth);
+  return `<div class="demo-summary-card" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:32px">${lv.rank.emoji}</span>
+        <div>
+          <div style="font-size:22px;font-weight:900;color:var(--gold);line-height:1.1">Lv.${lv.level}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${lv.rank.label}</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text-soft)">次のレベルまで</div>
+        <div style="font-size:15px;font-weight:800;color:var(--text)">${lv.toNext > 0 ? '¥' + Math.round(lv.toNext).toLocaleString() : 'MAX'}</div>
+      </div>
+    </div>
+    <div style="height:14px;background:var(--line-soft);border-radius:7px;overflow:hidden">
+      <div style="height:100%;width:${(lv.progress * 100).toFixed(1)}%;background:linear-gradient(90deg,#e0a838,#c88818);border-radius:7px;transition:width .5s"></div>
+    </div>
+  </div>`;
 }
 async function renderDemoPortfolio() {
   if (!demoTradesData) await loadDemoTrades();
   if (!demoClosedData) await loadDemoClosedTrades();
   if (!demoLimitOrders) await loadDemoLimitOrders();
+  if (!demoCashData) await loadDemoCash();
   const sumEl = document.getElementById('demo-summary');
   const listEl = document.getElementById('demo-list');
   if (demoTab === 'closed') { renderDemoClosed(sumEl, listEl); return; }
   if (demoTab === 'stats') { renderDemoStats(sumEl, listEl); return; }
+  const cash = demoCashData?.[demoPerson] ?? DEMO_START_CASH;
   const trades = demoTradesData?.[demoPerson] || [];
   if (!trades.length) {
-    sumEl.innerHTML = '';
+    const netWorth = cash;
+    const profit = netWorth - DEMO_START_CASH;
+    const pc = profit >= 0 ? '#c0392b' : '#2e6da4';
+    const psign = profit >= 0 ? '+' : '';
+    sumEl.innerHTML = demoLevelCard(netWorth) + `<div class="demo-summary-card">
+      <div class="demo-total-label">総資産（現金）</div>
+      <div class="demo-total-val">¥${Math.round(netWorth).toLocaleString()}</div>
+      <div class="demo-total-sub" style="color:${pc}">${psign}¥${Math.round(profit).toLocaleString()} (${psign}${(profit/DEMO_START_CASH*100).toFixed(1)}%)</div>
+      <div style="margin-top:6px;font-size:12px;color:var(--text-soft)">現金残高: ¥${Math.round(cash).toLocaleString()}</div>
+    </div>`;
     listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-soft);font-size:15px">保有中のデモ取引はありません<br><span style="font-size:13px">監視銘柄のチャート →「もし買ったら」→ デモ購入</span></div>';
     return;
   }
@@ -9145,9 +9247,9 @@ async function renderDemoPortfolio() {
       </div>
       <div class="demo-card-pnl" style="color:${pnlColor};margin-bottom:6px">${pnlSign}¥${Math.round(pnl).toLocaleString()}</div>
       <div class="demo-card-grid">
-        <div><div class="demo-card-lbl">買値</div><div class="demo-card-val">¥${Math.round(t.buyPrice).toLocaleString()}</div></div>
+        <div><div class="demo-card-lbl">平均取得単価</div><div class="demo-card-val">¥${Math.round(t.buyPrice).toLocaleString()}</div></div>
         <div><div class="demo-card-lbl">現在値</div><div class="demo-card-val">¥${Math.round(curPrice).toLocaleString()}</div></div>
-        <div><div class="demo-card-lbl">株数</div><div class="demo-card-val">${t.shares}株</div></div>
+        <div><div class="demo-card-lbl">株数</div><div class="demo-card-val">${t.shares.toLocaleString()}株</div></div>
         <div><div class="demo-card-lbl">購入日</div><div class="demo-card-val">${t.date}</div></div>
         <div><div class="demo-card-lbl">投資額</div><div class="demo-card-val">¥${Math.round(cost).toLocaleString()}</div></div>
         <div><div class="demo-card-lbl">評価額</div><div class="demo-card-val">¥${Math.round(value).toLocaleString()}</div></div>
@@ -9170,11 +9272,19 @@ async function renderDemoPortfolio() {
   const totalPct = totalCost ? (totalPnl / totalCost * 100) : 0;
   const tc = totalPnl >= 0 ? '#c0392b' : '#2e6da4';
   const ts = totalPnl >= 0 ? '+' : '';
-  sumEl.innerHTML = `<div class="demo-summary-card">
-    <div class="demo-total-label">デモ評価総額</div>
-    <div class="demo-total-val">¥${Math.round(totalValue).toLocaleString()}</div>
-    <div class="demo-total-sub" style="color:${tc}">${ts}¥${Math.round(totalPnl).toLocaleString()} (${ts}${totalPct.toFixed(1)}%)</div>
-    <div style="margin-top:6px;font-size:12px;color:var(--text-soft)">投資総額: ¥${Math.round(totalCost).toLocaleString()} / ${trades.length}銘柄保有中</div>
+  const netWorth = cash + totalValue;
+  const netProfit = netWorth - DEMO_START_CASH;
+  const nc = netProfit >= 0 ? '#c0392b' : '#2e6da4';
+  const nsign = netProfit >= 0 ? '+' : '';
+  sumEl.innerHTML = demoLevelCard(netWorth) + `<div class="demo-summary-card">
+    <div class="demo-total-label">総資産（現金＋評価額）</div>
+    <div class="demo-total-val">¥${Math.round(netWorth).toLocaleString()}</div>
+    <div class="demo-total-sub" style="color:${nc}">${nsign}¥${Math.round(netProfit).toLocaleString()} (${nsign}${(netProfit/DEMO_START_CASH*100).toFixed(1)}%) <span style="font-size:11px;color:var(--text-soft)">対1億</span></div>
+    <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+      <div style="background:var(--bg);border-radius:8px;padding:8px"><div style="color:var(--text-soft)">現金残高</div><div style="font-size:15px;font-weight:800">¥${Math.round(cash).toLocaleString()}</div></div>
+      <div style="background:var(--bg);border-radius:8px;padding:8px"><div style="color:var(--text-soft)">保有評価額</div><div style="font-size:15px;font-weight:800;color:${tc}">¥${Math.round(totalValue).toLocaleString()}<br><span style="font-size:11px">${ts}${totalPct.toFixed(1)}%（含み損益）</span></div></div>
+    </div>
+    <div style="margin-top:6px;font-size:12px;color:var(--text-soft)">${trades.length}銘柄保有中</div>
   </div>`;
   listEl.innerHTML = rows.join('');
 }
@@ -9212,6 +9322,9 @@ function renderDemoClosed(sumEl, listEl) {
         <div><div class="demo-card-lbl">購入日</div><div class="demo-card-val">${t.date}</div></div>
         <div><div class="demo-card-lbl">売却日</div><div class="demo-card-val">${t.sellDate}</div></div>
       </div>
+      <div style="text-align:right;margin-top:8px">
+        <button onclick="demoDeleteClosedTrade('${demoPerson}','${t.id}')" style="background:none;border:1px solid var(--line);color:var(--text-soft);font-size:13px;cursor:pointer;padding:5px 12px;border-radius:6px">🗑 履歴削除</button>
+      </div>
     </div>`;
   });
   const tc = totalPnl >= 0 ? '#c0392b' : '#2e6da4';
@@ -9223,15 +9336,65 @@ function renderDemoClosed(sumEl, listEl) {
   </div>`;
   listEl.innerHTML = rows.join('');
 }
-function renderDemoStats(sumEl, listEl) {
+function demoPerfGraph(closed) {
+  const sorted = closed.slice().sort((a, b) => new Date(a.sellDate) - new Date(b.sellDate));
+  if (!sorted.length) return '';
+  let cum = 0;
+  const pts = sorted.map(t => { cum += (t.shares || 0) * ((t.sellPrice || 0) - (t.buyPrice || 0)); return { date: t.sellDate, cum }; });
+  const W = 320, H = 150, padL = 8, padR = 8, padT = 12, padB = 20;
+  const vals = pts.map(p => p.cum).concat([0]);
+  let vMax = Math.max(...vals), vMin = Math.min(...vals);
+  if (vMax === vMin) { vMax += 1; vMin -= 1; }
+  const pad = (vMax - vMin) * 0.1; vMax += pad; vMin -= pad;
+  const n = pts.length;
+  const X = i => padL + (n === 1 ? (W - padL - padR) / 2 : i * (W - padL - padR) / (n - 1));
+  const Y = v => padT + (1 - (v - vMin) / (vMax - vMin)) * (H - padT - padB);
+  const zeroY = Y(0);
+  const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${X(i).toFixed(1)},${Y(p.cum).toFixed(1)}`).join(' ');
+  const areaColor = cum >= 0 ? '#c0392b' : '#2e6da4';
+  const area = `${line} L${X(n - 1).toFixed(1)},${zeroY.toFixed(1)} L${X(0).toFixed(1)},${zeroY.toFixed(1)} Z`;
+  const dots = pts.map((p, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(p.cum).toFixed(1)}" r="2.5" fill="${areaColor}"/>`).join('');
+  const firstD = pts[0].date?.slice(5) || '', lastD = pts[n - 1].date?.slice(5) || '';
+  return `<div class="demo-summary-card" style="margin:0 12px 12px">
+    <div style="font-size:13px;font-weight:700;color:var(--text-soft);margin-bottom:6px">📊 実現損益の推移（累計）</div>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">
+      <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${W - padR}" y2="${zeroY.toFixed(1)}" stroke="var(--line)" stroke-width="1" stroke-dasharray="3 3"/>
+      <path d="${area}" fill="${areaColor}" opacity="0.12"/>
+      <path d="${line}" fill="none" stroke="${areaColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+      <text x="${padL}" y="${H - 6}" font-size="9" fill="var(--text-soft)">${firstD}</text>
+      <text x="${W - padR}" y="${H - 6}" font-size="9" fill="var(--text-soft)" text-anchor="end">${lastD}</text>
+    </svg>
+    <div style="text-align:center;font-size:13px;margin-top:4px">累計 <span style="font-weight:800;color:${areaColor}">${cum >= 0 ? '+' : ''}¥${Math.round(cum).toLocaleString()}</span></div>
+  </div>`;
+}
+async function renderDemoStats(sumEl, listEl) {
   const closed = demoClosedData?.[demoPerson] || [];
   const open = demoTradesData?.[demoPerson] || [];
+  const cash = demoCashData?.[demoPerson] ?? DEMO_START_CASH;
   if (!closed.length && !open.length) {
+    // 取引ゼロでもレベル・資産は表示
     sumEl.innerHTML = '';
-    listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-soft);font-size:15px">取引データがありません</div>';
+    listEl.innerHTML = demoLevelCard(cash) + `<div style="text-align:center;padding:30px 0;color:var(--text-soft);font-size:15px">まだ取引がありません<br><span style="font-size:13px">総資産 ¥${Math.round(cash).toLocaleString()}</span></div>`;
     return;
   }
   sumEl.innerHTML = '';
+  // 保有時価を取得して総資産（＝レベル基準）を算出
+  let holdingsValue = 0;
+  if (open.length) {
+    const tickers = [...new Set(open.map(t => t.ticker))];
+    let quotes = {};
+    try {
+      const qRes = await fetch(API_BASE + `/api/quotes?symbols=${encodeURIComponent(tickers.join(','))}`);
+      const qj = await qRes.json();
+      if (qj && typeof qj === 'object') quotes = qj;
+    } catch {}
+    for (const t of open) {
+      const q = quotes[t.ticker] || quotes[t.ticker.replace('.T', '')] || {};
+      holdingsValue += (t.shares || 0) * (q.price || t.buyPrice);
+    }
+  }
+  const netWorth = cash + holdingsValue;
   const wins = closed.filter(t => t.sellPrice >= t.buyPrice);
   const losses = closed.filter(t => t.sellPrice < t.buyPrice);
   const winRate = closed.length ? (wins.length / closed.length * 100) : 0;
@@ -9257,7 +9420,17 @@ function renderDemoStats(sumEl, listEl) {
   const pnlColor = totalRealizedPnl >= 0 ? '#c0392b' : '#2e6da4';
   const pnlSign = totalRealizedPnl >= 0 ? '+' : '';
   const wrColor = winRate >= 50 ? '#c0392b' : '#2e6da4';
+  const netProfit = netWorth - DEMO_START_CASH;
+  const npc = netProfit >= 0 ? '#c0392b' : '#2e6da4';
+  const npsign = netProfit >= 0 ? '+' : '';
   listEl.innerHTML = `
+    <div style="padding:0 12px">${demoLevelCard(netWorth)}</div>
+    <div class="demo-summary-card" style="margin:0 12px 12px;text-align:center">
+      <div class="demo-total-label">総資産（現金＋保有評価額）</div>
+      <div class="demo-total-val">¥${Math.round(netWorth).toLocaleString()}</div>
+      <div style="font-size:14px;color:${npc};margin-top:2px">${npsign}¥${Math.round(netProfit).toLocaleString()} (${npsign}${(netProfit/DEMO_START_CASH*100).toFixed(1)}%) 対1億</div>
+    </div>
+    ${demoPerfGraph(closed)}
     <div class="demo-summary-card" style="margin:0 12px 12px">
       <div class="demo-total-label">実現損益合計</div>
       <div class="demo-total-val" style="color:${pnlColor}">${pnlSign}¥${Math.round(totalRealizedPnl).toLocaleString()}</div>
