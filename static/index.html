@@ -3080,7 +3080,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <div class="ev-add-row">
             <input id="memo-text" class="ev-in" placeholder="ひろのメモを書く…" maxlength="500">
             <label class="memo-img-btn" title="写真を添付">
-              <input type="file" accept="image/*" id="memo-img-input" onchange="onMemoImgSelect(this.files[0])" hidden>
+              <input type="file" accept="image/*,.heic,.heif" id="memo-img-input" onchange="onMemoImgSelect(this.files[0])" hidden>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             </label>
             <button class="ev-add-btn" onclick="addMemoFromUI()">追加</button>
@@ -3179,7 +3179,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="person-card sel-mine" id="card-mine" onclick="selectPerson('mine')">
           <div class="pc-avatar" id="ava-mine" onclick="event.stopPropagation()">
             <span class="pc-ph"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b9ad9c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-            <input type="file" accept="image/*" onchange="onAvatar('mine', this.files[0])">
+            <input type="file" accept="image/*,.heic,.heif" onchange="onAvatar('mine', this.files[0])">
             <div class="pc-cam"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fbf9f5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
           </div>
           <div class="pc-name">ひろ</div>
@@ -3187,7 +3187,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div class="person-card" id="card-hers" onclick="selectPerson('hers')">
           <div class="pc-avatar" id="ava-hers" onclick="event.stopPropagation()">
             <span class="pc-ph"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b9ad9c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-            <input type="file" accept="image/*" onchange="onAvatar('hers', this.files[0])">
+            <input type="file" accept="image/*,.heic,.heif" onchange="onAvatar('hers', this.files[0])">
             <div class="pc-cam"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fbf9f5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
           </div>
           <div class="pc-name">ちか</div>
@@ -3195,7 +3195,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       </div>
 
       <div class="drop-zone" id="drop-zone">
-        <input type="file" id="file-input" accept="image/*" multiple onchange="onFiles(this.files)">
+        <input type="file" id="file-input" accept="image/*,.heic,.heif" multiple onchange="onFiles(this.files)">
         <div class="drop-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8a7a5a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
         <h3>スクショを選択</h3>
         <p>Rシフトのスクショを2枚アップ</p>
@@ -3572,7 +3572,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
           <button class="ev-add-btn" onclick="addExpenseFromEditor()">追加</button>
         </div>
         <label class="scan-btn">
-          <input type="file" accept="image/*" onchange="scanExpense(this.files[0])" hidden>
+          <input type="file" accept="image/*,.heic,.heif" onchange="scanExpense(this.files[0])" hidden>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           レシート / PayPay画面から自動入力
         </label>
@@ -3584,11 +3584,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div class="ed-photos-grid" id="ed-photos-grid"></div>
       <div class="ed-photo-add-btns">
         <label class="scan-btn" style="flex:1;text-align:center">
-          <input type="file" accept="image/*" onchange="onEdPhotoSelect(this.files[0],'mine')" hidden>
+          <input type="file" accept="image/*,.heic,.heif" onchange="onEdPhotoSelect(this.files[0],'mine')" hidden>
           📷 ひろ
         </label>
         <label class="scan-btn" style="flex:1;text-align:center">
-          <input type="file" accept="image/*" onchange="onEdPhotoSelect(this.files[0],'hers')" hidden>
+          <input type="file" accept="image/*,.heic,.heif" onchange="onEdPhotoSelect(this.files[0],'hers')" hidden>
           📷 ちか
         </label>
       </div>
@@ -5028,7 +5028,9 @@ async function onAvatar(person, file) {
     loadCalendar();
   } catch { showToast('アイコンの保存に失敗しました', true); }
 }
-function resizeImage(file, max) {
+async function resizeImage(file, max) {
+  // HEIC/HEIF は先にJPEGへ変換
+  try { file = await normalizeImageFile(file); } catch (e) { throw new Error('HEICを変換できませんでした: ' + e.message); }
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
@@ -5884,6 +5886,7 @@ async function deleteExpenseById(id) {
 async function scanExpense(file) {
   if (!file) return;
   showToast('画像から金額を読み取り中…');
+  try { file = await normalizeImageFile(file); } catch (e) { showToast('HEICを変換できませんでした: ' + e.message, true); return; }
   const form = new FormData(); form.append('file', file);
   try {
     const r = await fetch(API_BASE+'/api/expense/scan', { method:'POST', body:form });
@@ -7005,12 +7008,14 @@ function onFiles(files) {
 }
 // iPhone HEIC等のフォーマットや大きすぎる画像をJPEGに変換する（Vision API対応形式に統一 + サイズ削減）
 async function toJpegBlob(file) {
+  // HEIC/HEIF は先にJPEGへ変換（ブラウザが直接デコードできないため）
+  try { file = await normalizeImageFile(file); } catch (e) { throw new Error('HEICを変換できませんでした: ' + e.message); }
   const url = URL.createObjectURL(file);
   try {
     const img = await new Promise((resolve, reject) => {
       const im = new Image();
       im.onload = () => resolve(im);
-      im.onerror = () => reject(new Error('画像を読み込めません（HEIC等の未対応形式かも）'));
+      im.onerror = () => reject(new Error('画像を読み込めません（未対応の形式かもしれません）'));
       im.src = url;
     });
     // 長辺を最大2000pxに縮小（AI解析には十分・帯域も節約）
@@ -13009,7 +13014,7 @@ function renderDiaryPhotoArea(dateKey) {
 function addDiaryPhoto(dateKey, person) {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'image/*';
+  input.accept = 'image/*,.heic,.heif';
   input.onchange = async e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -13054,14 +13059,45 @@ async function removeDiaryPhoto(dateKey, id) {
 }
 
 // ── 画像圧縮（共通ユーティリティ）──
+// HEIC/HEIF 変換ライブラリ(heic2any)を必要時だけ遅延読み込みする
+let _heicLibPromise = null;
+function loadHeicLib() {
+  if (window.heic2any) return Promise.resolve();
+  if (_heicLibPromise) return _heicLibPromise;
+  _heicLibPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+    s.onload = () => resolve();
+    s.onerror = () => { _heicLibPromise = null; reject(new Error('HEIC変換ライブラリを読み込めません（通信環境を確認してください）')); };
+    document.head.appendChild(s);
+  });
+  return _heicLibPromise;
+}
+// HEIC/HEIF なら事前にJPEGへ変換。それ以外はそのまま返す
+async function normalizeImageFile(file) {
+  const type = (file.type || '').toLowerCase();
+  const name = (file.name || '').toLowerCase();
+  const looksHeic = /heic|heif/.test(type) || /\.(heic|heif)$/i.test(name);
+  if (!looksHeic) return file;
+  await loadHeicLib();
+  const out = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+  const blob = Array.isArray(out) ? out[0] : out;
+  return new File([blob], (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+}
 // 画像を縮小してJPEG data URLに変換する（HEIC等の非対応形式はエラー付きで返す）
 async function compressImage(file, maxPx = 800, quality = 0.68) {
   if (!file) return { img: null, error: 'ファイルがありません' };
-  const type = (file.type || '').toLowerCase();
+  let type = (file.type || '').toLowerCase();
   const name = (file.name || '').toLowerCase();
   const isVideo = type.startsWith('video/') || /\.(mov|mp4|m4v)$/i.test(name);
   if (isVideo) return { img: null, error: '動画は追加できません（LivePhotoの場合は写真を選び直してください）' };
   const looksHeic = /heic|heif/.test(type) || /\.(heic|heif)$/i.test(name);
+
+  // 0) HEIC/HEIF は先にJPEGへ変換（ブラウザが直接デコードできないため）
+  if (looksHeic) {
+    try { file = await normalizeImageFile(file); type = 'image/jpeg'; }
+    catch (e) { return { img: null, error: 'HEICを変換できませんでした: ' + e.message }; }
+  }
 
   // 1) 標準の <img> でデコードを試みる（大半のブラウザ・iOS Safariで対応）
   let bitmap = null;
@@ -13069,16 +13105,23 @@ async function compressImage(file, maxPx = 800, quality = 0.68) {
     bitmap = await loadImageAsBitmap(file);
   } catch (_) { /* try fallback below */ }
 
-  // 2) createImageBitmap フォールバック（HEIC が <img> で失敗した場合）
+  // 2) createImageBitmap フォールバック
   if (!bitmap && 'createImageBitmap' in window) {
     try { bitmap = await createImageBitmap(file); } catch (_) {}
   }
 
+  // 3) 最後の手段：拡張子/typeでHEIC判定できなくても heic2any を試す
   if (!bitmap) {
-    const reason = looksHeic
-      ? 'iPhoneのHEIC形式です。設定→カメラ→フォーマットを「互換性優先」にするか、Safariで開いてください'
-      : `画像を読み込めません (${type || '不明な形式'})`;
-    return { img: null, error: reason };
+    try {
+      await loadHeicLib();
+      const out = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+      const b = Array.isArray(out) ? out[0] : out;
+      bitmap = await loadImageAsBitmap(new File([b], 'image.jpg', { type: 'image/jpeg' }));
+    } catch (_) {}
+  }
+
+  if (!bitmap) {
+    return { img: null, error: `画像を読み込めません (${type || '不明な形式'})` };
   }
 
   let w = bitmap.width, h = bitmap.height;
