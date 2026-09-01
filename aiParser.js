@@ -2,8 +2,13 @@ import Anthropic from '@anthropic-ai/sdk';
 
 const client = new Anthropic();
 
+// 診断用: 直近のシフト解析の生応答などを保持
+let _lastShiftDebug = null;
+export function getShiftParseDebug() { return _lastShiftDebug; }
+
 export async function parseShiftImages(imagesB64, mimeTypes) {
   const currentYear = new Date().getFullYear();
+  _lastShiftDebug = { at: new Date().toISOString(), images: imagesB64.length, mimeTypes, model: 'claude-sonnet-5' };
 
   const content = [];
   for (let i = 0; i < imagesB64.length; i++) {
@@ -55,18 +60,30 @@ export async function parseShiftImages(imagesB64, mimeTypes) {
 - JSON配列のみ返してください。`,
   });
 
-  const message = await client.messages.create({
-    model: 'claude-sonnet-5',
-    max_tokens: 4096,
-    messages: [{ role: 'user', content }],
-  });
+  let message;
+  try {
+    message = await client.messages.create({
+      model: 'claude-sonnet-5',
+      max_tokens: 4096,
+      messages: [{ role: 'user', content }],
+    });
+  } catch (e) {
+    _lastShiftDebug.error = 'API呼び出し失敗: ' + (e?.message || e);
+    _lastShiftDebug.status = e?.status;
+    throw e;
+  }
 
-  const raw = message.content[0].text.trim();
+  const raw = (message.content?.[0]?.text || '').trim();
+  _lastShiftDebug.rawSample = raw.slice(0, 2000);
+  _lastShiftDebug.stopReason = message.stop_reason;
   const match = raw.match(/\[[\s\S]*\]/);
-  if (!match) throw new Error(`AIからJSONが返されませんでした: ${raw.slice(0, 200)}`);
+  if (!match) { _lastShiftDebug.error = 'JSON配列なし'; throw new Error(`AIからJSONが返されませんでした: ${raw.slice(0, 200)}`); }
 
-  const shifts = JSON.parse(match[0]);
-  return shifts
+  let shifts;
+  try { shifts = JSON.parse(match[0]); }
+  catch (e) { _lastShiftDebug.error = 'JSON.parse失敗: ' + e.message; throw new Error('AIの返答を解析できませんでした'); }
+
+  const result = shifts
     .filter(s => s.year && s.month && s.day && ['work', 'off'].includes(s.shift_type))
     .map(s => ({
       year: Number(s.year),
@@ -77,6 +94,9 @@ export async function parseShiftImages(imagesB64, mimeTypes) {
       end_time: s.shift_type === 'work' ? normTime(s.end_time) : null,
       label: s.shift_type === 'off' ? normLabel(s.label) : null,
     }));
+  _lastShiftDebug.parsedCount = shifts.length;
+  _lastShiftDebug.resultCount = result.length;
+  return result;
 }
 
 // "1130" / "11.30" / "11時30分" / "11" などを "HH:MM" に正規化

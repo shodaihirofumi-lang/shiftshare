@@ -3,7 +3,7 @@ import express from 'express';
 import multer from 'multer';
 import webpush from 'web-push';
 import ical from 'node-ical';
-import { parseShiftImages, parseExpenseAmount } from './aiParser.js';
+import { parseShiftImages, parseExpenseAmount, getShiftParseDebug } from './aiParser.js';
 import {
   initDb,
   getAllShifts, getUploadLog,
@@ -82,17 +82,23 @@ app.post('/api/upload', upload.array('files', 3), async (req, res) => {
 
   const imagesB64 = req.files.map(f => f.buffer.toString('base64'));
   const mimeTypes = req.files.map(f => f.mimetype || 'image/jpeg');
+  lastUploadDebug = { at: new Date().toISOString(), person, files: req.files.map(f => ({ type: f.mimetype, bytes: f.size })) };
 
   try {
     const shifts = await parseShiftImages(imagesB64, mimeTypes);
+    lastUploadDebug.count = shifts.length;
     await saveShifts(person, shifts);
     sendPushNotification(person);
     res.json({ success: true, count: shifts.length });
   } catch (e) {
     console.error(e);
+    lastUploadDebug.error = e.message;
     res.status(500).json({ error: `AI解析エラー: ${e.message}` });
   }
 });
+// 診断用（一時的）: 直近アップロードの解析状況を確認する
+let lastUploadDebug = null;
+app.get('/api/upload-debug', (_req, res) => res.json({ upload: lastUploadDebug, parse: getShiftParseDebug() }));
 
 // ── DATA ──
 app.get('/api/shifts', (_req, res) => res.json(getAllShifts()));
