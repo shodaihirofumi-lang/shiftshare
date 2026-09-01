@@ -9064,9 +9064,55 @@ async function demoPlaceLimitOrder(person, tradeId) {
     if (!r.ok) throw new Error(d.error || 'エラー');
     demoLimitOrders = d.demoLimitOrders;
     el.style.display = 'none';
-    showToast(`指値注文 ¥${Math.round(price).toLocaleString()} を設定しました`);
+    showToast(`指値売り ¥${Math.round(price).toLocaleString()} を設定しました`);
     renderDemoPortfolio();
   } catch (e) { showToast('指値設定失敗: ' + e.message, true); }
+}
+function demoTogglePanel(panelId) {
+  const el = document.getElementById(panelId);
+  if (!el) return;
+  const showing = el.style.display !== 'none';
+  el.style.display = showing ? 'none' : 'flex';
+  if (!showing) { const inp = el.querySelector('input'); if (inp) inp.focus(); }
+}
+async function demoMarketBuyMore(person, ticker, name, curPrice, id) {
+  const el = document.getElementById('demo-buymkt-' + id);
+  const shares = parseInt(el.querySelector('input').value);
+  if (!shares || shares <= 0) { showToast('株数を入力してください', true); return; }
+  const cost = shares * curPrice;
+  if (!confirm(`${name} を成行で ${shares.toLocaleString()}株 買い増しますか？\n概算 ¥${Math.round(cost).toLocaleString()}（@¥${Math.round(curPrice).toLocaleString()}）`)) return;
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades/add', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person, trade: { ticker, name, shares, buyPrice: curPrice, target: 0, stop: 0, date: new Date().toISOString().slice(0,10) } }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'エラー');
+    demoTradesData = d.demoTrades;
+    if (d.demoCash) demoCashData = d.demoCash;
+    showToast(`${shares.toLocaleString()}株 買い増しました`);
+    renderDemoPortfolio();
+  } catch (e) { showToast('買い増し失敗: ' + e.message, true); }
+}
+async function demoPlaceBuyLimit(person, ticker, name, id) {
+  const el = document.getElementById('demo-buylimit-' + id);
+  const inputs = el.querySelectorAll('input');
+  const shares = parseInt(inputs[0].value);
+  const price = parseFloat(inputs[1].value);
+  if (!shares || shares <= 0) { showToast('株数を入力してください', true); return; }
+  if (!price || price <= 0) { showToast('指値価格を入力してください', true); return; }
+  try {
+    const r = await fetch(API_BASE + '/api/demo-trades/limit-order', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person, side: 'buy', ticker, name, shares, limitPrice: price }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'エラー');
+    demoLimitOrders = d.demoLimitOrders;
+    el.style.display = 'none';
+    showToast(`指値買い ¥${Math.round(price).toLocaleString()} × ${shares.toLocaleString()}株 を設定しました`);
+    renderDemoPortfolio();
+  } catch (e) { showToast('指値買い設定失敗: ' + e.message, true); }
 }
 async function demoCancelLimitOrder(person, orderId) {
   try {
@@ -9083,25 +9129,28 @@ async function demoCancelLimitOrder(person, orderId) {
 async function demoCheckLimitOrders(quotes) {
   if (!demoLimitOrders) return;
   for (const person of ['mine', 'hers']) {
-    const orders = demoLimitOrders[person] || [];
+    const orders = (demoLimitOrders[person] || []).slice();
     for (const order of orders) {
       const q = quotes[order.ticker] || quotes[order.ticker.replace('.T', '')] || {};
-      if (q.price && q.price >= order.limitPrice) {
-        try {
-          const r = await fetch(API_BASE + '/api/demo-trades/execute-limit', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ person, orderId: order.id }),
-          });
-          const d = await r.json();
-          if (d.success) {
-            demoTradesData = d.demoTrades;
-            demoClosedData = d.demoClosedTrades;
-            demoLimitOrders = d.demoLimitOrders;
-            if (d.demoCash) demoCashData = d.demoCash;
-            showToast(`指値約定！ ${order.name || order.ticker} ¥${Math.round(order.limitPrice).toLocaleString()}`);
-          }
-        } catch {}
-      }
+      if (!q.price) continue;
+      const side = order.side || 'sell';
+      // 売り: 現在値が指値以上で約定 / 買い: 現在値が指値以下で約定
+      const hit = side === 'buy' ? q.price <= order.limitPrice : q.price >= order.limitPrice;
+      if (!hit) continue;
+      try {
+        const r = await fetch(API_BASE + '/api/demo-trades/execute-limit', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ person, orderId: order.id }),
+        });
+        const d = await r.json();
+        if (d.success) {
+          demoTradesData = d.demoTrades;
+          demoClosedData = d.demoClosedTrades;
+          demoLimitOrders = d.demoLimitOrders;
+          if (d.demoCash) demoCashData = d.demoCash;
+          showToast(`指値${side === 'buy' ? '買い' : '売り'}約定！ ${order.name || order.ticker} ¥${Math.round(order.limitPrice).toLocaleString()}`);
+        }
+      } catch {}
     }
   }
 }
@@ -9230,15 +9279,16 @@ async function renderDemoPortfolio() {
     const pnlSign = pnl >= 0 ? '+' : '';
     const targetPnl = t.target ? ((t.target - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
     const stopPnl = t.stop ? ((t.stop - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
-    const limitOrder = myLimits.find(o => o.tradeId === t.id);
-    const limitHtml = limitOrder
-      ? `<div style="margin-top:8px;padding:8px 12px;background:rgba(192,57,43,.08);border:1.5px solid #c0392b;border-radius:8px;display:flex;align-items:center;justify-content:space-between">
-          <div><span style="font-size:13px;font-weight:700;color:#c0392b">📌 指値注文中</span><br><span style="font-size:16px;font-weight:800">¥${Math.round(limitOrder.limitPrice).toLocaleString()}</span> <span style="font-size:12px;color:var(--text-soft)">(${limitOrder.orderDate}設定)</span></div>
-          <button onclick="event.stopPropagation();demoCancelLimitOrder('${demoPerson}','${limitOrder.id}')" style="background:none;border:1.5px solid #c0392b;color:#c0392b;border-radius:6px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer">取消</button>
-        </div>`
-      : '';
+    const sellOrder = myLimits.find(o => (o.side || 'sell') === 'sell' && o.tradeId === t.id);
+    const buyOrders = myLimits.filter(o => o.side === 'buy' && o.ticker === t.ticker);
+    const jn = (t.name || '').replace(/'/g, "\\'"), jt = t.ticker.replace(/'/g, "\\'");
+    const orderChip = (o, label, color) => `<div style="margin-top:8px;padding:8px 12px;background:${color}14;border:1.5px solid ${color};border-radius:8px;display:flex;align-items:center;justify-content:space-between">
+        <div><span style="font-size:13px;font-weight:700;color:${color}">📌 指値${label}中</span><br><span style="font-size:16px;font-weight:800">¥${Math.round(o.limitPrice).toLocaleString()}</span> <span style="font-size:12px;color:var(--text-soft)">× ${(o.shares||0).toLocaleString()}株 (${o.orderDate})</span></div>
+        <button onclick="event.stopPropagation();demoCancelLimitOrder('${demoPerson}','${o.id}')" style="background:none;border:1.5px solid ${color};color:${color};border-radius:6px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer">取消</button>
+      </div>`;
+    const ordersHtml = (sellOrder ? orderChip(sellOrder, '売り', '#c0392b') : '') + buyOrders.map(o => orderChip(o, '買い', '#2e6da4')).join('');
     return `<div class="demo-card">
-      <div class="demo-card-head" onclick="openCandleChart('${t.ticker.replace(/'/g,"\\'")}','${(t.name||'').replace(/'/g,"\\'")}')">
+      <div class="demo-card-head" onclick="openCandleChart('${jt}','${jn}')">
         <div>
           <span class="demo-card-name">${t.name || t.ticker}</span>
           <span class="demo-card-code">${t.ticker}</span>
@@ -9256,15 +9306,28 @@ async function renderDemoPortfolio() {
         ${t.target ? `<div><div class="demo-card-lbl">目標</div><div class="demo-card-val">¥${Math.round(t.target).toLocaleString()} (${targetPnl}%)</div></div>` : ''}
         ${t.stop ? `<div><div class="demo-card-lbl">損切り</div><div class="demo-card-val">¥${Math.round(t.stop).toLocaleString()} (${stopPnl}%)</div></div>` : ''}
       </div>
-      ${limitHtml}
-      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
-        <button onclick="event.stopPropagation();demoSellTrade('${demoPerson}','${t.id}',${curPrice})" style="flex:1;background:#c0392b;color:#fff;border:none;border-radius:8px;padding:10px 0;font-size:15px;font-weight:700;cursor:pointer">成行売却</button>
-        <button onclick="event.stopPropagation();demoShowLimitSell('${demoPerson}','${t.id}',${curPrice})" style="flex:1;background:var(--bg);color:var(--text);border:2px solid #c0392b;border-radius:8px;padding:8px 0;font-size:15px;font-weight:700;cursor:pointer">${limitOrder ? '指値変更' : '指値注文'}</button>
-        <button onclick="event.stopPropagation();demoDeleteTrade('${demoPerson}','${t.id}')" style="background:none;border:none;color:var(--text-soft);font-size:18px;cursor:pointer;padding:6px 8px" title="削除">🗑</button>
+      ${ordersHtml}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <button onclick="event.stopPropagation();demoTogglePanel('demo-buymkt-${t.id}')" style="background:#2e6da4;color:#fff;border:none;border-radius:8px;padding:10px 0;font-size:15px;font-weight:700;cursor:pointer">成行買い増し</button>
+        <button onclick="event.stopPropagation();demoTogglePanel('demo-buylimit-${t.id}')" style="background:var(--bg);color:var(--text);border:2px solid #2e6da4;border-radius:8px;padding:8px 0;font-size:15px;font-weight:700;cursor:pointer">指値買い</button>
+        <button onclick="event.stopPropagation();demoSellTrade('${demoPerson}','${t.id}',${curPrice})" style="background:#c0392b;color:#fff;border:none;border-radius:8px;padding:10px 0;font-size:15px;font-weight:700;cursor:pointer">成行売却</button>
+        <button onclick="event.stopPropagation();demoShowLimitSell('${demoPerson}','${t.id}',${curPrice})" style="background:var(--bg);color:var(--text);border:2px solid #c0392b;border-radius:8px;padding:8px 0;font-size:15px;font-weight:700;cursor:pointer">指値売り</button>
+      </div>
+      <div id="demo-buymkt-${t.id}" style="display:none;flex-direction:column;gap:8px;margin-top:8px">
+        <input type="number" value="100" min="1" style="width:100%;box-sizing:border-box;padding:12px;border:2px solid #2e6da4;border-radius:8px;font-size:18px;font-weight:700;background:var(--bg);color:var(--text);font-family:inherit" onclick="event.stopPropagation()" placeholder="買い増し株数">
+        <button onclick="event.stopPropagation();demoMarketBuyMore('${demoPerson}','${jt}','${jn}',${curPrice},'${t.id}')" style="width:100%;background:#2e6da4;color:#fff;border:none;border-radius:8px;padding:12px 0;font-size:16px;font-weight:700;cursor:pointer">この株数を成行で買い増し（@¥${Math.round(curPrice).toLocaleString()}）</button>
+      </div>
+      <div id="demo-buylimit-${t.id}" style="display:none;flex-direction:column;gap:8px;margin-top:8px">
+        <input type="number" value="100" min="1" style="width:100%;box-sizing:border-box;padding:12px;border:2px solid #2e6da4;border-radius:8px;font-size:18px;font-weight:700;background:var(--bg);color:var(--text);font-family:inherit" onclick="event.stopPropagation()" placeholder="買い株数">
+        <input type="number" value="${Math.round(curPrice)}" style="width:100%;box-sizing:border-box;padding:12px;border:2px solid #2e6da4;border-radius:8px;font-size:18px;font-weight:700;background:var(--bg);color:var(--text);font-family:inherit" onclick="event.stopPropagation()" placeholder="指値価格（この値以下で約定）">
+        <button onclick="event.stopPropagation();demoPlaceBuyLimit('${demoPerson}','${jt}','${jn}','${t.id}')" style="width:100%;background:#2e6da4;color:#fff;border:none;border-radius:8px;padding:12px 0;font-size:16px;font-weight:700;cursor:pointer">指値買いを設定</button>
       </div>
       <div id="demo-limit-${t.id}" style="display:none;flex-direction:column;gap:8px;margin-top:8px">
-        <input type="number" value="${Math.round(curPrice)}" style="width:100%;box-sizing:border-box;padding:12px;border:2px solid var(--line);border-radius:8px;font-size:18px;font-weight:700;background:var(--bg);color:var(--text);font-family:inherit" onclick="event.stopPropagation()" placeholder="売却価格">
-        <button onclick="event.stopPropagation();demoPlaceLimitOrder('${demoPerson}','${t.id}')" style="width:100%;background:#c0392b;color:#fff;border:none;border-radius:8px;padding:12px 0;font-size:16px;font-weight:700;cursor:pointer">この価格で指値設定</button>
+        <input type="number" value="${Math.round(curPrice)}" style="width:100%;box-sizing:border-box;padding:12px;border:2px solid #c0392b;border-radius:8px;font-size:18px;font-weight:700;background:var(--bg);color:var(--text);font-family:inherit" onclick="event.stopPropagation()" placeholder="指値価格（この値以上で約定）">
+        <button onclick="event.stopPropagation();demoPlaceLimitOrder('${demoPerson}','${t.id}')" style="width:100%;background:#c0392b;color:#fff;border:none;border-radius:8px;padding:12px 0;font-size:16px;font-weight:700;cursor:pointer">指値売りを設定</button>
+      </div>
+      <div style="text-align:right;margin-top:8px">
+        <button onclick="event.stopPropagation();demoDeleteTrade('${demoPerson}','${t.id}')" style="background:none;border:1px solid var(--line);color:var(--text-soft);font-size:13px;cursor:pointer;padding:5px 12px;border-radius:6px">🗑 削除</button>
       </div>
     </div>`;
   });

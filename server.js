@@ -1809,17 +1809,20 @@ app.post('/api/demo-trades/merge-open', async (_req, res) => {
 app.get('/api/demo-trades/limits', (_req, res) => res.json(getDemoLimitOrders()));
 app.post('/api/demo-trades/limit-order', async (req, res) => {
   try {
-    const { person, tradeId, limitPrice } = req.body || {};
-    if (!tradeId || !limitPrice) throw new Error('tradeId と limitPrice が必要です');
-    const dt = getDemoTrades();
+    const { person, tradeId, ticker, name, shares, limitPrice, side } = req.body || {};
+    if (!limitPrice || limitPrice <= 0) throw new Error('limitPrice が必要です');
     const p = person || 'mine';
-    const trade = dt[p]?.find(t => t.id === tradeId);
-    if (!trade) throw new Error('保有中の取引が見つかりません');
-    const order = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      tradeId, ticker: trade.ticker, name: trade.name, shares: trade.shares,
-      buyPrice: trade.buyPrice, limitPrice, orderDate: new Date().toISOString().slice(0, 10),
-    };
+    const s = side === 'buy' ? 'buy' : 'sell';
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    let order;
+    if (s === 'sell') {
+      const trade = getDemoTrades()[p]?.find(t => t.id === tradeId);
+      if (!trade) throw new Error('保有中の取引が見つかりません');
+      order = { id, side: 'sell', tradeId, ticker: trade.ticker, name: trade.name, shares: trade.shares, buyPrice: trade.buyPrice, limitPrice, orderDate: new Date().toISOString().slice(0, 10) };
+    } else {
+      if (!ticker || !shares || shares <= 0) throw new Error('ticker と shares が必要です');
+      order = { id, side: 'buy', ticker, name: name || ticker, shares, limitPrice, orderDate: new Date().toISOString().slice(0, 10) };
+    }
     await addDemoLimitOrder(p, order);
     res.json({ success: true, demoLimitOrders: getDemoLimitOrders() });
   } catch (e) { res.status(400).json({ error: e.message }); }
@@ -1837,7 +1840,16 @@ app.post('/api/demo-trades/execute-limit', async (req, res) => {
     const lo = getDemoLimitOrders();
     const order = lo[p]?.find(o => o.id === orderId);
     if (!order) throw new Error('注文が見つかりません');
-    await sellDemoTrade(p, order.tradeId, order.limitPrice);
+    if (order.side === 'buy') {
+      const trade = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        ticker: order.ticker, name: order.name, shares: order.shares,
+        buyPrice: order.limitPrice, target: 0, stop: 0, date: new Date().toISOString().slice(0, 10),
+      };
+      await addDemoTrade(p, trade); // 資金不足なら例外→注文は残る
+    } else {
+      await sellDemoTrade(p, order.tradeId, order.limitPrice);
+    }
     await cancelDemoLimitOrder(p, order.id);
     res.json({ success: true, demoTrades: getDemoTrades(), demoClosedTrades: getDemoClosedTrades(), demoLimitOrders: getDemoLimitOrders(), demoCash: getDemoCash() });
   } catch (e) { res.status(400).json({ error: e.message }); }
