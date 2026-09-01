@@ -9183,6 +9183,8 @@ async function demoDeleteClosedTrade(person, id) {
 }
 const DEMO_START_CASH = 100000000; // 1億円スタート
 const DEMO_LV_TH = [0, 1000000, 3000000, 6000000, 10000000, 15000000, 22000000, 30000000, 40000000, 55000000, 75000000, 100000000];
+// 銘柄名は正式な日本語辞書(STOCK_JA)を最優先（保存名の文字化け対策）
+function demoNameOf(t) { return (STOCK_JA && STOCK_JA[t.ticker]) || (t.name && t.name.trim()) || t.ticker; }
 function demoLevelInfo(netWorth) {
   const profit = netWorth - DEMO_START_CASH;
   let idx = 0;
@@ -9281,7 +9283,7 @@ async function renderDemoPortfolio() {
     const stopPnl = t.stop ? ((t.stop - t.buyPrice) / t.buyPrice * 100).toFixed(1) : null;
     const sellOrder = myLimits.find(o => (o.side || 'sell') === 'sell' && o.tradeId === t.id);
     const buyOrders = myLimits.filter(o => o.side === 'buy' && o.ticker === t.ticker);
-    const jn = (t.name || '').replace(/'/g, "\\'"), jt = t.ticker.replace(/'/g, "\\'");
+    const jn = demoNameOf(t).replace(/'/g, "\\'"), jt = t.ticker.replace(/'/g, "\\'");
     const orderChip = (o, label, color) => `<div style="margin-top:8px;padding:8px 12px;background:${color}14;border:1.5px solid ${color};border-radius:8px;display:flex;align-items:center;justify-content:space-between">
         <div><span style="font-size:13px;font-weight:700;color:${color}">📌 指値${label}中</span><br><span style="font-size:16px;font-weight:800">¥${Math.round(o.limitPrice).toLocaleString()}</span> <span style="font-size:12px;color:var(--text-soft)">× ${(o.shares||0).toLocaleString()}株 (${o.orderDate})</span></div>
         <button onclick="event.stopPropagation();demoCancelLimitOrder('${demoPerson}','${o.id}')" style="background:none;border:1.5px solid ${color};color:${color};border-radius:6px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer">取消</button>
@@ -9290,7 +9292,7 @@ async function renderDemoPortfolio() {
     return `<div class="demo-card">
       <div class="demo-card-head" onclick="openCandleChart('${jt}','${jn}')">
         <div>
-          <span class="demo-card-name">${t.name || t.ticker}</span>
+          <span class="demo-card-name">${demoNameOf(t)}</span>
           <span class="demo-card-code">${t.ticker}</span>
         </div>
         <span class="demo-badge" style="background:${pnl >= 0 ? 'rgba(192,57,43,.12)' : 'rgba(46,109,164,.12)'};color:${pnlColor}">${pnlSign}${pnlPct.toFixed(1)}%</span>
@@ -9371,7 +9373,7 @@ function renderDemoClosed(sumEl, listEl) {
     return `<div class="demo-card" style="opacity:.92">
       <div class="demo-card-head">
         <div>
-          <span class="demo-card-name">${t.name || t.ticker}</span>
+          <span class="demo-card-name">${demoNameOf(t)}</span>
           <span class="demo-card-code">${t.ticker}</span>
         </div>
         <span class="demo-badge" style="background:${pnl >= 0 ? 'rgba(192,57,43,.12)' : 'rgba(46,109,164,.12)'};color:${pnlColor}">${pnlSign}${pnlPct.toFixed(1)}%</span>
