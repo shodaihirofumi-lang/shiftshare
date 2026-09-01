@@ -71,7 +71,7 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
 }
 
 // ── UPLOAD ──
-app.post('/api/upload', upload.array('files', 2), async (req, res) => {
+app.post('/api/upload', upload.array('files', 3), async (req, res) => {
   const person = req.body.person;
   if (!['mine', 'hers'].includes(person)) {
     return res.status(400).json({ error: 'person は mine または hers のみ' });

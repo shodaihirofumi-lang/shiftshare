@@ -608,7 +608,7 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .drop-zone p { font-size:16px; color:var(--text-soft); }
 .drop-hint { display:inline-block; margin-top:14px; background:#e9e2d4; color:#8a7a5a; padding:4px 14px; border-radius:18px; font-size:16px; font-weight:600; }
 
-.preview-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+.preview-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:18px; }
 .preview-card {
   border-radius:14px; aspect-ratio:9/16; display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:8px; font-size:16px; font-weight:600; background:#f3efe7; border:1.5px dashed var(--line); color:var(--text-soft);
@@ -3198,13 +3198,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <input type="file" id="file-input" accept="image/*,.heic,.heif" multiple onchange="onFiles(this.files)">
         <div class="drop-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8a7a5a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
         <h3>スクショを選択</h3>
-        <p>Rシフトのスクショを2枚アップ</p>
-        <span class="drop-hint">2枚まで選択可</span>
+        <p>シフト表のスクショをアップ（最大3枚）</p>
+        <span class="drop-hint">3枚まで選択可</span>
       </div>
 
       <div class="preview-grid">
         <div class="preview-card" id="prev-0"><span style="font-size:12px;color:var(--text-soft)">1枚目</span></div>
         <div class="preview-card" id="prev-1"><span style="font-size:12px;color:var(--text-soft)">2枚目</span></div>
+        <div class="preview-card" id="prev-2"><span style="font-size:12px;color:var(--text-soft)">3枚目</span></div>
       </div>
 
       <button class="btn-analyze" id="btn-analyze" onclick="doUpload()" disabled>
@@ -6992,8 +6993,8 @@ function selectPerson(p) {
   document.getElementById('card-hers').className = 'person-card'+(p==='hers'?' sel-hers':'');
 }
 function onFiles(files) {
-  selectedFiles = Array.from(files).slice(0,2);
-  for (let i=0;i<2;i++) {
+  selectedFiles = Array.from(files).slice(0,3);
+  for (let i=0;i<3;i++) {
     const card = document.getElementById('prev-'+i);
     if (selectedFiles[i]) {
       const url = URL.createObjectURL(selectedFiles[i]);
@@ -7050,6 +7051,10 @@ async function doUpload() {
     const r = await fetch(API_BASE+'/api/upload', { method:'POST', body:form });
     if (!r.ok) { const e = await r.json().catch(()=>({detail:'不明なエラー'})); throw new Error(e.error||e.detail||'エラー'); }
     const data = await r.json();
+    if (!data.count) {
+      showToast('シフトを読み取れませんでした。画像が鮮明か・日付と時刻が写っているか確認して、もう一度お試しください', true);
+      return;
+    }
     showToast(`${data.count}件のシフトを登録しました`);
     selectedFiles = []; document.getElementById('file-input').value=''; onFiles([]);
     await loadCalendar(); showTab('calendar');
