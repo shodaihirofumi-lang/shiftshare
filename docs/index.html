@@ -1861,6 +1861,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .scr-hit-copy.copied { background:var(--gold-bg); color:var(--gold); border-color:var(--gold-border); }
 .scr-hit-moomoo { color:#e8580c; border-color:#f0b48c; background:#fff3ec; font-weight:700; }
 [data-dark] .scr-hit-moomoo { background:#2a1a10; border-color:#7a4520; color:#ff8a4c; }
+.moomoo-tools { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:0 0 12px; }
+.moomoo-tools-lbl { font-size:12px; font-weight:700; color:var(--text-soft); }
+.moomoo-tools button { font-size:13px; font-weight:700; color:#e8580c; background:#fff3ec; border:1px solid #f0b48c; border-radius:8px; padding:6px 11px; cursor:pointer; font-family:inherit; }
+.moomoo-tools button:active { opacity:.75; }
+[data-dark] .moomoo-tools button { background:#2a1a10; border-color:#7a4520; color:#ff8a4c; }
 .scr-hit-price { font-size:13px; font-weight:700; color:var(--mine); }
 .scr-hit-detail { font-size:11px; color:var(--text-soft); margin-top:3px; line-height:1.5; }
 .scr-empty { font-size:13px; color:var(--text-soft); text-align:center; padding:14px 0; }
@@ -2622,6 +2627,13 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
         <div><div class="page-title">チャート探し</div><div class="page-sub">組み合わせ実戦編（第4巻）の条件を適用</div></div>
         <button class="chip-gray" style="cursor:pointer;border:none" onclick="refreshScreenerList()">🔄 更新</button>
       </div>
+      <div class="moomoo-tools">
+        <span class="moomoo-tools-lbl">moomooツール:</span>
+        <button onclick="openMoomooTool('calendar')">決算カレンダー↗</button>
+        <button onclick="openMoomooTool('heatmap')">ヒートマップ↗</button>
+        <button onclick="openMoomooTool('screener')">スクリーナー↗</button>
+        <button onclick="openMoomooTool('institution')">機関投資家↗</button>
+      </div>
       <div class="uni-picker">
         <div class="uni-picker-lbl">対象銘柄（絞り込む母集団）:</div>
         <div class="uni-picker-btns" id="uni-picker-scr">
@@ -2646,6 +2658,13 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
       <div class="page-top">
         <div><div class="page-title">銘柄選び</div><div class="page-sub">ファンダメンタル指標で絞り込み</div></div>
         <button class="chip-gray" style="cursor:pointer;border:none" onclick="refreshFundScreenerList()">🔄 更新</button>
+      </div>
+      <div class="moomoo-tools">
+        <span class="moomoo-tools-lbl">moomooツール:</span>
+        <button onclick="openMoomooTool('calendar')">決算カレンダー↗</button>
+        <button onclick="openMoomooTool('heatmap')">ヒートマップ↗</button>
+        <button onclick="openMoomooTool('screener')">スクリーナー↗</button>
+        <button onclick="openMoomooTool('institution')">機関投資家↗</button>
       </div>
       <div class="uni-picker">
         <div class="uni-picker-lbl">対象銘柄（絞り込む母集団）:</div>
@@ -3453,6 +3472,11 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
     <div class="modal-title" id="candle-title">—</div>
     <div class="modal-sub" id="candle-sub"></div>
     <div id="candle-company-desc" style="font-size:13px;color:var(--text-soft);margin:4px 0 8px;line-height:1.5;display:none"></div>
+    <div class="candle-moomoo-row" style="display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px">
+      <button class="scr-hit-copy scr-hit-moomoo" onclick="openMoomoo(candleSymbol)">moomoo概要↗</button>
+      <button class="scr-hit-copy scr-hit-moomoo" onclick="openMoomoo(candleSymbol,'earnings')">決算↗</button>
+      <button class="scr-hit-copy scr-hit-moomoo" onclick="openMoomoo(candleSymbol,'community')">掲示板↗</button>
+    </div>
     <div class="candle-interval">
       <button class="candle-int-btn active" data-int="1d" onclick="setCandleInterval('1d')">日足</button>
       <button class="candle-int-btn" data-int="1wk" onclick="setCandleInterval('1wk')">週足</button>
@@ -4002,7 +4026,8 @@ function holdingLine(h) {
   const tgtBtn = `<button class="folio-tgt ${hasTgt?'has':''}" onclick="event.stopPropagation();openTargets('${h.id}')" title="損切・利確の目標">目標</button>`;
   const editBtn = `<button class="folio-edit" onclick="event.stopPropagation();openEditHolding('${h.id}')" title="株数・取得単価・銘柄名を訂正">訂正</button>`;
   const delBtn = `<button class="folio-del" onclick="event.stopPropagation();delHolding('${h.id}','${escapeHtml(name)}')">削除</button>`;
-  const actions = `<div class="folio-actions">${sellBtn}${tgtBtn}${editBtn}${delBtn}</div>`;
+  const moomooBtn = `<button class="folio-tgt scr-hit-moomoo" onclick="event.stopPropagation();openMoomoo('${jsAttr(h.ticker)}')" title="moomooで見る">moomoo↗</button>`;
+  const actions = `<div class="folio-actions">${sellBtn}${tgtBtn}${editBtn}${moomooBtn}${delBtn}</div>`;
   const tap = `onclick="openStockChart('${jsAttr(h.ticker)}','${jsAttr(name)}')"`;
   const sig = q && q.signal && SIG[q.signal]
     ? `<span class="sig ${SIG[q.signal][1]}">${SIG[q.signal][0]}${q.rsi!=null?`<span class="sig-rsi">RSI${q.rsi}</span>`:''}</span>` : '';
@@ -8651,7 +8676,7 @@ function _scrKey(u, id) { return `${u}::${id}`; }
 // Web形式: https://www.moomoo.com/ja/stock/{コード}-{市場}
 // ・Android＋アプリありなら handle_all_urls によりアプリの銘柄ページが開く
 // ・iOS/PCブラウザではWebページ（アプリ誘導バナー付き）が開く
-function openMoomoo(symbol) {
+function openMoomoo(symbol, tab) {
   const s = String(symbol || '').trim().toUpperCase();
   if (!s) return;
   let path;
@@ -8662,7 +8687,20 @@ function openMoomoo(symbol) {
   } else {
     path = s.split(/[-.]/)[0] + '-US';               // 米国株
   }
-  window.open('https://www.moomoo.com/ja/stock/' + encodeURIComponent(path), '_blank', 'noopener');
+  // tab: 'earnings'(決算) / 'community'(掲示板) / 'news' など。未指定は概要
+  const suffix = tab ? '/' + tab : '';
+  window.open('https://www.moomoo.com/ja/stock/' + encodeURIComponent(path) + suffix, '_blank', 'noopener');
+}
+// moomooのツール系ページを開く
+function openMoomooTool(page) {
+  const urls = {
+    calendar: 'https://www.moomoo.com/ja/quote/calendar',       // 決算カレンダー
+    heatmap: 'https://www.moomoo.com/ja/heatmap-jp',            // ヒートマップ(日本株)
+    screener: 'https://www.moomoo.com/ja/screener',            // 銘柄スクリーナー
+    institution: 'https://www.moomoo.com/ja/quote/institution-tracking', // 機関投資家の動向
+  };
+  const u = urls[page];
+  if (u) window.open(u, '_blank', 'noopener');
 }
 function copyStockCode(btn, code) {
   const raw = String(code || '').replace('.T', '');
