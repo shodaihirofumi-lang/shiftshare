@@ -1859,6 +1859,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .scr-hit-copy { display:inline-block; margin-left:6px; font-size:11px; color:var(--text-soft); background:var(--card); border:1px solid var(--line); border-radius:5px; padding:1px 6px; cursor:pointer; font-family:inherit; }
 .scr-hit-copy:active { background:var(--bg); }
 .scr-hit-copy.copied { background:var(--gold-bg); color:var(--gold); border-color:var(--gold-border); }
+.scr-hit-moomoo { color:#e8580c; border-color:#f0b48c; background:#fff3ec; font-weight:700; }
+[data-dark] .scr-hit-moomoo { background:#2a1a10; border-color:#7a4520; color:#ff8a4c; }
 .scr-hit-price { font-size:13px; font-weight:700; color:var(--mine); }
 .scr-hit-detail { font-size:11px; color:var(--text-soft); margin-top:3px; line-height:1.5; }
 .scr-empty { font-size:13px; color:var(--text-soft); text-align:center; padding:14px 0; }
@@ -8645,6 +8647,23 @@ function setFundScreenerUniverse(u) {
   renderFundScreener();
 }
 function _scrKey(u, id) { return `${u}::${id}`; }
+// moomoo証券の銘柄ページを開く。
+// Web形式: https://www.moomoo.com/ja/stock/{コード}-{市場}
+// ・Android＋アプリありなら handle_all_urls によりアプリの銘柄ページが開く
+// ・iOS/PCブラウザではWebページ（アプリ誘導バナー付き）が開く
+function openMoomoo(symbol) {
+  const s = String(symbol || '').trim().toUpperCase();
+  if (!s) return;
+  let path;
+  if (/\.T$/.test(s) || /^\d{3,5}[A-Z]?$/.test(s)) {
+    path = s.replace(/\.T$/, '') + '-JP';           // 日本株
+  } else if (/-USD$/.test(s) || /^(BTC|ETH)$/.test(s)) {
+    path = s.replace(/-USD$/, '') + '-CC';           // 暗号資産
+  } else {
+    path = s.split(/[-.]/)[0] + '-US';               // 米国株
+  }
+  window.open('https://www.moomoo.com/ja/stock/' + encodeURIComponent(path), '_blank', 'noopener');
+}
 function copyStockCode(btn, code) {
   const raw = String(code || '').replace('.T', '');
   const write = async () => {
@@ -9680,7 +9699,7 @@ async function renderWatch() {
             : '';
           return `<div class="wl-item${sigClass}">
             <div class="wl-item-main" onclick="openCandleChart('${jsAttr(w.ticker)}','${jsAttr(jaName)}')">
-              <div class="wl-item-name">${escapeHtml(jaName)}<span class="wl-item-code" onclick="event.stopPropagation()">${escapeHtml(w.ticker)}</span><button class="scr-hit-copy" onclick="event.stopPropagation();copyStockCode(this,'${jsAttr(w.ticker)}')">コピー</button></div>
+              <div class="wl-item-name">${escapeHtml(jaName)}<span class="wl-item-code" onclick="event.stopPropagation()">${escapeHtml(w.ticker)}</span><button class="scr-hit-copy" onclick="event.stopPropagation();copyStockCode(this,'${jsAttr(w.ticker)}')">コピー</button><button class="scr-hit-copy scr-hit-moomoo" onclick="event.stopPropagation();openMoomoo('${jsAttr(w.ticker)}')">moomoo↗</button></div>
               <div class="wl-item-price-row">
                 <span class="wl-item-price">${priceText}</span>
                 ${chgHtml}
@@ -9803,7 +9822,7 @@ async function renderScreener() {
         const hitsHtml = cache.hits.length
           ? cache.hits.map(h => { const jaName = STOCK_JA[h.symbol] || h.name; return `<div class="scr-hit">
               <div class="scr-hit-top" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(jaName)}')">
-                <span class="scr-hit-name">${escapeHtml(jaName)} <span class="scr-hit-code" onclick="event.stopPropagation()">${escapeHtml(h.code)}</span><button class="scr-hit-copy" onclick="event.stopPropagation();copyStockCode(this,'${jsAttr(h.code)}')">コピー</button></span>
+                <span class="scr-hit-name">${escapeHtml(jaName)} <span class="scr-hit-code" onclick="event.stopPropagation()">${escapeHtml(h.code)}</span><button class="scr-hit-copy" onclick="event.stopPropagation();copyStockCode(this,'${jsAttr(h.code)}')">コピー</button><button class="scr-hit-copy scr-hit-moomoo" onclick="event.stopPropagation();openMoomoo('${jsAttr(h.symbol)}')">moomoo↗</button></span>
                 <span class="scr-hit-price">¥${Math.round(h.price).toLocaleString()}</span>
               </div>
               <div class="scr-hit-detail" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(jaName)}')">${escapeHtml(h.detail || '')}</div>
@@ -9896,7 +9915,7 @@ async function renderFundScreener() {
         const hitsHtml = cache.hits.length
           ? cache.hits.map(h => { const jaName = STOCK_JA[h.symbol] || h.name; return `<div class="scr-hit">
               <div class="scr-hit-top" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(jaName)}')">
-                <span class="scr-hit-name">${escapeHtml(jaName)} <span class="scr-hit-code" onclick="event.stopPropagation()">${escapeHtml(h.code)}</span><button class="scr-hit-copy" onclick="event.stopPropagation();copyStockCode(this,'${jsAttr(h.code)}')">コピー</button></span>
+                <span class="scr-hit-name">${escapeHtml(jaName)} <span class="scr-hit-code" onclick="event.stopPropagation()">${escapeHtml(h.code)}</span><button class="scr-hit-copy" onclick="event.stopPropagation();copyStockCode(this,'${jsAttr(h.code)}')">コピー</button><button class="scr-hit-copy scr-hit-moomoo" onclick="event.stopPropagation();openMoomoo('${jsAttr(h.symbol)}')">moomoo↗</button></span>
                 <span class="scr-hit-price">¥${Math.round(h.price).toLocaleString()}</span>
               </div>
               <div class="scr-hit-detail" onclick="openStockChart('${jsAttr(h.symbol)}','${jsAttr(jaName)}')">${escapeHtml(h.detail || '')}</div>
