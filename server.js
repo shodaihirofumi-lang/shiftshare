@@ -20,6 +20,7 @@ import {
   getDemoTrades, addDemoTrade, removeDemoTrade, getDemoClosedTrades, sellDemoTrade, removeDemoClosedTrade, getDemoLimitOrders, addDemoLimitOrder, cancelDemoLimitOrder, getDemoCash, mergeDemoOpenPositions,
   setHoldingTargets, markHoldingTargetFired, markHoldingEarningsNotified, getBuys,
   hasMoveAlert, markMoveAlert,
+  getEarningsCache, getNotifiedEarnings, getWatchScanAt, saveNotifyState,
   getNotes, addNote, deleteNote, toggleNote,
   getMemos, addMemo, deleteMemo, editMemo, pinMemo, setMemoImage,
   getPhotos, addPhoto, deletePhoto, reloadPhotoCache,
@@ -40,6 +41,12 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 
 // 全てのtextブロックを結合して返す。
 function aiText(data) {
   return (data?.content || []).filter(b => b && b.type === 'text').map(b => b.text || '').join('').trim();
+}
+// 通知タップ先などに使う moomoo 銘柄ページURL
+function moomooStockUrl(ticker, tab) {
+  const s = String(ticker || '').toUpperCase();
+  const path = (/\.T$/.test(s) || /^\d{3,5}[A-Z]?$/.test(s)) ? s.replace(/\.T$/, '') + '-JP' : s.split(/[-.]/)[0] + '-US';
+  return 'https://www.moomoo.com/ja/stock/' + path + (tab ? '/' + tab : '');
 }
 
 app.use(express.json({ limit: '8mb' }));
@@ -505,6 +512,7 @@ app.post('/api/holding/targets', async (req, res) => {
 const MOVE_ALERT_PCT = 5;
 app.get('/api/check-price-targets', async (_req, res) => {
   if (!VAPID_PUBLIC || !VAPID_PRIVATE) return res.json({ sent: 0, reason: 'no vapid' });
+  scanWatchlistAlerts().catch(() => {}); // 監視銘柄の決算/シグナル通知（重いので非同期・2時間に1回）
   const all = getHoldings();
   if (!all.length) return res.json({ sent: 0, reason: 'no holdings' });
   const subs = getPushSubscriptions();
@@ -563,13 +571,71 @@ app.get('/api/check-price-targets', async (_req, res) => {
     if (h.earningsDate && h.earningsNotified !== jstDate) {
       const days = Math.round((new Date(h.earningsDate + 'T00:00:00+09:00') - new Date(jstDate + 'T00:00:00+09:00')) / 86400000);
       if (days >= 0 && days <= 1) {
-        notify({ title: '📅 決算が近い', body: `${personName}の${fmtTk} の決算は${days === 0 ? '今日' : '明日'}（${h.earningsDate}）` });
+        notify({ title: '📅 決算が近い', body: `${personName}の${fmtTk} の決算は${days === 0 ? '今日' : '明日'}（${h.earningsDate}）`, url: moomooStockUrl(h.ticker, 'earnings') });
         await markHoldingEarningsNotified(h.id, jstDate); sent++; fired.push({ ticker: h.ticker, kind: 'earnings', days });
       }
     }
   }
   res.json({ sent, fired });
 });
+
+// 監視銘柄の「決算が近い」「買いシグナル発生」をプッシュ通知（重いので2時間に1回だけ実行）
+async function scanWatchlistAlerts() {
+  if (!VAPID_PUBLIC || !VAPID_PRIVATE) return;
+  const nowMs = Date.now();
+  if (nowMs - getWatchScanAt() <= 2 * 3600 * 1000) return; // 2時間以内なら実行しない
+  await saveNotifyState(nowMs); // 先に記録して多重起動を防止
+  const subs = getPushSubscriptions();
+  if (!subs.length) return;
+  const jstDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date());
+  const notify = (obj) => { const p = JSON.stringify(obj); for (const s of subs) webpush.sendNotification(s, p).catch(() => {}); };
+  const wl = getWatchlist();
+  const eCache = getEarningsCache();
+  const eNotified = getNotifiedEarnings();
+  const APP_URL = 'https://shiftshare.onrender.com/';
+  const nowSec = Date.now() / 1000;
+  for (const person of ['mine', 'hers']) {
+    const pName = person === 'hers' ? 'ちか' : 'ひろ';
+    for (const w of (wl[person] || [])) {
+      const t = w.ticker;
+      const code = t.replace(/\.T$/, '');
+      const nm = (w.name && w.name.trim()) ? w.name.trim() : t;
+      // (A) 決算が近い（決算日はティッカー単位で3日キャッシュ）
+      try {
+        let ec = eCache[t];
+        if (!ec || (nowMs - (ec.at || 0)) > 3 * 86400000) {
+          let j = await fetchCalendarEvents(t, false);
+          if (j.finance?.error?.code === 'Unauthorized' || j.quoteSummary?.error?.code === 'Unauthorized') j = await fetchCalendarEvents(t, true);
+          const dts = j.quoteSummary?.result?.[0]?.calendarEvents?.earnings?.earningsDate;
+          const next = dts?.length ? (dts.find(d => d.raw > nowSec) || dts[dts.length - 1]) : null;
+          ec = { date: next?.fmt || null, at: nowMs };
+          eCache[t] = ec;
+        }
+        if (ec.date) {
+          const days = Math.round((new Date(ec.date + 'T00:00:00+09:00') - new Date(jstDate + 'T00:00:00+09:00')) / 86400000);
+          const nkey = `${t}:${ec.date}`;
+          if (days >= 0 && days <= 3 && eNotified[nkey] !== jstDate) {
+            notify({ title: '📅 決算が近い（監視銘柄）', body: `${pName}の監視 ${nm} の決算は${days === 0 ? '今日' : days + '日後'}（${ec.date}）`, url: moomooStockUrl(t, 'earnings') });
+            eNotified[nkey] = jstDate;
+          }
+        }
+      } catch { /* skip */ }
+      // (B) 買いシグナル発生（1銘柄1日1回）
+      try {
+        const { signals } = await computeStockSignals(code);
+        if (signals && signals.length) {
+          const key = `sig:${jstDate}:${person}:${code}`;
+          if (!hasMoveAlert(key)) {
+            const labels = signals.slice(0, 2).map(s => s.label).join('、');
+            notify({ title: '🎯 買いシグナル発生（監視銘柄）', body: `${pName}の監視 ${nm}：${labels}${signals.length > 2 ? ` 他${signals.length - 2}件` : ''}`, url: APP_URL });
+            await markMoveAlert(key, jstDate);
+          }
+        }
+      } catch { /* skip */ }
+    }
+  }
+  await saveNotifyState(nowMs); // eCache / eNotified を永続化
+}
 // テクニカル指標（週足）
 function smaCalc(arr, n) { if (arr.length < n) return null; return arr.slice(-n).reduce((a, b) => a + b, 0) / n; }
 function rsiCalc(arr, period = 14) {
