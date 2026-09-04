@@ -573,6 +573,17 @@ export async function removeWatchStock(person, ticker) {
   wl[person] = wl[person].filter(x => x.ticker !== t);
   await persist();
 }
+// 銘柄ごとの買いシグナル通知 ON/OFF（既定ON。OFF時に sigOff=true を付与）
+export async function setWatchSignalNotify(person, ticker, enabled) {
+  if (!['mine', 'hers'].includes(person)) return null;
+  const t = _normTicker(ticker);
+  const wl = getWatchlist();
+  const it = wl[person].find(x => x.ticker === t);
+  if (!it) return null;
+  if (enabled) delete it.sigOff; else it.sigOff = true;
+  await persist();
+  return it;
+}
 
 // ── デモ取引 ──
 const DEMO_START_CASH = 100000000; // 1億円スタート

@@ -16,7 +16,7 @@ import {
   getGcalUrls, saveGcalUrl,
   getGtasksTokens, saveGtasksToken, deleteGtasksToken,
   getHoldings, addHolding, deleteHolding, editHolding, sellHolding, getRealized,
-  getWatchlist, addWatchStock, removeWatchStock,
+  getWatchlist, addWatchStock, removeWatchStock, setWatchSignalNotify,
   getDemoTrades, addDemoTrade, removeDemoTrade, getDemoClosedTrades, sellDemoTrade, removeDemoClosedTrade, getDemoLimitOrders, addDemoLimitOrder, cancelDemoLimitOrder, getDemoCash, mergeDemoOpenPositions,
   setHoldingTargets, markHoldingTargetFired, markHoldingEarningsNotified, getBuys,
   hasMoveAlert, markMoveAlert,
@@ -620,7 +620,8 @@ async function scanWatchlistAlerts() {
           }
         }
       } catch { /* skip */ }
-      // (B) 買いシグナル発生（1銘柄1日1回）
+      // (B) 買いシグナル発生（1銘柄1日1回）※銘柄ごとにOFFにできる
+      if (w.sigOff) continue;
       try {
         const { signals } = await computeStockSignals(code);
         if (signals && signals.length) {
@@ -1841,6 +1842,12 @@ app.post('/api/watchlist/add', async (req, res) => {
 app.post('/api/watchlist/remove', async (req, res) => {
   const { person, ticker } = req.body || {};
   await removeWatchStock(person, ticker);
+  res.json({ success: true, watchlist: getWatchlist() });
+});
+// 銘柄ごとの買いシグナル通知 ON/OFF
+app.post('/api/watchlist/signal-notify', async (req, res) => {
+  const { person, ticker, enabled } = req.body || {};
+  await setWatchSignalNotify(person || 'mine', ticker, !!enabled);
   res.json({ success: true, watchlist: getWatchlist() });
 });
 

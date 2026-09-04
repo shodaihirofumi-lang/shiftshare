@@ -1899,6 +1899,9 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .wl-item-chg.up { color:#c0392b; }
 .wl-item-chg.down { color:#2e6da4; }
 .wl-item-del { padding:6px 12px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); color:#b5544f; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }
+.wl-item-side { display:flex; flex-direction:column; gap:6px; align-items:stretch; flex-shrink:0; }
+.wl-item-bell { padding:6px 10px; border-radius:8px; border:1.5px solid var(--gold-border); background:var(--gold-bg); font-size:16px; cursor:pointer; font-family:inherit; line-height:1; }
+.wl-item-bell.off { border-color:var(--line); background:var(--card); opacity:.6; }
 .wl-empty { text-align:center; padding:20px; color:var(--text-soft); font-size:13px; }
 .wl-item.has-signal { border-color:var(--gold); background:linear-gradient(90deg, var(--gold-bg), var(--card)); box-shadow:0 2px 8px rgba(180,140,80,.15); }
 .wl-item.has-signal .wl-item-name { color:#7a4a0a; }
@@ -9742,7 +9745,10 @@ async function renderWatch() {
               </div>
               ${sigBadges}
             </div>
-            <button class="wl-item-del" onclick="removeWatchStockUI('${p}','${jsAttr(w.ticker)}')">削除</button>
+            <div class="wl-item-side">
+              <button class="wl-item-bell${w.sigOff?' off':''}" onclick="event.stopPropagation();toggleWatchSignal('${p}','${jsAttr(w.ticker)}',${!!w.sigOff})" title="買いシグナル通知 ${w.sigOff?'OFF（タップでON）':'ON（タップでOFF）'}">${w.sigOff?'🔕':'🔔'}</button>
+              <button class="wl-item-del" onclick="removeWatchStockUI('${p}','${jsAttr(w.ticker)}')">削除</button>
+            </div>
           </div>`;
         }).join('')
       : '<div class="wl-empty">まだ登録されていません</div>';
@@ -9814,6 +9820,21 @@ async function removeWatchStockUI(person, ticker) {
     renderWatch();
     showToast('監視から外しました');
   } catch (e) { showToast('削除失敗: ' + e.message, true); }
+}
+// 銘柄ごとの買いシグナル通知 ON/OFF（currentlyOff=現在ミュートかどうか）
+async function toggleWatchSignal(person, ticker, currentlyOff) {
+  const enabled = !!currentlyOff; // ミュート中ならON、ON中ならOFFにする
+  try {
+    const r = await fetch(API_BASE + '/api/watchlist/signal-notify', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person, ticker, enabled }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'エラー');
+    watchlistData = d.watchlist;
+    renderWatch();
+    showToast(enabled ? '買いシグナル通知をONにしました' : '買いシグナル通知をOFFにしました');
+  } catch (e) { showToast('切替失敗: ' + e.message, true); }
 }
 
 // 組み合わせ実戦編(Vol4)の章番号から、本の第一頁を計算
