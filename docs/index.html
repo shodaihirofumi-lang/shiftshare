@@ -4097,7 +4097,9 @@ async function addHoldingFromUI() {
   if (!ticker) { showToast('銘柄コードを入力してください', true); return; }
   if (!(shares>0)) { showToast('株数を入力してください', true); return; }
   try {
-    const jaName = (name && name.trim()) || stockName({ ticker, name });
+    // 銘柄コードは .T を補ってから正式名を解決（例:「6758」→「6758.T」→ソニーグループ）
+    const nt = /^\d{3,5}[A-Z]?$/.test(ticker) ? ticker + '.T' : ticker.toUpperCase();
+    const jaName = (name && name.trim()) || (typeof STOCK_JA !== 'undefined' && STOCK_JA[nt]) || stockName({ ticker: nt, name });
     const r = await fetch(API_BASE+'/api/holding', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({person:folioPerson, ticker, name: jaName, shares, cost:cost||0, reason, emotion, purchaseDate}) });
     if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error||'エラー'); }
     document.getElementById('fh-ticker').value=''; document.getElementById('fh-name').value=''; document.getElementById('fh-shares').value=''; document.getElementById('fh-cost').value=''; document.getElementById('fh-reason').value=''; document.getElementById('fh-date').value='';
