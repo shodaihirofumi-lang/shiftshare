@@ -974,6 +974,8 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 .folio-del { flex-shrink:0; padding:6px 13px; border-radius:9px; border:1.5px solid var(--line); background:var(--card); color:#b5544f; font-size:16px; font-weight:700; cursor:pointer; }
 .folio-del:active { background:#f6e0de; }
 .folio-sell { flex-shrink:0; padding:6px 13px; border-radius:9px; border:1.5px solid var(--mine); background:var(--mine-bg); color:var(--mine); font-size:16px; font-weight:700; cursor:pointer; }
+.folio-buy { flex-shrink:0; padding:6px 13px; border-radius:9px; border:1.5px solid #2e8b57; background:#e6f3ea; color:#1f6b40; font-size:16px; font-weight:700; cursor:pointer; }
+[data-dark] .folio-buy { background:#14301f; border-color:#3f8f5f; color:#7fd4a0; }
 .folio-sell:active { opacity:.85; }
 .folio-actions { display:flex; flex-direction:column; gap:5px; flex-shrink:0; }
 .folio-avg { font-size:16px; color:var(--text); margin-left:6px; font-weight:500; }
@@ -3487,6 +3489,37 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
   </div>
 </div>
 
+<!-- 買い増し（追加購入）モーダル -->
+<div class="modal-bg" id="buy-modal" onclick="if(event.target===this)closeBuyMore()">
+  <div class="modal">
+    <div class="modal-title" id="buy-title">買い増し</div>
+    <div class="modal-sub" id="buy-sub"></div>
+    <label class="sell-lbl">買い増し株数</label>
+    <input id="buy-shares" type="number" inputmode="decimal" class="ev-in" placeholder="追加で買う株数" oninput="updateBuyPreview()">
+    <label class="sell-lbl">買い単価</label>
+    <input id="buy-price" type="number" inputmode="decimal" class="ev-in" placeholder="1株あたりの購入額" oninput="updateBuyPreview()">
+    <label class="sell-lbl">購入日（任意）</label>
+    <input id="buy-date" type="date" class="ev-in">
+    <label class="sell-lbl">買う理由（任意）</label>
+    <input id="buy-reason" class="ev-in" placeholder="例：押し目で買い増し / 好決算" maxlength="200">
+    <div class="emotion-pick" id="buy-emotion" data-value="">
+      <div class="emotion-label">今の気持ち（任意）</div>
+      <div class="emotion-btns">
+        <button type="button" class="emo-btn" data-emo="confident" onclick="pickEmotion('buy-emotion',this)">😌 確信</button>
+        <button type="button" class="emo-btn" data-emo="calm" onclick="pickEmotion('buy-emotion',this)">🎯 冷静</button>
+        <button type="button" class="emo-btn" data-emo="unsure" onclick="pickEmotion('buy-emotion',this)">🤔 迷い</button>
+        <button type="button" class="emo-btn" data-emo="anxious" onclick="pickEmotion('buy-emotion',this)">😰 不安</button>
+        <button type="button" class="emo-btn" data-emo="rushed" onclick="pickEmotion('buy-emotion',this)">🔥 焦り</button>
+      </div>
+    </div>
+    <div id="buy-preview" class="sell-preview"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeBuyMore()">キャンセル</button>
+      <button class="btn-save" onclick="doBuyMore()">買い増しを確定</button>
+    </div>
+  </div>
+</div>
+
 <!-- 監視銘柄用ロウソク足チャート -->
 <div class="modal-bg" id="candle-modal" onclick="if(event.target===this)closeCandle()">
   <div class="modal candle-modal">
@@ -4050,12 +4083,13 @@ function holdingLine(h) {
   const q = quotes[h.ticker]; const cur = q?q.currency:'JPY'; const price = q?q.price:null;
   const name = stockName(h);
   const sellBtn = `<button class="folio-sell" onclick="event.stopPropagation();openSell('${h.id}')">売る</button>`;
+  const buyBtn = `<button class="folio-buy" onclick="event.stopPropagation();openBuyMore('${h.id}')">買い増し</button>`;
   const hasTgt = (h.takeProfit && h.takeProfit > 0) || (h.stopLoss && h.stopLoss > 0);
   const tgtBtn = `<button class="folio-tgt ${hasTgt?'has':''}" onclick="event.stopPropagation();openTargets('${h.id}')" title="損切・利確の目標">目標</button>`;
   const editBtn = `<button class="folio-edit" onclick="event.stopPropagation();openEditHolding('${h.id}')" title="株数・取得単価・銘柄名を訂正">訂正</button>`;
   const delBtn = `<button class="folio-del" onclick="event.stopPropagation();delHolding('${h.id}','${escapeHtml(name)}')">削除</button>`;
   const moomooBtn = `<button class="folio-tgt scr-hit-moomoo" onclick="event.stopPropagation();openMoomoo('${jsAttr(h.ticker)}')" title="moomooで見る">moomoo↗</button>`;
-  const actions = `<div class="folio-actions">${sellBtn}${tgtBtn}${editBtn}${moomooBtn}${delBtn}</div>`;
+  const actions = `<div class="folio-actions">${buyBtn}${sellBtn}${tgtBtn}${editBtn}${moomooBtn}${delBtn}</div>`;
   const tap = `onclick="openStockChart('${jsAttr(h.ticker)}','${jsAttr(name)}')"`;
   const sig = q && q.signal && SIG[q.signal]
     ? `<span class="sig ${SIG[q.signal][1]}">${SIG[q.signal][0]}${q.rsi!=null?`<span class="sig-rsi">RSI${q.rsi}</span>`:''}</span>` : '';
@@ -4294,6 +4328,59 @@ function updateSellPreview() {
     <div style="margin-top:6px">実現損益（予想）<span class="${up?'sell-up':'sell-down'}">${up?'+':'−'}${curSym(cur)}${Math.abs(Math.round(r)).toLocaleString()}</span></div>`;
 }
 function closeSell() { document.getElementById('sell-modal').classList.remove('active'); sellingHolding = null; resetEmotion('sell-emotion'); }
+// ── 買い増し（追加購入）──
+let buyingHolding = null;
+function openBuyMore(id) {
+  const h = holdings.find(x => x.id === id);
+  if (!h) return;
+  buyingHolding = h;
+  const name = stockName(h);
+  const q = quotes[h.ticker]; const cur = q ? q.currency : 'JPY';
+  document.getElementById('buy-title').textContent = '買い増し：' + name;
+  document.getElementById('buy-sub').textContent = `保有 ${h.shares}株 / 取得平均 ${curSym(cur)}${Math.round(h.cost).toLocaleString()}`;
+  document.getElementById('buy-shares').value = '';
+  document.getElementById('buy-price').value = q ? q.price : '';
+  document.getElementById('buy-date').value = '';
+  document.getElementById('buy-reason').value = '';
+  resetEmotion('buy-emotion');
+  updateBuyPreview();
+  document.getElementById('buy-modal').classList.add('active');
+}
+function updateBuyPreview() {
+  if (!buyingHolding) return;
+  const s = parseFloat(document.getElementById('buy-shares').value);
+  const p = parseFloat(document.getElementById('buy-price').value);
+  const cur = (quotes[buyingHolding.ticker]?.currency) || 'JPY';
+  const el = document.getElementById('buy-preview');
+  if (!(s > 0) || !(p > 0)) { el.innerHTML = '株数と単価を入力すると、買い増し後の株数と平均取得単価を表示します'; return; }
+  const totalShares = buyingHolding.shares + s;
+  const newAvg = (buyingHolding.shares * buyingHolding.cost + s * p) / totalShares;
+  const cost = p * s;
+  el.innerHTML = `<div>買付金額：<b>${curSym(cur)}${Math.round(cost).toLocaleString()}</b></div>
+    <div style="margin-top:6px">買い増し後：<b>${totalShares}株</b> / 平均取得単価 <b>${curSym(cur)}${Math.round(newAvg).toLocaleString()}</b></div>`;
+}
+function closeBuyMore() { document.getElementById('buy-modal').classList.remove('active'); buyingHolding = null; resetEmotion('buy-emotion'); }
+async function doBuyMore() {
+  if (!buyingHolding) return;
+  const shares = parseFloat(document.getElementById('buy-shares').value);
+  const cost = parseFloat(document.getElementById('buy-price').value);
+  if (!(shares > 0)) { showToast('株数を入力してください', true); return; }
+  if (!(cost > 0)) { showToast('買い単価を入力してください', true); return; }
+  const reason = document.getElementById('buy-reason').value.trim();
+  const emotion = document.getElementById('buy-emotion')?.dataset.value || null;
+  const purchaseDate = document.getElementById('buy-date').value || null;
+  const h = buyingHolding;
+  try {
+    const r = await fetch(API_BASE + '/api/holding', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person: (h.person === 'hers' ? 'hers' : 'mine'), ticker: h.ticker, name: stockName(h), shares, cost, reason, emotion, purchaseDate }),
+    });
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'エラー'); }
+    closeBuyMore();
+    await Promise.all([loadHoldings(), loadDiaries(), loadTrades()]);
+    showToast('買い増しを記録しました');
+  } catch (e) { showToast('買い増し失敗: ' + e.message, true); }
+}
 // ── 目標株価（損切・利確） ──
 let targetingHolding = null;
 function openTargets(id) {
