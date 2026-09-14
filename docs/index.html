@@ -3740,7 +3740,7 @@ async function enterApp() {
   {
     const ab = document.querySelector('.nav-btn.active');
     const cur = ab ? ab.id.replace('nav-', '') : 'calendar';
-    applyNavMode(NAV_MODE.invest.includes(cur) && cur !== 'dashboard' ? 'invest' : 'life');
+    applyNavMode(navModeMap().invest.includes(cur) && cur !== 'dashboard' ? 'invest' : 'life');
   }
   loadAvatars();
   await loadCalendar();
@@ -4945,17 +4945,17 @@ function scrollToToday() {
 enterApp();
 
 // ── TABS ──
-// ── ナビの2モード（投資／くらし）──
-const NAV_MODE = {
-  invest: ['dashboard','screener','fundscr','watch','demo','holdings','pnl','trades'],
-  life:   ['dashboard','calendar','gridcal','upload','diary','memo','board','goals'],
-};
-let navMode = 'invest';
-try { const m = localStorage.getItem('navMode'); if (m === 'invest' || m === 'life') navMode = m; } catch {}
+// ── ナビの2モード（投資／くらし）── ※関数宣言は巻き上げされTDZを避けられる
+function navModeMap() {
+  return {
+    invest: ['dashboard','screener','fundscr','watch','demo','holdings','pnl','trades'],
+    life:   ['dashboard','calendar','gridcal','upload','diary','memo','board','goals'],
+  };
+}
 function applyNavMode(mode) {
-  navMode = mode;
+  window.__navMode = mode;
   try { localStorage.setItem('navMode', mode); } catch {}
-  const show = new Set(NAV_MODE[mode]);
+  const show = new Set(navModeMap()[mode]);
   ['dashboard','screener','fundscr','watch','calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','demo','upload'].forEach(t => {
     const b = document.getElementById('nav-' + t);
     if (b) b.style.display = show.has(t) ? '' : 'none';
@@ -4968,13 +4968,14 @@ function setNavMode(mode) {
   applyNavMode(mode);
   const active = document.querySelector('.nav-btn.active');
   const cur = active ? active.id.replace('nav-', '') : '';
-  if (!NAV_MODE[mode].includes(cur)) showTab(mode === 'invest' ? 'holdings' : 'calendar');
+  if (!navModeMap()[mode].includes(cur)) showTab(mode === 'invest' ? 'holdings' : 'calendar');
 }
 function showTab(name) {
   // 開いたタブのモードに自動で合わせる（ダッシュは両モード共通なので変更しない）
   if (name !== 'dashboard') {
-    const m = NAV_MODE.invest.includes(name) ? 'invest' : (NAV_MODE.life.includes(name) ? 'life' : null);
-    if (m && m !== navMode) applyNavMode(m);
+    const MAP = navModeMap();
+    const m = MAP.invest.includes(name) ? 'invest' : (MAP.life.includes(name) ? 'life' : null);
+    if (m && m !== window.__navMode) applyNavMode(m);
   }
   ['dashboard','screener','fundscr','watch','calendar','gridcal','holdings','board','pnl','goals','trades','memo','diary','demo','upload'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===name);
