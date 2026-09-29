@@ -17,7 +17,7 @@ const redis = useRedis
     })
   : null;
 
-const empty = () => ({ shifts: [], pushSubscriptions: [], uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [], targetPrices: [], pushSettings: { weeklyReport: false, monthlyReport: false }, demoTrades: { mine: [], hers: [] }, demoClosedTrades: { mine: [], hers: [] }, demoLimitOrders: { mine: [], hers: [] }, earningsCache: {}, notifiedEarnings: {}, watchScanAt: 0 });
+const empty = () => ({ shifts: [], pushSubscriptions: [], pushSubOwners: {}, uploadLog: {}, avatars: {}, events: [], wages: {}, locations: {}, expenses: [], gcalUrls: {}, gtasksTokens: {}, holdings: [], notes: [], memos: [], notifiedOff: {}, realized: [], buys: [], diaries: {}, monthlyDiaries: {}, photoIndex: [], moveAlerts: {}, goals: [], targetPrices: [], pushSettings: { weeklyReport: false, monthlyReport: false }, demoTrades: { mine: [], hers: [] }, demoClosedTrades: { mine: [], hers: [] }, demoLimitOrders: { mine: [], hers: [] }, earningsCache: {}, notifiedEarnings: {}, watchScanAt: 0 });
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
@@ -271,16 +271,35 @@ export async function upsertShift(s) {
   await persist();
 }
 
-export async function savePushSubscription(sub) {
-  const json = JSON.stringify(sub);
-  if (!cache.pushSubscriptions.some(s => JSON.stringify(s) === json)) {
-    cache.pushSubscriptions.push(sub);
-    await persist();
+export async function savePushSubscription(sub, person) {
+  if (!cache.pushSubOwners) cache.pushSubOwners = {};
+  const ep = sub && sub.endpoint;
+  let changed = false;
+  const exists = ep
+    ? cache.pushSubscriptions.some(s => s && s.endpoint === ep)
+    : cache.pushSubscriptions.some(s => JSON.stringify(s) === JSON.stringify(sub));
+  if (!exists) { cache.pushSubscriptions.push(sub); changed = true; }
+  if (ep && (person === 'mine' || person === 'hers')) {
+    if (cache.pushSubOwners[ep] !== person) { cache.pushSubOwners[ep] = person; changed = true; }
   }
+  if (changed) await persist();
 }
 
 export function getPushSubscriptions() {
   return cache.pushSubscriptions;
+}
+
+// 特定の人の端末だけに送るための購読一覧。
+// 端末の持ち主が誰も未設定の間は全端末に送る（従来動作＝安全なフォールバック）。
+// 誰かが持ち主を設定したら、タグ付き端末は一致した人だけ、未設定端末は対象外にする。
+export function getPushSubscriptionsFor(person) {
+  const owners = cache.pushSubOwners || {};
+  const anyTagged = Object.keys(owners).length > 0;
+  return cache.pushSubscriptions.filter(s => {
+    const o = (s && s.endpoint) ? owners[s.endpoint] : null;
+    if (o) return o === person;
+    return !anyTagged;
+  });
 }
 
 export async function saveAvatar(person, dataUrl) {

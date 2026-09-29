@@ -7299,8 +7299,17 @@ async function setupPush() {
     if (await Notification.requestPermission() !== 'granted') return;
     let sub = await reg.pushManager.getSubscription();
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlB64(publicKey) });
-    await fetch(API_BASE+'/api/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(sub) });
+    const person = getDeviceOwner();
+    await fetch(API_BASE+'/api/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ sub, person }) });
   } catch {}
+}
+// この端末の持ち主（ひろ/ちか）。出勤アラームを本人の端末だけに届けるために使う。
+function getDeviceOwner() { try { return localStorage.getItem('deviceOwner') || ''; } catch { return ''; } }
+async function setDeviceOwner(p) {
+  try { localStorage.setItem('deviceOwner', p); } catch {}
+  await setupPush(); // 購読を持ち主タグ付きで登録し直す
+  loadPushSettings();
+  showToast(p === 'hers' ? 'この端末を「ちか」に設定しました' : 'この端末を「ひろ」に設定しました');
 }
 function urlB64(s) {
   const pad = '='.repeat((4-s.length%4)%4);
@@ -13982,6 +13991,7 @@ async function loadPushSettings() {
 function renderPushSettings(s) {
   const el = document.getElementById('push-report-settings');
   if (!el) return;
+  const owner = getDeviceOwner();
   el.innerHTML = `
     <div class="push-rep-row">
       <div>
@@ -14013,10 +14023,19 @@ function renderPushSettings(s) {
         <span class="push-toggle-slider"></span>
       </label>
     </div>
+    <div class="push-rep-row" style="display:block">
+      <div class="push-rep-lbl">この端末の持ち主</div>
+      <div class="push-rep-sub">出勤アラームを本人の端末だけに届けます。各自のスマホで1回設定してください。</div>
+      <div class="ev-person-toggle" style="margin-top:10px">
+        <button class="wl-btn${owner === 'mine' ? ' active' : ''}" onclick="setDeviceOwner('mine')">ひろの端末</button>
+        <button class="wl-btn${owner === 'hers' ? ' active' : ''}" onclick="setDeviceOwner('hers')">ちかの端末</button>
+      </div>
+      <div class="push-rep-sub" style="margin-top:6px">${owner ? `現在：<b>${owner === 'hers' ? 'ちか' : 'ひろ'}</b>の端末` : '未設定（どちらも設定するまでは両方の端末に届きます）'}</div>
+    </div>
     <div class="push-rep-row">
       <div>
         <div class="push-rep-lbl">ひろ 出勤アラーム</div>
-        <div class="push-rep-sub">出勤の2時間前にプッシュ通知</div>
+        <div class="push-rep-sub">出勤の2時間前に「ひろの端末」へ通知</div>
       </div>
       <label class="push-toggle">
         <input type="checkbox" ${s.shiftAlarm && s.shiftAlarm.mine ? 'checked' : ''} onchange="saveShiftAlarm('mine', this.checked)">
@@ -14026,7 +14045,7 @@ function renderPushSettings(s) {
     <div class="push-rep-row">
       <div>
         <div class="push-rep-lbl">ちか 出勤アラーム</div>
-        <div class="push-rep-sub">出勤の2時間前にプッシュ通知</div>
+        <div class="push-rep-sub">出勤の2時間前に「ちかの端末」へ通知</div>
       </div>
       <label class="push-toggle">
         <input type="checkbox" ${s.shiftAlarm && s.shiftAlarm.hers ? 'checked' : ''} onchange="saveShiftAlarm('hers', this.checked)">

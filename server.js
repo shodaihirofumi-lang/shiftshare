@@ -7,7 +7,7 @@ import { parseShiftImages, parseExpenseAmount } from './aiParser.js';
 import {
   initDb,
   getAllShifts, getUploadLog,
-  savePushSubscription, getPushSubscriptions, saveShifts,
+  savePushSubscription, getPushSubscriptions, getPushSubscriptionsFor, saveShifts,
   saveAvatar, getAvatars, upsertShift,
   getEvents, addEvent, deleteEvent,
   getWages, saveWage,
@@ -1718,7 +1718,11 @@ app.post('/api/avatar', async (req, res) => {
 
 // ── PUSH ──
 app.post('/api/push/subscribe', async (req, res) => {
-  await savePushSubscription(req.body);
+  // 新形式: { sub, person }（端末の持ち主タグ付き）／旧形式: 購読オブジェクトそのもの
+  const body = req.body || {};
+  const sub = body.sub && body.sub.endpoint ? body.sub : body;
+  const person = (body.person === 'mine' || body.person === 'hers') ? body.person : undefined;
+  await savePushSubscription(sub, person);
   res.json({ success: true });
 });
 
@@ -3002,14 +3006,11 @@ async function maybeSendShiftAlarms() {
   const settings = getPushSettings();
   const alarm = settings.shiftAlarm || {};
   if (!alarm.mine && !alarm.hers) return;
-  const subs = getPushSubscriptions();
-  if (!subs.length) return;
   const jstNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
   const y = jstNow.getFullYear(), mo = jstNow.getMonth() + 1, d = jstNow.getDate();
   const todayStr = `${y}-${mo}-${d}`;
   const shifts = getAllShifts();
   const sent = { ...(settings.shiftAlarmSent || {}) };
-  const notify = (obj) => { const p = JSON.stringify(obj); for (const s of subs) webpush.sendNotification(s, p).catch(() => {}); };
   let changed = false;
   for (const person of ['mine', 'hers']) {
     if (!alarm[person]) continue;
@@ -3022,8 +3023,11 @@ async function maybeSendShiftAlarms() {
     const key = `${person}:${todayStr}:${s.start_time}`;
     if (sent[key]) continue;
     if (nowMs >= alarmAt && nowMs <= alarmAt + SHIFT_ALARM_WINDOW_MS && nowMs < start.getTime()) {
+      const targetSubs = getPushSubscriptionsFor(person); // 本人の端末だけに送る（未設定時は全端末）
+      if (!targetSubs.length) continue;
       const pName = person === 'hers' ? 'ちか' : 'ひろ';
-      notify({ title: '⏰ 出勤2時間前', body: `${pName} 出勤 ${s.start_time}${s.end_time ? '〜' + s.end_time : ''}（あと約2時間）` });
+      const payload = JSON.stringify({ title: '⏰ 出勤2時間前', body: `${pName} 出勤 ${s.start_time}${s.end_time ? '〜' + s.end_time : ''}（あと約2時間）` });
+      for (const sub of targetSubs) webpush.sendNotification(sub, payload).catch(() => {});
       sent[key] = todayStr; changed = true;
     }
   }
