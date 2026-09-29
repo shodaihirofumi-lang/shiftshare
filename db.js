@@ -1047,11 +1047,25 @@ export async function deleteTargetPrice(id) {
   await persist();
 }
 
+const PUSH_DEFAULTS = {
+  weeklyReport: false,
+  monthlyReport: false,
+  signalNotify: true,                 // 買いシグナル通知の一括ON/OFF（既定ON）
+  shiftAlarm: { mine: false, hers: false }, // 出勤2時間前アラーム（人ごと・既定OFF）
+};
 export function getPushSettings() {
-  return cache.pushSettings || { weeklyReport: false, monthlyReport: false };
+  const s = cache.pushSettings || {};
+  return {
+    ...PUSH_DEFAULTS,
+    ...s,
+    shiftAlarm: { ...PUSH_DEFAULTS.shiftAlarm, ...(s.shiftAlarm || {}) },
+  };
 }
 export async function savePushSettings(settings) {
-  cache.pushSettings = { ...getPushSettings(), ...settings };
+  const cur = cache.pushSettings || {};
+  const next = { ...cur, ...settings };
+  if (settings.shiftAlarm) next.shiftAlarm = { ...(cur.shiftAlarm || {}), ...settings.shiftAlarm };
+  cache.pushSettings = next;
   await persist();
 }
 

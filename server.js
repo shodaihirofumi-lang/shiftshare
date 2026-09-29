@@ -66,8 +66,12 @@ app.use(express.static('static', {
   },
 }));
 
-// アクセス契機で定期レポートをチェック（常駐タイマーの代わり。中身は maybeSendScheduledReports）
-app.use((req, res, next) => { maybeSendScheduledReports().catch(() => {}); next(); });
+// アクセス契機で定期レポート＋出勤アラームをチェック（常駐タイマーの代わり）
+app.use((req, res, next) => {
+  maybeSendScheduledReports().catch(() => {});
+  maybeSendShiftAlarms().catch(() => {});
+  next();
+});
 
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
@@ -590,6 +594,7 @@ async function scanWatchlistAlerts() {
   const jstDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date());
   const notify = (obj) => { const p = JSON.stringify(obj); for (const s of subs) webpush.sendNotification(s, p).catch(() => {}); };
   const wl = getWatchlist();
+  const signalOn = getPushSettings().signalNotify !== false; // 買いシグナル通知の一括スイッチ
   const eCache = getEarningsCache();
   const eNotified = getNotifiedEarnings();
   const APP_URL = 'https://shiftshare.onrender.com/';
@@ -620,8 +625,8 @@ async function scanWatchlistAlerts() {
           }
         }
       } catch { /* skip */ }
-      // (B) 買いシグナル発生（1銘柄1日1回）※銘柄ごとにOFFにできる
-      if (w.sigOff) continue;
+      // (B) 買いシグナル発生（1銘柄1日1回）※一括OFFまたは銘柄ごとにOFFにできる
+      if (!signalOn || w.sigOff) continue;
       try {
         const { signals } = await computeStockSignals(code);
         if (signals && signals.length) {
@@ -2980,6 +2985,51 @@ async function maybeSendScheduledReports() {
     await savePushSettings({ lastMonthlyReport: today });
     await sendPushReport('📈 月次レポート', await buildReportBody());
     console.log('[monthly-report] 送信完了');
+  }
+}
+
+// ── 出勤2時間前アラーム（人ごとにON/OFF） ──
+// レポート同様アクセス契機でチェック。無料枠でサーバーがスリープするため、
+// サーバーが起きているタイミング（アプリを開いた時など）に発火猶予90分の枠内なら通知する。
+const SHIFT_ALARM_LEAD_MS = 2 * 3600 * 1000;   // 出勤の2時間前
+const SHIFT_ALARM_WINDOW_MS = 90 * 60 * 1000;  // 発火猶予（サーバーが遅れて起きても拾う）
+let _lastShiftAlarmCheck = 0;
+async function maybeSendShiftAlarms() {
+  if (!VAPID_PUBLIC || !VAPID_PRIVATE) return;
+  const nowMs = Date.now();
+  if (nowMs - _lastShiftAlarmCheck < 5 * 60 * 1000) return; // 5分に1回まで
+  _lastShiftAlarmCheck = nowMs;
+  const settings = getPushSettings();
+  const alarm = settings.shiftAlarm || {};
+  if (!alarm.mine && !alarm.hers) return;
+  const subs = getPushSubscriptions();
+  if (!subs.length) return;
+  const jstNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+  const y = jstNow.getFullYear(), mo = jstNow.getMonth() + 1, d = jstNow.getDate();
+  const todayStr = `${y}-${mo}-${d}`;
+  const shifts = getAllShifts();
+  const sent = { ...(settings.shiftAlarmSent || {}) };
+  const notify = (obj) => { const p = JSON.stringify(obj); for (const s of subs) webpush.sendNotification(s, p).catch(() => {}); };
+  let changed = false;
+  for (const person of ['mine', 'hers']) {
+    if (!alarm[person]) continue;
+    const s = shifts.find(x => x.person === person && x.year === y && x.month === mo && x.day === d && x.shift_type === 'work' && x.start_time);
+    if (!s) continue;
+    const [hh, mm] = String(s.start_time).split(':').map(n => parseInt(n, 10));
+    if (isNaN(hh)) continue;
+    const start = new Date(jstNow); start.setHours(hh, mm || 0, 0, 0);
+    const alarmAt = start.getTime() - SHIFT_ALARM_LEAD_MS;
+    const key = `${person}:${todayStr}:${s.start_time}`;
+    if (sent[key]) continue;
+    if (nowMs >= alarmAt && nowMs <= alarmAt + SHIFT_ALARM_WINDOW_MS && nowMs < start.getTime()) {
+      const pName = person === 'hers' ? 'ちか' : 'ひろ';
+      notify({ title: '⏰ 出勤2時間前', body: `${pName} 出勤 ${s.start_time}${s.end_time ? '〜' + s.end_time : ''}（あと約2時間）` });
+      sent[key] = todayStr; changed = true;
+    }
+  }
+  if (changed) {
+    for (const k of Object.keys(sent)) if (sent[k] !== todayStr) delete sent[k]; // 当日以外の記録は掃除
+    await savePushSettings({ shiftAlarmSent: sent });
   }
 }
 

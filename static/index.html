@@ -14002,7 +14002,47 @@ function renderPushSettings(s) {
         <input type="checkbox" ${s.monthlyReport ? 'checked' : ''} onchange="savePushSetting('monthlyReport', this.checked)">
         <span class="push-toggle-slider"></span>
       </label>
+    </div>
+    <div class="push-rep-row">
+      <div>
+        <div class="push-rep-lbl">買いシグナル通知（一括）</div>
+        <div class="push-rep-sub">監視銘柄の買いシグナルをまとめてON/OFF<br>※銘柄ごとの🔔設定より優先（OFFなら全て止まります）</div>
+      </div>
+      <label class="push-toggle">
+        <input type="checkbox" ${s.signalNotify !== false ? 'checked' : ''} onchange="savePushSetting('signalNotify', this.checked)">
+        <span class="push-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="push-rep-row">
+      <div>
+        <div class="push-rep-lbl">ひろ 出勤アラーム</div>
+        <div class="push-rep-sub">出勤の2時間前にプッシュ通知</div>
+      </div>
+      <label class="push-toggle">
+        <input type="checkbox" ${s.shiftAlarm && s.shiftAlarm.mine ? 'checked' : ''} onchange="saveShiftAlarm('mine', this.checked)">
+        <span class="push-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="push-rep-row">
+      <div>
+        <div class="push-rep-lbl">ちか 出勤アラーム</div>
+        <div class="push-rep-sub">出勤の2時間前にプッシュ通知</div>
+      </div>
+      <label class="push-toggle">
+        <input type="checkbox" ${s.shiftAlarm && s.shiftAlarm.hers ? 'checked' : ''} onchange="saveShiftAlarm('hers', this.checked)">
+        <span class="push-toggle-slider"></span>
+      </label>
     </div>`;
+}
+async function saveShiftAlarm(person, value) {
+  try {
+    const s = await fetch(API_BASE+'/api/push-settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shiftAlarm: { [person]: value } }),
+    }).then(r => r.json());
+    renderPushSettings(s);
+    showToast(value ? '出勤アラームをONにしました' : '出勤アラームをOFFにしました');
+  } catch { showToast('設定の保存に失敗しました', true); }
 }
 async function savePushSetting(key, value) {
   try {
