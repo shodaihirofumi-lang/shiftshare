@@ -2627,6 +2627,14 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 </head>
 <body>
 
+<!-- 起動中オーバーレイ（無料プランのコールドスタート対策。固定色で確実に表示） -->
+<div id="boot-overlay" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#f3efe6;color:#2b2b2b;font-family:'Hiragino Sans','Yu Gothic',sans-serif;">
+  <div style="width:46px;height:46px;border:5px solid #d8cfbb;border-top-color:#2b2b2b;border-radius:50%;animation:bootspin 0.9s linear infinite;"></div>
+  <div id="boot-msg" style="font-size:18px;font-weight:700;letter-spacing:1px;">読み込み中…</div>
+  <div id="boot-sub" style="font-size:14px;color:#6b6456;max-width:280px;text-align:center;line-height:1.6;"></div>
+</div>
+<style>@keyframes bootspin{to{transform:rotate(360deg)}}</style>
+
 <!-- LOGIN -->
 <!-- APP -->
 <div id="app">
@@ -3685,6 +3693,25 @@ body, button, input { font-family:'Hiragino Sans','Yu Gothic',sans-serif; }
 
 <script>
 const API_BASE = location.origin.includes('onrender.com') || location.hostname === 'localhost' ? '' : 'https://shiftshare.onrender.com';
+
+// ── 起動中オーバーレイ制御（無料プランのコールドスタート対策）──
+// サーバーが眠っていると起動に30〜60秒かかる。その間「真っ白で壊れた」ように見えるのを防ぐため、
+// 起動中であることと待ち時間の目安を表示し、最初のデータ取得が終わったら隠す。
+let _bootHidden = false;
+function hideBoot() {
+  if (_bootHidden) return; _bootHidden = true;
+  const el = document.getElementById('boot-overlay');
+  if (el) { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 320); }
+}
+(function bootProgress() {
+  const sub = () => document.getElementById('boot-sub');
+  const msg = () => document.getElementById('boot-msg');
+  setTimeout(() => { if (_bootHidden) return; const s = sub(); if (s) s.textContent = 'サーバーを起動しています…'; }, 3000);
+  setTimeout(() => { if (_bootHidden) return; const m = msg(), s = sub(); if (m) m.textContent = 'サーバーを起動中…'; if (s) s.textContent = '無料プランのため、しばらく使っていないと起動に最大40秒ほどかかります。そのままお待ちください。'; }, 7000);
+  setTimeout(() => { if (_bootHidden) return; const s = sub(); if (s) s.innerHTML = 'もう少しで起動します…<br>（改善しない場合は画面を下に引っ張って再読み込み）'; }, 20000);
+  // 安全策：万一hideBootが呼ばれなくても60秒で必ず隠す
+  setTimeout(hideBoot, 60000);
+})();
 // PWAインストール可能にするため Service Worker をログイン前から登録
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -3776,7 +3803,7 @@ async function enterApp() {
     applyNavMode(navModeMap().invest.includes(cur) && cur !== 'dashboard' ? 'invest' : 'life');
   }
   loadAvatars();
-  await loadCalendar();
+  try { await loadCalendar(); } finally { hideBoot(); } // 最初のデータ取得が終わったら起動オーバーレイを隠す
   setTimeout(scrollToToday, 200);
   loadWeather();
   loadGcal();
