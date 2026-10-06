@@ -21,26 +21,38 @@ const empty = () => ({ shifts: [], pushSubscriptions: [], pushSubOwners: {}, upl
 
 // 全データをメモリにキャッシュ。読み取りは同期、書き込み時に永続化。
 let cache = empty();
+// 初期読み込みが成功したか。失敗時は空データで上書きしないよう保存を停止してデータを守る。
+let loadOk = false;
 // 写真専用キャッシュ（メインのpersist()とは独立）
 // key: "photo:{YYYY-MM-DD}" or "memo-img:{memoId}" → base64 string
 let photoCache = {};
 
 export async function initDb() {
   if (useRedis) {
-    try {
-      const data = await redis.get(REDIS_KEY);
-      cache = data ? { ...empty(), ...data } : empty();
-      console.log('[db] Upstash Redis を使用（永続）');
-    } catch (e) {
-      console.error('[db] Redis 読み込み失敗、空で開始:', e.message);
+    // Upstashの一時的な不調で空起動→空上書き（全データ消失）を防ぐため、数回リトライする。
+    for (let attempt = 1; attempt <= 4 && !loadOk; attempt++) {
+      try {
+        const data = await redis.get(REDIS_KEY);
+        cache = data ? { ...empty(), ...data } : empty();
+        loadOk = true;
+        console.log('[db] Upstash Redis を使用（永続）' + (attempt > 1 ? `（${attempt}回目で成功）` : ''));
+      } catch (e) {
+        console.error(`[db] Redis 読み込み失敗 (${attempt}/4):`, e.message);
+        if (attempt < 4) await new Promise(r => setTimeout(r, 1500 * attempt));
+      }
+    }
+    if (!loadOk) {
+      // 重要: 読み込めなかった時は空データで上書きしない。保存を停止してRedis上の実データを保護する。
+      console.error('[db] 初期読み込みに失敗。データ保護のため書き込みを停止します（空での上書き防止）。再起動で復旧を試みます。');
       cache = empty();
     }
   } else {
     try {
       cache = { ...empty(), ...JSON.parse(fs.readFileSync(DB_FILE, 'utf8')) };
     } catch {
-      cache = empty();
+      cache = empty(); // ローカルはファイルが無い＝新規なので正常
     }
+    loadOk = true;
     console.log('[db] ローカルファイル data.json を使用（クラウドでは消えます）');
   }
   await migratePhotosToSeparateStore(); // 旧来のインライン画像を分離（photoIndex更新前に実行）
@@ -205,6 +217,11 @@ async function mergeDuplicateHoldings() {
 }
 
 async function persist() {
+  // 初期読み込みに失敗している時は保存しない。空データでRedisを上書きしてしまうのを防ぐ（データ保護）。
+  if (useRedis && !loadOk) {
+    console.error('[db] 保存を中止: 初期読み込み未完了のためデータ保護を優先');
+    return;
+  }
   if (useRedis) {
     await redis.set(REDIS_KEY, cache);
   } else {
